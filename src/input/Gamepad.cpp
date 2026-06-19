@@ -22,6 +22,11 @@ constexpr int   PAD       = GLFW_JOYSTICK_1;  /* première manette */
 constexpr float DEADZONE  = 0.07f;            /* zone morte ~7 % */
 constexpr float EXPO      = 1.5f;             /* courbe d'expansion */
 
+/* Seuil de "vraie sollicitation" pour décider que le joueur utilise la manette
+ * (et non une simple dérive de stick ou une gâchette mal calibrée). Plus élevé
+ * que la zone morte pour ne pas voler la priorité au clavier. */
+constexpr float ACTIVE_THRESHOLD = 0.5f;
+
 /* Applique zone morte puis expansion à un axe de stick brut [-1, +1].
  * La zone morte ignore les petits écarts ; l'expansion rend le centre
  * plus doux pour des corrections fines. */
@@ -78,14 +83,17 @@ bool Gamepad::isActive() noexcept {
         return false;
     }
     const float* axes = state.axes;
-    if (std::fabs(axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > DEADZONE ||
-        std::fabs(axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > DEADZONE ||
-        std::fabs(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) > DEADZONE) {
+    /* Un stick nettement poussé (au-delà d'une simple dérive). */
+    if (std::fabs(axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > ACTIVE_THRESHOLD ||
+        std::fabs(axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > ACTIVE_THRESHOLD ||
+        std::fabs(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) > ACTIVE_THRESHOLD) {
         return true;
     }
-    /* Gâchettes nettement enfoncées (bien au-delà du repos -1). */
-    if (axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > -0.8f ||
-        axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > -0.8f) {
+    /* Une gâchette nettement enfoncée. Seuil élevé car certaines manettes
+     * laissent la gâchette au repos à 0 (et non -1) : un seuil trop bas
+     * verrouillerait la source sur la manette et ignorerait le clavier. */
+    if (axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > ACTIVE_THRESHOLD ||
+        axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > ACTIVE_THRESHOLD) {
         return true;
     }
     return false;

@@ -18,11 +18,15 @@ physics::Controls InputSystem::poll(float dt) noexcept {
      * la manette a la main : le retour au clavier se fait ainsi sans à-coup. */
     const physics::Controls keyboardControls = m_keyboard.poll(dt);
 
-    /* On bascule de source dès qu'une nouvelle activité est détectée. */
-    if (Gamepad::isActive()) {
-        m_active = Source::Gamepad;
-    } else if (m_keyboard.isActive()) {
+    /* Le clavier est prioritaire : dès qu'une touche de pilotage est pressée,
+     * on repasse sur le clavier. La manette ne reprend la main que lorsque le
+     * clavier est au repos ET qu'elle est nettement sollicitée. Sans cette
+     * priorité, une manette branchée qui dérive un peu volerait la source et
+     * le clavier ne répondrait plus. */
+    if (m_keyboard.isActive()) {
         m_active = Source::Keyboard;
+    } else if (Gamepad::isActive()) {
+        m_active = Source::Gamepad;
     }
 
     if (m_active == Source::Gamepad && Gamepad::isPresent()) {

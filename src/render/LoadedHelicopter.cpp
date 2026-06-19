@@ -6,6 +6,7 @@
 #include "render/Shader.hpp"
 
 #include <cstdio>
+#include <utility>
 
 namespace artouste::render {
 
@@ -30,6 +31,32 @@ constexpr int   TAIL_BLADES     = 2;
 constexpr float MAIN_SPIN = 15.0f;
 constexpr float TAIL_SPIN = 75.0f;
 
+// Conversion d'un décalage FlightGear (x avant/arrière, y latéral, z vertical)
+// vers le repère Assimp (x, y vertical, z latéral).
+vec3 fgToAssimp(const vec3& fg) {
+    return vec3{fg.x, fg.z, fg.y};
+}
+
+// Planche de bord : offset d'assemblage (all-panels.xml).
+const vec3 PANEL_OFFSET = fgToAssimp(vec3{-4.136f, 0.0f, -0.344f});
+
+// Cadrans de la planche : fichier .ac et offset FlightGear relatif au panneau
+// (panel.xml). Deux rangées de quatre. Aiguilles figées (statiques).
+struct GaugeDef {
+    const char* file;
+    vec3        fgOffset;
+};
+const GaugeDef GAUGES[] = {
+    {"Interior/Panel/Instruments/alt/alt.ac", vec3{-0.222f, -0.181f, 0.112f}},
+    {"Interior/Panel/Instruments/vsi/vsi.ac", vec3{-0.208f, -0.060f, 0.112f}},
+    {"Interior/Panel/Instruments/ai/ai.ac", vec3{-0.231f, 0.060f, 0.112f}},
+    {"Interior/Panel/Instruments/asi/asi.ac", vec3{-0.207f, 0.181f, 0.112f}},
+    {"Interior/Panel/Instruments/vor/vor.ac", vec3{-0.223f, -0.181f, -0.014f}},
+    {"Interior/Panel/Instruments/hi/hi.ac", vec3{-0.223f, -0.060f, -0.014f}},
+    {"Interior/Panel/Instruments/rmi/rmi.ac", vec3{-0.224f, 0.060f, -0.014f}},
+    {"Interior/Panel/Instruments/torque/torque.ac", vec3{-0.223f, 0.181f, -0.014f}},
+};
+
 Model loadPart(const std::filesystem::path& path, const std::vector<std::string>& skip,
                const std::vector<std::string>& transparent = {}) {
     Model model = ModelLoader::load(path, skip, transparent);
@@ -51,6 +78,16 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
 
     m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
+
+    // Planche de bord + cadrans (statiques).
+    m_panel = loadPart(dir / "Interior/Panel/panel.ac", skipRotor);
+    for (const GaugeDef& def : GAUGES) {
+        Gauge gauge;
+        gauge.model  = loadPart(dir / def.file, skipRotor);
+        gauge.offset = PANEL_OFFSET + fgToAssimp(def.fgOffset);
+        m_gauges.push_back(std::move(gauge));
+    }
+
     m_mainHub   = loadPart(dir / "Externals/MainRotor/mainrotor.ac", skipRotor);
     m_mainBlade = loadPart(dir / "Externals/MainRotor/blade.ac", skipRotor);
     m_tailHub   = loadPart(dir / "Externals/TailRotor/tailrotor.ac", skipRotor);
@@ -101,9 +138,13 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds)
         }
     };
 
-    // Passe opaque : fuselage (hors vitrages) + intérieur + rotors.
+    // Passe opaque : fuselage (hors vitrages) + intérieur + planche + rotors.
     drawModel(m_fuselage, root, Pass::Opaque);
     drawModel(m_interior, root, Pass::Opaque);
+    drawModel(m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
+    for (const Gauge& gauge : m_gauges) {
+        drawModel(gauge.model, root * glm::translate(mat4(1.0f), gauge.offset), Pass::Opaque);
+    }
     drawRotors(Pass::Opaque);
 
     // Passe transparente : vitrages, avec mélange alpha et profondeur en

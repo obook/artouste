@@ -12,6 +12,7 @@
 #include "util/Math.hpp"
 
 #include <filesystem>
+#include <vector>
 
 namespace artouste::render {
 
@@ -29,12 +30,20 @@ public:
     void draw(Shader& shader, const mat4& base, float timeSeconds) const;
 
 private:
-    Model m_fuselage;
-    Model m_interior;
-    Model m_mainHub;
-    Model m_mainBlade;
-    Model m_tailHub;
-    Model m_tailBlade;
+    // Un cadran de la planche de bord et sa position (repère Assimp).
+    struct Gauge {
+        Model model;
+        vec3  offset;
+    };
+
+    Model              m_fuselage;
+    Model              m_interior;
+    Model              m_panel;
+    std::vector<Gauge> m_gauges;
+    Model              m_mainHub;
+    Model              m_mainBlade;
+    Model              m_tailHub;
+    Model              m_tailBlade;
 };
 
 }  // namespace artouste::render

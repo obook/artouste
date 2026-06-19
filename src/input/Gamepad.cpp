@@ -1,8 +1,8 @@
 /*
  * Gamepad.cpp
  * Conversion de l'état brut de la manette en commandes de vol.
- * Les sticks passent par une zone morte et une courbe d'expansion ;
- * la gâchette droite est convertie en collectif.
+ * Les sticks passent par une zone morte et une courbe d'expansion ; le
+ * collectif est un levier piloté par les gâchettes (il garde sa position).
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -12,6 +12,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace artouste::input {
@@ -26,6 +27,9 @@ constexpr float EXPO      = 1.5f;             /* courbe d'expansion */
  * (et non une simple dérive de stick ou une gâchette mal calibrée). Plus élevé
  * que la zone morte pour ne pas voler la priorité au clavier. */
 constexpr float ACTIVE_THRESHOLD = 0.5f;
+
+/* Vitesse du levier de collectif, en unités par seconde à pleine gâchette. */
+constexpr float COLLECTIVE_RATE = 0.6f;
 
 /* Applique zone morte puis expansion à un axe de stick brut [-1, +1].
  * La zone morte ignore les petits écarts ; l'expansion rend le centre
@@ -56,8 +60,9 @@ bool Gamepad::isPresent() noexcept {
     return glfwJoystickIsGamepad(PAD) == GLFW_TRUE;
 }
 
-physics::Controls Gamepad::poll() noexcept {
+physics::Controls Gamepad::poll(float dt) noexcept {
     physics::Controls controls;
+    controls.collective = m_collective;  /* on garde la position du levier */
 
     GLFWgamepadstate state;
     if (!readState(state)) {
@@ -70,11 +75,33 @@ physics::Controls Gamepad::poll() noexcept {
     controls.cyclicLongitudinal = shapeAxis(-axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
     controls.pedals             = shapeAxis(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]);
 
-    /* Collectif proportionnel à la gâchette droite : relâchée = 0 (posé au sol),
-     * à fond = collectif plein. La gâchette gauche n'est pas utilisée. */
-    controls.collective = triggerTo01(axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
+    /* Collectif en levier : la gâchette droite (RT) fait monter le levier, la
+     * gauche (LT) le fait descendre, à une vitesse proportionnelle à l'appui.
+     * Au repos, le levier garde sa position (comme le vrai levier de collectif). */
+    const float monte    = triggerTo01(axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
+    const float descend  = triggerTo01(axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]);
+    const float commande = monte - descend;  /* dans [-1, +1] */
+    if (std::fabs(commande) > 0.05f) {        /* on ignore le repos et le bruit */
+        m_collective += commande * COLLECTIVE_RATE * dt;
+        m_collective = std::clamp(m_collective, 0.0f, 1.0f);
+    }
+    controls.collective = m_collective;
 
     return controls;
+}
+
+bool Gamepad::viewTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevB = false;
+        return false;
+    }
+    const bool appuye = state.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS;
+    /* Front montant : vrai uniquement au passage de relâché à appuyé, pour ne
+     * changer de vue qu'une fois par appui. */
+    const bool nouvelAppui = appuye && !m_prevB;
+    m_prevB                = appuye;
+    return nouvelAppui;
 }
 
 bool Gamepad::isActive() noexcept {

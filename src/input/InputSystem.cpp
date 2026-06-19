@@ -30,7 +30,7 @@ physics::Controls InputSystem::poll(float dt) noexcept {
     }
 
     if (m_active == Source::Gamepad && Gamepad::isPresent()) {
-        return Gamepad::poll();
+        return m_gamepad.poll(dt);
     }
     return keyboardControls;
 }

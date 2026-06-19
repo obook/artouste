@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "input/Gamepad.hpp"
 #include "input/Keyboard.hpp"
 #include "physics/Controls.hpp"
 
@@ -24,12 +25,20 @@ public:
     explicit InputSystem(GLFWwindow* window) noexcept : m_keyboard(window) {}
 
     physics::Controls poll(float dt) noexcept;
-    void              reset() noexcept { m_keyboard.reset(); }
+
+    void reset() noexcept {
+        m_keyboard.reset();
+        m_gamepad.reset();
+    }
+
+    /* Le bouton B de la manette vient-il d'être pressé ? (change de vue) */
+    [[nodiscard]] bool viewTogglePressed() noexcept { return m_gamepad.viewTogglePressed(); }
 
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:
     Keyboard m_keyboard;
+    Gamepad  m_gamepad;
     Source   m_active = Source::Keyboard;
 };
 

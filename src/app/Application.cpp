@@ -221,6 +221,12 @@ void Application::mainLoop() {
          * indépendante de la cadence de rendu.
          */
         const physics::Controls controls = m_input->poll(frameDt);
+
+        /* Bouton B de la manette : change de vue, comme la touche C du clavier. */
+        if (m_input->viewTogglePressed()) {
+            m_viewMode = (m_viewMode + 1) % 3;
+        }
+
         if (m_paused) {
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {

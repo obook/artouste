@@ -40,7 +40,7 @@ constexpr char WINDOW_TITLE[] = "Artouste";
 
 // Position de l'oeil du pilote (siège droit) dans le repère corps : avant (X),
 // haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière.
-const vec3 COCKPIT_EYE{2.55f, 1.95f, 0.42f};
+const vec3 COCKPIT_EYE{2.95f, 1.88f, 0.42f};
 
 void glfwErrorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);
@@ -223,7 +223,7 @@ void Application::mainLoop() {
         const vec3 lookTarget = body.position + vec3{0.0f, 1.2f, 0.0f};
         if (m_viewMode == 1) {  // cockpit
             const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
-            const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.16f, 0.0f});
+            const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
             const vec3 up  = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
             m_camera.setFovYDeg(70.0f);
             m_camera.setLookAt(eye, eye + fwd, up);
@@ -344,7 +344,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
 
     if (std::getenv("ARTOUSTE_SHOT_COCKPIT") != nullptr) {
         m_camera.setFovYDeg(70.0f);
-        m_camera.setLookAt(COCKPIT_EYE, COCKPIT_EYE + glm::normalize(vec3{1.0f, -0.16f, 0.0f}),
+        m_camera.setLookAt(COCKPIT_EYE, COCKPIT_EYE + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
                            vec3{0.0f, 1.0f, 0.0f});
     } else {
         m_camera.orbit(vec3{0.0f, targetY, 0.0f}, radius, height, angle);

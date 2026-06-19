@@ -52,16 +52,17 @@ cd build && cpack
 Produit une archive `artouste-<version>-<système>.tar.gz` contenant le binaire
 et les shaders.
 
-## Modèle 3D et sons (optionnels, non inclus)
+## Modèle 3D et sons
 
 Le modèle 3D de l'Alouette II et les sons proviennent du paquet **FlightGear**
-de Emmanuel Baranger (helijah), sous licence GPL, non redistribué avec ce
-dépôt. Source : <http://helijah.free.fr/flightgear/les-appareils/alouette2/appareil.htm>.
-Pour les utiliser, placer le dossier `Alouette-II` dans `assets/models/`. En
-leur absence, l'application affiche un hélicoptère procédural et reste
+de Emmanuel Baranger (helijah), sous licence GPL. Le sous-ensemble utilisé par
+le simulateur (modèles `.ac`, textures, deux boucles sonores) est inclus dans
+ce dépôt avec le fichier `COPYING` d'origine. Source :
+<http://helijah.free.fr/flightgear/les-appareils/alouette2/appareil.htm>. S'ils
+sont absents, l'application affiche un hélicoptère procédural et reste
 silencieuse.
 
 ## Licence
 
-Code du projet : voir l'en-tête des fichiers. Les assets tiers conservent
-leur licence d'origine (GPL pour le modèle FlightGear).
+Ce projet est distribué sous licence **GPL v2** (voir `LICENSE`), comme le
+modèle 3D et les sons d'Emmanuel Baranger qu'il inclut.

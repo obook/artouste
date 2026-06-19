@@ -46,9 +46,9 @@ compile_commands.json
 .DS_Store
 Thumbs.db
 
-# Modèle 3D tiers FlightGear (GPL, ~36 Mo) : fourni localement, non
-# redistribué dans ce dépôt. Le dossier assets/models/ reste disponible
-# pour nos propres assets.
+# Paquet modèle FlightGear complet en local (GPL). Seul le sous-ensemble
+# utilisé par le simulateur est versionné (ajouté explicitement) ; le reste du
+# paquet et l'archive source restent ignorés.
 assets/models/Alouette-II/
 assets/models/*.tar.gz
 

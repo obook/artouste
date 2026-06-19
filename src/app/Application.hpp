@@ -1,5 +1,13 @@
-// Cycle de vie de l'application : fenêtre GLFW, contexte OpenGL, scène M1 et
-// boucle principale. Centralise ce qui était dans main.cpp au jalon M0.
+/*
+ * Application.hpp
+ * Classe qui pilote tout le cycle de vie du simulateur : fenêtre GLFW,
+ * contexte OpenGL, mise en place de la scène et boucle principale.
+ * C'est le coeur du programme, autour duquel s'articulent le rendu, la
+ * physique, les entrées et le son.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -20,11 +28,11 @@ class HelicopterModel;
 class LoadedHelicopter;
 class Skybox;
 class Mesh;
-}  // namespace artouste::render
+}  /* namespace artouste::render */
 
 namespace artouste::input {
 class InputSystem;
-}  // namespace artouste::input
+}  /* namespace artouste::input */
 
 namespace artouste::app {
 
@@ -36,7 +44,7 @@ public:
     Application(const Application&)            = delete;
     Application& operator=(const Application&) = delete;
 
-    // Initialise tout, lance la boucle, nettoie. Renvoie un code de sortie.
+    /* Initialise tout, déroule la boucle, nettoie. Renvoie un code de sortie. */
     int run();
 
 private:
@@ -56,22 +64,22 @@ private:
     int         m_height = 720;
 
     render::Camera                            m_camera;
-    std::unique_ptr<render::Shader>           m_shader;        // géométrie à couleur (terrain)
-    std::unique_ptr<render::Shader>           m_modelShader;   // géométrie texturée (modèle)
-    std::unique_ptr<render::Shader>           m_skyShader;     // ciel en dégradé
-    std::unique_ptr<render::Shader>           m_flatShader;    // couleur unie (ombre)
+    std::unique_ptr<render::Shader>           m_shader;        /* géométrie à couleur (terrain) */
+    std::unique_ptr<render::Shader>           m_modelShader;   /* géométrie texturée (modèle) */
+    std::unique_ptr<render::Shader>           m_skyShader;     /* ciel en dégradé */
+    std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (ombre) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
     std::unique_ptr<render::Terrain>          m_terrain;
-    std::unique_ptr<render::HelicopterModel>  m_helicopter;    // repli procédural
-    std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    // modèle FlightGear si présent
+    std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
+    std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;
     physics::FlightModel                      m_flight;
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
-    int                                       m_viewMode = 0;  // 0 chase, 1 cockpit, 2 orbite
+    int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
     bool                                      m_showHud  = true;
     bool                                      m_paused   = false;
 };
 
-}  // namespace artouste::app
+}  /* namespace artouste::app */

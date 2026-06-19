@@ -1,7 +1,13 @@
 #version 410 core
 
-// Dégradé de ciel selon l'élévation du rayon de vue : horizon clair, zénith
-// bleu, légère brume sous l'horizon.
+/*
+ * sky.frag
+ * Calcule la couleur du ciel en fonction de la hauteur du rayon de vue :
+ * horizon clair, zénith bleu, et une légère brume colorée sous l'horizon.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 in vec2 v_ndc;
 

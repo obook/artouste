@@ -1,5 +1,13 @@
-// Programme OpenGL minimal : compile un couple vertex/fragment, expose des
-// setters d'uniformes typés. RAII sur le GLuint pour éviter les fuites.
+/*
+ * Shader.hpp
+ * Programme graphique : assemble un shader de sommets et un shader de
+ * fragments en un programme utilisable par la carte graphique, et offre
+ * des fonctions simples pour lui envoyer des valeurs (uniformes). La
+ * ressource OpenGL est libérée automatiquement (RAII).
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -15,8 +23,10 @@ class Shader {
 public:
     Shader() = default;
 
-    // Charge et compile depuis des fichiers GLSL séparés.
-    // Lance std::runtime_error en cas d'échec de compilation/édition de liens.
+    /*
+     * Charge et compile les deux shaders depuis des fichiers GLSL.
+     * Lève std::runtime_error si la compilation ou l'assemblage échoue.
+     */
     Shader(const std::filesystem::path& vertex_path,
            const std::filesystem::path& fragment_path);
 
@@ -29,8 +39,10 @@ public:
 
     void use() const;
 
-    // Uniformes. Pas d'assertions ici : un nom inconnu est juste ignoré
-    // par OpenGL (location == -1).
+    /*
+     * Envoi de valeurs (uniformes) au programme. Un nom inconnu est
+     * simplement ignoré par OpenGL, sans erreur.
+     */
     void setMat4(const std::string& name, const mat4& value);
     void setVec3(const std::string& name, const vec3& value);
     void setVec4(const std::string& name, const vec4& value);
@@ -46,4 +58,4 @@ private:
     std::unordered_map<std::string, int>    m_locations;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

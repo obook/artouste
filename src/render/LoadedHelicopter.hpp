@@ -1,10 +1,17 @@
-// Helicoptère assemblé à partir du modèle FlightGear (.ac) : fuselage texturé +
-// rotors (moyeu + pales chargés séparément), animés à régime fixe.
-//
-// Le modèle FlightGear est en repère X = arrière, Y = latéral, Z = haut. Assimp
-// le convertit en Y-up (X longitudinal, Y haut, Z latéral) ; on applique encore
-// une rotation de 180° (le nez FlightGear est en -X, notre avant est +X) et un
-// décalage vertical pour poser les patins au sol. Échelle déjà en mètres.
+/*
+ * LoadedHelicopter.hpp
+ * Hélicoptère assemblé à partir des fichiers du modèle FlightGear (.ac) :
+ * fuselage texturé, intérieur, planche de bord et rotors (moyeu et pales
+ * chargés séparément, puis animés à régime fixe).
+ *
+ * Les fichiers FlightGear utilisent un repère différent du nôtre. Au chargement
+ * et au dessin, on applique donc des corrections (rotation de 180 degrés et
+ * décalage vertical pour poser les patins au sol) afin d'orienter et de placer
+ * l'appareil correctement dans la scène.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -22,15 +29,16 @@ class LoadedHelicopter {
 public:
     explicit LoadedHelicopter(const std::filesystem::path& modelsDir);
 
-    // Vrai si au moins le fuselage a été chargé (sinon : retomber sur le
-    // placeholder procédural).
+    /* Vrai si le fuselage a bien été chargé. Sinon, l'appelant se rabat sur
+       l'hélicoptère de remplacement construit par le code. */
     [[nodiscard]] bool loaded() const noexcept { return !m_fuselage.empty(); }
 
-    // base : transformation monde de l'appareil ; timeSeconds anime les rotors.
+    /* Dessine l'appareil complet. 'base' place et oriente l'hélicoptère dans le
+       monde ; 'timeSeconds' sert à faire tourner les rotors. */
     void draw(Shader& shader, const mat4& base, float timeSeconds) const;
 
 private:
-    // Un cadran de la planche de bord et sa position (repère Assimp).
+    /* Un cadran de la planche de bord avec sa position relative au panneau. */
     struct Gauge {
         Model model;
         vec3  offset;
@@ -46,4 +54,4 @@ private:
     Model              m_tailBlade;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

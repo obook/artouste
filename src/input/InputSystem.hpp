@@ -1,6 +1,12 @@
-// Fusionne clavier et manette en une seule source de commandes. Les deux sont
-// traités en parallèle ; on retient la dernière source active
-// pour éviter de mélanger deux pilotages et exposer l'aide visuelle adéquate.
+/*
+ * InputSystem.hpp
+ * Fusionne clavier et manette en une seule source de commandes.
+ * On retient la dernière source active pour ne pas mélanger deux pilotages
+ * et afficher l'aide visuelle adaptée.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -27,4 +33,4 @@ private:
     Source   m_active = Source::Keyboard;
 };
 
-}  // namespace artouste::input
+}  /* namespace artouste::input */

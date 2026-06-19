@@ -1,3 +1,13 @@
+/*
+ * Skybox.cpp
+ * Affiche le ciel : on dessine un grand triangle au fond de l'image et
+ * on désactive l'écriture de profondeur pour qu'il reste derrière tous
+ * les autres objets.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/Skybox.hpp"
 
 #include <glad/glad.h>
@@ -21,6 +31,10 @@ void Skybox::draw(Shader& shader, const mat4& invViewProj, const vec3& camPos) c
     shader.setMat4("u_invViewProj", invViewProj);
     shader.setVec3("u_camPos", camPos);
 
+    /*
+     * On désactive le test et l'écriture de profondeur le temps de
+     * tracer le ciel, puis on les rétablit pour le reste de la scène.
+     */
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
     glBindVertexArray(m_vao);
@@ -30,4 +44,4 @@ void Skybox::draw(Shader& shader, const mat4& invViewProj, const vec3& camPos) c
     glDepthMask(GL_TRUE);
 }
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

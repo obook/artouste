@@ -1,7 +1,13 @@
-// Hélicoptère stylisé construit en primitives (placeholder M1, en attendant le
-// modèle glTF Sketchfab). Proportions inspirées de l'Alouette II réelle :
-// rotor principal tripale ~10,2 m de diamètre, rotor de queue ~1,9 m.
-// Les rotors tournent à régime fixe ; la physique de vol viendra à M3.
+/*
+ * HelicopterModel.hpp
+ * Hélicoptère simplifié, construit à partir de formes géométriques de base
+ * (boîtes et pales). Il sert d'appareil de remplacement tant que le vrai modèle
+ * 3D n'est pas chargé. Ses proportions s'inspirent de l'Alouette II réelle.
+ * Les rotors tournent à vitesse fixe (animation purement visuelle).
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -16,8 +22,8 @@ class HelicopterModel {
 public:
     HelicopterModel();
 
-    // base : transformation monde de l'appareil (identité pour M1, statique).
-    // timeSeconds : temps écoulé, sert à l'animation des rotors.
+    /* Dessine l'appareil. 'base' le place et l'oriente dans le monde ;
+       'timeSeconds' fait tourner les rotors au fil du temps. */
     void draw(Shader& shader, const mat4& base, float timeSeconds) const;
 
 private:
@@ -31,4 +37,4 @@ private:
     Mesh m_tailRotor;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

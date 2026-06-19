@@ -1,3 +1,12 @@
+/*
+ * Primitives.cpp
+ * Implémente la fabrication des formes géométriques de base utilisées
+ * par le simulateur : boîte, damier au sol, jeu de pales et disque.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/Primitives.hpp"
 
 #include <cmath>
@@ -6,9 +15,12 @@ namespace artouste::render::primitives {
 
 namespace {
 
-// Ajoute un quad (deux triangles) à partir de quatre sommets coplanaires et
-// d'une normale partagée. Le sens d'enroulement importe peu : le rendu M1
-// désactive le face culling, seule la normale sert à l'éclairage.
+/*
+ * Ajoute un quadrilatère (deux triangles) à partir de quatre sommets
+ * d'un même plan et d'une normale commune. L'ordre des sommets importe
+ * peu ici : on dessine les deux faces, seule la normale sert à
+ * l'éclairage.
+ */
 void addQuad(MeshData& out, const vec3& p0, const vec3& p1, const vec3& p2, const vec3& p3,
              const vec3& normal, const vec3& color) {
     const unsigned int base = static_cast<unsigned int>(out.vertices.size());
@@ -20,8 +32,11 @@ void addQuad(MeshData& out, const vec3& p0, const vec3& p1, const vec3& p2, cons
                        {base, base + 1, base + 2, base, base + 2, base + 3});
 }
 
-// Recopie une géométrie dans une autre en lui appliquant une transformation.
-// On suppose xform sans mise à l'échelle non uniforme (rotation + translation).
+/*
+ * Recopie une forme dans une autre en lui appliquant un déplacement et
+ * une rotation (la matrice xform). Sert par exemple à placer chaque pale
+ * autour du moyeu.
+ */
 void appendTransformed(MeshData& out, const MeshData& src, const mat4& xform) {
     const mat3         normalMat = mat3(xform);
     const unsigned int base      = static_cast<unsigned int>(out.vertices.size());
@@ -37,24 +52,25 @@ void appendTransformed(MeshData& out, const MeshData& src, const mat4& xform) {
     }
 }
 
-}  // namespace
+}  /* namespace */
 
 MeshData box(const vec3& h, const vec3& color) {
     MeshData out;
     out.vertices.reserve(24);
     out.indices.reserve(36);
 
-    // +X / -X
+    /* Les six faces de la boîte, une paire par axe. */
+    /* +X / -X */
     addQuad(out, {h.x, -h.y, -h.z}, {h.x, -h.y, h.z}, {h.x, h.y, h.z}, {h.x, h.y, -h.z},
             {1.0f, 0.0f, 0.0f}, color);
     addQuad(out, {-h.x, -h.y, h.z}, {-h.x, -h.y, -h.z}, {-h.x, h.y, -h.z}, {-h.x, h.y, h.z},
             {-1.0f, 0.0f, 0.0f}, color);
-    // +Y / -Y
+    /* +Y / -Y */
     addQuad(out, {-h.x, h.y, -h.z}, {h.x, h.y, -h.z}, {h.x, h.y, h.z}, {-h.x, h.y, h.z},
             {0.0f, 1.0f, 0.0f}, color);
     addQuad(out, {-h.x, -h.y, h.z}, {h.x, -h.y, h.z}, {h.x, -h.y, -h.z}, {-h.x, -h.y, -h.z},
             {0.0f, -1.0f, 0.0f}, color);
-    // +Z / -Z
+    /* +Z / -Z */
     addQuad(out, {-h.x, -h.y, h.z}, {h.x, -h.y, h.z}, {h.x, h.y, h.z}, {-h.x, h.y, h.z},
             {0.0f, 0.0f, 1.0f}, color);
     addQuad(out, {h.x, -h.y, -h.z}, {-h.x, -h.y, -h.z}, {-h.x, h.y, -h.z}, {h.x, h.y, -h.z},
@@ -86,18 +102,20 @@ MeshData bladeSet(int count, float length, float chord, float thickness, const v
     MeshData    out;
     const float hubRadius = 0.20f;
 
-    // Une pale de référence, décalée vers l'extérieur le long de +X.
+    /* Une pale modèle, décalée vers l'extérieur le long de l'axe +X. */
     MeshData blade = box({length * 0.5f, thickness * 0.5f, chord * 0.5f}, color);
     for (Vertex& v : blade.vertices) {
         v.position.x += length * 0.5f + hubRadius;
     }
 
+    /* On répartit les pales en les faisant tourner régulièrement autour de Y. */
     for (int k = 0; k < count; ++k) {
         const float angle = static_cast<float>(k) * (TWO_PI / static_cast<float>(count));
         const mat4  rot   = glm::rotate(mat4(1.0f), angle, vec3{0.0f, 1.0f, 0.0f});
         appendTransformed(out, blade, rot);
     }
 
+    /* Le moyeu central qui relie les pales. */
     appendTransformed(out, box({hubRadius, thickness * 1.5f, hubRadius}, color), mat4(1.0f));
     return out;
 }
@@ -105,7 +123,8 @@ MeshData bladeSet(int count, float length, float chord, float thickness, const v
 MeshData disc(float radius, int segments, const vec3& color) {
     MeshData   out;
     const vec3 up{0.0f, 1.0f, 0.0f};
-    out.vertices.push_back({vec3{0.0f, 0.0f, 0.0f}, up, color});  // centre
+    out.vertices.push_back({vec3{0.0f, 0.0f, 0.0f}, up, color});  /* centre */
+    /* On place des points sur le cercle, reliés au centre pour former des parts de tarte. */
     for (int i = 0; i <= segments; ++i) {
         const float a = static_cast<float>(i) * (TWO_PI / static_cast<float>(segments));
         out.vertices.push_back({vec3{radius * std::cos(a), 0.0f, radius * std::sin(a)}, up, color});
@@ -118,4 +137,4 @@ MeshData disc(float radius, int segments, const vec3& color) {
     return out;
 }
 
-}  // namespace artouste::render::primitives
+}  /* namespace artouste::render::primitives */

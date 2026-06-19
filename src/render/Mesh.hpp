@@ -1,5 +1,12 @@
-// Maillage indexé minimal : VAO/VBO/EBO gérés en RAII (move-only).
-// Sommet = position + normale + couleur, suffisant pour le rendu M1.
+/*
+ * Mesh.hpp
+ * Maillage 3D indexé : un ensemble de sommets (position, normale,
+ * couleur) reliés par des triangles. Les ressources graphiques sont
+ * libérées automatiquement (RAII) et l'objet ne peut être que déplacé.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -13,7 +20,7 @@ struct Vertex {
     vec3 position;
     vec3 normal;
     vec3 color;
-    vec2 uv{0.0f, 0.0f};  // coordonnées de texture (0 pour la géométrie procédurale)
+    vec2 uv{0.0f, 0.0f};  /* coordonnées de texture (0 si géométrie procédurale) */
 };
 
 class Mesh {
@@ -40,4 +47,4 @@ private:
     int          m_indexCount = 0;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

@@ -1,13 +1,20 @@
 #version 410 core
 
-// Éclairage diffus (Lambert) d'une seule source directionnelle + terme ambiant.
+/*
+ * basic.frag
+ * Éclairage diffus (modèle de Lambert) avec une seule source de lumière
+ * directionnelle, plus un terme ambiant pour ne pas avoir d'ombres totalement noires.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 in vec3 v_normal;
 in vec3 v_color;
 
 out vec4 frag_color;
 
-uniform vec3 u_lightDir;  // direction VERS la lumière, normalisée
+uniform vec3 u_lightDir;  /* direction VERS la lumière, déjà normalisée */
 
 void main() {
     vec3  n       = normalize(v_normal);

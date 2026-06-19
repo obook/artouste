@@ -1,7 +1,17 @@
+/*
+ * Application.cpp
+ * Implémentation du cycle de vie du simulateur : ouverture de la fenêtre,
+ * chargement d'OpenGL, construction de la scène, boucle principale (entrées,
+ * physique à pas fixe, rendu, audio) et capture d'écran.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "app/Application.hpp"
 
 #include <glad/glad.h>
-// glad doit précéder GLFW.
+/* glad doit précéder GLFW. */
 #include <GLFW/glfw3.h>
 
 #include "app/Clock.hpp"
@@ -38,17 +48,21 @@ constexpr int  WINDOW_WIDTH  = 1280;
 constexpr int  WINDOW_HEIGHT = 720;
 constexpr char WINDOW_TITLE[] = "Artouste";
 
-// Position de l'oeil du pilote (siège droit) dans le repère corps : avant (X),
-// haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière.
+/*
+ * Position de l'oeil du pilote (siège droit) dans le repère corps : avant (X),
+ * haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière.
+ */
 const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
 
 void glfwErrorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);
 }
 
-// Localise le dossier des ressources : variable d'environnement, puis chemin
-// connu à la compilation (développement), puis dossier "assets" à côté de
-// l'exécutable (build packagé).
+/*
+ * Localise le dossier des ressources, dans l'ordre : variable d'environnement,
+ * puis chemin connu à la compilation (développement), puis dossier "assets"
+ * placé à côté de l'exécutable (version packagée).
+ */
 std::filesystem::path resolveAssetDir() {
     namespace fs = std::filesystem;
     if (const char* env = std::getenv("ARTOUSTE_ASSETS")) {
@@ -70,13 +84,15 @@ std::filesystem::path resolveAssetDir() {
     return fs::path("assets");
 }
 
-}  // namespace
+}  /* namespace */
 
 Application::Application() = default;
 
 Application::~Application() {
-    // Les ressources GL (Shader, Mesh) doivent être détruites tant que le
-    // contexte existe encore : on les libère avant de fermer GLFW.
+    /*
+     * Les ressources GL (Shader, Mesh) doivent être détruites tant que le
+     * contexte OpenGL existe encore : on les libère donc avant de fermer GLFW.
+     */
     m_hud.shutdown();
     m_input.reset();
     m_loadedHeli.reset();
@@ -116,7 +132,7 @@ bool Application::initWindow() {
     }
 
     glfwMakeContextCurrent(m_window);
-    glfwSwapInterval(1);  // vsync
+    glfwSwapInterval(1);  /* synchronisation verticale (vsync) */
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetKeyCallback(m_window, keyCallback);
@@ -162,8 +178,10 @@ void Application::initScene() {
     m_hud.init(m_window);
     m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
 
-    // Modèle FlightGear réel s'il est présent (gardé hors dépôt) ; sinon on
-    // garde le placeholder procédural.
+    /*
+     * On utilise le vrai modèle FlightGear s'il est présent (il est gardé hors
+     * du dépôt) ; sinon on conserve l'hélicoptère dessiné par le code.
+     */
     const std::filesystem::path modelsDir = assets / "models" / "Alouette-II" / "Models";
     if (std::filesystem::exists(modelsDir / "alouette.ac")) {
         auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
@@ -183,7 +201,7 @@ void Application::initScene() {
 }
 
 void Application::mainLoop() {
-    constexpr float SIM_DT = 1.0f / 240.0f;  // pas fixe de simulation (240 Hz)
+    constexpr float SIM_DT = 1.0f / 240.0f;  /* pas fixe de simulation (240 Hz) */
 
     Clock clock;
     float accumulator = 0.0f;
@@ -192,15 +210,19 @@ void Application::mainLoop() {
         glfwPollEvents();
         clock.tick();
         const float t = static_cast<float>(clock.elapsed());
-        // Pas de temps borné : évite un saut à la première image ou après un
-        // gel (débogage, fenêtre déplacée).
+        /*
+         * On borne le pas de temps : cela évite un saut brutal à la première
+         * image ou après un gel (débogage, fenêtre déplacée).
+         */
         const float frameDt = clamp(static_cast<float>(clock.dt()), 0.0f, 0.1f);
 
-        // Entrées -> commandes, puis intégration physique à pas fixe, découplée
-        // de la cadence de rendu.
+        /*
+         * Entrées -> commandes, puis intégration de la physique à pas fixe,
+         * indépendante de la cadence de rendu.
+         */
         const physics::Controls controls = m_input->poll(frameDt);
         if (m_paused) {
-            accumulator = 0.0f;  // pas de rattrapage à la reprise
+            accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
             accumulator += frameDt;
             while (accumulator >= SIM_DT) {
@@ -211,26 +233,26 @@ void Application::mainLoop() {
 
         const physics::RigidBody& body = m_flight.body();
 
-        // Transformation monde de l'appareil : translation + orientation (quat).
+        /* Transformation monde de l'appareil : translation + orientation (quaternion). */
         const mat4 base =
             glm::translate(mat4(1.0f), body.position) * glm::mat4_cast(body.orientation);
 
-        // Cap (lacet) extrait de l'orientation, pour la caméra chase.
+        /* Cap (lacet) extrait de l'orientation, utile pour la caméra de poursuite. */
         const vec3  forward = body.orientation * vec3{1.0f, 0.0f, 0.0f};
         const float yaw     = std::atan2(-forward.z, forward.x);
 
-        // Caméra : chase, cockpit (solidaire) ou orbite libre.
+        /* Caméra : poursuite, cockpit (solidaire de l'appareil) ou orbite libre. */
         const vec3 lookTarget = body.position + vec3{0.0f, 1.2f, 0.0f};
-        if (m_viewMode == 1) {  // cockpit
+        if (m_viewMode == 1) {  /* cockpit */
             const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
             const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
             const vec3 up  = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
             m_camera.setFovYDeg(70.0f);
             m_camera.setLookAt(eye, eye + fwd, up);
-        } else if (m_viewMode == 2) {  // orbite
+        } else if (m_viewMode == 2) {  /* orbite */
             m_camera.setFovYDeg(60.0f);
             m_camera.orbit(lookTarget, 15.0f, 6.0f, t * 0.25f);
-        } else {  // chase
+        } else {  /* poursuite */
             m_camera.setFovYDeg(60.0f);
             m_camera.chase(lookTarget, yaw, frameDt);
         }
@@ -251,7 +273,7 @@ void Application::mainLoop() {
         hud.varioFpm      = body.velocity.y * 196.85f;
         hud.collectivePct = controls.collective * 100.0f;
         hud.pedals        = controls.pedals;
-        hud.rotorPct      = 100.0f;  // régime supposé constant (régulateur)
+        hud.rotorPct      = 100.0f;  /* régime supposé constant (régulateur) */
         m_hud.render(hud, m_showHud, m_paused);
 
         glfwSwapBuffers(m_window);
@@ -266,10 +288,10 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
     glClearColor(0.53f, 0.70f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Ciel en dégradé (remplit la couleur de fond).
+    /* Ciel en dégradé (il remplit le fond de l'image). */
     m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position());
 
-    // Terrain : shader à couleur de sommet.
+    /* Terrain : shader qui colore selon les sommets. */
     m_shader->use();
     m_shader->setMat4("u_view", view);
     m_shader->setMat4("u_proj", proj);
@@ -277,8 +299,10 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
     m_shader->setMat4("u_model", mat4(1.0f));
     m_terrain->draw();
 
-    // Ombre portée : disque sombre translucide au sol sous l'appareil, qui
-    // s'estompe et s'élargit avec l'altitude.
+    /*
+     * Ombre portée : un disque sombre translucide au sol sous l'appareil.
+     * Il s'estompe et s'élargit à mesure que l'altitude augmente.
+     */
     const vec3  heliPos     = vec3(base[3]);
     const float altitude    = heliPos.y > 0.0f ? heliPos.y : 0.0f;
     const float shadowAlpha = 0.35f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
@@ -300,7 +324,7 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
         glDisable(GL_BLEND);
     }
 
-    // Hélicoptère : modèle texturé réel s'il est chargé, sinon procédural.
+    /* Hélicoptère : modèle texturé réel s'il est chargé, sinon version dessinée. */
     if (m_loadedHeli) {
         m_modelShader->use();
         m_modelShader->setMat4("u_view", view);
@@ -324,8 +348,11 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
     m_camera.setAspect(static_cast<float>(fbw) / static_cast<float>(fbh));
 
-    // Cadrage par défaut (vue 3/4 arrière), surchargeable par variables
-    // d'environnement pour inspecter sous plusieurs angles sans recompiler.
+    /*
+     * Cadrage par défaut (vue trois quarts arrière). On peut le modifier via
+     * des variables d'environnement pour observer plusieurs angles sans
+     * recompiler.
+     */
     float angle  = 2.4f;
     float radius = 14.0f;
     float height = 6.0f;
@@ -360,8 +387,11 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.collectivePct = 55.0f;
     hud.rotorPct      = 100.0f;
 
-    // Plusieurs images : ImGui rend ses fenêtres auto-dimensionnées invisibles
-    // à leur première apparition (mesure), elles se stabilisent ensuite.
+    /*
+     * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres
+     * auto-dimensionnées invisibles à leur première apparition (le temps de les
+     * mesurer), puis elles se stabilisent.
+     */
     for (int i = 0; i < 3; ++i) {
         renderScene(base, 1.3f);
         m_hud.render(hud, m_showHud, false);
@@ -410,23 +440,23 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
-        case GLFW_KEY_C:  // cycle de vue (chase -> cockpit -> orbite)
+        case GLFW_KEY_C:  /* change de vue (poursuite -> cockpit -> orbite) */
             if (app != nullptr) {
                 app->m_viewMode = (app->m_viewMode + 1) % 3;
             }
             break;
-        case GLFW_KEY_R:  // reset position de l'appareil
+        case GLFW_KEY_R:  /* replace l'appareil à sa position de départ */
             if (app != nullptr) {
                 app->m_flight.reset();
                 app->m_input->reset();
             }
             break;
-        case GLFW_KEY_H:  // HUD on/off
+        case GLFW_KEY_H:  /* affiche ou masque le HUD */
             if (app != nullptr) {
                 app->m_showHud = !app->m_showHud;
             }
             break;
-        case GLFW_KEY_P:  // pause
+        case GLFW_KEY_P:  /* met en pause ou reprend */
             if (app != nullptr) {
                 app->m_paused = !app->m_paused;
             }
@@ -446,8 +476,11 @@ int Application::run() {
 
     try {
         initScene();
-        // Mode capture : si ARTOUSTE_SCREENSHOT pointe un chemin, on rend une
-        // image, on l'enregistre et on quitte (utile pour valider le rendu).
+        /*
+         * Mode capture : si ARTOUSTE_SCREENSHOT indique un chemin, on rend une
+         * image, on l'enregistre, puis on quitte (pratique pour vérifier le
+         * rendu sans lancer la boucle interactive).
+         */
         if (const char* shot = std::getenv("ARTOUSTE_SCREENSHOT")) {
             captureScreenshot(shot);
             return EXIT_SUCCESS;
@@ -460,4 +493,4 @@ int Application::run() {
     return EXIT_SUCCESS;
 }
 
-}  // namespace artouste::app
+}  /* namespace artouste::app */

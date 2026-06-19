@@ -1,5 +1,11 @@
-// Placeholder M0 : confirme que Catch2 est correctement câblé.
-// Sera supprimé à l'arrivée des vrais tests (flight_model_tests.cpp, M3).
+/*
+ * placeholder_tests.cpp
+ * Test temporaire qui vérifie que Catch2 est bien branché et compile.
+ * Il sera retiré une fois les vrais tests en place (flight_model_tests.cpp).
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include <catch2/catch_test_macros.hpp>
 

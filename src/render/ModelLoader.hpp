@@ -1,8 +1,13 @@
-// Chargement d'un fichier 3D (.ac FlightGear) en Model via Assimp.
-// Parcourt la hiérarchie de nœuds en cumulant les transformations (les objets
-// AC3D portent des décalages), résout les textures par rapport au dossier du
-// fichier, et peut ignorer certains nœuds par sous-chaîne de nom (les plans
-// semi-transparents blur/disc des rotors, les doublons HDR des vitrages).
+/*
+ * ModelLoader.hpp
+ * Charge un fichier 3D (format .ac de FlightGear) et le transforme en Model,
+ * à l'aide de la bibliothèque Assimp. Le chargeur parcourt l'arbre des nœuds,
+ * place chaque morceau au bon endroit, retrouve les textures dans le dossier du
+ * fichier, et sait écarter certains nœuds repérés par leur nom.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -16,12 +21,15 @@ namespace artouste::render {
 
 class ModelLoader {
 public:
-    // Renvoie un Model vide en cas d'échec (fichier absent, illisible).
-    // transparentNameSubstrings : parties marquées translucides (verrière), à
-    // dessiner en passe transparente.
+    /* Charge le fichier et renvoie le modèle ; en cas d'échec (fichier absent
+       ou illisible), renvoie un Model vide.
+       - skipNameSubstrings : noms de nœuds à ignorer complètement (par exemple
+         les plans flous du rotor en mouvement).
+       - transparentNameSubstrings : noms de nœuds à traiter comme translucides
+         (les vitrages), pour les dessiner dans la passe transparente. */
     static Model load(const std::filesystem::path& path,
                       const std::vector<std::string>& skipNameSubstrings        = {},
                       const std::vector<std::string>& transparentNameSubstrings = {});
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

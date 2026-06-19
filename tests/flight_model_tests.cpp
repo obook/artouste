@@ -1,6 +1,12 @@
-// Tests du modèle de vol M3. Comme physics/, ils s'exécutent sans contexte
-// graphique. On vérifie les comportements clés : sustentation, décollage,
-// stabilité en assiette, anti-couple, et absence de NaN sous entrées aléatoires.
+/*
+ * flight_model_tests.cpp
+ * Tests du modèle de vol réaliste. Comme la physique arcade, ils tournent sans
+ * contexte graphique. On vérifie les comportements clés : sustentation, décollage,
+ * stabilité d'assiette, anti-couple, et absence de NaN sous entrées aléatoires.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include "physics/FlightModel.hpp"
 #include "physics/constants.hpp"
@@ -23,33 +29,33 @@ void advance(FlightModel& model, const Controls& controls, float seconds) {
     }
 }
 
-// Inclinaison de l'axe rotor par rapport à la verticale (radians).
+/* Inclinaison de l'axe du rotor par rapport à la verticale, en radians. */
 float tiltAngle(const FlightModel& model) {
     const artouste::vec3 up = model.body().orientation * artouste::vec3{0.0f, 1.0f, 0.0f};
     return std::acos(artouste::clamp(up.y, -1.0f, 1.0f));
 }
 
-}  // namespace
+}  /* namespace */
 
 TEST_CASE("Hors effet de sol, le collectif de sustentation tient l'altitude", "[flight]") {
     FlightModel model;
-    model.reset(50.0f);  // assez haut pour ignorer l'effet de sol
+    model.reset(50.0f);  /* assez haut pour ignorer l'effet de sol */
     Controls hover;
     hover.collective = artouste::physics::COLL_HOVER;
     advance(model, hover, 5.0f);
 
-    // L'appareil ne doit ni s'enfoncer ni grimper notablement.
+    /* L'appareil ne doit ni s'enfoncer ni grimper de façon notable. */
     REQUIRE(std::fabs(model.body().position.y - 50.0f) < 1.0f);
     REQUIRE(std::fabs(model.body().velocity.y) < 1.0f);
 }
 
 TEST_CASE("L'effet de sol soulève au ras du sol", "[flight][m5]") {
-    FlightModel model;  // au sol (y = 0)
+    FlightModel model;  /* au sol (y = 0) */
     Controls    hover;
     hover.collective = artouste::physics::COLL_HOVER;
     advance(model, hover, 4.0f);
 
-    // Au même collectif de sustentation, le coussin d'air fait décoller.
+    /* Au même collectif de sustentation, le coussin d'air fait décoller. */
     REQUIRE(model.body().position.y > 0.5f);
 }
 
@@ -61,7 +67,7 @@ TEST_CASE("L'effet de translation augmente la poussée", "[flight][m5]") {
     advance(model, hover, 2.0f);
     const float hoverThrust = model.lastThrust();
 
-    // On prend de la vitesse vers l'avant.
+    /* On prend de la vitesse vers l'avant. */
     Controls forward = hover;
     forward.cyclicLongitudinal = 1.0f;
     advance(model, forward, 6.0f);
@@ -93,10 +99,10 @@ TEST_CASE("Sans poussée, l'appareil reste au sol (garde-fou)", "[flight]") {
 
 TEST_CASE("Au sol collectif à zéro, l'appareil reste immobile", "[flight]") {
     FlightModel    model;
-    const Controls rest;  // collectif = 0 par défaut au lancement
+    const Controls rest;  /* collectif = 0 par défaut au lancement */
     REQUIRE(rest.collective == 0.0f);
 
-    // Même avec une commande de palonnier, les patins adhèrent au sol.
+    /* Même avec une commande de palonnier, les patins restent collés au sol. */
     Controls input = rest;
     input.pedals   = 1.0f;
     advance(model, input, 3.0f);
@@ -111,7 +117,7 @@ TEST_CASE("Au sol collectif à zéro, l'appareil reste immobile", "[flight]") {
 TEST_CASE("La stabilité augmentée ramène l'assiette à plat", "[flight]") {
     FlightModel model;
 
-    // On incline en commandant le cyclique pendant un temps...
+    /* On incline l'appareil en poussant le cyclique pendant un moment... */
     Controls roll;
     roll.collective   = artouste::physics::COLL_HOVER;
     roll.cyclicLateral = 1.0f;
@@ -119,7 +125,7 @@ TEST_CASE("La stabilité augmentée ramène l'assiette à plat", "[flight]") {
     const float tilted = tiltAngle(model);
     REQUIRE(tilted > 0.05f);
 
-    // ...puis on relâche : l'assiette doit revenir vers l'horizontale.
+    /* ...puis on relâche : l'assiette doit revenir vers l'horizontale. */
     Controls release;
     release.collective = artouste::physics::COLL_HOVER;
     advance(model, release, 4.0f);
@@ -138,11 +144,12 @@ TEST_CASE("Les palonniers commandent le lacet", "[flight]") {
 TEST_CASE("Aucun NaN ni Inf sur entrées aléatoires bornées", "[flight][fuzz]") {
     FlightModel model;
 
-    // Générateur déterministe simple (pas de dépendance à <random> ni au temps).
+    /* Générateur pseudo-aléatoire déterministe et simple : pas de dépendance
+       à <random> ni à l'horloge, donc le test donne toujours le même résultat. */
     unsigned int seed = 12345u;
     auto         next = [&seed]() {
         seed = seed * 1664525u + 1013904223u;
-        return static_cast<float>(seed >> 8) / static_cast<float>(1u << 24);  // [0,1)
+        return static_cast<float>(seed >> 8) / static_cast<float>(1u << 24);  /* dans [0, 1) */
     };
 
     for (int i = 0; i < 10000; ++i) {

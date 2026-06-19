@@ -1,12 +1,18 @@
-// Outil de diagnostic de modèle 3D (hors simulateur).
-//
-// Charge un fichier via Assimp, parcourt la hiérarchie de noeuds en cumulant
-// les transformations, et affiche : meshes, nombre de sommets/faces, présence
-// d'UV, matériaux/textures, et la bounding box assemblée. Sert à connaître
-// l'échelle et l'orientation réelles du modèle FlightGear avant de l'intégrer
-// au rendu (travail "à l'aveugle" : on lit des chiffres, pas des pixels).
-//
-// Usage : ./build/bin/model_probe [chemin.ac]
+/*
+ * model_probe.cpp
+ * Petit outil de diagnostic de modèle 3D, indépendant du simulateur. Il charge
+ * un fichier avec la bibliothèque Assimp, parcourt la hiérarchie de noeuds en
+ * cumulant les transformations, puis affiche : les meshes, leur nombre de
+ * sommets et de faces, la présence de coordonnées de texture (UV), les
+ * matériaux et textures, et la boîte englobante de l'ensemble. Il sert à
+ * connaître l'échelle et l'orientation réelles du modèle FlightGear avant de
+ * l'intégrer au rendu : on lit des chiffres, pas encore des pixels.
+ *
+ * Usage : ./build/bin/model_probe [chemin.ac]
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -24,10 +30,13 @@ constexpr const char* DEFAULT_PATH =
     "assets/models/Alouette-II/Models/alouette.ac";
 
 glm::mat4 toGlm(const aiMatrix4x4& a) {
-    // Assimp est row-major, GLM column-major : on transpose en convertissant.
-    return glm::mat4(a.a1, a.b1, a.c1, a.d1,   //
-                     a.a2, a.b2, a.c2, a.d2,   //
-                     a.a3, a.b3, a.c3, a.d3,   //
+    /*
+     * Assimp range ses matrices par lignes, GLM par colonnes : on transpose
+     * donc au moment de la conversion.
+     */
+    return glm::mat4(a.a1, a.b1, a.c1, a.d1,   /* */
+                     a.a2, a.b2, a.c2, a.d2,   /* */
+                     a.a3, a.b3, a.c3, a.d3,   /* */
                      a.a4, a.b4, a.c4, a.d4);
 }
 
@@ -80,7 +89,7 @@ void processNode(const aiScene* scene, const aiNode* node, const glm::mat4& pare
     }
 }
 
-}  // namespace
+}  /* namespace */
 
 int main(int argc, char** argv) {
     const std::string path = (argc > 1) ? argv[1] : DEFAULT_PATH;

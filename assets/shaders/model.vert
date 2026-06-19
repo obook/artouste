@@ -1,6 +1,13 @@
 #version 410 core
 
-// Shader pour modèle texturé : transformation MVP, normale monde, UV.
+/*
+ * model.vert
+ * Shader de sommets pour un modèle texturé : transformation MVP, normale dans
+ * le repère monde, position monde et coordonnées de texture (UV) transmises au fragment.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;

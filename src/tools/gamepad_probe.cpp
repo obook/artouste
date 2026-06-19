@@ -1,12 +1,17 @@
-// Outil de diagnostic manette (hors simulateur).
-//
-// Liste les manettes vues par GLFW, indique si elles sont reconnues comme
-// "gamepad" (mapping SDL disponible, donc utilisable via glfwGetGamepadState),
-// et affiche en direct axes et boutons. Les axes sont annotés selon le mapping
-// de pilotage prévu pour vérifier les orientations.
-//
-// Usage : ./build/bin/gamepad_probe   (Ctrl+C pour quitter)
-// Branchement à chaud pris en charge : on peut le lancer avant la manette.
+/*
+ * gamepad_probe.cpp
+ * Petit outil de diagnostic de manette, indépendant du simulateur. Il liste
+ * les manettes vues par GLFW, indique si chacune est reconnue comme "gamepad"
+ * (un mapping SDL existe, donc glfwGetGamepadState est utilisable), et affiche
+ * en direct ses axes et ses boutons. Les axes sont annotés selon le pilotage
+ * prévu, ce qui permet de vérifier leurs orientations.
+ *
+ * Usage : ./build/bin/gamepad_probe   (Ctrl+C pour quitter)
+ * Le branchement à chaud est géré : on peut le lancer avant la manette.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include <GLFW/glfw3.h>
 
@@ -25,7 +30,7 @@ const char* boolText(int present) {
     return present == GLFW_TRUE ? "oui" : "non";
 }
 
-// Affiche l'état d'un gamepad reconnu : axes mappés + boutons enfoncés.
+/* Affiche l'état d'un gamepad reconnu : ses axes mappés et les boutons enfoncés. */
 void printGamepad(int jid) {
     GLFWgamepadstate state;
     if (glfwGetGamepadState(jid, &state) != GLFW_TRUE) {
@@ -75,7 +80,7 @@ void printGamepad(int jid) {
     std::printf("%s\n", any ? "" : " (aucun)");
 }
 
-}  // namespace
+}  /* namespace */
 
 int main() {
     glfwSetErrorCallback(errorCallback);
@@ -88,9 +93,9 @@ int main() {
     std::printf("Branche ta manette Xbox ; Ctrl+C pour quitter.\n");
 
     while (true) {
-        glfwPollEvents();  // nécessaire au branchement à chaud
+        glfwPollEvents();  /* nécessaire pour détecter le branchement à chaud */
 
-        std::printf("\033[H\033[J");  // efface l'écran, curseur en haut
+        std::printf("\033[H\033[J");  /* efface l'écran et replace le curseur en haut */
         std::printf("=== Sonde manette (Ctrl+C pour quitter) ===\n\n");
 
         int found = 0;
@@ -123,7 +128,7 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(80));
     }
 
-    // Inaccessible (sortie par Ctrl+C) ; présent pour la symétrie.
+    /* Code inaccessible (on sort par Ctrl+C) ; présent par souci de symétrie. */
     glfwTerminate();
     return EXIT_SUCCESS;
 }

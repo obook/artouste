@@ -1,3 +1,12 @@
+/*
+ * Model.cpp
+ * Implémentation du modèle 3D : cache de textures partagées, ajout des parties
+ * et dessin trié par passe (opaque ou transparente).
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/Model.hpp"
 
 #include "render/Shader.hpp"
@@ -5,10 +14,13 @@
 namespace artouste::render {
 
 const Texture* Model::acquireTexture(const std::filesystem::path& path) {
+    /* Si cette texture a déjà été chargée, on renvoie la même : inutile de la
+       relire depuis le disque et de la dupliquer en mémoire GPU. */
     const std::string key = path.string();
     if (auto it = m_textures.find(key); it != m_textures.end()) {
         return it->second.get();
     }
+    /* Premier usage de ce chemin : on charge la texture et on la met en cache. */
     auto           texture = std::make_unique<Texture>(path);
     const Texture* raw     = texture.get();
     m_textures.emplace(key, std::move(texture));
@@ -21,12 +33,15 @@ void Model::addPart(Mesh&& mesh, const Texture* texture, bool transparent, float
 
 void Model::draw(Shader& shader, Pass pass) const {
     for (const Part& part : m_parts) {
+        /* On saute les parties qui ne correspondent pas à la passe demandée. */
         if (pass == Pass::Opaque && part.transparent) {
             continue;
         }
         if (pass == Pass::Transparent && !part.transparent) {
             continue;
         }
+        /* On transmet au shader les réglages propres à cette partie, puis on
+           dessine son maillage. */
         shader.setFloat("u_opacity", part.opacity);
         if (part.texture != nullptr) {
             part.texture->bind(0);
@@ -35,4 +50,4 @@ void Model::draw(Shader& shader, Pass pass) const {
     }
 }
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

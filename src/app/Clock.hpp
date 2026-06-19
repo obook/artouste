@@ -1,5 +1,11 @@
-// Horloge de boucle : mesure le pas de temps de rendu (dt) et le temps total.
-// Le pas fixe de simulation physique sera ajouté à M3.
+/*
+ * Clock.hpp
+ * Petite horloge de boucle : à chaque image, elle mesure le temps écoulé
+ * depuis l'image précédente (dt) ainsi que le temps total depuis le démarrage.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -9,7 +15,7 @@ namespace artouste::app {
 
 class Clock {
 public:
-    // A appeler une fois par image, en début de boucle.
+    /* À appeler une seule fois par image, au début de la boucle. */
     void tick() noexcept {
         const double now = glfwGetTime();
         m_dt              = now - m_last;
@@ -26,4 +32,4 @@ private:
     double m_elapsed = 0.0;
 };
 
-}  // namespace artouste::app
+}  /* namespace artouste::app */

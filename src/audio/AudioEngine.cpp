@@ -1,3 +1,13 @@
+/*
+ * AudioEngine.cpp
+ * Implémentation du moteur audio avec miniaudio : chargement des boucles
+ * moteur et rotor, puis modulation de leur volume et de leur hauteur selon
+ * le collectif et la vitesse air.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "audio/AudioEngine.hpp"
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -14,7 +24,7 @@ float clamp01(float v) noexcept {
     return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
-}  // namespace
+}  /* namespace */
 
 struct AudioEngine::Impl {
     ma_engine engine{};
@@ -76,13 +86,13 @@ void AudioEngine::update(float collective, float airspeed) {
     if (!m_impl->engineInit) {
         return;
     }
-    // Moteur : volume et hauteur croissent avec le collectif (puissance turbine).
+    /* Moteur : volume et hauteur montent avec le collectif (la turbine pousse plus fort). */
     if (m_impl->engineLoaded) {
         const float c = clamp01(collective);
         ma_sound_set_volume(&m_impl->engineSound, 0.35f + 0.55f * c);
         ma_sound_set_pitch(&m_impl->engineSound, 0.90f + 0.30f * c);
     }
-    // Rotor : un peu plus présent en translation.
+    /* Rotor : un peu plus présent quand l'appareil avance (translation). */
     if (m_impl->rotorLoaded) {
         const float a = airspeed > 40.0f ? 1.0f : airspeed / 40.0f;
         ma_sound_set_volume(&m_impl->rotorSound, 0.35f + 0.20f * a);
@@ -93,4 +103,4 @@ bool AudioEngine::ready() const noexcept {
     return m_impl->engineInit && (m_impl->engineLoaded || m_impl->rotorLoaded);
 }
 
-}  // namespace artouste::audio
+}  /* namespace artouste::audio */

@@ -1,7 +1,12 @@
-// artouste - point d'entrée.
-// Jalon M1 : hélicoptère statique (placeholder procédural), terrain en damier,
-// rotors animés à régime fixe, caméra en orbite. Toute la logique est dans
-// artouste::app::Application ; main se contente de la lancer.
+/*
+ * main.cpp
+ * Point d'entrée du simulateur. Crée l'application puis lance sa boucle ;
+ * toute la logique vit dans artouste::app::Application, main se contente
+ * de la démarrer et de renvoyer son code de sortie.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include "app/Application.hpp"
 

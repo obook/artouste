@@ -1,5 +1,11 @@
-// Tests du vol arcade M2. Vérifie surtout que physics/ se compile et s'exécute
-// sans le moindre contexte graphique (règle d'isolation).
+/*
+ * arcade_flight_tests.cpp
+ * Tests du vol "arcade" (modèle simplifié). Ils s'exécutent sans aucun contexte
+ * graphique : c'est ce qui permet de vérifier la physique seule, isolée du rendu.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #include "physics/ArcadeFlight.hpp"
 
@@ -10,7 +16,7 @@ using artouste::physics::Controls;
 
 namespace {
 
-// Avance la simulation de `seconds` par petits pas fixes.
+/* Fait avancer la simulation pendant `seconds`, par petits pas de temps fixes. */
 void advance(ArcadeFlight& flight, const Controls& controls, float seconds) {
     constexpr float step = 1.0f / 120.0f;
     for (float t = 0.0f; t < seconds; t += step) {
@@ -18,11 +24,11 @@ void advance(ArcadeFlight& flight, const Controls& controls, float seconds) {
     }
 }
 
-}  // namespace
+}  /* namespace */
 
 TEST_CASE("Le collectif au neutre maintient l'altitude", "[arcade]") {
     ArcadeFlight   flight;
-    const Controls neutral;  // collective = 0,5 par défaut
+    const Controls neutral;  /* collective = 0,5 par défaut */
     advance(flight, neutral, 5.0f);
 
     const auto& st = flight.state();
@@ -38,7 +44,7 @@ TEST_CASE("Collectif plein fait monter, collectif nul fait rester au sol", "[arc
     advance(flight, up, 3.0f);
     REQUIRE(flight.state().position.y > 1.0f);
 
-    // Au sol, collectif à zéro : le garde-fou empêche de passer sous le terrain.
+    /* Au sol, collectif à zéro : le garde-fou empêche de passer sous le terrain. */
     ArcadeFlight grounded;
     Controls     down;
     down.collective = 0.0f;

@@ -1,3 +1,13 @@
+/*
+ * Mesh.cpp
+ * Construit un maillage sur la carte graphique : envoie les sommets et
+ * les indices dans des tampons OpenGL, puis sait se dessiner et libérer
+ * sa mémoire GPU.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/Mesh.hpp"
 
 #include <glad/glad.h>
@@ -15,16 +25,22 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
 
     glBindVertexArray(m_vao);
 
+    /* On copie les sommets vers la carte graphique (VBO). */
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
                  vertices.data(), GL_STATIC_DRAW);
 
+    /* Puis les indices (EBO) qui disent comment relier les sommets en triangles. */
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                  indices.data(), GL_STATIC_DRAW);
 
+    /*
+     * On indique à OpenGL comment lire chaque sommet : où trouver la
+     * position, la normale, la couleur et les coordonnées de texture.
+     */
     const GLsizei stride = static_cast<GLsizei>(sizeof(Vertex));
 
     glEnableVertexAttribArray(0);
@@ -91,4 +107,4 @@ void Mesh::draw() const {
     glBindVertexArray(0);
 }
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

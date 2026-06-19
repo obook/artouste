@@ -1,6 +1,13 @@
 #version 410 core
 
-// Shader plat : transformation MVP, couleur uniforme (ombre portée).
+/*
+ * flat.vert
+ * Shader de sommets minimal : il ne fait que la transformation MVP. La couleur
+ * est fixe (uniforme), ce qui sert par exemple à dessiner l'ombre portée.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 layout(location = 0) in vec3 a_pos;
 

@@ -1,9 +1,15 @@
-// Lecture des commandes à la manette. Utilise l'API gamepad
-// de GLFW (mapping SDL), avec zone morte et courbe d'expansion sur les sticks.
-//   Stick gauche  -> cyclique (tangage/roulis)
-//   Stick droit X -> palonniers
-//   Gâchettes LT/RT -> collectif
-// Sans état : on lit directement l'état courant de la manette.
+/*
+ * Gamepad.hpp
+ * Lecture des commandes à la manette via l'API gamepad de GLFW (mapping SDL).
+ * Zone morte et courbe d'expansion adoucissent les sticks. Répartition :
+ *   stick gauche  -> cyclique (tangage / roulis)
+ *   stick droit X -> palonniers
+ *   gâchette droite -> collectif
+ * Aucun état conservé : on lit directement la manette à chaque appel.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -13,14 +19,15 @@ namespace artouste::input {
 
 class Gamepad {
 public:
-    // Manette branchée ET reconnue (mapping SDL disponible) ?
+    /* Manette branchée ET reconnue (mapping SDL disponible) ? */
     [[nodiscard]] static bool isPresent() noexcept;
 
-    // Une commande au-delà de la zone morte est-elle active ? (détection de source)
+    /* Une commande dépasse-t-elle la zone morte ? Sert à savoir quelle
+     * source de commande est utilisée. */
     [[nodiscard]] static bool isActive() noexcept;
 
-    // Lit l'état courant. Renvoie des commandes neutres si absente.
+    /* Lit l'état courant. Renvoie des commandes neutres si la manette est absente. */
     [[nodiscard]] static physics::Controls poll() noexcept;
 };
 
-}  // namespace artouste::input
+}  /* namespace artouste::input */

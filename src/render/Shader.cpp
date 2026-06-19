@@ -1,3 +1,13 @@
+/*
+ * Shader.cpp
+ * Lit les fichiers GLSL, compile les shaders, les assemble en un
+ * programme et gère l'envoi des uniformes. Les emplacements (locations)
+ * sont mis en cache pour éviter de les redemander à chaque image.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/Shader.hpp"
 
 #include <glad/glad.h>
@@ -42,7 +52,7 @@ unsigned int compile(unsigned int type, const std::string& source,
     return shader;
 }
 
-}  // namespace
+}  /* namespace */
 
 Shader::Shader(const std::filesystem::path& vertex_path,
                const std::filesystem::path& fragment_path) {
@@ -97,6 +107,7 @@ void Shader::use() const {
 }
 
 int Shader::getLocation(const std::string& name) {
+    /* Si l'emplacement est déjà connu, on le réutilise (cache). */
     if (auto it = m_locations.find(name); it != m_locations.end()) {
         return it->second;
     }
@@ -125,4 +136,4 @@ void Shader::setInt(const std::string& name, int value) {
     glUniform1i(getLocation(name), value);
 }
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

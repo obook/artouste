@@ -1,5 +1,11 @@
-// HUD transparent : affiche les informations de vol en overlay
-// via Dear ImGui, par-dessus la scène 3D. Activable/désactivable (touche H).
+/*
+ * Hud.hpp
+ * HUD transparent : affiche les informations de vol en surimpression,
+ * par-dessus la scène 3D, grâce à Dear ImGui. La touche H l'affiche ou le masque.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -7,14 +13,14 @@ struct GLFWwindow;
 
 namespace artouste::ui {
 
-// Valeurs affichées, déjà converties dans les unités du HUD.
+/* Valeurs à afficher, déjà converties dans les unités du HUD. */
 struct HudData {
     float altitudeM      = 0.0f;
     float airspeedKt     = 0.0f;
     float headingDeg     = 0.0f;
     float varioFpm       = 0.0f;
     float collectivePct  = 0.0f;
-    float pedals         = 0.0f;  // [-1, +1]
+    float pedals         = 0.0f;  /* [-1, +1] */
     float rotorPct       = 0.0f;
 };
 
@@ -23,8 +29,8 @@ public:
     void init(GLFWwindow* window);
     void shutdown();
 
-    // Construit et dessine l'overlay pour une image : HUD si showHud, bandeau
-    // de pause si paused (une seule frame ImGui).
+    /* Construit et dessine la surimpression d'une image : le HUD si showHud,
+     * le bandeau de pause si paused (le tout en une seule frame ImGui). */
     void render(const HudData& data, bool showHud, bool paused);
 
     [[nodiscard]] bool ready() const noexcept { return m_ready; }
@@ -33,4 +39,4 @@ private:
     bool m_ready = false;
 };
 
-}  // namespace artouste::ui
+}  /* namespace artouste::ui */

@@ -1,7 +1,13 @@
-// Vol "arcade" du jalon M2 : pas de physique réaliste, contrôle direct.
-// Les commandes pilotent directement les vitesses (lacet, montée, translation)
-// et l'assiette n'est qu'un retour visuel. Sert à valider entrées et caméra
-// avant le vrai modèle de vol (M3). Aucune dépendance au rendu : testable seul.
+/*
+ * ArcadeFlight.hpp
+ * Vol "arcade" simplifié : pas de physique réaliste, le pilote agit en direct.
+ * Les commandes fixent directement les vitesses (lacet, montée, déplacement) et
+ * l'assiette n'est qu'un effet visuel. Sert à tester les entrées et la caméra
+ * avant le vrai modèle de vol.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -21,4 +27,4 @@ private:
     FlightState m_state;
 };
 
-}  // namespace artouste::physics
+}  /* namespace artouste::physics */

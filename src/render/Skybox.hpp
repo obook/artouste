@@ -1,6 +1,12 @@
-// Ciel en dégradé : un simple triangle plein écran dont le fragment calcule la
-// couleur selon l'élévation du rayon de vue. Pas de cubemap. Le profil core
-// impose un VAO lié même pour un tracé sans attribut.
+/*
+ * Skybox.hpp
+ * Ciel en dégradé : un grand triangle qui couvre tout l'écran et dont
+ * la couleur varie selon la hauteur visée (plus clair vers l'horizon,
+ * plus foncé vers le haut). Pas d'image de ciel, tout est calculé.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -18,11 +24,11 @@ public:
     Skybox(const Skybox&)            = delete;
     Skybox& operator=(const Skybox&) = delete;
 
-    // Dessine le ciel (profondeur en lecture seule, écriture désactivée).
+    /* Dessine le ciel en arrière-plan, derrière tout le reste de la scène. */
     void draw(Shader& shader, const mat4& invViewProj, const vec3& camPos) const;
 
 private:
     unsigned int m_vao = 0;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

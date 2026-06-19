@@ -1,5 +1,11 @@
-// Terrain plat en damier : un simple plan herbeux donnant des
-// repères visuels pour percevoir le mouvement. Pas de relief pour l'instant.
+/*
+ * Terrain.hpp
+ * Sol plat en damier : un plan herbeux qui sert de repère visuel pour
+ * percevoir le déplacement de l'appareil. Pas de relief pour l'instant.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -17,4 +23,4 @@ private:
     Mesh m_mesh;
 };
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

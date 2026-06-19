@@ -1,3 +1,12 @@
+/*
+ * Hud.cpp
+ * Construction de l'affichage tête haute avec Dear ImGui : quatre panneaux
+ * dans les coins de l'écran, plus un bandeau de pause centré.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "ui/Hud.hpp"
 
 #include <imgui.h>
@@ -8,7 +17,8 @@ namespace artouste::ui {
 
 namespace {
 
-// Petit panneau sans décor, à l'angle indiqué (pivot 0/1 par axe).
+/* Ouvre un petit panneau sans décor, ancré à un coin de l'écran.
+ * Le pivot (0 ou 1 sur chaque axe) indique de quel coin il s'agit. */
 void corner(const char* id, const ImVec2& pos, const ImVec2& pivot) {
     constexpr ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
@@ -20,12 +30,12 @@ void corner(const char* id, const ImVec2& pos, const ImVec2& pivot) {
     ImGui::Begin(id, nullptr, flags);
 }
 
-}  // namespace
+}  /* namespace */
 
 void Hud::init(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::GetIO().IniFilename = nullptr;  // pas de fichier de réglages sur disque
+    ImGui::GetIO().IniFilename = nullptr;  /* pas de fichier de réglages sur disque */
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
@@ -54,7 +64,7 @@ void Hud::render(const HudData& data, bool showHud, bool paused) {
     const ImVec2 display = ImGui::GetIO().DisplaySize;
     const float  w       = display.x;
     const float  h       = display.y;
-    const float  m       = 14.0f;  // marge
+    const float  m       = 14.0f;  /* marge depuis les bords */
 
     if (showHud) {
         corner("hud_tl", ImVec2(m, m), ImVec2(0.0f, 0.0f));
@@ -95,4 +105,4 @@ void Hud::render(const HudData& data, bool showHud, bool paused) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-}  // namespace artouste::ui
+}  /* namespace artouste::ui */

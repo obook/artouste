@@ -1,3 +1,13 @@
+/*
+ * LoadedHelicopter.cpp
+ * Implémentation de l'hélicoptère chargé : assemblage des différentes pièces
+ * (fuselage, intérieur, planche de bord, rotors), placement de chacune et
+ * animation des rotors au fil du temps.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
+
 #include "render/LoadedHelicopter.hpp"
 
 #include <glad/glad.h>
@@ -12,12 +22,12 @@ namespace artouste::render {
 
 namespace {
 
-// --- Correction de repère FlightGear -> moteur -------------------------------
-constexpr float Y_OFFSET = 1.951f;  // remonte les patins au niveau du sol
+/* Correction de repère FlightGear vers notre moteur. */
+constexpr float Y_OFFSET = 1.951f;  /* remonte les patins au niveau du sol */
 
-// --- Placements des rotors (repère Assimp, avant correction) -----------------
-// Issus des fichiers d'assemblage FlightGear (all-*rotor.xml). Coordonnées
-// FlightGear (x, y, z) -> Assimp (x, z, y).
+/* Position des rotors (dans le repère du modèle, avant correction). Ces valeurs
+   proviennent des fichiers d'assemblage de FlightGear. Une coordonnée
+   FlightGear (x, y, z) correspond chez nous à (x, z, y). */
 const vec3  MAIN_HUB{-2.142f, 0.177f, 0.000f};
 constexpr float MAIN_BLADE_RISE = 0.826f;
 constexpr int   MAIN_BLADES     = 3;
@@ -26,22 +36,24 @@ const vec3  TAIL_HUB{3.963f, 0.174f, 0.226f};
 constexpr float TAIL_BLADE_RISE = 0.031f;
 constexpr int   TAIL_BLADES     = 2;
 
-// Régimes d'animation purement visuels (rad/s), ralentis pour éviter l'effet
-// stroboscopique. Le rotor de queue tourne environ 5x plus vite (ratio réel).
+/* Vitesses de rotation purement décoratives (en radians par seconde). Elles sont
+   volontairement ralenties pour éviter l'effet stroboscopique. Le rotor de queue
+   tourne environ 5 fois plus vite que le rotor principal, comme dans la réalité. */
 constexpr float MAIN_SPIN = 15.0f;
 constexpr float TAIL_SPIN = 75.0f;
 
-// Conversion d'un décalage FlightGear (x avant/arrière, y latéral, z vertical)
-// vers le repère Assimp (x, y vertical, z latéral).
+/* Convertit une position exprimée dans le repère FlightGear (x avant/arrière,
+   y latéral, z vertical) vers le repère du modèle (x, y vertical, z latéral). */
 vec3 fgToAssimp(const vec3& fg) {
     return vec3{fg.x, fg.z, fg.y};
 }
 
-// Planche de bord : offset d'assemblage (all-panels.xml).
+/* Position de la planche de bord (issue des fichiers d'assemblage FlightGear). */
 const vec3 PANEL_OFFSET = fgToAssimp(vec3{-4.136f, 0.0f, -0.344f});
 
-// Cadrans de la planche : fichier .ac et offset FlightGear relatif au panneau
-// (panel.xml). Deux rangées de quatre. Aiguilles figées (statiques).
+/* Description des cadrans de la planche de bord : le fichier .ac de chacun et sa
+   position relative au panneau (coordonnées FlightGear). Ils forment deux rangées
+   de quatre. Leurs aiguilles sont figées (purement décoratives). */
 struct GaugeDef {
     const char* file;
     vec3        fgOffset;
@@ -57,6 +69,8 @@ const GaugeDef GAUGES[] = {
     {"Interior/Panel/Instruments/torque/torque.ac", vec3{-0.223f, 0.181f, -0.014f}},
 };
 
+/* Charge une pièce du modèle et affiche un petit compte-rendu (nom du fichier et
+   nombre de parties obtenues), pratique pour vérifier le chargement. */
 Model loadPart(const std::filesystem::path& path, const std::vector<std::string>& skip,
                const std::vector<std::string>& transparent = {}) {
     Model model = ModelLoader::load(path, skip, transparent);
@@ -65,21 +79,23 @@ Model loadPart(const std::filesystem::path& path, const std::vector<std::string>
     return model;
 }
 
-}  // namespace
+}  /* namespace */
 
 LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
-    // On ignore : les plans semi-transparents (blur/disc) des rotors, les
-    // doublons HDR des vitrages (rendu opaque), et la version flotteurs du
-    // train (on garde le mode patins, comme FlightGear par défaut).
+    /* Listes de nœuds à écarter au chargement :
+       - skipBody : plans flous des rotors (blur/disc), doublons HDR des vitrages,
+         et version flotteurs du train (on garde les patins, par défaut chez
+         FlightGear).
+       - skipRotor : uniquement les plans flous des rotors. */
     const std::vector<std::string> skipBody{"hdr", "blur", "disc", "flotteur", "barre"};
     const std::vector<std::string> skipRotor{"blur", "disc"};
-    // Vitrages rendus en translucide (verrière de cabine, vitres de portes).
+    /* Nœuds à rendre translucides : la verrière de cabine et les vitres. */
     const std::vector<std::string> glass{"verriere", "vitre"};
 
     m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
 
-    // Planche de bord + cadrans (statiques).
+    /* Planche de bord et ses cadrans (sans animation). */
     m_panel = loadPart(dir / "Interior/Panel/panel.ac", skipRotor);
     for (const GaugeDef& def : GAUGES) {
         Gauge gauge;
@@ -88,6 +104,8 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
         m_gauges.push_back(std::move(gauge));
     }
 
+    /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale
+       est chargée par rotor, puis recopiée et tournée à l'affichage. */
     m_mainHub   = loadPart(dir / "Externals/MainRotor/mainrotor.ac", skipRotor);
     m_mainBlade = loadPart(dir / "Externals/MainRotor/blade.ac", skipRotor);
     m_tailHub   = loadPart(dir / "Externals/TailRotor/tailrotor.ac", skipRotor);
@@ -95,28 +113,33 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
 }
 
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds) const {
-    // Correction de repère commune : 180° autour de Y puis remontée verticale.
+    /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
+       (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
+       patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
     const mat4 correction = glm::translate(mat4(1.0f), vec3{0.0f, Y_OFFSET, 0.0f}) *
                             glm::rotate(mat4(1.0f), PI, vec3{0.0f, 1.0f, 0.0f});
     const mat4 root = base * correction;
 
+    /* Petit raccourci : fixe la matrice du modèle puis dessine la pièce. */
     const auto drawModel = [&](const Model& model, const mat4& transform, Pass pass) {
         shader.setMat4("u_model", transform);
         model.draw(shader, pass);
     };
 
-    // Transformations des rotors (réutilisées par les deux passes).
+    /* Transformations des rotors, calculées une fois et réutilisées par les deux
+       passes (opaque puis transparente). L'angle dépend du temps écoulé. */
     const float mainAngle = timeSeconds * MAIN_SPIN;
     const mat4  mainBase  = root * glm::translate(mat4(1.0f), MAIN_HUB) *
                            glm::rotate(mat4(1.0f), mainAngle, vec3{0.0f, 1.0f, 0.0f});
-    // Rotor de queue : disque basculé à la verticale (-90° autour de X), puis
-    // rotation autour de son axe (Y local), ce qui place le spin sur l'axe
-    // latéral après bascule.
+    /* Rotor de queue : son disque est vertical, on bascule donc le rotor de -90
+       degrés autour de X avant de le faire tourner autour de son propre axe. */
     const float tailAngle = timeSeconds * TAIL_SPIN;
     const mat4  tailBase  = root * glm::translate(mat4(1.0f), TAIL_HUB) *
                            glm::rotate(mat4(1.0f), -HALF_PI, vec3{1.0f, 0.0f, 0.0f}) *
                            glm::rotate(mat4(1.0f), tailAngle, vec3{0.0f, 1.0f, 0.0f});
 
+    /* Dessine les deux rotors : leur moyeu, puis chaque pale répartie également
+       autour de l'axe (une pale unique recopiée et tournée). */
     const auto drawRotors = [&](Pass pass) {
         drawModel(m_mainHub, mainBase, pass);
         for (int k = 0; k < MAIN_BLADES; ++k) {
@@ -138,7 +161,8 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds)
         }
     };
 
-    // Passe opaque : fuselage (hors vitrages) + intérieur + planche + rotors.
+    /* Passe opaque : fuselage (hors vitrages), intérieur, planche, cadrans et
+       rotors. On dessine d'abord tout ce qui est opaque. */
     drawModel(m_fuselage, root, Pass::Opaque);
     drawModel(m_interior, root, Pass::Opaque);
     drawModel(m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
@@ -147,8 +171,10 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds)
     }
     drawRotors(Pass::Opaque);
 
-    // Passe transparente : vitrages, avec mélange alpha et profondeur en
-    // lecture seule pour ne pas masquer ce qui est derrière.
+    /* Passe transparente : les vitrages, dessinés en dernier. On active le
+       mélange (blending) pour qu'ils laissent voir ce qui est derrière, et on
+       passe le tampon de profondeur en lecture seule pour ne pas cacher les
+       objets situés derrière la vitre. */
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
@@ -157,4 +183,4 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds)
     glDisable(GL_BLEND);
 }
 
-}  // namespace artouste::render
+}  /* namespace artouste::render */

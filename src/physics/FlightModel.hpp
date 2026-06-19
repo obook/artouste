@@ -1,7 +1,12 @@
-// Modèle de vol v1 (M3) : assemble les forces et moments (poussée, gravité,
-// traînée, cyclique, anti-couple, amortissements) et les intègre via RigidBody.
-// Décollage et vol stationnaire jouables, sans effets fins (effet de sol,
-// translation, autorotation arrivent plus tard). Aucune dépendance au rendu.
+/*
+ * FlightModel.hpp
+ * Vrai modèle de vol : il rassemble toutes les forces et tous les couples qui
+ * agissent sur l'hélicoptère (poussée du rotor, gravité, traînée, commandes,
+ * anti-couple, amortissements), puis les confie au corps rigide pour avancer.
+ *
+ * Auteur : O. Booklage
+ * Licence : GPL v2
+ */
 
 #pragma once
 
@@ -12,12 +17,12 @@ namespace artouste::physics {
 
 class FlightModel {
 public:
-    // Avance la simulation d'un pas dt (appelé à cadence fixe par l'appelant).
+    /* Avance la simulation d'un pas de durée dt (appelé à cadence régulière). */
     void update(const Controls& controls, float dt) noexcept;
 
     void reset() noexcept { m_body = RigidBody{}; }
 
-    // Réinitialise à une altitude donnée (pratique pour tester hors effet de sol).
+    /* Réinitialise à une altitude donnée, pratique pour tester loin du sol. */
     void reset(float altitude) noexcept {
         m_body            = RigidBody{};
         m_body.position.y = altitude;
@@ -25,7 +30,7 @@ public:
 
     [[nodiscard]] const RigidBody& body() const noexcept { return m_body; }
 
-    // Dernière poussée calculée (N) : utile au débogage et au futur HUD.
+    /* Dernière poussée calculée, en newtons : utile pour le débogage et l'affichage. */
     [[nodiscard]] float lastThrust() const noexcept { return m_lastThrust; }
 
 private:
@@ -33,4 +38,4 @@ private:
     float     m_lastThrust = 0.0f;
 };
 
-}  // namespace artouste::physics
+}  /* namespace artouste::physics */

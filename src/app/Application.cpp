@@ -306,6 +306,7 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
         m_modelShader->setMat4("u_view", view);
         m_modelShader->setMat4("u_proj", proj);
         m_modelShader->setVec3("u_lightDir", lightDir);
+        m_modelShader->setVec3("u_camPos", m_camera.position());
         m_modelShader->setInt("u_texture", 0);
         m_loadedHeli->draw(*m_modelShader, base, timeSeconds);
     } else {

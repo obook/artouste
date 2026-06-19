@@ -13,9 +13,12 @@ uniform mat4 u_proj;
 
 out vec3 v_normal;
 out vec2 v_uv;
+out vec3 v_worldPos;
 
 void main() {
+    vec4 world  = u_model * vec4(a_pos, 1.0);
+    v_worldPos  = world.xyz;
     v_normal    = mat3(u_model) * a_normal;
     v_uv        = a_uv;
-    gl_Position = u_proj * u_view * u_model * vec4(a_pos, 1.0);
+    gl_Position = u_proj * u_view * world;
 }

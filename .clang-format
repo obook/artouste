@@ -1,0 +1,70 @@
+# Style C++ du projet artouste
+# Base : LLVM, adapté C++20 et lisibilité.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+IndentCaseLabels: true
+NamespaceIndentation: None
+IndentPPDirectives: AfterHash
+
+# Largeur de ligne
+ColumnLimit: 100
+
+# Accolades et espaces
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Sauts de ligne
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+EmptyLineBeforeAccessModifier: LogicalBlock
+
+# Listes d'arguments / paramètres
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: Align
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Includes
+IncludeBlocks: Regroup
+SortIncludes: CaseSensitive
+IncludeCategories:
+  # Headers projet entre guillemets
+  - Regex:           '^"'
+    Priority:        1
+  # Headers de bibliothèques tierces avec dossier (GLFW/, glm/, imgui.h…)
+  - Regex:           '^<(GLFW|glad|glm|imgui|stb|catch2|assimp|miniaudio)'
+    Priority:        2
+  # Standard C++ (sans extension)
+  - Regex:           '^<[a-z0-9_]+>$'
+    Priority:        4
+  # Le reste des headers <…>
+  - Regex:           '^<.*>'
+    Priority:        3
+
+# Alignement
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignTrailingComments: true
+AlignOperands: Align
+
+# Divers
+FixNamespaceComments: true
+ReflowComments: true
+SortUsingDeclarations: true

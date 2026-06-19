@@ -1,0 +1,77 @@
+// Cycle de vie de l'application : fenêtre GLFW, contexte OpenGL, scène M1 et
+// boucle principale. Centralise ce qui était dans main.cpp au jalon M0.
+
+#pragma once
+
+#include "audio/AudioEngine.hpp"
+#include "physics/FlightModel.hpp"
+#include "render/Camera.hpp"
+#include "ui/Hud.hpp"
+
+#include <filesystem>
+#include <memory>
+
+struct GLFWwindow;
+
+namespace artouste::render {
+class Shader;
+class Terrain;
+class HelicopterModel;
+class LoadedHelicopter;
+class Skybox;
+class Mesh;
+}  // namespace artouste::render
+
+namespace artouste::input {
+class InputSystem;
+}  // namespace artouste::input
+
+namespace artouste::app {
+
+class Application {
+public:
+    Application();
+    ~Application();
+
+    Application(const Application&)            = delete;
+    Application& operator=(const Application&) = delete;
+
+    // Initialise tout, lance la boucle, nettoie. Renvoie un code de sortie.
+    int run();
+
+private:
+    bool initWindow();
+    bool initGL();
+    void initScene();
+    void mainLoop();
+    void renderScene(const mat4& base, float timeSeconds);
+    void captureScreenshot(const std::filesystem::path& path);
+    void onResize(int width, int height);
+
+    static void resizeCallback(GLFWwindow* window, int width, int height);
+    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
+    GLFWwindow* m_window = nullptr;
+    int         m_width  = 1280;
+    int         m_height = 720;
+
+    render::Camera                            m_camera;
+    std::unique_ptr<render::Shader>           m_shader;        // géométrie à couleur (terrain)
+    std::unique_ptr<render::Shader>           m_modelShader;   // géométrie texturée (modèle)
+    std::unique_ptr<render::Shader>           m_skyShader;     // ciel en dégradé
+    std::unique_ptr<render::Shader>           m_flatShader;    // couleur unie (ombre)
+    std::unique_ptr<render::Skybox>           m_sky;
+    std::unique_ptr<render::Mesh>             m_shadowDisc;
+    std::unique_ptr<render::Terrain>          m_terrain;
+    std::unique_ptr<render::HelicopterModel>  m_helicopter;    // repli procédural
+    std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    // modèle FlightGear si présent
+    std::unique_ptr<input::InputSystem>       m_input;
+    physics::FlightModel                      m_flight;
+    ui::Hud                                   m_hud;
+    audio::AudioEngine                        m_audio;
+    int                                       m_viewMode = 0;  // 0 chase, 1 cockpit, 2 orbite
+    bool                                      m_showHud  = true;
+    bool                                      m_paused   = false;
+};
+
+}  // namespace artouste::app

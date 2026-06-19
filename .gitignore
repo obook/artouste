@@ -1,0 +1,59 @@
+# Build artifacts
+build/
+build-*/
+out/
+cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+Testing/
+install_manifest.txt
+
+# Compiled binaries and intermediates
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# Logs and core dumps
+*.log
+core
+core.*
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+compile_commands.json
+.clangd/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Modèle 3D tiers FlightGear (GPL, ~36 Mo) : fourni localement, non
+# redistribué dans ce dépôt. Le dossier assets/models/ reste disponible
+# pour nos propres assets.
+assets/models/Alouette-II/
+assets/models/*.tar.gz
+
+# Captures d écran et médias de travail, hors dépôt
+media/
+
+# Fichier de reglages ImGui (genere au runtime)
+imgui.ini

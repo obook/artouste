@@ -53,12 +53,9 @@ physics::Controls Gamepad::poll() noexcept {
     controls.cyclicLongitudinal = shapeAxis(-axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
     controls.pedals             = shapeAxis(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]);
 
-    // Collectif : RT monte, LT descend, neutre (0,5) gâchettes au repos.
-    const float rt = triggerTo01(axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
-    const float lt = triggerTo01(axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]);
-    float       collective = 0.5f + 0.5f * (rt - lt);
-    collective             = collective < 0.0f ? 0.0f : (collective > 1.0f ? 1.0f : collective);
-    controls.collective    = collective;
+    // Collectif proportionnel à la gâchette droite (relâchée = 0, posé au sol ;
+    // à fond = collectif plein). La gâchette gauche n'est plus utilisée.
+    controls.collective = triggerTo01(axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]);
 
     return controls;
 }

@@ -91,6 +91,23 @@ TEST_CASE("Sans poussée, l'appareil reste au sol (garde-fou)", "[flight]") {
     REQUIRE(model.body().position.y >= 0.0f);
 }
 
+TEST_CASE("Au sol collectif à zéro, l'appareil reste immobile", "[flight]") {
+    FlightModel    model;
+    const Controls rest;  // collectif = 0 par défaut au lancement
+    REQUIRE(rest.collective == 0.0f);
+
+    // Même avec une commande de palonnier, les patins adhèrent au sol.
+    Controls input = rest;
+    input.pedals   = 1.0f;
+    advance(model, input, 3.0f);
+
+    const auto& b = model.body();
+    REQUIRE(std::fabs(b.position.x) < 0.001f);
+    REQUIRE(std::fabs(b.position.y) < 0.001f);
+    REQUIRE(std::fabs(b.position.z) < 0.001f);
+    REQUIRE(std::fabs(b.angularVelocity.y) < 0.001f);
+}
+
 TEST_CASE("La stabilité augmentée ramène l'assiette à plat", "[flight]") {
     FlightModel model;
 

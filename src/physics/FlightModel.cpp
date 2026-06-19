@@ -85,6 +85,15 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
             m_body.velocity.y = 0.0f;
         }
     }
+
+    // Posé sur les patins : tant que la poussée ne dépasse pas le poids, les
+    // patins adhèrent au sol (pas de glissement ni de rotation parasite). Dès
+    // que le collectif suffit à soulever l'appareil, il quitte le sol normalement.
+    if (m_body.position.y <= 0.0f && m_lastThrust <= MASS * G) {
+        m_body.position.y      = 0.0f;
+        m_body.velocity        = vec3{0.0f, 0.0f, 0.0f};
+        m_body.angularVelocity = vec3{0.0f, 0.0f, 0.0f};
+    }
 }
 
 }  // namespace artouste::physics

@@ -1,5 +1,7 @@
 # Artouste
 
+![Alouette II en vol dans le simulateur Artouste](docs/artouste-en-vol.png)
+
 Simulateur de pilotage 3D de l'hélicoptère **Aérospatiale Alouette II**
 (SE.3130), en C++ moderne et OpenGL. Vol jouable au clavier ou à la manette,
 modèle de vol simplifié mais reconnaissable, rendu temps réel sans moteur de

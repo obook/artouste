@@ -40,7 +40,7 @@ constexpr char WINDOW_TITLE[] = "Artouste";
 
 // Position de l'oeil du pilote (siège droit) dans le repère corps : avant (X),
 // haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière.
-const vec3 COCKPIT_EYE{2.95f, 1.88f, 0.42f};
+const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
 
 void glfwErrorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);

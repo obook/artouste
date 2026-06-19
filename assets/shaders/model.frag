@@ -14,10 +14,12 @@ uniform float     u_opacity;   // 1 = opaque, < 1 = translucide (verrière)
 void main() {
     vec4 albedo = texture(u_texture, v_uv);
 
+    // Demi-Lambert : adoucit l'ombre (les faces opposées à la lumière, comme la
+    // planche de bord à l'intérieur, restent éclairées) sans aplatir le relief.
     vec3  n       = normalize(v_normal);
-    float diffuse = max(dot(n, normalize(u_lightDir)), 0.0);
-    float ambient = 0.40;
-    float light   = ambient + (1.0 - ambient) * diffuse;
+    float ndl     = dot(n, normalize(u_lightDir));
+    float diffuse = ndl * 0.5 + 0.5;
+    float light   = 0.32 + 0.68 * diffuse;
 
     frag_color = vec4(albedo.rgb * light, albedo.a * u_opacity);
 }

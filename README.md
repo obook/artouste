@@ -35,10 +35,18 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Démarrage et arrêt de la turbine Artouste en deux temps (la turbine monte en
   régime, puis le rotor s'accélère) : il faut la lancer pour décoller.
 - Entrées clavier et manette Xbox (détection automatique de la source).
+- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le
+  cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la
+  physique. La bascule est progressive.
+- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite
+  suit) et levier de collectif (la main gauche se pose dessus et le suit).
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
   instruments ronds verts superposés (Super HUD), ou rien.
-- Son moteur et rotor, ciel en dégradé, ombre portée.
+- Son moteur et rotor, ciel en dégradé, ombre portée (rotor centré sur le mât).
+- Effets moteur quand la turbine tourne : strombo (gyrophare rouge sur le toit de
+  la cabine, tiers haut clignotant en rotation) et tuyère (distorsion thermique de
+  l'air chaud, léger halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
 ## Commandes
@@ -51,6 +59,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
 | Livrée (Gendarmerie/origine) | `L`       | bouton `A` (vert)    |
+| Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
 | Reset position          | `R`            | bouton `X`           |

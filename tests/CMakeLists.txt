@@ -6,9 +6,11 @@ add_executable(artouste_tests
     placeholder_tests.cpp
     arcade_flight_tests.cpp
     flight_model_tests.cpp
+    flight_assist_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightModel.cpp
+    ${CMAKE_SOURCE_DIR}/src/physics/FlightAssist.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
 )
 

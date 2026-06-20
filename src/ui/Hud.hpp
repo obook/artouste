@@ -36,6 +36,7 @@ struct HudData {
     float       turbineRpm    = 0.0f;   /* régime turbine en tr/min */
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */
+    bool        assist        = false;  /* mode assisté actif : affiche un repère */
 };
 
 class Hud {

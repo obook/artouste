@@ -93,6 +93,17 @@ inline constexpr float ETL_V_HIGH = 15.0f;   /* m/s (~29 kt) plein effet */
  * en assiette et difficile à tenir. À réduire ou retirer pour plus de réalisme. */
 inline constexpr float LEVEL_GAIN   = 6000.0f;  /* N.m par unité de sin(inclinaison) */
 
+/* --- Mode assisté ------------------------------------------------------------ */
+/* Couche de confort posée par-dessus les commandes du pilote (voir FlightAssist).
+ * Elle ne change pas la physique : elle adoucit et corrige les entrées pour rendre
+ * l'appareil tenable sans expérience. Valeurs a calibrer a l'usage. */
+inline constexpr float ASSIST_ANTITORQUE_GAIN = 0.6f;   /* pousse le palonnier selon la variation de collectif */
+inline constexpr float ASSIST_SMOOTH_TAU      = 0.18f;  /* s : lissage des inputs (anti sur-contrôle) */
+inline constexpr float ASSIST_RECENTER_TAU    = 1.2f;   /* s : rappel doux du cyclique au neutre sans input */
+inline constexpr float ASSIST_COLLECTIVE_RATE = 0.5f;   /* 1/s : variation max du collectif */
+inline constexpr float ASSIST_TRANSITION_RATE = 2.0f;   /* 1/s : vitesse de bascule entre les modes (~0,5 s) */
+inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deca, cyclique considéré relâché (rappel au neutre) */
+
 /* --- Garde-fous numériques --------------------------------------- */
 /* Limites de sécurité pour éviter que le calcul ne s'emballe. */
 inline constexpr float MAX_SPEED    = 120.0f;   /* vitesse maximale, en m/s */

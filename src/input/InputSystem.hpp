@@ -53,6 +53,9 @@ public:
     /* Le bouton A vient-il d'être pressé ? (bascule la livrée Gendarmerie) */
     [[nodiscard]] bool liveryTogglePressed() noexcept { return m_gamepad.liveryTogglePressed(); }
 
+    /* La croix directionnelle haut vient-elle d'être pressée ? (bascule le mode assisté) */
+    [[nodiscard]] bool assistTogglePressed() noexcept { return m_gamepad.assistTogglePressed(); }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

@@ -180,6 +180,16 @@ bool Gamepad::liveryTogglePressed() noexcept {
     return risingEdge(state, GLFW_GAMEPAD_BUTTON_A, m_prevA);
 }
 
+bool Gamepad::assistTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevDpadUp = false;
+        return false;
+    }
+    /* Croix directionnelle haut : bascule le mode assisté (comme la touche M). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_UP, m_prevDpadUp);
+}
+
 bool Gamepad::isActive() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {

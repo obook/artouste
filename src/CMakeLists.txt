@@ -8,6 +8,7 @@ add_executable(artouste
     input/InputSystem.cpp
     physics/RigidBody.cpp
     physics/FlightModel.cpp
+    physics/FlightAssist.cpp
     physics/Turbine.cpp
     render/Shader.cpp
     render/Mesh.cpp

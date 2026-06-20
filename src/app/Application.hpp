@@ -13,6 +13,7 @@
 #pragma once
 
 #include "audio/AudioEngine.hpp"
+#include "physics/FlightAssist.hpp"
 #include "physics/FlightModel.hpp"
 #include "render/Camera.hpp"
 #include "ui/Hud.hpp"
@@ -88,6 +89,7 @@ private:
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;
     physics::FlightModel                      m_flight;
+    physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */

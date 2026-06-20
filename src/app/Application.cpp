@@ -336,7 +336,14 @@ void Application::mainLoop() {
          * Entrées -> commandes, puis intégration de la physique à pas fixe,
          * indépendante de la cadence de rendu.
          */
-        const physics::Controls controls = m_input->poll(frameDt);
+        /* Commandes brutes du pilote, puis passage par le mode assisté : s'il est
+         * actif, il corrige et adoucit les commandes ; sinon il les laisse intactes. */
+        const physics::Controls controls = m_assist.apply(m_input->poll(frameDt), frameDt);
+
+        /* Croix directionnelle haut de la manette : bascule le mode assisté (comme la touche M). */
+        if (m_input->assistTogglePressed()) {
+            m_assist.toggle();
+        }
 
         /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
         if (m_input->viewTogglePressed()) {
@@ -508,6 +515,7 @@ void Application::mainLoop() {
         hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
         hud.fuelLiters    = m_flight.fuelLiters();
         hud.turbine       = m_flight.turbine().label();
+        hud.assist        = m_assist.active();
         m_hud.render(hud, m_hudMode, m_paused);
 
         glfwSwapBuffers(m_window);
@@ -797,6 +805,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.turbineRpm    = 33500.0f;
     hud.fuelLiters    = 480.0f;
     hud.turbine       = "EN RÉGIME";
+    hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */
 
     /*
      * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres
@@ -885,6 +894,11 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_L:  /* bascule la livrée Gendarmerie nationale */
             if (app != nullptr) {
                 app->toggleGendarmerieLivery();
+            }
+            break;
+        case GLFW_KEY_M:  /* bascule le mode assisté (confort de pilotage) */
+            if (app != nullptr) {
+                app->m_assist.toggle();
             }
             break;
         case GLFW_KEY_R:  /* replace l'appareil à sa position de départ (la côte) */

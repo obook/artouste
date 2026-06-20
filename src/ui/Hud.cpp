@@ -266,6 +266,9 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
         ImGui::Text("PALONNIER");
         ImGui::ProgressBar(data.pedals * 0.5f + 0.5f, ImVec2(140.0f, 0.0f), "");
+        if (data.assist) {
+            ImGui::TextColored(ImVec4(0.4f, 0.9f, 1.0f, 1.0f), "MODE ASSISTE");
+        }
         ImGui::End();
     } else if (mode == HudMode::Overlay) {
         /* Super HUD : rang d'instruments ronds verts superposés en bas de l'image
@@ -317,6 +320,11 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             const char* warn = "CARBURANT BAS";
             dl->AddText(ImVec2(w * 0.5f - ImGui::CalcTextSize(warn).x * 0.5f, y - r - 26.0f),
                         IM_COL32(255, 70, 70, 255), warn);
+        }
+
+        /* Repère du mode assisté, discret, en bas a gauche. */
+        if (data.assist) {
+            dl->AddText(ImVec2(m, h - 24.0f), IM_COL32(110, 220, 255, 255), "MODE ASSISTE");
         }
     }
     /* mode Off : aucun affichage de vol. */

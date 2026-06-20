@@ -5,6 +5,7 @@
  * simple et stable : on cherche une dynamique reconnaissable, pas le réalisme absolu.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -42,8 +43,9 @@ inline constexpr float PITCH_CTRL   = 3000.0f;  /* N.m  cyclique longitudinal */
 inline constexpr float YAW_CTRL     = 3500.0f;  /* N.m  palonniers */
 
 /* Le rotor principal exerce sur le fuselage un couple en sens inverse de sa
- * rotation. Nul au collectif de vol stationnaire, il augmente avec le collectif ;
- * le pilote le compense aux palonniers. */
+ * rotation. Sur l'Alouette II il tourne dans le sens horaire vu de dessus, donc ce
+ * couple fait partir le nez vers la gauche. Nul au collectif de vol stationnaire, il
+ * augmente avec le collectif ; le pilote le compense au palonnier droit. */
 inline constexpr float REACTIVE_TORQUE = 1500.0f;  /* N.m à pleine variation */
 
 /* --- Amortissements et stabilité --------------------------------------------- */

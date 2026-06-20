@@ -4,6 +4,7 @@
  * graphique : c'est ce qui permet de vérifier la physique seule, isolée du rendu.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -55,9 +56,9 @@ TEST_CASE("Collectif plein fait monter, collectif nul fait rester au sol", "[arc
 TEST_CASE("Les palonniers font tourner le cap", "[arcade]") {
     ArcadeFlight flight;
     Controls     yaw;
-    yaw.pedals = 1.0f;
+    yaw.pedals = 1.0f;  /* palonnier droit : le nez part à droite, yaw décroît */
     advance(flight, yaw, 1.0f);
-    REQUIRE(flight.state().yaw > 0.5f);
+    REQUIRE(flight.state().yaw < -0.5f);
 }
 
 TEST_CASE("Le reset ramène à l'état initial", "[arcade]") {

@@ -5,6 +5,7 @@
  * les limites de sécurité et le contact avec le sol.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -78,8 +79,12 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     vec3 torque;
     torque.x = controls.cyclicLateral * ROLL_CTRL          /* roulis (autour de X) */
                + LEVEL_GAIN * levelBody.x - DAMP_ROLL * w.x;
-    torque.y = controls.pedals * YAW_CTRL                  /* lacet (autour de Y) */
-               - REACTIVE_TORQUE * (collective - COLL_HOVER) - DAMP_YAW * w.y;
+    /* Lacet (autour de Y). Sur l'Alouette II, le rotor tourne dans le sens horaire
+     * vu de dessus : son couple de réaction fait partir le nez vers la gauche, et le
+     * pilote compense au palonnier droit. D'où le signe + sur l'anti-couple, qui croît
+     * avec le collectif, et le palonnier droit qui ramène le nez vers la droite. */
+    torque.y = -controls.pedals * YAW_CTRL
+               + REACTIVE_TORQUE * (collective - COLL_HOVER) - DAMP_YAW * w.y;
     torque.z = -controls.cyclicLongitudinal * PITCH_CTRL   /* tangage (autour de Z) */
                + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;
 

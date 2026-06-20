@@ -4,6 +4,7 @@
  * font ensuite avancer l'appareil. Tout est lissé pour un rendu agréable.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -38,8 +39,10 @@ float approach(float current, float target, float dt, float tau) noexcept {
 }  /* namespace */
 
 void ArcadeFlight::update(const Controls& controls, float dt) noexcept {
-    /* Lacet : on ajoute directement la rotation commandée à l'orientation. */
-    m_state.yaw += controls.pedals * YAW_RATE * dt;
+    /* Lacet : on ajoute directement la rotation commandée à l'orientation.
+     * Palonnier droit (pedals > 0) -> le nez part à droite, comme sur le vrai
+     * modèle de vol, d'où le signe négatif avec le repère droitier de GLM. */
+    m_state.yaw -= controls.pedals * YAW_RATE * dt;
 
     /* Assiette : pur effet visuel qui rejoint doucement la cible. Le nez pique
      * (tangage négatif) quand on commande l'avancée. */

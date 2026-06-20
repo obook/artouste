@@ -46,6 +46,12 @@ core.*
 compile_commands.json
 .clangd/
 
+# Outillage Python (environnement virtuel et caches) : hors depot
+.venv/
+tools/.venv/
+__pycache__/
+*.pyc
+
 # OS junk
 .DS_Store
 Thumbs.db

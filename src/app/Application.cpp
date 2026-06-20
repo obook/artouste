@@ -21,6 +21,8 @@
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
+#include "render/Model.hpp"
+#include "render/ModelLoader.hpp"
 #include "render/Primitives.hpp"
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
@@ -143,6 +145,7 @@ Application::~Application() {
     m_sea.reset();
     m_shadowDisc.reset();
     m_helipad.reset();
+    m_helipadModel.reset();
     m_sky.reset();
     m_flatShader.reset();
     m_skyShader.reset();
@@ -236,6 +239,16 @@ void Application::initScene() {
                                                      vec3{0.20f, 0.20f, 0.22f},
                                                      vec3{0.80f, 0.10f, 0.10f});
     m_helipad          = std::make_unique<render::Mesh>(padData.vertices, padData.indices);
+
+    /* Hélipad texturé fabriqué avec Blender (voir tools/helipad). S'il est présent,
+       il remplace la version procédurale ci-dessus ; sinon on garde celle-ci. */
+    const std::filesystem::path helipadModel = assets / "models" / "helipad" / "helipad.ac";
+    if (std::filesystem::exists(helipadModel)) {
+        render::Model pad = render::ModelLoader::load(helipadModel, {}, {});
+        if (!pad.empty()) {
+            m_helipadModel = std::make_unique<render::Model>(std::move(pad));
+        }
+    }
 
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */
     const vec3 up{0.0f, 1.0f, 0.0f};
@@ -561,18 +574,32 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
         }
         const mat4 padModel =
             glm::translate(mat4(1.0f), vec3{m_startPos.x, padTop + 0.06f, m_startPos.z});
-        m_shader->use();
-        m_shader->setMat4("u_view", view);
-        m_shader->setMat4("u_proj", proj);
-        m_shader->setMat4("u_model", padModel);
-        m_shader->setVec3("u_lightDir", lightDir);
+
         /* Le pad est quasiment dans le plan du terrain : sans précaution, les deux
            surfaces se disputent la profondeur et scintillent (z-fighting). Le décalage
            de polygones biaise la profondeur du pad vers l'avant pour qu'il l'emporte
            toujours proprement sur le sol, quelle que soit la distance. */
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(-1.0f, -1.0f);
-        m_helipad->draw();
+        if (m_helipadModel) {
+            /* Version texturée (modèle Blender), dessinée avec le shader des modèles. */
+            m_modelShader->use();
+            m_modelShader->setMat4("u_view", view);
+            m_modelShader->setMat4("u_proj", proj);
+            m_modelShader->setMat4("u_model", padModel);
+            m_modelShader->setVec3("u_lightDir", lightDir);
+            m_modelShader->setVec3("u_camPos", m_camera.position());
+            m_modelShader->setInt("u_texture", 0);
+            m_helipadModel->draw(*m_modelShader, render::Pass::Opaque);
+        } else {
+            /* Repli procédural (aplats de couleur). */
+            m_shader->use();
+            m_shader->setMat4("u_view", view);
+            m_shader->setMat4("u_proj", proj);
+            m_shader->setMat4("u_model", padModel);
+            m_shader->setVec3("u_lightDir", lightDir);
+            m_helipad->draw();
+        }
         glPolygonOffset(0.0f, 0.0f);
         glDisable(GL_POLYGON_OFFSET_FILL);
     }

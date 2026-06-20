@@ -79,6 +79,31 @@ ce dépôt avec le fichier `COPYING` d'origine. Source :
 sont absents, l'application affiche un hélicoptère procédural et reste
 silencieuse.
 
+## Hélipad (régénérer l'asset)
+
+L'hélipad de la zone de départ est un modèle `.ac` texturé (`assets/models/helipad/`),
+fabriqué avec Blender. Le `.ac` et sa texture sont **versionnés** : compiler et
+lancer le simulateur ne demande donc **ni Blender ni greffon**. Les étapes
+ci-dessous ne servent qu'à le **régénérer** après modification.
+
+1. Texture (béton, anneau, H rouge), via un environnement Python isolé (hors
+   dépôt, voir `.gitignore`) :
+
+```bash
+python3 -m venv tools/.venv
+tools/.venv/bin/pip install Pillow
+tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helipad.png
+```
+
+2. Modèle `.ac`, via Blender et le greffon AC3D d'Emmanuel
+   (<https://github.com/NikolaiVChr/Blender-AC3D>, fork de l'original
+   <https://github.com/majic79/Blender-AC3D>), installé comme module
+   `io_scene_ac3d` :
+
+```bash
+blender --background --python tools/helipad/make_helipad.py
+```
+
 ## Licence
 
 Ce projet est distribué sous licence **GPL v2** (voir `LICENSE`), comme le

@@ -48,6 +48,13 @@ struct MeshData {
 [[nodiscard]] MeshData disc(float radius, int segments, const vec3& color);
 
 /*
+ * Sphère UV centrée sur l'origine, de rayon donné. 'rings' compte les tranches
+ * en latitude, 'sectors' les quartiers en longitude. Sert aux petites lueurs
+ * (strombo, tuyère) dessinées avec le shader plat.
+ */
+[[nodiscard]] MeshData sphere(float radius, int rings, int sectors, const vec3& color);
+
+/*
  * Hélipad posé à plat (plan XZ, normale +Y), centré sur l'origine : un disque
  * sombre, un anneau près du bord et un grand H au centre. Sert à marquer la zone
  * de départ où l'appareil est posé et où le reset le ramène.

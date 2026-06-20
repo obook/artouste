@@ -56,7 +56,14 @@ private:
     void initScene();
     void mainLoop();
     void renderScene(const mat4& base, float rotorAngle, float rotorFraction,
-                     float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f);
+                     float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
+                     float collective = 0.0f, float turbineFraction = 0.0f,
+                     float timeSeconds = 0.0f);
+
+    /* Lueurs liées au moteur : strombo (flash rouge anti-collision au-dessus de la
+       cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge
+       à la sortie de la turbine, d'intensité croissante avec le régime). */
+    void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 
@@ -81,6 +88,7 @@ private:
     std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (ombre) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
+    std::unique_ptr<render::Mesh>             m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
     std::unique_ptr<render::Mesh>             m_helipad;       /* marque au sol, repli procédural */
     std::unique_ptr<render::Model>           m_helipadModel;  /* hélipad texturé (modèle Blender) */
     std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */

@@ -63,6 +63,30 @@ constexpr char WINDOW_TITLE[] = "Artouste";
 const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
 
 /*
+ * Repères des effets moteur, dans le même repère corps que COCKPIT_EYE (X avant,
+ * Y haut, Z droite, origine au centre de l'appareil). Réglés à l'oeil via le mode
+ * capture (ARTOUSTE_SHOT_*).
+ *
+ * Strombo (feu anti-collision) : petite sphère rouge posée au-dessus de la cabine,
+ * qui clignote (allumée une brève fraction de la période) tant que la turbine tourne.
+ */
+const vec3        BEACON_POS{2.70f, 2.35f, 0.0f};  /* au-dessus du toit, devant le mât */
+constexpr float   BEACON_RADIUS = 0.10f;           /* rayon de la sphère (m) */
+constexpr float   BEACON_PERIOD = 1.2f;            /* période du clignotement (s) */
+constexpr float   BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
+
+/*
+ * Tuyère : sortie de la turbine, derrière le bloc moteur, au départ de la poutre.
+ * La turbine est haute sur le pont moteur (derrière le mât) : la sortie est donc en
+ * arrière de l'origine (X négatif) et en hauteur, pas dans le carter (plus bas, plus
+ * en avant). On ne dessine pas de flamme : la turbine rejette de l'air très chaud,
+ * qui se traduit par une distorsion thermique localisée (léger halo bleuté qui ondule)
+ * et un petit coeur tiède sur le métal de la tuyère.
+ */
+const vec3        NOZZLE_BODY_POS{-0.55f, 2.15f, 0.0f};
+constexpr float   NOZZLE_RADIUS = 0.24f;
+
+/*
  * Rotor principal (animation visuelle) :
  *   - ROTOR_SPIN_RATE : vitesse de rotation à plein régime, en rad/s. Volontairement
  *     ralentie par rapport à la réalité pour éviter l'effet stroboscopique.
@@ -148,6 +172,7 @@ Application::~Application() {
     m_terrain.reset();
     m_sea.reset();
     m_shadowDisc.reset();
+    m_glowSphere.reset();
     m_helipad.reset();
     m_helipadModel.reset();
     m_sky.reset();
@@ -236,6 +261,11 @@ void Application::initScene() {
 
     const auto discData = render::primitives::disc(6.0f, 48, vec3{0.0f, 0.0f, 0.0f});
     m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
+
+    /* Petite sphère unité, réutilisée (mise à l'échelle au dessin) pour le flash du
+       strombo et la lueur de la tuyère. Le shader plat ne lit que la position. */
+    const auto sphereData = render::primitives::sphere(1.0f, 12, 16, vec3{1.0f, 1.0f, 1.0f});
+    m_glowSphere          = std::make_unique<render::Mesh>(sphereData.vertices, sphereData.indices);
 
     /* Hélipad de la zone de départ : disque gris très clair (presque blanc), anneau
        gris foncé et grand H rouge. Centré sur l'origine ; placé au départ à l'affichage. */
@@ -496,7 +526,8 @@ void Application::mainLoop() {
         }
 
         renderScene(base, m_rotorAngle, m_flight.turbine().rotorFraction(), controls.pedals,
-                    controls.cyclicLongitudinal, controls.cyclicLateral);
+                    controls.cyclicLongitudinal, controls.cyclicLateral, controls.collective,
+                    turbineFraction, t);
 
         ui::HudData hud;
         hud.altitudeM    = body.position.y;
@@ -523,7 +554,8 @@ void Application::mainLoop() {
 }
 
 void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction,
-                              float rudder, float cyclicLong, float cyclicLat) {
+                              float rudder, float cyclicLong, float cyclicLat,
+                              float collective, float turbineFraction, float timeSeconds) {
     const vec3 lightDir = glm::normalize(vec3{0.4f, 1.0f, 0.35f});
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
@@ -655,29 +687,44 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
          * pose donc le disque au-dessus du plus haut des quatre coins, avec une
          * marge, pour qu'il ne traverse jamais le sol.
          */
-        float top = ground;
-        top       = std::fmax(top, m_terrain->heightAt(heliPos.x + radius, heliPos.z + radius));
-        top       = std::fmax(top, m_terrain->heightAt(heliPos.x + radius, heliPos.z - radius));
-        top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z + radius));
-        top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z - radius));
+        /* Pose le disque juste au-dessus du plus haut des quatre coins de son
+           emprise, pour qu'il ne traverse jamais un sol en pente. */
+        const auto topUnder = [&](const vec3& c, float r) {
+            float t = m_terrain->heightAt(c.x, c.z);
+            t       = std::fmax(t, m_terrain->heightAt(c.x + r, c.z + r));
+            t       = std::fmax(t, m_terrain->heightAt(c.x + r, c.z - r));
+            t       = std::fmax(t, m_terrain->heightAt(c.x - r, c.z + r));
+            t       = std::fmax(t, m_terrain->heightAt(c.x - r, c.z - r));
+            return t;
+        };
 
-        const vec3 shadowPos{heliPos.x, top + 0.30f, heliPos.z};
         m_flatShader->use();
         m_flatShader->setMat4("u_view", view);
         m_flatShader->setMat4("u_proj", proj);
 
-        /* Disque rotor : grand et clair, qui apparait en fondu avec le régime. */
+        /* Disque rotor : centré sous l'axe du mât (et non sous le centre de
+           l'appareil), pour que l'ombre des pales tombe au bon endroit. Le mât est
+           en avant de l'origine, le long de l'axe X du fuselage. */
+        vec3 rotorCenter = heliPos;
+        if (m_loadedHeli) {
+            rotorCenter =
+                vec3(base * vec4(render::LoadedHelicopter::ROTOR_FORWARD_OFFSET, 0.0f, 0.0f, 1.0f));
+        }
         const float rotorShadowAlpha = shadowAlpha * 0.55f * clamp(rotorFraction, 0.0f, 1.0f);
         if (rotorShadowAlpha > 0.01f) {
-            m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), shadowPos) *
+            const vec3 rotorShadowPos{rotorCenter.x, topUnder(rotorCenter, radius) + 0.30f,
+                                      rotorCenter.z};
+            m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), rotorShadowPos) *
                                                  glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
             m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, rotorShadowAlpha});
             m_shadowDisc->draw();
         }
 
-        /* Fuselage : petit disque dense, toujours présent. */
-        const float bodyScale = scaleXZ * (2.8f / 6.0f);  /* empreinte fuselage ~2,8 m */
-        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), shadowPos) *
+        /* Fuselage : petit disque dense, toujours présent, sous le centre de l'appareil. */
+        const float bodyScale  = scaleXZ * (2.8f / 6.0f);  /* empreinte fuselage ~2,8 m */
+        const float bodyRadius = 2.8f * scaleXZ;
+        const vec3  bodyShadowPos{heliPos.x, topUnder(heliPos, bodyRadius) + 0.30f, heliPos.z};
+        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), bodyShadowPos) *
                                              glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
         m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, shadowAlpha});
         m_shadowDisc->draw();
@@ -726,6 +773,66 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
     } else {
         m_helicopter->draw(*m_shader, base, rotorAngle);
     }
+
+    /* Lueurs moteur (strombo + tuyère), dessinées en dernier car translucides. */
+    drawEngineEffects(base, turbineFraction, timeSeconds);
+}
+
+void Application::drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds) {
+    /* Rien tant que la turbine n'est pas lancée. */
+    if (turbineFraction <= 0.01f) {
+        return;
+    }
+
+    /* Position d'une lueur exprimée en repère corps (X avant, Y haut, Z droite),
+       comme COCKPIT_EYE, puis ramenée dans le monde par la pose 'base'. */
+    const auto bodyToWorld = [&](const vec3& bodyPos) {
+        return vec3(base * vec4(bodyPos, 1.0f));
+    };
+
+    /* Une petite sphère lumineuse de couleur unie, mélangée par-dessus la scène. */
+    const auto drawGlow = [&](const vec3& worldPos, float radius, const vec4& color) {
+        if (color.a <= 0.01f) {
+            return;
+        }
+        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), worldPos) *
+                                             glm::scale(mat4(1.0f), vec3{radius}));
+        m_flatShader->setVec4("u_color", color);
+        m_glowSphere->draw();
+    };
+
+    m_flatShader->use();
+    m_flatShader->setMat4("u_view", m_camera.view());
+    m_flatShader->setMat4("u_proj", m_camera.proj());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);  /* les lueurs ne masquent rien : elles s'ajoutent au rendu */
+
+    /* --- Strombo ------------------------------------------------------------- */
+    /* Petite sphère rouge au-dessus de la cabine, qui clignote : allumée seulement au
+       début de chaque période, éteinte le reste du temps, tant que la turbine tourne. */
+    const float beaconPhase = std::fmod(timeSeconds, BEACON_PERIOD) / BEACON_PERIOD;
+    if (beaconPhase < BEACON_ON) {
+        drawGlow(bodyToWorld(BEACON_POS), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
+    }
+
+    /* --- Tuyère -------------------------------------------------------------- */
+    /* Air chaud rejeté par la turbine : pas de flamme, mais une distorsion thermique.
+       On la suggère par un léger halo bleuté très translucide qui ondule doucement
+       (deux sinus de fréquences différentes pour un scintillement non répétitif), plus
+       un petit coeur tiède sur le métal de la tuyère. L'effet croît avec le régime. */
+    const float heat    = clamp(turbineFraction, 0.0f, 1.0f);
+    const float shimmer = 0.85f + 0.15f * std::sin(timeSeconds * 9.0f) * std::sin(timeSeconds * 5.3f);
+    const vec3  nozzleWorld = bodyToWorld(NOZZLE_BODY_POS);
+
+    /* Halo bleuté (air chaud) : large, presque transparent, taille qui ondule. */
+    drawGlow(nozzleWorld, NOZZLE_RADIUS * shimmer, vec4{0.55f, 0.75f, 1.0f, 0.10f * heat});
+    /* Coeur un peu plus dense, plus resserré, légèrement plus chaud (blanc bleuté). */
+    drawGlow(nozzleWorld, NOZZLE_RADIUS * 0.5f * shimmer, vec4{0.80f, 0.88f, 1.0f, 0.14f * heat});
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void Application::captureScreenshot(const std::filesystem::path& path) {

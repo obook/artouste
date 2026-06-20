@@ -138,6 +138,37 @@ MeshData disc(float radius, int segments, const vec3& color) {
     return out;
 }
 
+MeshData sphere(float radius, int rings, int sectors, const vec3& color) {
+    MeshData out;
+    /* Grille de sommets en (latitude, longitude). La latitude va du pôle bas au
+       pôle haut, la longitude fait le tour. La normale d'une sphère centrée sur
+       l'origine est simplement la direction du sommet. */
+    for (int r = 0; r <= rings; ++r) {
+        const float phi = -HALF_PI + PI * static_cast<float>(r) / static_cast<float>(rings);
+        for (int s = 0; s <= sectors; ++s) {
+            const float theta = TWO_PI * static_cast<float>(s) / static_cast<float>(sectors);
+            const vec3  n{std::cos(phi) * std::cos(theta), std::sin(phi),
+                          std::cos(phi) * std::sin(theta)};
+            out.vertices.push_back({n * radius, n, color});
+        }
+    }
+    /* Deux triangles par case du quadrillage. */
+    const int stride = sectors + 1;
+    for (int r = 0; r < rings; ++r) {
+        for (int s = 0; s < sectors; ++s) {
+            const auto a = static_cast<unsigned int>(r * stride + s);
+            const auto b = static_cast<unsigned int>((r + 1) * stride + s);
+            out.indices.push_back(a);
+            out.indices.push_back(b);
+            out.indices.push_back(a + 1);
+            out.indices.push_back(a + 1);
+            out.indices.push_back(b);
+            out.indices.push_back(b + 1);
+        }
+    }
+    return out;
+}
+
 MeshData helipad(float radius, int segments, const vec3& padColor, const vec3& ringColor,
                  const vec3& letterColor) {
     MeshData   out;

@@ -47,6 +47,17 @@ Dépendances récupérées automatiquement (FetchContent) : GLFW, GLAD, GLM,
 Dear ImGui, Assimp, stb, miniaudio, Catch2. Prérequis système : pilotes
 OpenGL, bibliothèques X11/Wayland, et un compilateur C++20.
 
+### Avec VSCode
+
+La configuration partagée est dans `.vscode/`. Lancer une fois la tâche
+"CMake : configurer" (menu Terminal > Exécuter la tâche), puis :
+
+- Ctrl+Maj+B : compiler (tâche "CMake : compiler").
+- F5 : compiler puis lancer le simulateur sous gdb.
+- Tâches "CMake : tester", "Artouste : lancer", "CMake : nettoyer" pour le reste.
+
+L'IntelliSense s'appuie sur `build/compile_commands.json`.
+
 ## Packaging
 
 ```bash

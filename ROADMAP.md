@@ -44,7 +44,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Compilation
 
-- [ ] Créer un fichier pour la compilation avec VSCode
+- [x] Créer un fichier pour la compilation avec VSCode
 
 
 

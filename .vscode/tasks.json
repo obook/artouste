@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake : configurer",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S", ".",
+                "-B", "build",
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            ],
+            "problemMatcher": [],
+            "detail": "Genere le dossier build. A relancer si CMakeLists.txt change."
+        },
+        {
+            "label": "CMake : compiler",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "-j"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Compile le simulateur et les tests. Raccourci : Ctrl+Maj+B."
+        },
+        {
+            "label": "CMake : tester",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--test-dir", "build",
+                "--output-on-failure"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Lance les tests Catch2."
+        },
+        {
+            "label": "Artouste : lancer",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/bin/artouste",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "Demarre le simulateur. Compiler d'abord."
+        },
+        {
+            "label": "CMake : nettoyer",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "--target", "clean"
+            ],
+            "problemMatcher": [],
+            "detail": "Supprime les fichiers compiles en gardant la configuration."
+        }
+    ]
+}

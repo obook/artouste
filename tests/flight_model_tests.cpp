@@ -205,8 +205,12 @@ TEST_CASE("Le rotor attend le plein régime de la turbine", "[flight][turbine]")
     REQUIRE(model.turbine().turbineFraction() > 0.0f); /* turbine en train de monter */
 
     /* La turbine atteint son plein régime, mais le frein rotor est encore serré :
-       les pales restent immobiles le temps que le pilote le lâche (état Attente). */
-    advance(model, idle, artouste::physics::TURBINE_START_TIME);
+       les pales restent immobiles le temps que le pilote le lâche (état Attente).
+       On s'arrête au milieu du délai de frein pour observer cet état, quelles que
+       soient les durées choisies pour la montée et le délai. */
+    advance(model, idle,
+            artouste::physics::TURBINE_START_TIME * 0.5f +
+                artouste::physics::ROTOR_BRAKE_DELAY * 0.5f);
     REQUIRE(model.turbine().state() == State::Attente);
     REQUIRE(model.turbine().turbineFraction() == 1.0f);
     REQUIRE(model.turbine().rotorFraction() == 0.0f);  /* pales toujours à l'arrêt */

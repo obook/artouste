@@ -36,6 +36,7 @@ inline constexpr float COLL_HOVER   = 0.55f;    /* collectif nécessaire pour se
  * s'accélère à son tour. Les pales ne tournent donc qu'une fois la turbine
  * lancée. L'arrêt est plus long : le rotor, lancé, met du temps à s'immobiliser. */
 inline constexpr float TURBINE_START_TIME = 5.0f;  /* s : turbine de 0 à 100 % */
+inline constexpr float ROTOR_BRAKE_DELAY  = 3.0f;  /* s : turbine au régime, frein rotor encore serré, avant le lâcher */
 inline constexpr float ROTOR_ENGAGE_TIME  = 5.0f;  /* s : rotor de 0 à 100 % ensuite */
 inline constexpr float TURBINE_STOP_TIME  = 8.0f;  /* s : arrêt, rotor de 100 % à 0 (inertie) */
 

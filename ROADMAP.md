@@ -16,9 +16,14 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] L'hélicoptère fait de petits sautillements.
 
-### Autres
+### Hélipad
 
-- [ ] Il faut un décalage de quelques secondes entre la turbine max et le laché de frein qui permet la rotation des pales
+- [ ] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol
+
+
+### Turbine
+
+- [x] Il faut un décalage de quelques secondes entre la turbine max et le laché de frein qui permet la rotation des pales
 
 ### Sons
 
@@ -33,5 +38,10 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 ### Position de la pale au lancement
 
 - [x] Ne pas la mettre exactement à O° dans l'axe, mais la décaler un peu, si possible aléatoirement à chaque lancement.
+
+## Compilation
+
+- [ ] Créer un fichier pour la compilation avec VSCode
+
 
 

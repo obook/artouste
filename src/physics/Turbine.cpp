@@ -21,6 +21,7 @@ void Turbine::toggle() noexcept {
             m_state = State::Demarrage;  /* (re)lance la turbine */
             break;
         case State::Demarrage:
+        case State::Attente:
         case State::Embrayage:
         case State::Regime:
             m_state = State::Extinction;  /* coupe la turbine */
@@ -32,18 +33,26 @@ void Turbine::update(float dt) noexcept {
     switch (m_state) {
         case State::Demarrage:
             /* La turbine monte seule en régime ; le rotor reste immobile, pales
-             * arrêtées. Dans la réalité, le pilote a libéré le frein rotor au
-             * préalable (geste non modélisé ici). */
+             * arrêtées. */
             m_turbine += dt / TURBINE_START_TIME;
             if (m_turbine >= 1.0f) {
-                m_turbine = 1.0f;
-                m_state   = State::Embrayage;  /* seuil atteint : le rotor s'engage */
+                m_turbine    = 1.0f;
+                m_brakeTimer = 0.0f;
+                m_state      = State::Attente;  /* turbine au régime, frein encore serré */
+            }
+            break;
+        case State::Attente:
+            /* La turbine tient son plein régime, mais le frein rotor est encore
+             * serré : les pales restent immobiles le temps que le pilote le lâche.
+             * Ce délai écoulé, on passe à l'embrayage du rotor. */
+            m_brakeTimer += dt;
+            if (m_brakeTimer >= ROTOR_BRAKE_DELAY) {
+                m_state = State::Embrayage;  /* frein lâché : le rotor s'engage */
             }
             break;
         case State::Embrayage:
-            /* Au-delà du seuil de régime turbine, le rotor s'engage automatiquement
-             * par la roue libre (celle qui permet aussi l'autorotation) et les pales
-             * accélèrent jusqu'au régime de vol. */
+            /* Frein lâché : le rotor s'engage par la roue libre (celle qui permet
+             * aussi l'autorotation) et les pales accélèrent jusqu'au régime de vol. */
             m_rotor += dt / ROTOR_ENGAGE_TIME;
             if (m_rotor >= 1.0f) {
                 m_rotor = 1.0f;
@@ -80,6 +89,7 @@ const char* Turbine::label() const noexcept {
     switch (m_state) {
         case State::Arret:      return "ARRÊT";
         case State::Demarrage:  return "DÉMARRAGE";
+        case State::Attente:    return "FREIN ROTOR";
         case State::Embrayage:  return "EMBRAYAGE";
         case State::Regime:     return "EN RÉGIME";
         case State::Extinction: return "EXTINCTION";

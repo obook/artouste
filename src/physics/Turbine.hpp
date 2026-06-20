@@ -1,14 +1,15 @@
 /*
  * Turbine.hpp
  * Turbine Artouste de l'Alouette II, modélisée comme une petite machine à états.
- * Le démarrage se fait en deux temps :
+ * Le démarrage se fait en trois temps :
  *   1. la turbine (générateur) monte seule en régime ; le rotor reste immobile,
  *      les pales ne tournent pas ;
- *   2. au-delà d'un seuil de régime turbine, le rotor s'engage automatiquement
- *      (simplification simulateur : on s'appuie sur la roue libre, celle qui
- *      permet aussi l'autorotation) ; les pales accélèrent jusqu'au régime de vol.
- * Dans la réalité, le pilote libère d'abord le frein rotor (serré au parking) ;
- * ce geste n'est pas modélisé : le rotor part dès que la turbine atteint le seuil.
+ *   2. la turbine tient son plein régime quelques secondes, frein rotor encore
+ *      serré : c'est le temps que prend le pilote avant de lâcher le frein ;
+ *   3. le frein lâché, le rotor s'engage par la roue libre (celle qui permet
+ *      aussi l'autorotation) et les pales accélèrent jusqu'au régime de vol.
+ * Le lâcher du frein lui-même n'est pas une commande du joueur : il est simulé
+ * par le délai de l'étape 2.
  * On suit donc deux régimes distincts, chacun dans [0, 1] :
  *   - le régime turbine, qui pilote le son (sifflement de montée en régime) ;
  *   - le régime rotor, qui pilote la portance (le modèle de vol le multiplie à
@@ -27,9 +28,10 @@ namespace artouste::physics {
 
 class Turbine {
 public:
-    /* Les états du cycle. Le démarrage passe par Demarrage (la turbine monte)
-     * puis Embrayage (le rotor s'accélère) avant d'atteindre le plein régime. */
-    enum class State { Arret, Demarrage, Embrayage, Regime, Extinction };
+    /* Les états du cycle. Le démarrage passe par Demarrage (la turbine monte),
+     * Attente (turbine au régime, frein rotor encore serré) puis Embrayage (le
+     * rotor s'accélère) avant d'atteindre le plein régime. */
+    enum class State { Arret, Demarrage, Attente, Embrayage, Regime, Extinction };
 
     /* Lance le démarrage si la turbine est coupée, sinon entame l'extinction.
      * Pendant une transition, bascule simplement vers l'autre sens. */
@@ -61,6 +63,7 @@ private:
     State m_state   = State::Arret;
     float m_turbine = 0.0f;  /* régime turbine [0, 1] */
     float m_rotor   = 0.0f;  /* régime rotor   [0, 1] */
+    float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
 };
 
 }  /* namespace artouste::physics */

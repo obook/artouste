@@ -54,9 +54,13 @@ private:
     bool initGL();
     void initScene();
     void mainLoop();
-    void renderScene(const mat4& base, float rotorAngle, float rotorFraction);
+    void renderScene(const mat4& base, float rotorAngle, float rotorFraction,
+                     float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
+
+    /* Bascule la livrée Gendarmerie (partagée par la touche L et le bouton A). */
+    void toggleGendarmerieLivery();
 
     static void resizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -66,7 +70,8 @@ private:
     int         m_height = 720;
 
     render::Camera                            m_camera;
-    vec3                                      m_startPos{0.0f, 0.0f, 0.0f};  /* point de départ (côte) */
+    vec3                                      m_startPos{0.0f, 0.0f, 0.0f};  /* centre du H (pad) */
+    vec3                                      m_parkPos{0.0f, 0.0f, 0.0f};   /* origine de l'appareil au parking : décalée pour centrer le mât sur le H */
     std::unique_ptr<render::Shader>           m_shader;        /* géométrie à couleur (repli) */
     std::unique_ptr<render::Shader>           m_modelShader;   /* géométrie texturée (modèle) */
     std::unique_ptr<render::Shader>           m_terrainShader; /* terrain réel drapé d'orthophoto */
@@ -88,6 +93,7 @@ private:
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
+    bool                                      m_gendarmerieLivery = true;  /* livrée Gendarmerie par défaut (touche L / bouton A) */
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */
     float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */

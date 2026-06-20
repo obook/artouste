@@ -41,13 +41,21 @@ std::string lower(std::string s) {
     return s;
 }
 
-/* Renvoie vrai si le nom du nœud contient l'une des sous-chaînes cherchées
+/* Renvoie vrai si le nom du nœud correspond à l'un des motifs cherchés
    (comparaison insensible à la casse). Sert à repérer les nœuds à ignorer ou
-   à rendre translucides d'après leur nom. */
+   à rendre translucides d'après leur nom. Par défaut le motif est une sous-chaîne ;
+   préfixé de '=', il impose une correspondance exacte du nom complet. C'est utile
+   quand un nom est sous-chaîne d'un autre (par exemple "brasG" dans "avantbrasG") :
+   on peut alors viser le bras seul sans emporter l'avant-bras. */
 bool matchesAny(const std::string& nodeName, const std::vector<std::string>& needles) {
     const std::string name = lower(nodeName);
-    for (const std::string& needle : needles) {
-        if (name.find(needle) != std::string::npos) {
+    for (const std::string& raw : needles) {
+        const std::string needle = lower(raw);
+        if (!needle.empty() && needle.front() == '=') {
+            if (name == needle.substr(1)) {
+                return true;
+            }
+        } else if (name.find(needle) != std::string::npos) {
             return true;
         }
     }
@@ -125,6 +133,7 @@ void processNode(Model& model, const aiScene* scene, const aiNode* node, const m
 
             /* On n'ajoute la partie que si elle contient vraiment de la géométrie. */
             if (!indices.empty()) {
+                model.recordVertices(vertices);
                 model.addPart(Mesh(vertices, indices),
                               resolveTexture(model, scene, mesh, baseDir), isTransparent,
                               opacity);

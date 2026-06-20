@@ -16,6 +16,7 @@
 #include "render/ModelLoader.hpp"
 #include "render/Shader.hpp"
 
+#include <cmath>
 #include <cstdio>
 #include <utility>
 
@@ -52,6 +53,30 @@ vec3 fgToAssimp(const vec3& fg) {
 /* Position de la planche de bord (issue des fichiers d'assemblage FlightGear). */
 const vec3 PANEL_OFFSET = fgToAssimp(vec3{-4.136f, 0.0f, -0.344f});
 
+/* Position du pilote sur son siège (issue de Pilot/all-pilots.xml). Sur l'Alouette
+   II le pilote est à droite : on prend donc le côté latéral négatif (la place
+   "copilote" de FlightGear). Le pilote est purement décoratif : ses animations
+   FlightGear (tête, bras, jambes suivant les commandes) sont ignorées, comme les
+   aiguilles figées des cadrans. */
+const vec3 PILOT_OFFSET = fgToAssimp(vec3{-3.97159f, -0.40060f, -0.54200f});
+
+/* Copilote sur le siège gauche : même position que le pilote mais côté latéral
+   opposé (c'est le placement d'origine du pilote chez FlightGear). */
+const vec3 COPILOT_OFFSET = fgToAssimp(vec3{-3.97159f, 0.40060f, -0.54200f});
+
+/* Palonniers (rudder) au sol, en avant des sièges (issus de all-pedals.xml). Une
+   paire par siège ; leurs animations FlightGear (bascule au palonnier) sont
+   ignorées, comme tout le reste, on les laisse fixes. */
+const vec3 PEDALS_PILOT_OFFSET   = fgToAssimp(vec3{-4.46341f, -0.38800f, -0.83315f});
+const vec3 PEDALS_COPILOT_OFFSET = fgToAssimp(vec3{-4.46341f, 0.38800f, -0.83315f});
+
+/* Manche cyclique complet (modèle yokes/yoke.ac, colonne depuis le plancher) : une
+   colonne par siège, devant le pilote (issus de all-yokes.xml). La poignée incluse
+   dans le modèle pilote n'en est qu'un bout ; c'est ce yoke qui fait la vraie tige.
+   Ses animations FlightGear sont ignorées, on le laisse fixe. */
+const vec3 CYCLIC_PILOT_OFFSET   = fgToAssimp(vec3{-4.18685f, -0.38800f, -0.80400f});
+const vec3 CYCLIC_COPILOT_OFFSET = fgToAssimp(vec3{-4.18685f, 0.38800f, -0.80400f});
+
 /* Description des cadrans de la planche de bord : le fichier .ac de chacun et sa
    position relative au panneau (coordonnées FlightGear). Ils forment deux rangées
    de quatre. Leurs aiguilles sont figées (purement décoratives). */
@@ -80,6 +105,43 @@ Model loadPart(const std::filesystem::path& path, const std::vector<std::string>
     return model;
 }
 
+/* Construit un décalque : un quad texturé dans le plan XY (face +Z), centré sur
+   l'origine, côté 1 x 1, coordonnées de texture 0..1. Rangé comme une unique
+   partie transparente d'un Model, pour réutiliser tout le rendu existant. */
+Model makeDecal(const std::filesystem::path& texPath) {
+    std::vector<Vertex> verts(4);
+    verts[0].position = vec3{-0.5f, -0.5f, 0.0f}; verts[0].uv = vec2{0.0f, 0.0f};
+    verts[1].position = vec3{ 0.5f, -0.5f, 0.0f}; verts[1].uv = vec2{1.0f, 0.0f};
+    verts[2].position = vec3{ 0.5f,  0.5f, 0.0f}; verts[2].uv = vec2{1.0f, 1.0f};
+    verts[3].position = vec3{-0.5f,  0.5f, 0.0f}; verts[3].uv = vec2{0.0f, 1.0f};
+    for (Vertex& v : verts) {
+        v.normal = vec3{0.0f, 0.0f, 1.0f};
+        v.color  = vec3{1.0f};
+    }
+    const std::vector<unsigned int> idx{0, 1, 2, 0, 2, 3};
+    Model model;
+    const Texture* tex = model.acquireTexture(texPath);
+    model.addPart(Mesh(verts, idx), tex, /*transparent=*/true);
+    return model;
+}
+
+/* Pose un décalque sur un flanc. 'fgPos' est la position de son centre (coordonnées
+   FlightGear), 'w' et 'h' sa largeur et sa hauteur en mètres. Le quad regarde vers
+   l'extérieur du côté correspondant (demi-tour pour le côté gauche, fg.y < 0), avec
+   un léger décalage pour ne pas vibrer (z-fighting) contre la coque. */
+void drawDecal(Shader& shader, const mat4& root, const Model& decal, const vec3& fgPos,
+               float w, float h) {
+    vec3 pos = fgToAssimp(fgPos);
+    pos.z += (fgPos.y >= 0.0f ? 0.02f : -0.02f);
+    mat4 local = glm::translate(mat4(1.0f), pos);
+    if (fgPos.y < 0.0f) {
+        local = local * glm::rotate(mat4(1.0f), PI, vec3{0.0f, 1.0f, 0.0f});
+    }
+    const mat4 m = root * local * glm::scale(mat4(1.0f), vec3{w, h, 1.0f});
+    shader.setMat4("u_model", m);
+    decal.draw(shader, Pass::Transparent);
+}
+
 }  /* namespace */
 
 LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
@@ -98,7 +160,76 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     const std::vector<std::string> glass{"verriere", "vitre"};
 
     m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
+    /* Livrée Gendarmerie nationale : texture bleue de rechange, préchargée dans le
+       cache du fuselage et activable à la demande (voir setGendarmerieLivery). */
+    m_liveryGendarmerie = m_fuselage.acquireTexture(dir / "texture-gendarmerie.png");
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
+
+    /* Pilote sur son siège (modèle FlightGear, texture general_pilot.png). Le
+       pilote entier sert aux vues externes (et au copilote). En vue cockpit, on
+       enlève la tête (sinon l'intérieur du crâne masque tout), le torse (sinon la
+       poitrine cache la planche), le haut des bras (brasG/brasD, en correspondance
+       exacte pour ne pas emporter avantbrasG/avantbrasD) et les jambes, ces
+       dernières étant chargées à part pour les animer au palonnier. */
+    const std::vector<std::string> legParts{"cuisse", "jambe", "pied"};
+    std::vector<std::string> skipCockpit{"tete", "casque", "corps", "=brasg", "=brasd"};
+    skipCockpit.insert(skipCockpit.end(), legParts.begin(), legParts.end());
+    /* Le bras droit (haut du bras, avant-bras, poignée) est chargé à part, en deux
+       segments articulés (épaule, coude), pour suivre le manche cyclique sans se
+       déformer. Le pilote cockpit ne garde que l'avant-bras gauche. */
+    skipCockpit.push_back("avantbrasd");
+    skipCockpit.push_back("manche");
+    m_pilot        = loadPart(dir / "Pilot/general_pilot.ac", skipBody);
+    m_pilotCockpit = loadPart(dir / "Pilot/general_pilot.ac", skipCockpit);
+    /* Bras droit en trois segments : haut du bras (brasD), avant-bras (avantbrasD)
+       et poignée (manche), chacun isolé. */
+    m_armUpper = loadPart(dir / "Pilot/general_pilot.ac",
+                          {"tete", "casque", "corps", "=brasg", "avantbras", "manche",
+                           "cuisse", "jambe", "pied"});
+    m_forearm  = loadPart(dir / "Pilot/general_pilot.ac",
+                          {"tete", "casque", "corps", "=brasg", "=brasd", "avantbrasg",
+                           "manche", "cuisse", "jambe", "pied"});
+    m_grip     = loadPart(dir / "Pilot/general_pilot.ac",
+                          {"tete", "casque", "corps", "=brasg", "=brasd", "avantbras",
+                           "cuisse", "jambe", "pied"});
+
+    /* Points d'articulation = jonctions réelles entre les maillages : la paire de
+       sommets la plus proche entre deux pièces (le point où elles se touchent). Le
+       coude relie le haut du bras à l'avant-bras, le poignet l'avant-bras à la
+       poignée. Bien plus précis que les coins de boite englobante. */
+    const auto junction = [](const Model& a, const Model& b) {
+        float bestSq = 1e30f;
+        vec3  result{0.0f};
+        for (const vec3& pa : a.positions()) {
+            for (const vec3& pb : b.positions()) {
+                const vec3  d  = pa - pb;
+                const float sq = glm::dot(d, d);
+                if (sq < bestSq) {
+                    bestSq = sq;
+                    result = 0.5f * (pa + pb);
+                }
+            }
+        }
+        return result;
+    };
+    m_elbowLocal = junction(m_armUpper, m_forearm);
+    m_wristLocal = junction(m_forearm, m_grip);
+
+    /* Jambes isolées (gauche et droite) pour les faire pivoter au palonnier : on
+       écarte tout sauf cuisse/jambe/pied du côté voulu. */
+    m_legLeft  = loadPart(dir / "Pilot/general_pilot.ac",
+                          {"tete", "casque", "corps", "=brasg", "=brasd", "avantbras",
+                           "manche", "cuissed", "jambed", "piedd"});
+    m_legRight = loadPart(dir / "Pilot/general_pilot.ac",
+                          {"tete", "casque", "corps", "=brasg", "=brasd", "avantbras",
+                           "manche", "cuisseg", "jambeg", "piedg"});
+
+    /* Palonnier : pédales gauche (paloG) et droite (paloD) isolées, pour les faire
+       basculer en sens opposé au palonnier. */
+    m_pedalLeft  = loadPart(dir / "Interior/Panel/Instruments/pedals/pedals.ac", {"palod"});
+    m_pedalRight = loadPart(dir / "Interior/Panel/Instruments/pedals/pedals.ac", {"palog"});
+    /* Manche cyclique : la colonne complète, recopiée devant chaque siège. */
+    m_cyclic = loadPart(dir / "Interior/Panel/Instruments/yokes/yoke.ac", skipBody);
 
     /* Planche de bord et ses cadrans (sans animation). */
     /* Planche de bord : on écarte aussi les capots (sur1..sur6) posés au-dessus
@@ -120,9 +251,21 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_mainBlade = loadPart(dir / "Externals/MainRotor/blade.ac", skipRotor);
     m_tailHub   = loadPart(dir / "Externals/TailRotor/tailrotor.ac", skipRotor);
     m_tailBlade = loadPart(dir / "Externals/TailRotor/blade.ac", skipRotor);
+
+    /* Marquages de la livrée Gendarmerie (posés sur les flancs en 3D, voir draw). */
+    m_decalGendarmerie = makeDecal(dir / "decal-gendarmerie.png");
+    m_decalReg         = makeDecal(dir / "decal-fbrhp.png");
+    m_decalStripe      = makeDecal(dir / "decal-stripe.png");
 }
 
-void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle) const {
+void LoadedHelicopter::setGendarmerieLivery(bool on) {
+    m_gendarmerie = on;
+    m_fuselage.setLivery(on ? m_liveryGendarmerie : nullptr);
+}
+
+void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
+                            bool fullPilot, float rudder, float cyclicLong,
+                            float cyclicLat) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -169,6 +312,94 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle) 
        traités à part, en mélange, pour le fondu selon le régime. */
     drawModel(m_fuselage, root, Pass::Opaque);
     drawModel(m_interior, root, Pass::Opaque);
+    /* En vue cockpit, le pilote est dessiné sans jambes (chargées à part) : on
+       affiche alors ses jambes animées au palonnier. Le pilote entier (vues
+       externes) et le copilote gardent leurs jambes figées. */
+    drawModel(fullPilot ? m_pilot : m_pilotCockpit,
+              root * glm::translate(mat4(1.0f), PILOT_OFFSET), Pass::Opaque);
+    drawModel(m_pilot, root * glm::translate(mat4(1.0f), COPILOT_OFFSET), Pass::Opaque);
+    /* Inclinaison du manche cyclique (issue de yoke.xml) : tangage autour de l'axe
+       latéral (notre Z), roulis autour de l'axe avant-arrière (notre X), pivot à la
+       base du manche. La même rotation servira à faire suivre l'avant-bras droit. */
+    const float cyclicPitch = glm::radians(cyclicLong * 15.0f);
+    const float cyclicRoll  = glm::radians(cyclicLat * -10.0f);
+    const mat4  cyclicR = glm::rotate(mat4(1.0f), cyclicPitch, vec3{0.0f, 0.0f, 1.0f}) *
+                          glm::rotate(mat4(1.0f), cyclicRoll, vec3{1.0f, 0.0f, 0.0f});
+
+    if (!fullPilot) {
+        /* Jambes du pilote : pivot à la hanche (issu de pilot.xml), rotation autour
+           de l'axe latéral (notre Z), opposée d'une jambe à l'autre, ~10 deg par
+           unité de palonnier. */
+        const vec3 hip       = fgToAssimp(vec3{0.237f, 0.0f, -0.065f});
+        const float legAngle = glm::radians(rudder * -10.0f);
+        const auto legMat = [&](float angle) {
+            return root * glm::translate(mat4(1.0f), PILOT_OFFSET) *
+                   glm::translate(mat4(1.0f), hip) *
+                   glm::rotate(mat4(1.0f), angle, vec3{0.0f, 0.0f, 1.0f}) *
+                   glm::translate(mat4(1.0f), -hip);
+        };
+        drawModel(m_legLeft, legMat(legAngle), Pass::Opaque);
+        drawModel(m_legRight, legMat(-legAngle), Pass::Opaque);
+
+        const mat4 pilotBase  = root * glm::translate(mat4(1.0f), PILOT_OFFSET);
+        const mat4 stickXform = glm::translate(mat4(1.0f), CYCLIC_PILOT_OFFSET) * cyclicR *
+                                glm::translate(mat4(1.0f), -CYCLIC_PILOT_OFFSET);
+
+        /* Haut du bras : laissé au repos. Il reste rattaché à l'épaule et tient le
+           coude en place (donc aucun gonflement). */
+        drawModel(m_armUpper, pilotBase, Pass::Opaque);
+
+        /* Poignée : elle suit rigidement le manche (même rotation autour de sa
+           base), donc la prise reste parfaite. */
+        drawModel(m_grip, root * stickXform * glm::translate(mat4(1.0f), PILOT_OFFSET),
+                  Pass::Opaque);
+
+        /* Avant-bras : il pivote autour du coude (fixe, donc rattaché au haut du
+           bras) pour rejoindre le poignet, qui a suivi la poignée sur le manche. Un
+           léger étirement le long de l'os lui permet d'atteindre exactement le
+           poignet. Le bras reste connecté de l'épaule à la poignée. */
+        const vec3 elbow  = PILOT_OFFSET + m_elbowLocal;
+        const vec3 wrist0 = PILOT_OFFSET + m_wristLocal;
+        /* Le poignet (jonction avant-bras/poignée) suit le manche avec la poignée :
+           l'avant-bras y amène son extrémité -> raccord exact, sans trou. */
+        const vec3 wrist1 = vec3(stickXform * vec4(wrist0, 1.0f));
+        const float len0  = glm::length(wrist0 - elbow);
+        const float len1  = glm::length(wrist1 - elbow);
+        const vec3  d0    = (wrist0 - elbow) / glm::max(len0, 1e-4f);
+        const vec3  d1    = (wrist1 - elbow) / glm::max(len1, 1e-4f);
+        mat4        aim   = mat4(1.0f);
+        const vec3  axis  = glm::cross(d0, d1);
+        const float sinA  = glm::length(axis);
+        if (sinA > 1e-4f) {
+            aim = glm::rotate(mat4(1.0f), std::atan2(sinA, glm::dot(d0, d1)), axis / sinA);
+        }
+        const float stretch = len0 > 1e-4f ? len1 / len0 : 1.0f;
+        const mat4  scale   = mat4(mat3(1.0f) + (stretch - 1.0f) * glm::outerProduct(d0, d0));
+        const mat4  foreArm = pilotBase * glm::translate(mat4(1.0f), m_elbowLocal) * aim *
+                              scale * glm::translate(mat4(1.0f), -m_elbowLocal);
+        drawModel(m_forearm, foreArm, Pass::Opaque);
+    }
+    /* Palonniers devant chaque siège : les deux pédales basculent en sens opposé
+       (~15 deg par unité de palonnier), autour de l'axe latéral. */
+    const float pedalAngle = glm::radians(rudder * -15.0f);
+    const auto pedalMat = [&](const vec3& offset, float angle) {
+        return root * glm::translate(mat4(1.0f), offset) *
+               glm::rotate(mat4(1.0f), angle, vec3{0.0f, 0.0f, 1.0f});
+    };
+    drawModel(m_pedalLeft, pedalMat(PEDALS_PILOT_OFFSET, pedalAngle), Pass::Opaque);
+    drawModel(m_pedalRight, pedalMat(PEDALS_PILOT_OFFSET, -pedalAngle), Pass::Opaque);
+    /* Pédales du copilote laissées au neutre : ses jambes, elles, sont figées, des
+       pédales animées lui rentreraient dans les pieds. */
+    drawModel(m_pedalLeft, pedalMat(PEDALS_COPILOT_OFFSET, 0.0f), Pass::Opaque);
+    drawModel(m_pedalRight, pedalMat(PEDALS_COPILOT_OFFSET, 0.0f), Pass::Opaque);
+    /* Manches cycliques devant chaque siège. Celui du pilote s'incline avec la
+       commande (en vue cockpit, où la main suit) ; celui du copilote reste fixe,
+       sa main à lui étant figée. */
+    const mat4 pilotCyclic = (!fullPilot)
+        ? root * glm::translate(mat4(1.0f), CYCLIC_PILOT_OFFSET) * cyclicR
+        : root * glm::translate(mat4(1.0f), CYCLIC_PILOT_OFFSET);
+    drawModel(m_cyclic, pilotCyclic, Pass::Opaque);
+    drawModel(m_cyclic, root * glm::translate(mat4(1.0f), CYCLIC_COPILOT_OFFSET), Pass::Opaque);
     drawModel(m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
     for (const Gauge& gauge : m_gauges) {
         drawModel(gauge.model, root * glm::translate(mat4(1.0f), gauge.offset), Pass::Opaque);
@@ -187,10 +418,22 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle) 
         drawModel(m_tailBlade, bladeMat, Pass::Opaque);
     }
 
-    /* Passe transparente : les vitrages, dessinés en dernier. */
+    /* Passe transparente : marquages de livrée (posés sur la coque opaque) puis
+       vitrages, dessinés en dernier. */
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
+    if (m_gendarmerie) {
+        /* "GENDARMERIE" sur le bas des flancs de cabine, "F-BRHP" sur le caisson
+           arrière. Positions en coordonnées FlightGear, affinées visuellement. */
+        /* Liséré blanc juste au-dessus du mot, sur chaque flanc. */
+        drawDecal(shader, root, m_decalStripe, vec3{-3.60f, 0.90f, -0.71f}, 1.15f, 0.015f);
+        drawDecal(shader, root, m_decalStripe, vec3{-3.60f, -0.90f, -0.71f}, 1.15f, 0.015f);
+        drawDecal(shader, root, m_decalGendarmerie, vec3{-3.60f, 0.90f, -0.80f}, 0.90f, 0.13f);
+        drawDecal(shader, root, m_decalGendarmerie, vec3{-3.60f, -0.90f, -0.80f}, 0.90f, 0.13f);
+        drawDecal(shader, root, m_decalReg, vec3{-1.92f, 0.62f, -0.05f}, 0.36f, 0.11f);
+        drawDecal(shader, root, m_decalReg, vec3{-1.92f, -0.62f, -0.05f}, 0.36f, 0.11f);
+    }
     drawModel(m_fuselage, root, Pass::Transparent);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);

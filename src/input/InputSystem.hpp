@@ -50,6 +50,9 @@ public:
     /* La combinaison LB + RB vient-elle d'être pressée ? (quitter) */
     [[nodiscard]] bool quitPressed() noexcept { return m_gamepad.quitPressed(); }
 
+    /* Le bouton A vient-il d'être pressé ? (bascule la livrée Gendarmerie) */
+    [[nodiscard]] bool liveryTogglePressed() noexcept { return m_gamepad.liveryTogglePressed(); }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

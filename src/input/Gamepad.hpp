@@ -57,6 +57,10 @@ public:
      * (quitter). Une combinaison évite les sorties accidentelles. */
     [[nodiscard]] bool quitPressed() noexcept;
 
+    /* Vrai une seule fois, au moment où le bouton A vient d'être pressé (bascule la
+     * livrée Gendarmerie, comme la touche L). */
+    [[nodiscard]] bool liveryTogglePressed() noexcept;
+
     /* Remet le levier de collectif à zéro. */
     void reset() noexcept { m_collective = 0.0f; }
 
@@ -68,6 +72,7 @@ private:
     bool  m_prevBack   = false; /* état du bouton Back à l'image précédente */
     bool  m_prevX      = false; /* état du bouton X à l'image précédente */
     bool  m_prevQuit   = false; /* état de la combinaison LB + RB à l'image précédente */
+    bool  m_prevA      = false; /* état du bouton A à l'image précédente */
 };
 
 }  /* namespace artouste::input */

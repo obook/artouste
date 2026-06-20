@@ -170,6 +170,16 @@ bool Gamepad::quitPressed() noexcept {
     return nouvelAppui;
 }
 
+bool Gamepad::liveryTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevA = false;
+        return false;
+    }
+    /* Bouton A (vert, en bas du losange ABXY) : bascule la livrée Gendarmerie. */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_A, m_prevA);
+}
+
 bool Gamepad::isActive() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {

@@ -32,6 +32,13 @@ void Model::addPart(Mesh&& mesh, const Texture* texture, bool transparent, float
     m_parts.push_back(Part{std::move(mesh), texture, transparent, opacity});
 }
 
+void Model::recordVertices(const std::vector<Vertex>& vertices) {
+    m_positions.reserve(m_positions.size() + vertices.size());
+    for (const Vertex& v : vertices) {
+        m_positions.push_back(v.position);
+    }
+}
+
 void Model::draw(Shader& shader, Pass pass, float opacityScale) const {
     for (const Part& part : m_parts) {
         /* On saute les parties qui ne correspondent pas à la passe demandée. */
@@ -44,8 +51,13 @@ void Model::draw(Shader& shader, Pass pass, float opacityScale) const {
         /* On transmet au shader les réglages propres à cette partie, puis on
            dessine son maillage. */
         shader.setFloat("u_opacity", part.opacity * opacityScale);
-        if (part.texture != nullptr) {
-            part.texture->bind(0);
+        /* Livrée de rechange : si elle est posée, elle remplace la texture des
+           parties texturées (le vitrage, sans texture, garde son rendu). */
+        const Texture* texture = (m_livery != nullptr && part.texture != nullptr)
+                                     ? m_livery
+                                     : part.texture;
+        if (texture != nullptr) {
+            texture->bind(0);
         }
         part.mesh.draw();
     }

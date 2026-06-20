@@ -54,9 +54,13 @@ constexpr char WINDOW_TITLE[] = "Artouste";
 
 /*
  * Position de l'oeil du pilote (siège droit) dans le repère corps : avant (X),
- * haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière.
+ * haut (Y), droite (Z). Réglée pour cadrer la planche de bord et la verrière, et
+ * pour laisser voir les avant-bras du pilote sur le manche en partie basse (le
+ * torse et le haut des bras, eux, sont retirés du modèle en vue cockpit, voir
+ * LoadedHelicopter). Posée sur le siège droit, un peu recentrée, et avancée pour
+ * rapprocher la planche de bord.
  */
-const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
+const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
 
 /*
  * Rotor principal (animation visuelle) :
@@ -274,7 +278,12 @@ void Application::initScene() {
         constexpr float START_Z = 3006.0f;   /* m au sud du centre */
         const float     ground  = m_terrain->heightAt(START_X, START_Z);
         m_startPos              = vec3{START_X, ground, START_Z};
-        m_flight.reset(m_startPos);
+        /* L'appareil se gare mât rotor centré sur le H : son origine (que la
+           physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
+           de départ (cap initial = +X, orientation identité au reset). */
+        const float parkX = START_X - render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
+        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, START_Z), START_Z};
+        m_flight.reset(m_parkPos);
     }
 
     m_helicopter = std::make_unique<render::HelicopterModel>();
@@ -292,6 +301,8 @@ void Application::initScene() {
         auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
         if (loaded->loaded()) {
             m_loadedHeli = std::move(loaded);
+            /* Livrée Gendarmerie appliquée d'emblée (état par défaut). */
+            m_loadedHeli->setGendarmerieLivery(m_gendarmerieLivery);
             std::printf("[scène] modèle FlightGear chargé.\n");
         } else {
             std::printf("[scène] échec du chargement du modèle, repli procédural.\n");
@@ -346,11 +357,14 @@ void Application::mainLoop() {
             m_paused = !m_paused;
         }
         if (m_input->resetPressed()) {  /* X : replace l'appareil au départ (comme R) */
-            m_flight.reset(m_startPos);
+            m_flight.reset(m_parkPos);
             m_input->reset();
         }
         if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+        }
+        if (m_input->liveryTogglePressed()) {  /* A : bascule la livrée (comme L) */
+            toggleGendarmerieLivery();
         }
 
         /* Hauteur du relief sous l'appareil : sert au contact avec le sol. */
@@ -474,7 +488,8 @@ void Application::mainLoop() {
             }
         }
 
-        renderScene(base, m_rotorAngle, m_flight.turbine().rotorFraction());
+        renderScene(base, m_rotorAngle, m_flight.turbine().rotorFraction(), controls.pedals,
+                    controls.cyclicLongitudinal, controls.cyclicLateral);
 
         ui::HudData hud;
         hud.altitudeM    = body.position.y;
@@ -499,7 +514,8 @@ void Application::mainLoop() {
     }
 }
 
-void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction) {
+void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction,
+                              float rudder, float cyclicLong, float cyclicLat) {
     const vec3 lightDir = glm::normalize(vec3{0.4f, 1.0f, 0.35f});
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
@@ -670,7 +686,11 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_modelShader->setVec3("u_lightDir", lightDir);
         m_modelShader->setVec3("u_camPos", m_camera.position());
         m_modelShader->setInt("u_texture", 0);
-        m_loadedHeli->draw(*m_modelShader, base, rotorAngle);
+        /* En vue cockpit, le pilote est dessiné sans tête ni casque (la caméra est
+           à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
+           fait basculer pédales et jambes. */
+        m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
+                           cyclicLong, cyclicLat);
 
         /*
          * Disque rotor (mis en commentaire, à reprendre plus tard).
@@ -710,6 +730,12 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
     m_camera.setAspect(static_cast<float>(fbw) / static_cast<float>(fbh));
 
+    /* Livrée Gendarmerie dans la capture si ARTOUSTE_SHOT_LIVERY est définie
+       (pratique pour vérifier les marquages sans la boucle interactive). */
+    if (m_loadedHeli && std::getenv("ARTOUSTE_SHOT_LIVERY") != nullptr) {
+        m_loadedHeli->setGendarmerieLivery(true);
+    }
+
     /*
      * Cadrage par défaut (vue trois quarts arrière). On peut le modifier via
      * des variables d'environnement pour observer plusieurs angles sans
@@ -737,12 +763,18 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
 
     /* L'appareil est placé en vol au-dessus de la côte (sa position de départ),
-       de sorte que la capture montre le relief réel et la mer sous lui. */
-    const vec3 shotPos{m_startPos.x, m_terrain->heightAt(m_startPos.x, m_startPos.z) + agl,
-                       m_startPos.z};
+       de sorte que la capture montre le relief réel et la mer sous lui. Avec
+       ARTOUSTE_SHOT_PARK, on le pose plutôt à sa position de parking (mât centré
+       sur le H), pour vérifier ce placement. */
+    vec3 shotPos{m_startPos.x, m_terrain->heightAt(m_startPos.x, m_startPos.z) + agl,
+                 m_startPos.z};
+    if (std::getenv("ARTOUSTE_SHOT_PARK") != nullptr) {
+        shotPos = m_parkPos;
+    }
     const mat4 base = glm::translate(mat4(1.0f), shotPos);
 
     if (std::getenv("ARTOUSTE_SHOT_COCKPIT") != nullptr) {
+        m_viewMode = 1;  /* vue cockpit : pilote allégé, jambes animées */
         m_camera.setFovYDeg(70.0f);
         m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
         const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
@@ -771,8 +803,21 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
      * auto-dimensionnées invisibles à leur première apparition (le temps de les
      * mesurer), puis elles se stabilisent.
      */
+    /* Commandes de capture (pour vérifier les animations pédales/jambes/manche). */
+    float shotRudder = 0.0f;
+    float shotCyclicLong = 0.0f;
+    float shotCyclicLat = 0.0f;
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_RUDDER")) {
+        shotRudder = std::strtof(e, nullptr);
+    }
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_CYCLIC_LONG")) {
+        shotCyclicLong = std::strtof(e, nullptr);
+    }
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_CYCLIC_LAT")) {
+        shotCyclicLat = std::strtof(e, nullptr);
+    }
     for (int i = 0; i < 3; ++i) {
-        renderScene(base, 1.3f, 1.0f);
+        renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat);
         m_hud.render(hud, m_hudMode, false);
     }
     glFinish();
@@ -790,6 +835,14 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     } else {
         std::fprintf(stderr, "[capture] échec d'écriture %s\n", path.string().c_str());
     }
+}
+
+void Application::toggleGendarmerieLivery() {
+    if (!m_loadedHeli) {
+        return;
+    }
+    m_gendarmerieLivery = !m_gendarmerieLivery;
+    m_loadedHeli->setGendarmerieLivery(m_gendarmerieLivery);
 }
 
 void Application::onResize(int width, int height) {
@@ -829,9 +882,14 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_flight.turbine().toggle();
             }
             break;
+        case GLFW_KEY_L:  /* bascule la livrée Gendarmerie nationale */
+            if (app != nullptr) {
+                app->toggleGendarmerieLivery();
+            }
+            break;
         case GLFW_KEY_R:  /* replace l'appareil à sa position de départ (la côte) */
             if (app != nullptr) {
-                app->m_flight.reset(app->m_startPos);
+                app->m_flight.reset(app->m_parkPos);
                 app->m_input->reset();
             }
             break;

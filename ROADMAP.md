@@ -6,23 +6,23 @@
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
-- [ ] Dans la mesure du possible, respecter la forme et l'allure des vrais instruments repérer dans les photographies du dossier docs.
-
 - [x] Mettre l'altitude dans le même style que la boussole, mais à gauche et verticalement
 
 ## Réalisme
 
-### Ajouter le pilotage
+- [ ] Configuration
 
-- [ ] Modéliser un pilote dans son siège, utiliser blender si besoin
+    Module de chargement de la configuration
 
-### Vue de suivie (chase/arrière)
+    Quelques éléments seront configurable par un fichier .json, chargé et appliqué au lancement, il est éditable à la main, la première variable est la position de la caméra intérieur
 
-- [x] L'hélicoptère fait de petits sautillements.
+- [ ] strombo : flash rouge clignotant au dessus de l'habitacle lorsque la turbine fonctionne
 
-### Hélipad
+- [ ] tuyère : zone jaune et/ou rouge lorsqu'elle est en fonctionnement pour illustrer la chaleur
 
-- [x] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol, blender disponible (le plugin de conversion .ac https://github.com/NikolaiVChr/Blender-AC3D utilisé par Emmanuel est nécessaire).
+- [ ] Mode assisté : voir docs/ASSISTED_MODE.md
+
+- [ ] L'ombre des pales est centrée sur le centre de gravité, il faut le centrer sur le rotor principal
 
 ### Ombre hélicopter
 
@@ -41,14 +41,5 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 ### raccord avec la mer
 
 - [x] Il reste des zones blanches en zig-zag sur les raccords.
-
-### Position de la pale au lancement
-
-- [x] Ne pas la mettre exactement à O° dans l'axe, mais la décaler un peu, si possible aléatoirement à chaque lancement.
-
-## Compilation
-
-- [x] Créer un fichier pour la compilation avec VSCode
-
 
 

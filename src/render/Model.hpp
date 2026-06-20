@@ -48,9 +48,20 @@ public:
     /* Renvoie la texture du chemin donné, en la chargeant une seule fois :
        si elle est déjà dans le cache, on réutilise celle-ci. */
     const Texture* acquireTexture(const std::filesystem::path& path);
+
+    /* Remplace, à l'affichage, la texture de toutes les parties texturées par
+       celle-ci (livrée de rechange). Passer nullptr pour revenir aux textures
+       d'origine. Les parties sans texture (le vitrage) ne sont pas touchées. */
+    void setLivery(const Texture* texture) noexcept { m_livery = texture; }
     /* Ajoute une partie au modèle (maillage + texture + réglages de rendu). */
     void addPart(Mesh&& mesh, const Texture* texture, bool transparent = false,
                  float opacity = 1.0f);
+
+    /* Mémorise les positions des sommets (repère local du modèle), pendant le
+       chargement. Sert à retrouver le point de jonction réel entre deux pièces
+       (le coude, le poignet), en cherchant la paire de sommets la plus proche. */
+    void recordVertices(const std::vector<Vertex>& vertices);
+    [[nodiscard]] const std::vector<vec3>& positions() const noexcept { return m_positions; }
 
 private:
     /* Une partie du modèle : un morceau de géométrie avec sa texture et son
@@ -64,6 +75,8 @@ private:
 
     std::vector<Part>                                        m_parts;
     std::unordered_map<std::string, std::unique_ptr<Texture>> m_textures;
+    const Texture*                                           m_livery = nullptr;
+    std::vector<vec3>                                        m_positions;
 };
 
 }  /* namespace artouste::render */

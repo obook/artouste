@@ -38,6 +38,18 @@ public:
     /* Le bouton Start de la manette vient-il d'être pressé ? (démarre/coupe la turbine) */
     [[nodiscard]] bool turbineTogglePressed() noexcept { return m_gamepad.turbineTogglePressed(); }
 
+    /* Le bouton B de la manette vient-il d'être pressé ? (affiche/masque le HUD) */
+    [[nodiscard]] bool hudTogglePressed() noexcept { return m_gamepad.hudTogglePressed(); }
+
+    /* Le bouton Back de la manette vient-il d'être pressé ? (pause/reprise) */
+    [[nodiscard]] bool pauseTogglePressed() noexcept { return m_gamepad.pauseTogglePressed(); }
+
+    /* Le bouton X de la manette vient-il d'être pressé ? (reset position) */
+    [[nodiscard]] bool resetPressed() noexcept { return m_gamepad.resetPressed(); }
+
+    /* La combinaison LB + RB vient-elle d'être pressée ? (quitter) */
+    [[nodiscard]] bool quitPressed() noexcept { return m_gamepad.quitPressed(); }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

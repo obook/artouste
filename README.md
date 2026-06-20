@@ -29,10 +29,10 @@ jeu lourd.
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
-| HUD on/off              | `H`            | --                   |
-| Pause                   | `P`            | --                   |
-| Reset position          | `R`            | --                   |
-| Quitter                 | `Échap`        | --                   |
+| HUD on/off              | `H`            | bouton `B`           |
+| Pause                   | `P`            | bouton `Back`        |
+| Reset position          | `R`            | bouton `X`           |
+| Quitter                 | `Échap`        | `LB` + `RB`          |
 
 ## Compilation (Linux)
 

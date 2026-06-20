@@ -124,6 +124,52 @@ bool Gamepad::turbineTogglePressed() noexcept {
     return risingEdge(state, GLFW_GAMEPAD_BUTTON_START, m_prevStart);
 }
 
+bool Gamepad::hudTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevB = false;
+        return false;
+    }
+    /* Bouton B : affiche ou masque le HUD (comme la touche H). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_B, m_prevB);
+}
+
+bool Gamepad::pauseTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevBack = false;
+        return false;
+    }
+    /* Bouton Back (View) : met en pause ou reprend (comme la touche P). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_BACK, m_prevBack);
+}
+
+bool Gamepad::resetPressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevX = false;
+        return false;
+    }
+    /* Bouton X : replace l'appareil au point de départ (comme la touche R). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_X, m_prevX);
+}
+
+bool Gamepad::quitPressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevQuit = false;
+        return false;
+    }
+    /* Quitter : les deux gâchettes d'épaule (LB + RB) pressées ensemble. La
+     * combinaison évite une sortie sur un simple appui involontaire. On déclenche
+     * une fois, au passage de "pas les deux" à "les deux" (front montant). */
+    const bool both = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS &&
+                      state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS;
+    const bool nouvelAppui = both && !m_prevQuit;
+    m_prevQuit             = both;
+    return nouvelAppui;
+}
+
 bool Gamepad::isActive() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {

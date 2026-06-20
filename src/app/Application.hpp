@@ -86,6 +86,8 @@ private:
     bool                                      m_showHud  = true;
     bool                                      m_paused   = false;
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
+    float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */
+    physics::Turbine::State                   m_prevTurbineState = physics::Turbine::State::Arret;  /* pour déclencher le son de démarrage au bon moment */
 };
 
 }  /* namespace artouste::app */

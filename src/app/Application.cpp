@@ -301,6 +301,22 @@ void Application::mainLoop() {
             m_flight.turbine().toggle();
         }
 
+        /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour
+         * pouvoir jouer à la manette seule. */
+        if (m_input->hudTogglePressed()) {  /* B : affiche/masque le HUD (comme H) */
+            m_showHud = !m_showHud;
+        }
+        if (m_input->pauseTogglePressed()) {  /* Back : pause/reprise (comme P) */
+            m_paused = !m_paused;
+        }
+        if (m_input->resetPressed()) {  /* X : replace l'appareil au départ (comme R) */
+            m_flight.reset(m_startPos);
+            m_input->reset();
+        }
+        if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
+            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+        }
+
         /* Hauteur du relief sous l'appareil : sert au contact avec le sol. */
         const vec3& pos = m_flight.body().position;
         m_flight.setGroundHeight(m_terrain->heightAt(pos.x, pos.z));
@@ -347,7 +363,47 @@ void Application::mainLoop() {
         const float airspeed         = glm::length(vec2{body.velocity.x, body.velocity.z});
         const float turbineFraction  = m_flight.turbine().turbineFraction();
         const float rotorFraction    = m_flight.turbine().rotorFraction();
-        m_audio.update(controls.collective, airspeed, turbineFraction, rotorFraction);
+
+        /* Son ponctuel de démarrage : déclenché quand la turbine entre en phase de
+         * démarrage, coupé si le pilote l'interrompt (passage en extinction). */
+        const physics::Turbine::State turbineState = m_flight.turbine().state();
+        if (turbineState != m_prevTurbineState) {
+            if (turbineState == physics::Turbine::State::Demarrage) {
+                m_audio.playStartSound();
+            } else if (turbineState == physics::Turbine::State::Extinction) {
+                m_audio.stopStartSound();
+            }
+            m_prevTurbineState = turbineState;
+        }
+
+        const audio::AudioEngine::View audioView =
+            m_viewMode == 1 ? audio::AudioEngine::View::Interior   /* cockpit */
+            : m_viewMode == 2 ? audio::AudioEngine::View::Fly      /* orbite */
+                              : audio::AudioEngine::View::Rear;    /* poursuite */
+
+        /* Effet Doppler : uniquement en vue extérieure libre (orbite). On le déduit
+         * de la vitesse propre de l'appareil projetée sur l'axe caméra->appareil (la
+         * caméra d'orbite est quasi fixe), et non d'une différence de distance entre
+         * deux images : ainsi un changement de vue ou un reset, qui téléporte la
+         * caméra, ne crée aucun Doppler parasite (la vitesse reste bornée). En vues
+         * intérieure et poursuite, la caméra suit l'appareil -> pas de mouvement
+         * relatif, pas de Doppler. Un léger lissage adoucit l'entrée/sortie d'effet. */
+        float targetClosing = 0.0f;
+        if (audioView == audio::AudioEngine::View::Fly) {
+            const vec3  toCam = m_camera.position() - body.position;
+            const float dist  = glm::length(toCam);
+            if (dist > 0.001f) {
+                targetClosing = glm::dot(body.velocity, toCam / dist);
+            }
+        }
+        m_closingSpeed += (targetClosing - m_closingSpeed) * (1.0f - std::exp(-frameDt / 0.25f));
+
+        /* En pause, on suspend les boucles sonores ; sinon on les module normalement. */
+        m_audio.setPaused(m_paused);
+        if (!m_paused) {
+            m_audio.update(controls.collective, airspeed, turbineFraction, rotorFraction,
+                           audioView, m_closingSpeed);
+        }
 
         /* Angle du rotor principal. Il n'avance qu'au prorata du régime rotor (donc
          * pales immobiles turbine coupée, puis accélération), dans le sens horaire vu

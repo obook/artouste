@@ -70,7 +70,7 @@ const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
  * Strombo (feu anti-collision) : petite sphère rouge posée au-dessus de la cabine,
  * qui clignote (allumée une brève fraction de la période) tant que la turbine tourne.
  */
-const vec3        BEACON_POS{2.70f, 2.35f, 0.0f};  /* au-dessus du toit, devant le mât */
+const vec3        BEACON_POS{3.11f, 2.41f, 0.0f};  /* position du beacon du modèle (all-lights.xml), sur le toit */
 constexpr float   BEACON_RADIUS = 0.10f;           /* rayon de la sphère (m) */
 constexpr float   BEACON_PERIOD = 1.2f;            /* période du clignotement (s) */
 constexpr float   BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */

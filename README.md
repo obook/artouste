@@ -11,9 +11,12 @@ jeu lourd.
 
 - Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques,
   anti-couple), effet de sol et effet de translation, intégration à pas fixe.
+- Démarrage et arrêt de la turbine Artouste en deux temps (la turbine monte en
+  régime, puis le rotor s'accélère) : il faut la lancer pour décoller.
 - Entrées clavier et manette Xbox (détection automatique de la source).
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
-- HUD transparent (altitude, vitesse, cap, variomètre, régime, collectif).
+- HUD transparent (altitude, vitesse, cap, variomètre, état turbine, régime
+  rotor, collectif, palonnier).
 - Son moteur et rotor, ciel en dégradé, ombre portée.
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
@@ -24,6 +27,7 @@ jeu lourd.
 | Collectif +/-           | `W`/`Z` / `S`  | RT / LT              |
 | Cyclique                | flèches        | stick gauche         |
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
+| Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
 | HUD on/off              | `H`            | --                   |
 | Pause                   | `P`            | --                   |

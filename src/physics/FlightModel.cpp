@@ -33,15 +33,20 @@ float clampAbs(float v, float limit) noexcept {
 }  /* namespace */
 
 void FlightModel::update(const Controls& controls, float dt) noexcept {
+    /* Turbine : on fait avancer son régime avant tout le reste, car la poussée
+     * et l'anti-couple en dépendent. Rotor à l'arrêt -> rotorFraction = 0. */
+    m_turbine.update(dt);
+    const float rotorFraction = m_turbine.rotorFraction();
+
     const vec3 worldUp{0.0f, 1.0f, 0.0f};
     const vec3 bodyUpWorld = m_body.orientation * worldUp;  /* axe du rotor exprimé dans le repère monde */
 
     /* --- Forces (repère monde) ---------------------------------------------- */
     /* Poussée du rotor, dirigée selon l'axe vertical du fuselage. Elle est calée
-     * pour équilibrer le poids au collectif COLL_HOVER. On suppose le régime du
-     * rotor constant. */
+     * pour équilibrer le poids au collectif COLL_HOVER, et proportionnelle au
+     * régime du rotor : tant que la turbine n'est pas lancée, pas de portance. */
     const float collective  = saturate(controls.collective);
-    const float baseThrust  = (MASS * G / COLL_HOVER) * collective;
+    const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction;
 
     /* Effet de sol : près du sol, la poussée est renforcée ; ce gain diminue avec
      * la hauteur au-dessus du relief. */
@@ -84,7 +89,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * pilote compense au palonnier droit. D'où le signe + sur l'anti-couple, qui croît
      * avec le collectif, et le palonnier droit qui ramène le nez vers la droite. */
     torque.y = -controls.pedals * YAW_CTRL
-               + REACTIVE_TORQUE * (collective - COLL_HOVER) - DAMP_YAW * w.y;
+               + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction - DAMP_YAW * w.y;
     torque.z = -controls.cyclicLongitudinal * PITCH_CTRL   /* tangage (autour de Z) */
                + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;
 

@@ -83,20 +83,27 @@ bool AudioEngine::init(const std::filesystem::path& soundsDir) {
     return true;
 }
 
-void AudioEngine::update(float collective, float airspeed) {
+void AudioEngine::update(float collective, float airspeed, float turbineFraction,
+                         float rotorFraction) {
     if (!m_impl->engineInit) {
         return;
     }
-    /* Moteur : volume et hauteur montent avec le collectif (la turbine pousse plus fort). */
+    const float turbine = clamp01(turbineFraction);  /* régime turbine [0, 1] */
+    const float rotor   = clamp01(rotorFraction);    /* régime rotor   [0, 1] */
+
+    /* Turbine : volume et hauteur suivent son régime (silencieuse à l'arrêt, la
+     * hauteur grimpe pendant la montée en régime : sifflement de démarrage). Le
+     * collectif l'accentue un peu (la turbine pousse plus fort en charge). */
     if (m_impl->engineLoaded) {
         const float c = clamp01(collective);
-        ma_sound_set_volume(&m_impl->engineSound, 0.35f + 0.55f * c);
-        ma_sound_set_pitch(&m_impl->engineSound, 0.90f + 0.30f * c);
+        ma_sound_set_volume(&m_impl->engineSound, (0.35f + 0.55f * c) * turbine);
+        ma_sound_set_pitch(&m_impl->engineSound, 0.55f + 0.35f * turbine + 0.30f * c);
     }
-    /* Rotor : un peu plus présent quand l'appareil avance (translation). */
+    /* Rotor : ne se fait entendre qu'une fois les pales lancées, un peu plus
+     * quand l'appareil avance (translation). Son volume suit le régime rotor. */
     if (m_impl->rotorLoaded) {
         const float a = airspeed > 40.0f ? 1.0f : airspeed / 40.0f;
-        ma_sound_set_volume(&m_impl->rotorSound, 0.35f + 0.20f * a);
+        ma_sound_set_volume(&m_impl->rotorSound, (0.35f + 0.20f * a) * rotor);
     }
 }
 

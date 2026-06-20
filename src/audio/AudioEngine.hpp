@@ -31,9 +31,11 @@ public:
      * Renvoie false, en silence, en cas d'échec. */
     bool init(const std::filesystem::path& soundsDir);
 
-    /* À appeler à chaque image : module le son selon le collectif [0, 1] et la
-     * vitesse air (en m/s). */
-    void update(float collective, float airspeed);
+    /* À appeler à chaque image : module le son selon le collectif [0, 1], la
+     * vitesse air (en m/s), le régime turbine [0, 1] (sifflement de la turbine)
+     * et le régime rotor [0, 1] (souffle des pales). Au repos, tout est
+     * silencieux ; au démarrage, la turbine siffle avant que le rotor ne tourne. */
+    void update(float collective, float airspeed, float turbineFraction, float rotorFraction);
 
     [[nodiscard]] bool ready() const noexcept;
 

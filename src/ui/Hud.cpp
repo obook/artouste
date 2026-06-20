@@ -79,6 +79,7 @@ void Hud::render(const HudData& data, bool showHud, bool paused) {
         ImGui::End();
 
         corner("hud_bl", ImVec2(m, h - m), ImVec2(0.0f, 1.0f));
+        ImGui::Text("TURB %s", data.turbine);
         ImGui::Text("NR   %3.0f %%", static_cast<double>(data.rotorPct));
         ImGui::Text("COLL %3.0f %%", static_cast<double>(data.collectivePct));
         ImGui::End();

@@ -13,6 +13,7 @@
 
 #include "physics/Controls.hpp"
 #include "physics/RigidBody.hpp"
+#include "physics/Turbine.hpp"
 
 namespace artouste::physics {
 
@@ -20,6 +21,13 @@ class FlightModel {
 public:
     /* Avance la simulation d'un pas de durée dt (appelé à cadence régulière). */
     void update(const Controls& controls, float dt) noexcept;
+
+    /* Turbine Artouste : on l'expose pour la piloter (démarrage/arrêt) et lire
+     * son état (HUD, audio). Le modèle multiplie poussée et anti-couple par son
+     * régime ; il faut donc la démarrer pour décoller. Repositionner l'appareil
+     * (reset) ne touche pas à la turbine : elle garde son état. */
+    [[nodiscard]] Turbine&       turbine() noexcept { return m_turbine; }
+    [[nodiscard]] const Turbine& turbine() const noexcept { return m_turbine; }
 
     void reset() noexcept { m_body = RigidBody{}; }
 
@@ -46,6 +54,7 @@ public:
 
 private:
     RigidBody m_body;
+    Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
 };

@@ -30,6 +30,15 @@ inline constexpr float I_PITCH      = 3500.0f;  /* kg.m^2  autour de Z */
  * exactement le poids. */
 inline constexpr float COLL_HOVER   = 0.55f;    /* collectif nécessaire pour se sustenter */
 
+/* --- Turbine Artouste --------------------------------------------------------- */
+/* Démarrage en deux temps, comme une vraie turbine libre : la turbine (le
+ * générateur) monte d'abord seule en régime, puis le rotor s'accouple et
+ * s'accélère à son tour. Les pales ne tournent donc qu'une fois la turbine
+ * lancée. L'arrêt est plus long : le rotor, lancé, met du temps à s'immobiliser. */
+inline constexpr float TURBINE_START_TIME = 5.0f;  /* s : turbine de 0 à 100 % */
+inline constexpr float ROTOR_ENGAGE_TIME  = 5.0f;  /* s : rotor de 0 à 100 % ensuite */
+inline constexpr float TURBINE_STOP_TIME  = 8.0f;  /* s : arrêt, rotor de 100 % à 0 (inertie) */
+
 /* --- Traînée quadratique selon l'axe (repère corps) -------------------------- */
 /* La traînée freine le mouvement : Force = -k * v * |v| sur chaque axe.
  * Elle est plus forte verticalement qu'horizontalement (forme de l'appareil). */

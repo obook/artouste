@@ -16,13 +16,14 @@ namespace artouste::ui {
 
 /* Valeurs à afficher, déjà converties dans les unités du HUD. */
 struct HudData {
-    float altitudeM      = 0.0f;
-    float airspeedKt     = 0.0f;
-    float headingDeg     = 0.0f;
-    float varioFpm       = 0.0f;
-    float collectivePct  = 0.0f;
-    float pedals         = 0.0f;  /* [-1, +1] */
-    float rotorPct       = 0.0f;
+    float       altitudeM     = 0.0f;
+    float       airspeedKt    = 0.0f;
+    float       headingDeg    = 0.0f;
+    float       varioFpm      = 0.0f;
+    float       collectivePct = 0.0f;
+    float       pedals        = 0.0f;   /* [-1, +1] */
+    float       rotorPct      = 0.0f;
+    const char* turbine       = "";     /* libellé d'état de la turbine */
 };
 
 class Hud {

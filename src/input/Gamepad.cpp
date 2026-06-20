@@ -91,6 +91,19 @@ physics::Controls Gamepad::poll(float dt) noexcept {
     return controls;
 }
 
+namespace {
+
+/* Front montant d'un bouton : vrai uniquement au passage de relâché à appuyé,
+ * pour ne déclencher qu'une fois par appui. "prev" mémorise l'état précédent. */
+bool risingEdge(const GLFWgamepadstate& state, int button, bool& prev) noexcept {
+    const bool appuye      = state.buttons[button] == GLFW_PRESS;
+    const bool nouvelAppui = appuye && !prev;
+    prev                   = appuye;
+    return nouvelAppui;
+}
+
+}  /* namespace */
+
 bool Gamepad::viewTogglePressed() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
@@ -98,12 +111,17 @@ bool Gamepad::viewTogglePressed() noexcept {
         return false;
     }
     /* Bouton jaune Y de la manette Xbox (en haut du losange ABXY). */
-    const bool appuye = state.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS;
-    /* Front montant : vrai uniquement au passage de relâché à appuyé, pour ne
-     * changer de vue qu'une fois par appui. */
-    const bool nouvelAppui = appuye && !m_prevY;
-    m_prevY                = appuye;
-    return nouvelAppui;
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_Y, m_prevY);
+}
+
+bool Gamepad::turbineTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevStart = false;
+        return false;
+    }
+    /* Bouton Start (menu) de la manette Xbox : démarre ou coupe la turbine. */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_START, m_prevStart);
 }
 
 bool Gamepad::isActive() noexcept {

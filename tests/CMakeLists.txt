@@ -9,6 +9,7 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightModel.cpp
+    ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).

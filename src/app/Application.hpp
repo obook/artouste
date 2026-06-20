@@ -53,7 +53,7 @@ private:
     bool initGL();
     void initScene();
     void mainLoop();
-    void renderScene(const mat4& base, float timeSeconds);
+    void renderScene(const mat4& base, float rotorAngle);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 
@@ -85,6 +85,7 @@ private:
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
     bool                                      m_showHud  = true;
     bool                                      m_paused   = false;
+    float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
 };
 
 }  /* namespace artouste::app */

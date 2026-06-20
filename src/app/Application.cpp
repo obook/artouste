@@ -56,6 +56,19 @@ constexpr char WINDOW_TITLE[] = "Artouste";
 const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
 
 /*
+ * Rotor principal (animation visuelle) :
+ *   - ROTOR_SPIN_RATE : vitesse de rotation à plein régime, en rad/s. Volontairement
+ *     ralentie par rapport à la réalité pour éviter l'effet stroboscopique.
+ *   - BLADE_SPACING : écart entre deux pales (rotor tripale -> 120 degrés). Les
+ *     positions de parking sont les multiples de cet écart : une pale alignée sur
+ *     l'axe de l'appareil, les deux autres encadrant la sortie d'échappement.
+ *   - PARK_TAU : constante de temps du retour en position de parking, à l'arrêt.
+ */
+constexpr float ROTOR_SPIN_RATE = 16.0f;
+constexpr float BLADE_SPACING   = 2.0944f;  /* 2*pi/3 rad ~ 120 degrés */
+constexpr float PARK_TAU        = 0.6f;
+
+/*
  * Brume atmosphérique : le terrain et la mer se fondent dans cette teinte de
  * ciel entre FOG_START et FOG_END (distance à la caméra, en mètres). Elle donne
  * la profondeur et masque le bord du terrain comme le plan de coupe lointain.
@@ -234,8 +247,9 @@ void Application::initScene() {
     m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
 
     /*
-     * On utilise le vrai modèle FlightGear s'il est présent (il est gardé hors
-     * du dépôt) ; sinon on conserve l'hélicoptère dessiné par le code.
+     * On utilise le vrai modèle FlightGear s'il est présent : le sous-ensemble
+     * nécessaire est versionné dans le dépôt (le paquet FlightGear complet, lui,
+     * reste local). Sinon on conserve l'hélicoptère dessiné par le code.
      */
     const std::filesystem::path modelsDir = assets / "models" / "Alouette-II" / "Models";
     if (std::filesystem::exists(modelsDir / "alouette.ac")) {
@@ -282,6 +296,11 @@ void Application::mainLoop() {
             m_viewMode = (m_viewMode + 1) % 3;
         }
 
+        /* Bouton Start de la manette : démarre ou coupe la turbine, comme la touche T. */
+        if (m_input->turbineTogglePressed()) {
+            m_flight.turbine().toggle();
+        }
+
         /* Hauteur du relief sous l'appareil : sert au contact avec le sol. */
         const vec3& pos = m_flight.body().position;
         m_flight.setGroundHeight(m_terrain->heightAt(pos.x, pos.z));
@@ -325,10 +344,28 @@ void Application::mainLoop() {
             m_camera.chase(lookTarget, yaw, frameDt);
         }
 
-        const float airspeed = glm::length(vec2{body.velocity.x, body.velocity.z});
-        m_audio.update(controls.collective, airspeed);
+        const float airspeed         = glm::length(vec2{body.velocity.x, body.velocity.z});
+        const float turbineFraction  = m_flight.turbine().turbineFraction();
+        const float rotorFraction    = m_flight.turbine().rotorFraction();
+        m_audio.update(controls.collective, airspeed, turbineFraction, rotorFraction);
 
-        renderScene(base, t);
+        /* Angle du rotor principal. Il n'avance qu'au prorata du régime rotor (donc
+         * pales immobiles turbine coupée, puis accélération), dans le sens horaire vu
+         * de dessus (angle décroissant). À l'arrêt, on le ramène en douceur à la
+         * position de parking la plus proche : une pale dans l'axe de l'appareil, les
+         * deux autres de part et d'autre de la sortie de la turbine, pour qu'aucune ne
+         * stationne dans le jet chaud. Figé en pause, comme le reste de la simulation. */
+        if (!m_paused) {
+            if (rotorFraction > 0.0f) {
+                m_rotorAngle -= rotorFraction * ROTOR_SPIN_RATE * frameDt;
+            } else {
+                const float park  = std::round(m_rotorAngle / BLADE_SPACING) * BLADE_SPACING;
+                const float alpha = 1.0f - std::exp(-frameDt / PARK_TAU);
+                m_rotorAngle += (park - m_rotorAngle) * alpha;
+            }
+        }
+
+        renderScene(base, m_rotorAngle);
 
         ui::HudData hud;
         hud.altitudeM    = body.position.y;
@@ -341,14 +378,15 @@ void Application::mainLoop() {
         hud.varioFpm      = body.velocity.y * 196.85f;
         hud.collectivePct = controls.collective * 100.0f;
         hud.pedals        = controls.pedals;
-        hud.rotorPct      = 100.0f;  /* régime supposé constant (régulateur) */
+        hud.rotorPct      = rotorFraction * 100.0f;  /* régime réel de la turbine */
+        hud.turbine       = m_flight.turbine().label();
         m_hud.render(hud, m_showHud, m_paused);
 
         glfwSwapBuffers(m_window);
     }
 }
 
-void Application::renderScene(const mat4& base, float timeSeconds) {
+void Application::renderScene(const mat4& base, float rotorAngle) {
     const vec3 lightDir = glm::normalize(vec3{0.4f, 1.0f, 0.35f});
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
@@ -359,7 +397,12 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
     /* Ciel en dégradé (il remplit le fond de l'image). */
     m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position());
 
-    /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin. */
+    /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin.
+     * Il est toujours sous la mer du terrain (dessinée à y=0) et n'a jamais à
+     * occulter le terrain ; on le dessine donc sans écrire dans le tampon de
+     * profondeur, de sorte que le terrain (dessiné après) le recouvre toujours.
+     * Cela supprime le z-fighting au loin, y compris en vue cockpit où le faible
+     * plan rapproché (near) dégrade fortement la précision de profondeur. */
     m_seaShader->use();
     m_seaShader->setMat4("u_view", view);
     m_seaShader->setMat4("u_proj", proj);
@@ -369,7 +412,9 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
     m_seaShader->setVec3("u_fogColor", FOG_COLOR);
     m_seaShader->setFloat("u_fogStart", FOG_START);
     m_seaShader->setFloat("u_fogEnd", FOG_END);
+    glDepthMask(GL_FALSE);
     m_sea->draw();
+    glDepthMask(GL_TRUE);
 
     /*
      * Terrain : orthophoto réelle drapée sur le relief, avec brume au loin.
@@ -448,9 +493,9 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
         m_modelShader->setVec3("u_lightDir", lightDir);
         m_modelShader->setVec3("u_camPos", m_camera.position());
         m_modelShader->setInt("u_texture", 0);
-        m_loadedHeli->draw(*m_modelShader, base, timeSeconds);
+        m_loadedHeli->draw(*m_modelShader, base, rotorAngle);
     } else {
-        m_helicopter->draw(*m_shader, base, timeSeconds);
+        m_helicopter->draw(*m_shader, base, rotorAngle);
     }
 }
 
@@ -514,6 +559,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.varioFpm      = 240.0f;
     hud.collectivePct = 55.0f;
     hud.rotorPct      = 100.0f;
+    hud.turbine       = "EN RÉGIME";
 
     /*
      * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres
@@ -571,6 +617,11 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_C:  /* change de vue (poursuite -> cockpit -> orbite) */
             if (app != nullptr) {
                 app->m_viewMode = (app->m_viewMode + 1) % 3;
+            }
+            break;
+        case GLFW_KEY_T:  /* démarre ou coupe la turbine */
+            if (app != nullptr) {
+                app->m_flight.turbine().toggle();
             }
             break;
         case GLFW_KEY_R:  /* replace l'appareil à sa position de départ (la côte) */

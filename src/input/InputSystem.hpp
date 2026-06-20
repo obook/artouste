@@ -35,6 +35,9 @@ public:
     /* Le bouton Y de la manette vient-il d'être pressé ? (change de vue) */
     [[nodiscard]] bool viewTogglePressed() noexcept { return m_gamepad.viewTogglePressed(); }
 
+    /* Le bouton Start de la manette vient-il d'être pressé ? (démarre/coupe la turbine) */
+    [[nodiscard]] bool turbineTogglePressed() noexcept { return m_gamepad.turbineTogglePressed(); }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

@@ -142,6 +142,7 @@ Application::~Application() {
     m_terrain.reset();
     m_sea.reset();
     m_shadowDisc.reset();
+    m_helipad.reset();
     m_sky.reset();
     m_flatShader.reset();
     m_skyShader.reset();
@@ -228,6 +229,13 @@ void Application::initScene() {
 
     const auto discData = render::primitives::disc(6.0f, 48, vec3{0.0f, 0.0f, 0.0f});
     m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
+
+    /* Hélipad de la zone de départ : disque gris très clair (presque blanc), anneau
+       gris foncé et grand H rouge. Centré sur l'origine ; placé au départ à l'affichage. */
+    const auto padData = render::primitives::helipad(7.0f, 48, vec3{0.90f, 0.90f, 0.92f},
+                                                     vec3{0.20f, 0.20f, 0.22f},
+                                                     vec3{0.80f, 0.10f, 0.10f});
+    m_helipad          = std::make_unique<render::Mesh>(padData.vertices, padData.indices);
 
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */
     const vec3 up{0.0f, 1.0f, 0.0f};
@@ -534,6 +542,39 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
         m_shader->setVec3("u_lightDir", lightDir);
         m_shader->setMat4("u_model", mat4(1.0f));
         m_terrain->draw();
+    }
+
+    /*
+     * Hélipad de la zone de départ : posé à plat au point de départ, juste au-dessus
+     * du sol pour rester visible sans accrocher le relief. C'est là que l'appareil
+     * démarre et que le reset (touche X ou R) le ramène.
+     */
+    if (m_helipad) {
+        /* Le sol de la côte est en pente : on pose le disque juste au-dessus du
+           plus haut point du relief sous l'emprise du pad, pour qu'il ne soit
+           pas à moitié enfoui côté amont. */
+        constexpr float padRadius = 7.0f;
+        float           padTop    = m_startPos.y;
+        for (const vec2 d : {vec2{padRadius, 0.0f}, vec2{-padRadius, 0.0f}, vec2{0.0f, padRadius},
+                             vec2{0.0f, -padRadius}}) {
+            padTop = std::fmax(padTop, m_terrain->heightAt(m_startPos.x + d.x, m_startPos.z + d.y));
+        }
+        const mat4 padModel =
+            glm::translate(mat4(1.0f), vec3{m_startPos.x, padTop + 0.06f, m_startPos.z});
+        m_shader->use();
+        m_shader->setMat4("u_view", view);
+        m_shader->setMat4("u_proj", proj);
+        m_shader->setMat4("u_model", padModel);
+        m_shader->setVec3("u_lightDir", lightDir);
+        /* Le pad est quasiment dans le plan du terrain : sans précaution, les deux
+           surfaces se disputent la profondeur et scintillent (z-fighting). Le décalage
+           de polygones biaise la profondeur du pad vers l'avant pour qu'il l'emporte
+           toujours proprement sur le sol, quelle que soit la distance. */
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(-1.0f, -1.0f);
+        m_helipad->draw();
+        glPolygonOffset(0.0f, 0.0f);
+        glDisable(GL_POLYGON_OFFSET_FILL);
     }
 
     /*

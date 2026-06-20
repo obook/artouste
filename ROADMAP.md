@@ -18,8 +18,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Hélipad
 
-- [ ] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol
+- [x] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol, blender disponible, mais il faut installer le plugin https://github.com/NikolaiVChr/Blender-AC3D
 
+### Ombre hélicopter
+
+- [ ] Elle est trop foncée/sombre
 
 ### Turbine
 

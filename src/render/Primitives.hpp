@@ -47,4 +47,12 @@ struct MeshData {
  */
 [[nodiscard]] MeshData disc(float radius, int segments, const vec3& color);
 
+/*
+ * Hélipad posé à plat (plan XZ, normale +Y), centré sur l'origine : un disque
+ * sombre, un anneau près du bord et un grand H au centre. Sert à marquer la zone
+ * de départ où l'appareil est posé et où le reset le ramène.
+ */
+[[nodiscard]] MeshData helipad(float radius, int segments, const vec3& padColor,
+                               const vec3& ringColor, const vec3& letterColor);
+
 }  /* namespace artouste::render::primitives */

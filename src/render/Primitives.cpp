@@ -138,4 +138,45 @@ MeshData disc(float radius, int segments, const vec3& color) {
     return out;
 }
 
+MeshData helipad(float radius, int segments, const vec3& padColor, const vec3& ringColor,
+                 const vec3& letterColor) {
+    MeshData   out;
+    const vec3 up{0.0f, 1.0f, 0.0f};
+
+    /* Le disque sombre de la plateforme, au ras du sol. */
+    appendTransformed(out, disc(radius, segments, padColor), mat4(1.0f));
+
+    /* On empile les marques claires juste au-dessus du disque pour qu'elles
+       restent visibles sans bagarre de profondeur avec lui (z-fighting). */
+    const float ringY = 0.02f;
+    const float markY = 0.04f;
+
+    /* Anneau clair près du bord : une couronne de quadrilatères entre deux rayons. */
+    const float rIn  = radius * 0.86f;
+    const float rOut = radius * 0.96f;
+    for (int i = 0; i < segments; ++i) {
+        const float a0 = static_cast<float>(i) * (TWO_PI / static_cast<float>(segments));
+        const float a1 = static_cast<float>(i + 1) * (TWO_PI / static_cast<float>(segments));
+        const vec3  in0{rIn * std::cos(a0), ringY, rIn * std::sin(a0)};
+        const vec3  out0{rOut * std::cos(a0), ringY, rOut * std::sin(a0)};
+        const vec3  out1{rOut * std::cos(a1), ringY, rOut * std::sin(a1)};
+        const vec3  in1{rIn * std::cos(a1), ringY, rIn * std::sin(a1)};
+        addQuad(out, in0, out0, out1, in1, up, ringColor);
+    }
+
+    /* Le grand H : deux montants verticaux (selon Z) reliés par une barre. */
+    const float halfW  = radius * 0.26f;  /* demi-écart entre les montants (axe X) */
+    const float halfL  = radius * 0.36f;  /* demi-hauteur des montants (axe Z) */
+    const float stroke = radius * 0.10f;  /* épaisseur des barres */
+    const auto  bar    = [&](float x0, float x1, float z0, float z1) {
+        addQuad(out, {x0, markY, z0}, {x1, markY, z0}, {x1, markY, z1}, {x0, markY, z1}, up,
+                letterColor);
+    };
+    bar(-halfW, -halfW + stroke, -halfL, halfL);          /* montant gauche */
+    bar(halfW - stroke, halfW, -halfL, halfL);            /* montant droit */
+    bar(-halfW + stroke, halfW - stroke, -stroke * 0.5f, stroke * 0.5f);  /* barre centrale */
+
+    return out;
+}
+
 }  /* namespace artouste::render::primitives */

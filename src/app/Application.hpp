@@ -74,6 +74,7 @@ private:
     std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (ombre) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
+    std::unique_ptr<render::Mesh>             m_helipad;       /* marque au sol de la zone de départ */
     std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain>          m_terrain;
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */

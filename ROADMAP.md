@@ -12,13 +12,17 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Réalisme
 
+### Ajouter le pilotage
+
+- [ ] Modéliser un pilote dans son siège, utiliser blender si besoin
+
 ### Vue de suivie (chase/arrière)
 
 - [x] L'hélicoptère fait de petits sautillements.
 
 ### Hélipad
 
-- [x] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol, blender disponible, mais il faut installer le plugin https://github.com/NikolaiVChr/Blender-AC3D
+- [x] prévoir sur la zone de départ un hélipad avec un grand H sans altitude sur lequel l'hélicopter est posé et qui permet d'y revenir après un vol, blender disponible (le plugin de conversion .ac https://github.com/NikolaiVChr/Blender-AC3D utilisé par Emmanuel est nécessaire).
 
 ### Ombre hélicopter
 

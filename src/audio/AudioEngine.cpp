@@ -25,6 +25,8 @@ float clamp01(float v) noexcept {
     return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
+constexpr float START_VOLUME = 0.7f;  /* volume de base du son de démarrage */
+
 /* Rendu sonore propre à une vue : volumes relatifs de la turbine et des pales
  * (le mixage), et un facteur de timbre (l'égalisation, approchée par la hauteur :
  * < 1 assombrit le son, comme étouffé dans la cabine). */
@@ -188,6 +190,16 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
     const float rotorVol = (0.35f + 0.20f * a) * rotor * mix.rotorVol;
     routeSource(m_impl->rotorSound, m_impl->rotorLoaded, m_impl->rotorInside,
                 m_impl->rotorInsideLoaded, rotorVol, 1.0f);
+
+    /* Son de démarrage : ponctuel, mais il dure longtemps et domine pendant la
+     * montée en régime. On le module donc aussi selon la vue (volume turbine et
+     * étouffement en cabine), faute de quoi changer de vue au démarrage ne
+     * s'entend pas. Il n'a pas de version cabine : on étouffe par la hauteur. */
+    if (m_impl->startLoaded && ma_sound_is_playing(&m_impl->startSound) == MA_TRUE) {
+        const float muffle = interior ? mix.tone : 1.0f;
+        ma_sound_set_volume(&m_impl->startSound, START_VOLUME * mix.turbineVol);
+        ma_sound_set_pitch(&m_impl->startSound, muffle * doppler);
+    }
 }
 
 void AudioEngine::setPaused(bool paused) {
@@ -226,7 +238,7 @@ void AudioEngine::playStartSound() {
     /* Rejoue le son de démarrage depuis le début (déclenché à l'entrée en phase
      * de démarrage de la turbine). */
     ma_sound_seek_to_pcm_frame(&m_impl->startSound, 0);
-    ma_sound_set_volume(&m_impl->startSound, 0.7f);
+    ma_sound_set_volume(&m_impl->startSound, START_VOLUME);
     ma_sound_start(&m_impl->startSound);
 }
 

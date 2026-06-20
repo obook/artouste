@@ -670,6 +670,30 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_modelShader->setVec3("u_camPos", m_camera.position());
         m_modelShader->setInt("u_texture", 0);
         m_loadedHeli->draw(*m_modelShader, base, rotorAngle);
+
+        /*
+         * Disque rotor (mis en commentaire, à reprendre plus tard).
+         * À haut régime, on remplacerait les pales distinctes (estompées côté
+         * modèle) par ce disque translucide dans le plan rotor, pour éviter l'effet
+         * stroboscopique d'un rotor tournant à vitesse réelle :
+         *
+         * if (rotorFraction > 0.01f) {
+         *     const vec3  hub   = m_loadedHeli->mainHubWorld(base);
+         *     const float scale = render::LoadedHelicopter::MAIN_ROTOR_RADIUS / 6.0f;
+         *     glEnable(GL_BLEND);
+         *     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         *     glDepthMask(GL_FALSE);
+         *     m_flatShader->use();
+         *     m_flatShader->setMat4("u_view", view);
+         *     m_flatShader->setMat4("u_proj", proj);
+         *     m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), hub) *
+         *                               glm::scale(mat4(1.0f), vec3{scale, 1.0f, scale}));
+         *     m_flatShader->setVec4("u_color", vec4{0.18f, 0.18f, 0.20f, rotorFraction * 0.55f});
+         *     m_shadowDisc->draw();
+         *     glDepthMask(GL_TRUE);
+         *     glDisable(GL_BLEND);
+         * }
+         */
     } else {
         m_helicopter->draw(*m_shader, base, rotorAngle);
     }

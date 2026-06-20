@@ -39,6 +39,14 @@ public:
        l'application (rotation au régime du rotor, puis parking à l'arrêt). */
     void draw(Shader& shader, const mat4& base, float rotorAngle) const;
 
+    /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
+       translucide à haut régime, voir le code mis en commentaire). 'base' est la
+       pose de l'appareil. */
+    [[nodiscard]] vec3 mainHubWorld(const mat4& base) const;
+
+    /* Rayon du rotor principal, en mètres (longueur d'une pale). */
+    static constexpr float MAIN_ROTOR_RADIUS = 5.0f;
+
 private:
     /* Un cadran de la planche de bord avec sa position relative au panneau. */
     struct Gauge {

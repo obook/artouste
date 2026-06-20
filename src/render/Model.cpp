@@ -32,7 +32,7 @@ void Model::addPart(Mesh&& mesh, const Texture* texture, bool transparent, float
     m_parts.push_back(Part{std::move(mesh), texture, transparent, opacity});
 }
 
-void Model::draw(Shader& shader, Pass pass) const {
+void Model::draw(Shader& shader, Pass pass, float opacityScale) const {
     for (const Part& part : m_parts) {
         /* On saute les parties qui ne correspondent pas à la passe demandée. */
         if (pass == Pass::Opaque && part.transparent) {
@@ -43,7 +43,7 @@ void Model::draw(Shader& shader, Pass pass) const {
         }
         /* On transmet au shader les réglages propres à cette partie, puis on
            dessine son maillage. */
-        shader.setFloat("u_opacity", part.opacity);
+        shader.setFloat("u_opacity", part.opacity * opacityScale);
         if (part.texture != nullptr) {
             part.texture->bind(0);
         }

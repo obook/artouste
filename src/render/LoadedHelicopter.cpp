@@ -155,49 +155,71 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle) 
                            glm::rotate(mat4(1.0f), -HALF_PI, vec3{1.0f, 0.0f, 0.0f}) *
                            glm::rotate(mat4(1.0f), tailAngle, vec3{0.0f, 1.0f, 0.0f});
 
-    /* Dessine les deux rotors : leur moyeu, puis chaque pale répartie également
-       autour de l'axe (une pale unique recopiée et tournée). */
-    const auto drawRotors = [&](Pass pass) {
-        drawModel(m_mainHub, mainBase, pass);
-        for (int k = 0; k < MAIN_BLADES; ++k) {
-            const float heading =
-                static_cast<float>(k) * (TWO_PI / static_cast<float>(MAIN_BLADES));
-            const mat4 bladeMat = mainBase *
-                                  glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
-                                  glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f});
-            drawModel(m_mainBlade, bladeMat, pass);
-        }
-        drawModel(m_tailHub, tailBase, pass);
-        for (int k = 0; k < TAIL_BLADES; ++k) {
-            const float heading =
-                static_cast<float>(k) * (TWO_PI / static_cast<float>(TAIL_BLADES));
-            const mat4 bladeMat = tailBase *
-                                  glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
-                                  glm::translate(mat4(1.0f), vec3{0.0f, TAIL_BLADE_RISE, 0.0f});
-            drawModel(m_tailBlade, bladeMat, pass);
-        }
+    /* Position d'une pale du rotor principal, répartie autour de l'axe (une pale
+       unique recopiée et tournée), au niveau du plan rotor. */
+    const auto mainBladeMat = [&](int k) {
+        const float heading =
+            static_cast<float>(k) * (TWO_PI / static_cast<float>(MAIN_BLADES));
+        return mainBase * glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
+               glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f});
     };
 
-    /* Passe opaque : fuselage (hors vitrages), intérieur, planche, cadrans et
-       rotors. On dessine d'abord tout ce qui est opaque. */
+    /* Passe opaque : fuselage (hors vitrages), intérieur, planche, cadrans, moyeux
+       et rotor de queue. Les pales du rotor principal et leur disque flou sont
+       traités à part, en mélange, pour le fondu selon le régime. */
     drawModel(m_fuselage, root, Pass::Opaque);
     drawModel(m_interior, root, Pass::Opaque);
     drawModel(m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
     for (const Gauge& gauge : m_gauges) {
         drawModel(gauge.model, root * glm::translate(mat4(1.0f), gauge.offset), Pass::Opaque);
     }
-    drawRotors(Pass::Opaque);
+    drawModel(m_mainHub, mainBase, Pass::Opaque);
+    for (int k = 0; k < MAIN_BLADES; ++k) {
+        drawModel(m_mainBlade, mainBladeMat(k), Pass::Opaque);
+    }
+    drawModel(m_tailHub, tailBase, Pass::Opaque);
+    for (int k = 0; k < TAIL_BLADES; ++k) {
+        const float heading =
+            static_cast<float>(k) * (TWO_PI / static_cast<float>(TAIL_BLADES));
+        const mat4 bladeMat = tailBase *
+                              glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
+                              glm::translate(mat4(1.0f), vec3{0.0f, TAIL_BLADE_RISE, 0.0f});
+        drawModel(m_tailBlade, bladeMat, Pass::Opaque);
+    }
 
-    /* Passe transparente : les vitrages, dessinés en dernier. On active le
-       mélange (blending) pour qu'ils laissent voir ce qui est derrière, et on
-       passe le tampon de profondeur en lecture seule pour ne pas cacher les
-       objets situés derrière la vitre. */
+    /* Passe transparente : les vitrages, dessinés en dernier. */
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
     drawModel(m_fuselage, root, Pass::Transparent);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
+
+    /* --- Disque flou du rotor (mis en commentaire, à reprendre plus tard) -------
+       Idée : à haut régime, estomper les pales distinctes (fondu sortant selon le
+       régime) et les remplacer par un disque flou translucide, pour éviter l'effet
+       stroboscopique. Les pales seraient alors dessinées dans la passe en mélange :
+
+       const float bladeFade = 1.0f - clamp(rotorFraction, 0.0f, 1.0f);
+       if (bladeFade > 0.01f) {
+           for (int k = 0; k < MAIN_BLADES; ++k) {
+               shader.setMat4("u_model", mainBladeMat(k));
+               m_mainBlade.draw(shader, Pass::Opaque, bladeFade);  // opacityScale
+           }
+       }
+       et l'application dessinerait le disque translucide via mainHubWorld() (voir
+       le bloc correspondant, lui aussi en commentaire, dans Application.cpp).
+       -------------------------------------------------------------------------- */
+}
+
+vec3 LoadedHelicopter::mainHubWorld(const mat4& base) const {
+    /* Même chaîne de transformations que pour le rotor dans draw(), jusqu'au plan
+       des pales : sert à poser le disque flou du rotor au bon endroit. */
+    const mat4 correction = glm::translate(mat4(1.0f), vec3{0.0f, Y_OFFSET, 0.0f}) *
+                            glm::rotate(mat4(1.0f), PI, vec3{0.0f, 1.0f, 0.0f});
+    const mat4 hub = base * correction * glm::translate(mat4(1.0f), MAIN_HUB) *
+                     glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f});
+    return vec3(hub[3]);
 }
 
 }  /* namespace artouste::render */

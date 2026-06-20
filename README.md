@@ -15,8 +15,8 @@ jeu lourd.
   régime, puis le rotor s'accélère) : il faut la lancer pour décoller.
 - Entrées clavier et manette Xbox (détection automatique de la source).
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
-- HUD transparent (altitude, vitesse, cap, variomètre, état turbine, régime
-  rotor, collectif, palonnier).
+- HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
+  instruments ronds verts superposés (Super HUD), ou rien.
 - Son moteur et rotor, ciel en dégradé, ombre portée.
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
@@ -29,7 +29,7 @@ jeu lourd.
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
-| HUD on/off              | `H`            | bouton `B`           |
+| HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
 | Reset position          | `R`            | bouton `X`           |
 | Quitter                 | `Échap`        | `LB` + `RB`          |

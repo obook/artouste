@@ -304,8 +304,8 @@ void Application::mainLoop() {
 
         /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour
          * pouvoir jouer à la manette seule. */
-        if (m_input->hudTogglePressed()) {  /* B : affiche/masque le HUD (comme H) */
-            m_showHud = !m_showHud;
+        if (m_input->hudTogglePressed()) {  /* B : fait défiler les modes HUD (comme H) */
+            m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
         }
         if (m_input->pauseTogglePressed()) {  /* Back : pause/reprise (comme P) */
             m_paused = !m_paused;
@@ -433,11 +433,14 @@ void Application::mainLoop() {
         }
         hud.headingDeg    = headingDeg;
         hud.varioFpm      = body.velocity.y * 196.85f;
+        hud.varioMs       = body.velocity.y;
         hud.collectivePct = controls.collective * 100.0f;
         hud.pedals        = controls.pedals;
-        hud.rotorPct      = rotorFraction * 100.0f;  /* régime réel de la turbine */
+        hud.rotorPct      = rotorFraction * 100.0f;          /* régime rotor, en pourcentage */
+        hud.rotorRpm      = rotorFraction * 360.0f;          /* régime rotor nominal : 360 tr/min */
+        hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
         hud.turbine       = m_flight.turbine().label();
-        m_hud.render(hud, m_showHud, m_paused);
+        m_hud.render(hud, m_hudMode, m_paused);
 
         glfwSwapBuffers(m_window);
     }
@@ -616,8 +619,11 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.headingDeg    = 47.0f;
     hud.altitudeM     = 35.0f;
     hud.varioFpm      = 240.0f;
+    hud.varioMs       = 1.2f;
     hud.collectivePct = 55.0f;
     hud.rotorPct      = 100.0f;
+    hud.rotorRpm      = 360.0f;
+    hud.turbineRpm    = 33500.0f;
     hud.turbine       = "EN RÉGIME";
 
     /*
@@ -627,7 +633,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
      */
     for (int i = 0; i < 3; ++i) {
         renderScene(base, 1.3f);
-        m_hud.render(hud, m_showHud, false);
+        m_hud.render(hud, m_hudMode, false);
     }
     glFinish();
 
@@ -689,9 +695,10 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_input->reset();
             }
             break;
-        case GLFW_KEY_H:  /* affiche ou masque le HUD */
+        case GLFW_KEY_H:  /* fait défiler les modes HUD : coins -> superposé -> rien */
             if (app != nullptr) {
-                app->m_showHud = !app->m_showHud;
+                app->m_hudMode =
+                    static_cast<ui::HudMode>((static_cast<int>(app->m_hudMode) + 1) % 3);
             }
             break;
         case GLFW_KEY_P:  /* met en pause ou reprend */

@@ -83,7 +83,7 @@ private:
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
-    bool                                      m_showHud  = true;
+    ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */

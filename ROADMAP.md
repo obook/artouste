@@ -6,13 +6,19 @@
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
-Dans la mesure du possible, respecter la forme et l'allure des vrais instruments repérer dans les photographies du dossier docs.
+- [ ] Dans la mesure du possible, respecter la forme et l'allure des vrais instruments repérer dans les photographies du dossier docs.
+
+- [x] Mettre l'altitude dans le même style que la boussole, mais à gauche et verticalement
 
 ## Réalisme
 
-## Vue de suivie (chase/arrière)
+### Vue de suivie (chase/arrière)
 
-- [ ] L'hélicoptère fait de petits sautillements.
+- [x] L'hélicoptère fait de petits sautillements.
+
+### Autres
+
+- [ ] Il faut un décalage de quelques secondes entre la turbine max et le laché de frein qui permet la rotation des pales
 
 ### Sons
 
@@ -22,10 +28,10 @@ Dans la mesure du possible, respecter la forme et l'allure des vrais instruments
 
 ### raccord avec la mer
 
-- [ ] Il reste des zones blanches en zig-zag sur les raccords.
+- [x] Il reste des zones blanches en zig-zag sur les raccords.
 
 ### Position de la pale au lancement
 
-- [ ] Ne pas la mettre exactement à O° dans l'axe, mais la décaler un peu, si possible aléatoirement à chaque lancement.
+- [x] Ne pas la mettre exactement à O° dans l'axe, mais la décaler un peu, si possible aléatoirement à chaque lancement.
 
 

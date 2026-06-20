@@ -86,6 +86,7 @@ private:
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
+    float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */
     float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */
     physics::Turbine::State                   m_prevTurbineState = physics::Turbine::State::Arret;  /* pour déclencher le son de démarrage au bon moment */
 };

@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <random>
 #include <vector>
 
 #ifndef ARTOUSTE_ASSET_DIR
@@ -63,10 +64,15 @@ const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
  *     positions de parking sont les multiples de cet écart : une pale alignée sur
  *     l'axe de l'appareil, les deux autres encadrant la sortie d'échappement.
  *   - PARK_TAU : constante de temps du retour en position de parking, à l'arrêt.
+ *   - ROTOR_PARK_JITTER : décalage maximal (rad) de la position de parking par
+ *     rapport à l'axe. Tiré au hasard à chaque lancement, pour que la pale ne soit
+ *     pas figée pile dans l'axe (plus naturel). Petit, pour rester loin de la sortie
+ *     d'échappement.
  */
-constexpr float ROTOR_SPIN_RATE = 16.0f;
-constexpr float BLADE_SPACING   = 2.0944f;  /* 2*pi/3 rad ~ 120 degrés */
-constexpr float PARK_TAU        = 0.6f;
+constexpr float ROTOR_SPIN_RATE   = 16.0f;
+constexpr float BLADE_SPACING     = 2.0944f;  /* 2*pi/3 rad ~ 120 degrés */
+constexpr float PARK_TAU          = 0.6f;
+constexpr float ROTOR_PARK_JITTER = 0.26f;    /* ~15 degrés */
 
 /*
  * Brume atmosphérique : le terrain et la mer se fondent dans cette teinte de
@@ -197,6 +203,14 @@ bool Application::initGL() {
 }
 
 void Application::initScene() {
+    /* Décalage de parking du rotor, tiré au hasard à chaque lancement : la pale ne
+     * se range pas pile dans l'axe, ce qui est plus naturel. On y place aussi l'angle
+     * de départ du rotor, pour qu'il soit déjà à cette position au lancement. */
+    std::mt19937                          rng(std::random_device{}());
+    std::uniform_real_distribution<float> jitter(-ROTOR_PARK_JITTER, ROTOR_PARK_JITTER);
+    m_parkOffset = jitter(rng);
+    m_rotorAngle = m_parkOffset;
+
     const std::filesystem::path assets = resolveAssetDir();
     m_shader = std::make_unique<render::Shader>(assets / "shaders" / "basic.vert",
                                                 assets / "shaders" / "basic.frag");
@@ -322,11 +336,14 @@ void Application::mainLoop() {
         const vec3& pos = m_flight.body().position;
         m_flight.setGroundHeight(m_terrain->heightAt(pos.x, pos.z));
 
+        /* État physique avant le dernier pas, conservé pour interpoler le rendu. */
+        physics::RigidBody prevBody = m_flight.body();
         if (m_paused) {
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
             accumulator += frameDt;
             while (accumulator >= SIM_DT) {
+                prevBody = m_flight.body();
                 m_flight.update(controls, SIM_DT);
                 accumulator -= SIM_DT;
             }
@@ -334,16 +351,25 @@ void Application::mainLoop() {
 
         const physics::RigidBody& body = m_flight.body();
 
+        /* Interpolation entre l'avant-dernier et le dernier état physique, selon le
+         * reste de l'accumulateur. La physique tourne à pas fixe (240 Hz) et le rendu
+         * à une autre cadence : sans cette interpolation, l'appareil avance d'un
+         * nombre variable de pas par image, ce qui se voit comme un sautillement,
+         * surtout en vue de poursuite. */
+        const float alpha     = accumulator / SIM_DT;
+        const vec3  renderPos = glm::mix(prevBody.position, body.position, alpha);
+        const quat  renderOri = glm::slerp(prevBody.orientation, body.orientation, alpha);
+
         /* Transformation monde de l'appareil : translation + orientation (quaternion). */
         const mat4 base =
-            glm::translate(mat4(1.0f), body.position) * glm::mat4_cast(body.orientation);
+            glm::translate(mat4(1.0f), renderPos) * glm::mat4_cast(renderOri);
 
         /* Cap (lacet) extrait de l'orientation, utile pour la caméra de poursuite. */
-        const vec3  forward = body.orientation * vec3{1.0f, 0.0f, 0.0f};
+        const vec3  forward = renderOri * vec3{1.0f, 0.0f, 0.0f};
         const float yaw     = std::atan2(-forward.z, forward.x);
 
         /* Caméra : poursuite, cockpit (solidaire de l'appareil) ou orbite libre. */
-        const vec3 lookTarget = body.position + vec3{0.0f, 1.2f, 0.0f};
+        const vec3 lookTarget = renderPos + vec3{0.0f, 1.2f, 0.0f};
         if (m_viewMode == 1) {  /* cockpit */
             const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
             const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
@@ -409,16 +435,21 @@ void Application::mainLoop() {
         /* Angle du rotor principal. Il n'avance qu'au prorata du régime rotor (donc
          * pales immobiles turbine coupée, puis accélération), dans le sens horaire vu
          * de dessus (angle décroissant). À l'arrêt, on le ramène en douceur à la
-         * position de parking la plus proche : une pale dans l'axe de l'appareil, les
-         * deux autres de part et d'autre de la sortie de la turbine, pour qu'aucune ne
-         * stationne dans le jet chaud. Figé en pause, comme le reste de la simulation. */
+         * position de parking la plus proche : une pale presque dans l'axe de l'appareil
+         * (à un léger décalage aléatoire près, voir m_parkOffset), les deux autres de
+         * part et d'autre de la sortie de la turbine, pour qu'aucune ne stationne dans
+         * le jet chaud. Figé en pause, comme le reste de la simulation. */
         if (!m_paused) {
             if (rotorFraction > 0.0f) {
                 m_rotorAngle -= rotorFraction * ROTOR_SPIN_RATE * frameDt;
             } else {
-                const float park  = std::round(m_rotorAngle / BLADE_SPACING) * BLADE_SPACING;
-                const float alpha = 1.0f - std::exp(-frameDt / PARK_TAU);
-                m_rotorAngle += (park - m_rotorAngle) * alpha;
+                /* Multiple de 120° le plus proche, décalé du jitter de parking, pour
+                 * que la pale ne soit pas figée pile dans l'axe. */
+                const float park =
+                    std::round((m_rotorAngle - m_parkOffset) / BLADE_SPACING) * BLADE_SPACING
+                    + m_parkOffset;
+                const float ease = 1.0f - std::exp(-frameDt / PARK_TAU);
+                m_rotorAngle += (park - m_rotorAngle) * ease;
             }
         }
 

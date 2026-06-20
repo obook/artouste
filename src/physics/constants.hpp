@@ -38,7 +38,8 @@ inline constexpr float COLL_HOVER   = 0.55f;    /* collectif nécessaire pour se
 inline constexpr float TURBINE_START_TIME = 48.0f;  /* s : turbine de 0 à 100 %, calé sur le son turbine-start.wav (~48,6 s) */
 inline constexpr float ROTOR_BRAKE_DELAY  = 3.0f;  /* s : turbine au régime, frein rotor encore serré, avant le lâcher */
 inline constexpr float ROTOR_ENGAGE_TIME  = 15.0f;  /* s : rotor de 0 à 100 % (montée en régime après le lâcher de frein) */
-inline constexpr float TURBINE_STOP_TIME  = 8.0f;  /* s : arrêt, rotor de 100 % à 0 (inertie) */
+inline constexpr float TURBINE_STOP_TIME  = 30.0f;  /* s : extinction, turbine de 100 % à 0 */
+inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (forte inertie, plus lent que la turbine) */
 
 /* --- Carburant ---------------------------------------------------------------- */
 /* Réservoir et consommation de l'Alouette II (d'après PANEL.md : ~580 L, 110 kg/h

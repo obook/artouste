@@ -60,8 +60,9 @@ void Turbine::update(float dt) noexcept {
             }
             break;
         case State::Extinction:
-            /* Coupure : le rotor redescend (inertie), la turbine s'éteint avec lui. */
-            m_rotor -= dt / TURBINE_STOP_TIME;
+            /* Coupure : la turbine s'éteint, et le rotor redescend plus lentement
+             * encore, porté par sa forte inertie (roue libre). */
+            m_rotor -= dt / ROTOR_STOP_TIME;
             if (m_rotor < 0.0f) {
                 m_rotor = 0.0f;
             }

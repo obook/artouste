@@ -222,10 +222,12 @@ TEST_CASE("Le rotor attend le plein régime de la turbine", "[flight][turbine]")
     REQUIRE(model.turbine().state() == State::Regime);
     REQUIRE(model.turbine().rotorFraction() == 1.0f);
 
-    /* Arrêt : après le temps de descente, le rotor est immobile. */
+    /* Arrêt : turbine et rotor redescendent (le rotor, plus lent, donne le tempo).
+       On attend la somme des deux temps pour être sûr que tout est immobile. */
     model.turbine().toggle();
     REQUIRE(model.turbine().state() == State::Extinction);
-    advance(model, idle, artouste::physics::TURBINE_STOP_TIME + 1.0f);
+    advance(model, idle,
+            artouste::physics::ROTOR_STOP_TIME + artouste::physics::TURBINE_STOP_TIME + 1.0f);
     REQUIRE(model.turbine().state() == State::Arret);
     REQUIRE(model.turbine().rotorFraction() == 0.0f);
 }

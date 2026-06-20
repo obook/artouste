@@ -40,6 +40,16 @@ inline constexpr float ROTOR_BRAKE_DELAY  = 3.0f;  /* s : turbine au régime, fr
 inline constexpr float ROTOR_ENGAGE_TIME  = 15.0f;  /* s : rotor de 0 à 100 % (montée en régime après le lâcher de frein) */
 inline constexpr float TURBINE_STOP_TIME  = 8.0f;  /* s : arrêt, rotor de 100 % à 0 (inertie) */
 
+/* --- Carburant ---------------------------------------------------------------- */
+/* Réservoir et consommation de l'Alouette II (d'après PANEL.md : ~580 L, 110 kg/h
+ * en croisière, 155 kg/h à pleine puissance, autonomie ~4 h). On raisonne en
+ * litres (kérosène ~0,8 kg/L). La turbine consomme dès qu'elle tourne, davantage
+ * quand le collectif demande de la puissance. Réservoir vide -> extinction. */
+inline constexpr float FUEL_CAPACITY_L   = 575.0f;  /* contenance du réservoir (L) */
+inline constexpr float FUEL_BURN_MIN_LPH = 112.0f;  /* turbine lancée, collectif au mini (L/h) */
+inline constexpr float FUEL_BURN_MAX_LPH = 194.0f;  /* pleine puissance (L/h) */
+inline constexpr float FUEL_LOW_L        = 15.0f;   /* seuil du voyant bas carburant (~4 gallons) */
+
 /* --- Traînée quadratique selon l'axe (repère corps) -------------------------- */
 /* La traînée freine le mouvement : Force = -k * v * |v| sur chaque axe.
  * Elle est plus forte verticalement qu'horizontalement (forme de l'appareil). */

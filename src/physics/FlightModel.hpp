@@ -14,6 +14,7 @@
 #include "physics/Controls.hpp"
 #include "physics/RigidBody.hpp"
 #include "physics/Turbine.hpp"
+#include "physics/constants.hpp"
 
 namespace artouste::physics {
 
@@ -29,18 +30,25 @@ public:
     [[nodiscard]] Turbine&       turbine() noexcept { return m_turbine; }
     [[nodiscard]] const Turbine& turbine() const noexcept { return m_turbine; }
 
-    void reset() noexcept { m_body = RigidBody{}; }
+    /* Repositionner l'appareil refait le plein (retour à la base) ; la turbine,
+       elle, garde son état. */
+    void reset() noexcept {
+        m_body      = RigidBody{};
+        m_fuelLiters = FUEL_CAPACITY_L;
+    }
 
     /* Réinitialise à une altitude donnée, pratique pour tester loin du sol. */
     void reset(float altitude) noexcept {
         m_body            = RigidBody{};
         m_body.position.y = altitude;
+        m_fuelLiters      = FUEL_CAPACITY_L;
     }
 
     /* Réinitialise à une position donnée (par exemple posé sur la côte). */
     void reset(const vec3& position) noexcept {
         m_body          = RigidBody{};
         m_body.position = position;
+        m_fuelLiters    = FUEL_CAPACITY_L;
     }
 
     /* Altitude du sol (m) sous l'appareil : le contact se fait à cette hauteur
@@ -52,11 +60,15 @@ public:
     /* Dernière poussée calculée, en newtons : utile pour le débogage et l'affichage. */
     [[nodiscard]] float lastThrust() const noexcept { return m_lastThrust; }
 
+    /* Carburant restant, en litres (pour le HUD et le voyant d'alerte). */
+    [[nodiscard]] float fuelLiters() const noexcept { return m_fuelLiters; }
+
 private:
     RigidBody m_body;
     Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
+    float     m_fuelLiters   = FUEL_CAPACITY_L;
 };
 
 }  /* namespace artouste::physics */

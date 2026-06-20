@@ -10,6 +10,8 @@
 
 #include "ui/Hud.hpp"
 
+#include "physics/constants.hpp"
+
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -253,6 +255,12 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         ImGui::Text("TURB %s", data.turbine);
         ImGui::Text("NR   %3.0f %%", static_cast<double>(data.rotorPct));
         ImGui::Text("COLL %3.0f %%", static_cast<double>(data.collectivePct));
+        if (data.fuelLiters < physics::FUEL_LOW_L) {
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "CARB %4.0f L  BAS",
+                               static_cast<double>(data.fuelLiters));
+        } else {
+            ImGui::Text("CARB %4.0f L", static_cast<double>(data.fuelLiters));
+        }
         ImGui::End();
 
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
@@ -271,12 +279,13 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         altitudeTape(dl, 24.0f, h * 0.5f, 60.0f, h * 0.28f, data.altitudeM);
 
         /* Valeurs pré-formatées (formats littéraux : pas de format dynamique). */
-        char nr[16], turb[16], ias[16], vs[16], coll[16];
+        char nr[16], turb[16], ias[16], vs[16], coll[16], fuel[16];
         std::snprintf(nr,   sizeof(nr),   "%.0f",  static_cast<double>(data.rotorRpm));
         std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
         std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKt));
         std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));
         std::snprintf(coll, sizeof(coll), "%.0f",  static_cast<double>(data.collectivePct));
+        std::snprintf(fuel, sizeof(fuel), "%.0f",  static_cast<double>(data.fuelLiters));
 
         struct G {
             float       value, vmin, vmax, bandMin, bandMax;
@@ -289,6 +298,8 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             {data.airspeedKt,    0.0f, 140.0f,   95.0f,    105.0f,   "IAS kt",    ias},
             {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs},
             {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll},
+            {data.fuelLiters,    0.0f, physics::FUEL_CAPACITY_L, physics::FUEL_LOW_L,
+             physics::FUEL_CAPACITY_L, "CARB L", fuel},
         };
         const int   n  = static_cast<int>(sizeof(gauges) / sizeof(gauges[0]));
         const float r  = 38.0f;
@@ -299,6 +310,13 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             gauge(dl, x0 + dx * static_cast<float>(i), y, r, gauges[i].value, gauges[i].vmin,
                   gauges[i].vmax, gauges[i].bandMin, gauges[i].bandMax, gauges[i].label,
                   gauges[i].text);
+        }
+
+        /* Voyant d'alerte : carburant sous la réserve. */
+        if (data.fuelLiters < physics::FUEL_LOW_L) {
+            const char* warn = "CARBURANT BAS";
+            dl->AddText(ImVec2(w * 0.5f - ImGui::CalcTextSize(warn).x * 0.5f, y - r - 26.0f),
+                        IM_COL32(255, 70, 70, 255), warn);
         }
     }
     /* mode Off : aucun affichage de vol. */

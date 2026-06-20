@@ -46,6 +46,25 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * pour équilibrer le poids au collectif COLL_HOVER, et proportionnelle au
      * régime du rotor : tant que la turbine n'est pas lancée, pas de portance. */
     const float collective  = saturate(controls.collective);
+
+    /* Carburant : la turbine consomme dès qu'elle tourne, d'autant plus que le
+     * collectif demande de la puissance. À sec, on coupe la turbine (panne). */
+    const float turbineFraction = m_turbine.turbineFraction();
+    if (turbineFraction > 0.0f && m_fuelLiters > 0.0f) {
+        const float burnLph =
+            (FUEL_BURN_MIN_LPH + (FUEL_BURN_MAX_LPH - FUEL_BURN_MIN_LPH) * collective) *
+            turbineFraction;
+        m_fuelLiters -= burnLph * (dt / 3600.0f);
+        if (m_fuelLiters <= 0.0f) {
+            m_fuelLiters = 0.0f;
+            /* Panne sèche : on déclenche l'extinction si la turbine tournait. */
+            if (m_turbine.state() != Turbine::State::Arret &&
+                m_turbine.state() != Turbine::State::Extinction) {
+                m_turbine.toggle();
+            }
+        }
+    }
+
     const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction;
 
     /* Effet de sol : près du sol, la poussée est renforcée ; ce gain diminue avec

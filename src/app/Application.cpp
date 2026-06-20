@@ -83,7 +83,7 @@ constexpr float   BEACON_ON     = 0.18f;           /* fraction de la période o�
  * qui se traduit par une distorsion thermique localisée (léger halo bleuté qui ondule)
  * et un petit coeur tiède sur le métal de la tuyère.
  */
-const vec3        NOZZLE_BODY_POS{-0.55f, 2.15f, 0.0f};
+const vec3        NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
 constexpr float   NOZZLE_RADIUS = 0.24f;
 
 /*

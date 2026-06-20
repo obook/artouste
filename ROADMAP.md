@@ -18,7 +18,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] balise de sécurité est un feu clignotant rouge situé sur le fuselage (strombo) : l'aspect est celui d'un cylindre avec le premier quart du haut clignotant en rouge vif clignotant (l'original est en rotation, voir 21-165-05.webp)
 
-- [x] tuyère : Distorsion thermique visuelle localisée par l'air chaud, léger halo bleuté comme sur une gazinière à feu bas - bug elle est à envion 50 cm de la sortie de la tuyère
+- [x] tuyère : Distorsion thermique visuelle localisée par l'air chaud, léger halo bleuté comme sur une gazinière à feu bas
 
 - [x] Mode assisté : couche de confort (touche M / croix haut), voir src/physics/FlightAssist
 

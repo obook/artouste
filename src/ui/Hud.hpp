@@ -4,6 +4,7 @@
  * par-dessus la scène 3D, grâce à Dear ImGui. La touche H l'affiche ou le masque.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

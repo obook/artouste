@@ -6,6 +6,7 @@
  * indices (MeshData) prêts à devenir un Mesh.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

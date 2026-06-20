@@ -10,6 +10,7 @@
  *   - unités SI partout : mètres, secondes, kilogrammes, radians.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

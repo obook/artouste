@@ -5,6 +5,7 @@
  * heightAt() (contact avec le sol, placement de l'appareil).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

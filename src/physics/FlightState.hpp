@@ -5,6 +5,7 @@
  * elles résultent de l'intégration des forces. Repère monde Y vers le haut, angles en radians.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

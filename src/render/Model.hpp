@@ -5,6 +5,7 @@
  * dans un cache par chemin) ; les parties ne font qu'y pointer.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

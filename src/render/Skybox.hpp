@@ -5,6 +5,7 @@
  * plus foncé vers le haut). Pas d'image de ciel, tout est calculé.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

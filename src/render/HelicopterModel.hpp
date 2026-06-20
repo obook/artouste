@@ -6,6 +6,7 @@
  * Les rotors tournent à vitesse fixe (animation purement visuelle).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

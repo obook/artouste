@@ -5,6 +5,7 @@
  * collectif garde sa position, comme le vrai levier.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

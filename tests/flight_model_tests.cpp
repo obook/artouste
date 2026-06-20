@@ -5,6 +5,7 @@
  * stabilité d'assiette, anti-couple, et absence de NaN sous entrées aléatoires.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

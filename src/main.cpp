@@ -5,6 +5,7 @@
  * de la démarrer et de renvoyer son code de sortie.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

@@ -11,6 +11,7 @@
  * Usage : ./build/bin/model_probe [chemin.ac]
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

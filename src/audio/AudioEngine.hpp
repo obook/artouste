@@ -8,6 +8,7 @@
  * ne pas alourdir les autres fichiers qui incluent cet en-tête.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

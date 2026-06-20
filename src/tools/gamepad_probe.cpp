@@ -10,6 +10,7 @@
  * Le branchement à chaud est géré : on peut le lancer avant la manette.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

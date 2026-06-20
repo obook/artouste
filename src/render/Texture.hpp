@@ -5,6 +5,7 @@
  * peut donc pas être copiée, seulement déplacée (move-only).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

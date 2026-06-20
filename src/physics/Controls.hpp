@@ -4,6 +4,7 @@
  * Sert de contrat simple entre la couche d'entrée (clavier, manette) et la physique.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

@@ -5,6 +5,7 @@
  * les autres objets.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

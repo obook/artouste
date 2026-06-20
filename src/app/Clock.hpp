@@ -4,6 +4,7 @@
  * depuis l'image précédente (dt) ainsi que le temps total depuis le démarrage.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

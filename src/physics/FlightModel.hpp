@@ -5,6 +5,7 @@
  * anti-couple, amortissements), puis les confie au corps rigide pour avancer.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

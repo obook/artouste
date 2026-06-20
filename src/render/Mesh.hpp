@@ -5,6 +5,7 @@
  * libérées automatiquement (RAII) et l'objet ne peut être que déplacé.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

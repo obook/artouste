@@ -5,6 +5,7 @@
  * de derrière (vue poursuite), ou se placer dans le cockpit.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

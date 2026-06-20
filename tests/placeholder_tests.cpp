@@ -4,6 +4,7 @@
  * Il sera retiré une fois les vrais tests en place (flight_model_tests.cpp).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

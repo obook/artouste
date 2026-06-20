@@ -6,6 +6,7 @@
  * avant le vrai modèle de vol.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

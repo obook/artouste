@@ -4,6 +4,7 @@
  * par le simulateur : boîte, damier au sol, jeu de pales et disque.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

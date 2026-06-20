@@ -4,6 +4,7 @@
  * projection selon le mode choisi (orbite, poursuite ou cockpit).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

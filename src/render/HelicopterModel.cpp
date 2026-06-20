@@ -4,6 +4,7 @@
  * le composent, placement de chacune et animation des deux rotors.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

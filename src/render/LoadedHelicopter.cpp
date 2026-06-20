@@ -5,6 +5,7 @@
  * animation des rotors au fil du temps.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

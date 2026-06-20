@@ -5,6 +5,7 @@
  * sont mis en cache pour éviter de les redemander à chaque image.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 

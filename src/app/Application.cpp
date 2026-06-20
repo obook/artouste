@@ -79,14 +79,15 @@ constexpr float FOG_END   = 22000.0f;
 
 /*
  * Plan de mer : couleur de l'océan (accordée à la mer recolorée de l'orthophoto)
- * et demi-côté en mètres. Le niveau est nettement sous 0 : le terrain ne
- * descend jamais sous le niveau de la mer, donc ce plan reste caché sous la mer
- * du bloc (dessinée à y=0 par l'orthophoto) sans rivaliser avec elle en
- * profondeur, ce qui éviterait sinon un scintillement (z-fighting) au loin. Il
- * ne réapparaît qu'au-delà du bord du terrain, pour étendre l'océan à l'horizon.
+ * et demi-côté en mètres. Il est au même niveau que la mer du bloc de terrain
+ * (dessinée à y=0 par l'orthophoto), pour un raccord net au bord du terrain : sans
+ * cela, un plan plus bas laissait une marche visible (jointure en escalier) le long
+ * du bord. Pas de z-fighting malgré ce niveau commun car ce plan est dessiné sans
+ * écrire dans le tampon de profondeur (voir renderScene), donc le terrain le
+ * recouvre toujours ; il ne se voit qu'au-delà du bord du terrain, jusqu'à l'horizon.
  */
 const vec3      SEA_COLOR{0.180f, 0.259f, 0.271f};  /* (46,66,69) : mer de l'orthophoto */
-constexpr float SEA_LEVEL = -40.0f;
+constexpr float SEA_LEVEL = 0.0f;
 constexpr float SEA_HALF  = 100000.0f;
 
 void glfwErrorCallback(int code, const char* description) {
@@ -464,6 +465,7 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
     m_seaShader->setMat4("u_proj", proj);
     m_seaShader->setMat4("u_model", mat4(1.0f));
     m_seaShader->setVec3("u_seaColor", SEA_COLOR);
+    m_seaShader->setVec3("u_lightDir", lightDir);
     m_seaShader->setVec3("u_camPos", m_camera.position());
     m_seaShader->setVec3("u_fogColor", FOG_COLOR);
     m_seaShader->setFloat("u_fogStart", FOG_START);
@@ -483,6 +485,7 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
         m_terrainShader->setMat4("u_proj", proj);
         m_terrainShader->setMat4("u_model", mat4(1.0f));
         m_terrainShader->setVec3("u_lightDir", lightDir);
+        m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
         m_terrainShader->setVec3("u_camPos", m_camera.position());
         m_terrainShader->setVec3("u_fogColor", FOG_COLOR);
         m_terrainShader->setFloat("u_fogStart", FOG_START);

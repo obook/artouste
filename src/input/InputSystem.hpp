@@ -5,6 +5,7 @@
  * et afficher l'aide visuelle adaptée.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -31,7 +32,7 @@ public:
         m_gamepad.reset();
     }
 
-    /* Le bouton B de la manette vient-il d'être pressé ? (change de vue) */
+    /* Le bouton Y de la manette vient-il d'être pressé ? (change de vue) */
     [[nodiscard]] bool viewTogglePressed() noexcept { return m_gamepad.viewTogglePressed(); }
 
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }

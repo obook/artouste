@@ -5,6 +5,7 @@
  * collectif est un levier piloté par les gâchettes (il garde sa position).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -93,14 +94,15 @@ physics::Controls Gamepad::poll(float dt) noexcept {
 bool Gamepad::viewTogglePressed() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
-        m_prevB = false;
+        m_prevY = false;
         return false;
     }
-    const bool appuye = state.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS;
+    /* Bouton jaune Y de la manette Xbox (en haut du losange ABXY). */
+    const bool appuye = state.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS;
     /* Front montant : vrai uniquement au passage de relâché à appuyé, pour ne
      * changer de vue qu'une fois par appui. */
-    const bool nouvelAppui = appuye && !m_prevB;
-    m_prevB                = appuye;
+    const bool nouvelAppui = appuye && !m_prevY;
+    m_prevY                = appuye;
     return nouvelAppui;
 }
 

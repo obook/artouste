@@ -5,11 +5,12 @@
  *   stick gauche    -> cyclique (tangage / roulis)
  *   stick droit X   -> palonniers
  *   gâchettes RT/LT -> collectif (levier : RT monte, LT descend, garde la position)
- *   bouton B        -> change de vue
+ *   bouton Y        -> change de vue
  * La manette conserve un état d'une image à l'autre : la position du levier de
- * collectif et l'état précédent du bouton B (pour détecter le moment de l'appui).
+ * collectif et l'état précédent du bouton Y (pour détecter le moment de l'appui).
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -32,7 +33,7 @@ public:
      * Le collectif est un levier : il garde sa position quand on relâche. */
     [[nodiscard]] physics::Controls poll(float dt) noexcept;
 
-    /* Vrai une seule fois, au moment où le bouton B vient d'être pressé. */
+    /* Vrai une seule fois, au moment où le bouton Y vient d'être pressé. */
     [[nodiscard]] bool viewTogglePressed() noexcept;
 
     /* Remet le levier de collectif à zéro. */
@@ -40,7 +41,7 @@ public:
 
 private:
     float m_collective = 0.0f;  /* position mémorisée du levier de collectif */
-    bool  m_prevB      = false; /* état du bouton B à l'image précédente */
+    bool  m_prevY      = false; /* état du bouton Y à l'image précédente */
 };
 
 }  /* namespace artouste::input */

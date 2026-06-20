@@ -5,6 +5,7 @@
  * physique à pas fixe, rendu, audio) et capture d'écran.
  *
  * Auteur : O. Booklage
+ * Date : juin 2026
  * Licence : GPL v2
  */
 
@@ -276,7 +277,7 @@ void Application::mainLoop() {
          */
         const physics::Controls controls = m_input->poll(frameDt);
 
-        /* Bouton B de la manette : change de vue, comme la touche C du clavier. */
+        /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
         if (m_input->viewTogglePressed()) {
             m_viewMode = (m_viewMode + 1) % 3;
         }

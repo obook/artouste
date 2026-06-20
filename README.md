@@ -24,7 +24,7 @@ jeu lourd.
 | Collectif +/-           | `W`/`Z` / `S`  | RT / LT              |
 | Cyclique                | flèches        | stick gauche         |
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
-| Vue (poursuite/cockpit/orbite) | `C`     | --                   |
+| Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
 | HUD on/off              | `H`            | --                   |
 | Pause                   | `P`            | --                   |
 | Reset position          | `R`            | --                   |

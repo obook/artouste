@@ -35,8 +35,9 @@ public:
     [[nodiscard]] bool loaded() const noexcept { return !m_fuselage.empty(); }
 
     /* Dessine l'appareil complet. 'base' place et oriente l'hélicoptère dans le
-       monde ; 'timeSeconds' sert à faire tourner les rotors. */
-    void draw(Shader& shader, const mat4& base, float timeSeconds) const;
+       monde ; 'rotorAngle' est l'angle du rotor principal (rad), géré par
+       l'application (rotation au régime du rotor, puis parking à l'arrêt). */
+    void draw(Shader& shader, const mat4& base, float rotorAngle) const;
 
 private:
     /* Un cadran de la planche de bord avec sa position relative au panneau. */

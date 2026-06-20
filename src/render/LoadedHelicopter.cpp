@@ -113,7 +113,7 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_tailBlade = loadPart(dir / "Externals/TailRotor/blade.ac", skipRotor);
 }
 
-void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds) const {
+void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -128,13 +128,20 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float timeSeconds)
     };
 
     /* Transformations des rotors, calculées une fois et réutilisées par les deux
-       passes (opaque puis transparente). L'angle dépend du temps écoulé. */
-    const float mainAngle = timeSeconds * MAIN_SPIN;
+       passes (opaque puis transparente). L'angle du rotor principal est fourni par
+       l'application (sens horaire vu de dessus, comme sur l'Alouette II ; à l'arrêt,
+       une pale est alignée sur l'axe de l'appareil).
+       La correction de nez appliquée à 'root' (demi-tour autour de Y) place la pale 0
+       vers l'arrière ; on ajoute donc un demi-tour au rotor pour qu'au parking une
+       pale pointe vers l'avant et que les deux autres encadrent la sortie turbine. */
+    const float mainAngle = rotorAngle + PI;
     const mat4  mainBase  = root * glm::translate(mat4(1.0f), MAIN_HUB) *
                            glm::rotate(mat4(1.0f), mainAngle, vec3{0.0f, 1.0f, 0.0f});
     /* Rotor de queue : son disque est vertical, on bascule donc le rotor de -90
-       degrés autour de X avant de le faire tourner autour de son propre axe. */
-    const float tailAngle = timeSeconds * TAIL_SPIN;
+       degrés autour de X avant de le faire tourner autour de son propre axe. Il est
+       solidaire du rotor principal, d'où l'angle déduit par le rapport de vitesse
+       (et de sens opposé, comme auparavant). */
+    const float tailAngle = -rotorAngle * (TAIL_SPIN / MAIN_SPIN);
     const mat4  tailBase  = root * glm::translate(mat4(1.0f), TAIL_HUB) *
                            glm::rotate(mat4(1.0f), -HALF_PI, vec3{1.0f, 0.0f, 0.0f}) *
                            glm::rotate(mat4(1.0f), tailAngle, vec3{0.0f, 1.0f, 0.0f});

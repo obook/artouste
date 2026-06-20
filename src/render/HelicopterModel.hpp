@@ -24,8 +24,10 @@ public:
     HelicopterModel();
 
     /* Dessine l'appareil. 'base' le place et l'oriente dans le monde ;
-       'timeSeconds' fait tourner les rotors au fil du temps. */
-    void draw(Shader& shader, const mat4& base, float timeSeconds) const;
+       'rotorAngle' est l'angle du rotor principal (rad), géré par l'application
+       (rotation au régime du rotor, puis parking à l'arrêt). Le rotor de queue en
+       est déduit, dans le même rapport de vitesse qu'auparavant. */
+    void draw(Shader& shader, const mat4& base, float rotorAngle) const;
 
 private:
     Mesh m_cabin;

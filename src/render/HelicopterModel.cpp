@@ -53,7 +53,7 @@ HelicopterModel::HelicopterModel() {
     m_tailRotor = toMesh(bladeSet(3, 0.85f, 0.16f, 0.04f, rotorColor));
 }
 
-void HelicopterModel::draw(Shader& shader, const mat4& base, float timeSeconds) const {
+void HelicopterModel::draw(Shader& shader, const mat4& base, float rotorAngle) const {
     /* Petit raccourci : place une pièce (par rapport à l'appareil) puis la dessine. */
     const auto drawPart = [&](const Mesh& mesh, const mat4& local) {
         shader.setMat4("u_model", base * local);
@@ -68,15 +68,19 @@ void HelicopterModel::draw(Shader& shader, const mat4& base, float timeSeconds) 
     drawPart(m_skidLeft, glm::translate(mat4(1.0f), vec3{0.20f, 0.10f, 0.90f}));
     drawPart(m_skidRight, glm::translate(mat4(1.0f), vec3{0.20f, 0.10f, -0.90f}));
 
-    /* Rotor principal : il tourne autour de l'axe vertical (Y). */
-    const float mainAngle = timeSeconds * MAIN_ROTOR_SPEED;
+    /* Rotor principal : il tourne autour de l'axe vertical (Y). L'angle est fourni
+       par l'application (sens horaire vu de dessus, comme sur l'Alouette II ; à
+       l'arrêt, une pale est alignée sur l'axe de l'appareil). */
+    const float mainAngle = rotorAngle;
     const mat4  mainXform = glm::translate(mat4(1.0f), vec3{0.20f, 3.05f, 0.00f}) *
                            glm::rotate(mat4(1.0f), mainAngle, vec3{0.0f, 1.0f, 0.0f});
     drawPart(m_mainRotor, mainXform);
 
     /* Rotor de queue : son disque est vertical. On le bascule de -90 degrés
-       autour de X pour le redresser, puis on le fait tourner autour de son axe. */
-    const float tailAngle = timeSeconds * TAIL_ROTOR_SPEED;
+       autour de X pour le redresser, puis on le fait tourner autour de son axe.
+       Il est solidaire du rotor principal, d'où l'angle déduit par le rapport de
+       vitesse (et de sens opposé, comme auparavant). */
+    const float tailAngle = -rotorAngle * (TAIL_ROTOR_SPEED / MAIN_ROTOR_SPEED);
     const mat4  tailXform = glm::translate(mat4(1.0f), vec3{-6.15f, 1.90f, 0.22f}) *
                            glm::rotate(mat4(1.0f), -HALF_PI, vec3{1.0f, 0.0f, 0.0f}) *
                            glm::rotate(mat4(1.0f), tailAngle, vec3{0.0f, 1.0f, 0.0f});

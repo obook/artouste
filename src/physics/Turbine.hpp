@@ -1,12 +1,14 @@
 /*
  * Turbine.hpp
  * Turbine Artouste de l'Alouette II, modélisée comme une petite machine à états.
- * Le démarrage se fait en deux temps, comme sur une vraie turbine libre :
+ * Le démarrage se fait en deux temps :
  *   1. la turbine (générateur) monte seule en régime ; le rotor reste immobile,
- *      retenu par le frein rotor, donc les pales ne tournent pas ;
- *   2. le frein relâché, la turbine libre entraîne le rotor par la roue libre
- *      (la même qui permet l'autorotation en cas de panne) ; les pales accélèrent
- *      jusqu'au régime de vol.
+ *      les pales ne tournent pas ;
+ *   2. au-delà d'un seuil de régime turbine, le rotor s'engage automatiquement
+ *      (simplification simulateur : on s'appuie sur la roue libre, celle qui
+ *      permet aussi l'autorotation) ; les pales accélèrent jusqu'au régime de vol.
+ * Dans la réalité, le pilote libère d'abord le frein rotor (serré au parking) ;
+ * ce geste n'est pas modélisé : le rotor part dès que la turbine atteint le seuil.
  * On suit donc deux régimes distincts, chacun dans [0, 1] :
  *   - le régime turbine, qui pilote le son (sifflement de montée en régime) ;
  *   - le régime rotor, qui pilote la portance (le modèle de vol le multiplie à

@@ -31,17 +31,19 @@ void Turbine::toggle() noexcept {
 void Turbine::update(float dt) noexcept {
     switch (m_state) {
         case State::Demarrage:
-            /* La turbine monte seule en régime ; le rotor reste retenu par le frein,
-             * pales immobiles. */
+            /* La turbine monte seule en régime ; le rotor reste immobile, pales
+             * arrêtées. Dans la réalité, le pilote a libéré le frein rotor au
+             * préalable (geste non modélisé ici). */
             m_turbine += dt / TURBINE_START_TIME;
             if (m_turbine >= 1.0f) {
                 m_turbine = 1.0f;
-                m_state   = State::Embrayage;  /* turbine lancée, frein relâché */
+                m_state   = State::Embrayage;  /* seuil atteint : le rotor s'engage */
             }
             break;
         case State::Embrayage:
-            /* Frein relâché : la turbine libre entraîne le rotor par la roue libre,
-             * les pales s'accélèrent. */
+            /* Au-delà du seuil de régime turbine, le rotor s'engage automatiquement
+             * par la roue libre (celle qui permet aussi l'autorotation) et les pales
+             * accélèrent jusqu'au régime de vol. */
             m_rotor += dt / ROTOR_ENGAGE_TIME;
             if (m_rotor >= 1.0f) {
                 m_rotor = 1.0f;

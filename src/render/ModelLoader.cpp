@@ -54,7 +54,10 @@ bool matchesAny(const std::string& nodeName, const std::vector<std::string>& nee
     return false;
 }
 
-constexpr float GLASS_OPACITY = 0.35f;  /* opacité utilisée pour les vitrages */
+/* Opacité des vitrages : volontairement faible pour que la verrière de la bulle
+   se comporte comme un vrai verre (on voit nettement au travers) plutôt que
+   comme un voile gris laiteux, surtout au bas du panneau vu de la cabine. */
+constexpr float GLASS_OPACITY = 0.12f;
 
 /* Retrouve la texture associée au matériau d'un maillage. Renvoie nullptr si le
    maillage n'a pas de matériau ou pas de texture diffuse. Le chemin est exprimé

@@ -90,6 +90,10 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
        - skipRotor : uniquement les plans flous des rotors. */
     const std::vector<std::string> skipBody{"hdr", "blur", "disc", "flotteur", "barre"};
     const std::vector<std::string> skipRotor{"blur", "disc"};
+    /* Pour les cadrans, on écarte en plus la vitre : c'est un disque sans texture
+       posé devant le cadran. Faute de l'éclairer comme un vrai verre, elle cache
+       le fond gradué et les aiguilles et apparaît comme un trou sombre. */
+    const std::vector<std::string> skipGauge{"blur", "disc", "vitre"};
     /* Nœuds à rendre translucides : la verrière de cabine et les vitres. */
     const std::vector<std::string> glass{"verriere", "vitre"};
 
@@ -97,10 +101,15 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
 
     /* Planche de bord et ses cadrans (sans animation). */
-    m_panel = loadPart(dir / "Interior/Panel/panel.ac", skipRotor);
+    /* Planche de bord : on écarte aussi les capots (sur1..sur6) posés au-dessus
+       de chaque cadran. Sans reflet de verre pour les adoucir, ces pare-soleil
+       sombres ressortent comme de vilains rectangles noirs devant les
+       instruments une fois ceux-ci bien visibles. */
+    const std::vector<std::string> skipPanel{"blur", "disc", "sur"};
+    m_panel = loadPart(dir / "Interior/Panel/panel.ac", skipPanel);
     for (const GaugeDef& def : GAUGES) {
         Gauge gauge;
-        gauge.model  = loadPart(dir / def.file, skipRotor);
+        gauge.model  = loadPart(dir / def.file, skipGauge);
         gauge.offset = PANEL_OFFSET + fgToAssimp(def.fgOffset);
         m_gauges.push_back(std::move(gauge));
     }

@@ -158,6 +158,50 @@ void headingTape(ImDrawList* dl, float cx, float top, float halfWidth, float hei
     centeredText(dl, cx, top - 20.0f, HUD_BRIGHT, hbuf);
 }
 
+/* Ruban d'altitude vertical, à gauche de l'image : même principe que la boussole
+ * mais en hauteur. L'échelle (en mètres) défile, l'altitude courante reste au centre
+ * sous un repère, avec sa valeur chiffrée à droite du ruban. Graduations tous les
+ * 10 m, libellé tous les 50 m. */
+void altitudeTape(ImDrawList* dl, float left, float cy, float width, float halfHeight,
+                  float altitude) {
+    const float  pxPerM    = 2.0f;
+    const int    minorStep = 10;  /* m entre graduations */
+    const int    majorStep = 50;  /* m entre libellés */
+    const ImVec2 tl{left, cy - halfHeight};
+    const ImVec2 br{left + width, cy + halfHeight};
+    const float  half = ImGui::GetTextLineHeight() * 0.5f;
+
+    panelRect(dl, tl, br, 4.0f);
+    dl->AddRect(tl, br, HUD_GREEN, 0.0f, 0, 1.5f);
+    dl->PushClipRect(tl, br, true);
+
+    const float rangeM = halfHeight / pxPerM;  /* demi-plage visible, en mètres */
+    const int   start  = static_cast<int>(std::floor((altitude - rangeM) / minorStep)) * minorStep;
+    const int   end    = static_cast<int>(std::ceil((altitude + rangeM) / minorStep)) * minorStep;
+    for (int v = start; v <= end; v += minorStep) {
+        const float y     = cy - (static_cast<float>(v) - altitude) * pxPerM;
+        const bool  major = (v % majorStep) == 0;
+        hudLine(dl, ImVec2(br.x - (major ? width * 0.45f : width * 0.25f), y), ImVec2(br.x, y),
+                HUD_GREEN, 1.5f);
+        if (major && v >= 0) {
+            char buf[12];
+            std::snprintf(buf, sizeof(buf), "%d", v);
+            dl->AddText(ImVec2(tl.x + 4.0f, y - half), HUD_GREEN, buf);
+        }
+    }
+    dl->PopClipRect();
+
+    /* Repère central fixe (triangle pointant vers le ruban) et altitude courante. */
+    dl->AddTriangleFilled(ImVec2(br.x, cy - 7.0f), ImVec2(br.x, cy + 7.0f),
+                          ImVec2(br.x - 8.0f, cy), HUD_BRIGHT);
+    char abuf[12];
+    std::snprintf(abuf, sizeof(abuf), "%.0f", static_cast<double>(altitude));
+    const ImVec2 sz = ImGui::CalcTextSize(abuf);
+    panelRect(dl, ImVec2(br.x + 4.0f, cy - half - 2.0f), ImVec2(br.x + 12.0f + sz.x, cy + half + 2.0f),
+              3.0f);
+    dl->AddText(ImVec2(br.x + 8.0f, cy - half), HUD_BRIGHT, abuf);
+}
+
 }  /* namespace */
 
 void Hud::init(GLFWwindow* window) {
@@ -220,16 +264,17 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
          * (Priorité 1 de PANEL.md), assez bas pour ne pas gêner la vue de vol. */
         ImDrawList* dl = ImGui::GetForegroundDrawList();
 
-        /* Ruban de cap qui défile, en haut de l'image : largeur d'origine, centré,
-         * mais plus haut que la version initiale. */
+        /* Ruban de cap qui défile, en haut de l'image. */
         headingTape(dl, w * 0.5f, 30.0f, 230.0f, 40.0f, data.headingDeg);
 
+        /* Ruban d'altitude vertical, à gauche de l'image. */
+        altitudeTape(dl, 24.0f, h * 0.5f, 60.0f, h * 0.28f, data.altitudeM);
+
         /* Valeurs pré-formatées (formats littéraux : pas de format dynamique). */
-        char nr[16], turb[16], ias[16], alt[16], vs[16], coll[16];
+        char nr[16], turb[16], ias[16], vs[16], coll[16];
         std::snprintf(nr,   sizeof(nr),   "%.0f",  static_cast<double>(data.rotorRpm));
         std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
         std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKt));
-        std::snprintf(alt,  sizeof(alt),  "%.0f",  static_cast<double>(data.altitudeM));
         std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));
         std::snprintf(coll, sizeof(coll), "%.0f",  static_cast<double>(data.collectivePct));
 
@@ -242,7 +287,6 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             {data.rotorRpm,      0.0f, 420.0f,   340.0f,   380.0f,   "NR tr/min", nr},
             {data.turbineRpm,    0.0f, 35000.0f, 33000.0f, 34000.0f, "TURBINE",   turb},
             {data.airspeedKt,    0.0f, 140.0f,   95.0f,    105.0f,   "IAS kt",    ias},
-            {data.altitudeM,     0.0f, 5000.0f,  0.0f,     0.0f,     "ALT m",     alt},
             {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs},
             {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll},
         };

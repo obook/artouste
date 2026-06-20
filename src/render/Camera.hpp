@@ -33,6 +33,12 @@ public:
 
     void setFovYDeg(float degrees) noexcept { m_fovY = degrees * DEG_TO_RAD; }
 
+    /* Distance du plan proche (m). En vue cockpit, la verrière est à quelques
+       centimètres de l'oeil : il faut un near petit pour ne pas la couper. En
+       vues externes, un near plus grand préserve la précision de profondeur au
+       loin (terrain et mer). */
+    void setNear(float n) noexcept { m_near = n; }
+
     [[nodiscard]] mat4 view() const noexcept;
     [[nodiscard]] mat4 proj() const noexcept;
     [[nodiscard]] const vec3& position() const noexcept { return m_position; }
@@ -45,8 +51,11 @@ private:
     bool  m_followInit  = false;  /* premier appel de chase : on se cale net */
     float m_fovY        = HALF_PI / 1.5f;  /* angle de vue vertical : 60 degrés */
     float m_aspect      = 16.0f / 9.0f;
-    float m_near        = 0.1f;
-    float m_far         = 5000.0f;
+    /* near volontairement à 0.5 (pas 0.1) : avec un far très lointain, un near
+       trop petit gaspille la précision du tampon de profondeur et fait
+       scintiller (z-fighting) le terrain et la mer au loin. */
+    float m_near        = 0.5f;
+    float m_far         = 40000.0f;  /* assez loin pour voir la côte et le relief en entier */
 };
 
 }  /* namespace artouste::render */

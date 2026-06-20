@@ -54,6 +54,27 @@ constexpr char WINDOW_TITLE[] = "Artouste";
  */
 const vec3 COCKPIT_EYE{3.40f, 1.86f, 0.42f};
 
+/*
+ * Brume atmosphérique : le terrain et la mer se fondent dans cette teinte de
+ * ciel entre FOG_START et FOG_END (distance à la caméra, en mètres). Elle donne
+ * la profondeur et masque le bord du terrain comme le plan de coupe lointain.
+ */
+const vec3      FOG_COLOR{0.74f, 0.80f, 0.86f};
+constexpr float FOG_START = 4000.0f;
+constexpr float FOG_END   = 22000.0f;
+
+/*
+ * Plan de mer : couleur de l'océan (accordée à la mer recolorée de l'orthophoto)
+ * et demi-côté en mètres. Le niveau est nettement sous 0 : le terrain ne
+ * descend jamais sous le niveau de la mer, donc ce plan reste caché sous la mer
+ * du bloc (dessinée à y=0 par l'orthophoto) sans rivaliser avec elle en
+ * profondeur, ce qui éviterait sinon un scintillement (z-fighting) au loin. Il
+ * ne réapparaît qu'au-delà du bord du terrain, pour étendre l'océan à l'horizon.
+ */
+const vec3      SEA_COLOR{0.180f, 0.259f, 0.271f};  /* (46,66,69) : mer de l'orthophoto */
+constexpr float SEA_LEVEL = -40.0f;
+constexpr float SEA_HALF  = 100000.0f;
+
 void glfwErrorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);
 }
@@ -98,10 +119,13 @@ Application::~Application() {
     m_loadedHeli.reset();
     m_helicopter.reset();
     m_terrain.reset();
+    m_sea.reset();
     m_shadowDisc.reset();
     m_sky.reset();
     m_flatShader.reset();
     m_skyShader.reset();
+    m_seaShader.reset();
+    m_terrainShader.reset();
     m_modelShader.reset();
     m_shader.reset();
 
@@ -163,6 +187,10 @@ void Application::initScene() {
                                                 assets / "shaders" / "basic.frag");
     m_modelShader = std::make_unique<render::Shader>(assets / "shaders" / "model.vert",
                                                      assets / "shaders" / "model.frag");
+    m_terrainShader = std::make_unique<render::Shader>(assets / "shaders" / "terrain.vert",
+                                                       assets / "shaders" / "terrain.frag");
+    m_seaShader   = std::make_unique<render::Shader>(assets / "shaders" / "sea.vert",
+                                                     assets / "shaders" / "sea.frag");
     m_skyShader   = std::make_unique<render::Shader>(assets / "shaders" / "sky.vert",
                                                      assets / "shaders" / "sky.frag");
     m_flatShader  = std::make_unique<render::Shader>(assets / "shaders" / "flat.vert",
@@ -172,7 +200,33 @@ void Application::initScene() {
     const auto discData = render::primitives::disc(6.0f, 48, vec3{0.0f, 0.0f, 0.0f});
     m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
 
-    m_terrain    = std::make_unique<render::Terrain>(400.0f, 80);
+    /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */
+    const vec3 up{0.0f, 1.0f, 0.0f};
+    const std::vector<render::Vertex> seaVerts = {
+        {{-SEA_HALF, SEA_LEVEL, -SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
+        {{SEA_HALF, SEA_LEVEL, -SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
+        {{SEA_HALF, SEA_LEVEL, SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
+        {{-SEA_HALF, SEA_LEVEL, SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
+    };
+    const std::vector<unsigned int> seaIdx = {0, 1, 2, 0, 2, 3};
+    m_sea = std::make_unique<render::Mesh>(seaVerts, seaIdx);
+
+    /* Terrain réel de la côte basque (relief IGN + orthophoto drapée). */
+    m_terrain = std::make_unique<render::Terrain>(assets / "terrain");
+
+    /*
+     * Position de départ : posé sur la côte de Hendaye, l'océan à l'ouest et le
+     * relief (jusqu'à La Rhune) vers l'est. Si le terrain réel est absent, on
+     * reste à l'origine sur le sol plat de repli.
+     */
+    if (m_terrain->textured()) {
+        constexpr float START_X = -9140.0f;  /* m à l'est du centre (négatif = ouest) */
+        constexpr float START_Z = 3006.0f;   /* m au sud du centre */
+        const float     ground  = m_terrain->heightAt(START_X, START_Z);
+        m_startPos              = vec3{START_X, ground, START_Z};
+        m_flight.reset(m_startPos);
+    }
+
     m_helicopter = std::make_unique<render::HelicopterModel>();
     m_input      = std::make_unique<input::InputSystem>(m_window);
     m_hud.init(m_window);
@@ -227,6 +281,10 @@ void Application::mainLoop() {
             m_viewMode = (m_viewMode + 1) % 3;
         }
 
+        /* Hauteur du relief sous l'appareil : sert au contact avec le sol. */
+        const vec3& pos = m_flight.body().position;
+        m_flight.setGroundHeight(m_terrain->heightAt(pos.x, pos.z));
+
         if (m_paused) {
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
@@ -254,12 +312,15 @@ void Application::mainLoop() {
             const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
             const vec3 up  = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
             m_camera.setFovYDeg(70.0f);
+            m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
             m_camera.setLookAt(eye, eye + fwd, up);
         } else if (m_viewMode == 2) {  /* orbite */
             m_camera.setFovYDeg(60.0f);
+            m_camera.setNear(0.5f);
             m_camera.orbit(lookTarget, 15.0f, 6.0f, t * 0.25f);
         } else {  /* poursuite */
             m_camera.setFovYDeg(60.0f);
+            m_camera.setNear(0.5f);
             m_camera.chase(lookTarget, yaw, frameDt);
         }
 
@@ -297,28 +358,76 @@ void Application::renderScene(const mat4& base, float timeSeconds) {
     /* Ciel en dégradé (il remplit le fond de l'image). */
     m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position());
 
-    /* Terrain : shader qui colore selon les sommets. */
-    m_shader->use();
-    m_shader->setMat4("u_view", view);
-    m_shader->setMat4("u_proj", proj);
-    m_shader->setVec3("u_lightDir", lightDir);
-    m_shader->setMat4("u_model", mat4(1.0f));
-    m_terrain->draw();
+    /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin. */
+    m_seaShader->use();
+    m_seaShader->setMat4("u_view", view);
+    m_seaShader->setMat4("u_proj", proj);
+    m_seaShader->setMat4("u_model", mat4(1.0f));
+    m_seaShader->setVec3("u_seaColor", SEA_COLOR);
+    m_seaShader->setVec3("u_camPos", m_camera.position());
+    m_seaShader->setVec3("u_fogColor", FOG_COLOR);
+    m_seaShader->setFloat("u_fogStart", FOG_START);
+    m_seaShader->setFloat("u_fogEnd", FOG_END);
+    m_sea->draw();
 
     /*
-     * Ombre portée : un disque sombre translucide au sol sous l'appareil.
-     * Il s'estompe et s'élargit à mesure que l'altitude augmente.
+     * Terrain : orthophoto réelle drapée sur le relief, avec brume au loin.
+     * Si les données réelles manquent, on retombe sur le shader à couleurs de
+     * sommets et le damier plat de repli.
+     */
+    if (m_terrain->textured()) {
+        m_terrainShader->use();
+        m_terrainShader->setMat4("u_view", view);
+        m_terrainShader->setMat4("u_proj", proj);
+        m_terrainShader->setMat4("u_model", mat4(1.0f));
+        m_terrainShader->setVec3("u_lightDir", lightDir);
+        m_terrainShader->setVec3("u_camPos", m_camera.position());
+        m_terrainShader->setVec3("u_fogColor", FOG_COLOR);
+        m_terrainShader->setFloat("u_fogStart", FOG_START);
+        m_terrainShader->setFloat("u_fogEnd", FOG_END);
+        m_terrainShader->setInt("u_texture", 0);
+        m_terrain->bindTexture(0);
+        m_terrain->draw();
+    } else {
+        m_shader->use();
+        m_shader->setMat4("u_view", view);
+        m_shader->setMat4("u_proj", proj);
+        m_shader->setVec3("u_lightDir", lightDir);
+        m_shader->setMat4("u_model", mat4(1.0f));
+        m_terrain->draw();
+    }
+
+    /*
+     * Ombre portée : un disque sombre translucide posé sur le relief sous
+     * l'appareil. Il s'estompe et s'élargit à mesure que la hauteur augmente.
      */
     const vec3  heliPos     = vec3(base[3]);
-    const float altitude    = heliPos.y > 0.0f ? heliPos.y : 0.0f;
+    const float ground      = m_terrain->heightAt(heliPos.x, heliPos.z);
+    const float altitude    = heliPos.y - ground > 0.0f ? heliPos.y - ground : 0.0f;
     const float shadowAlpha = 0.35f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
     if (shadowAlpha > 0.01f) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
         const float scaleXZ = 1.0f + altitude * 0.02f;
-        const mat4  shadowModel =
-            glm::translate(mat4(1.0f), vec3{heliPos.x, 0.03f, heliPos.z}) *
+        const float radius  = 6.0f * scaleXZ;  /* rayon du disque (m), cf. disc(6, ...) */
+
+        /*
+         * Le disque est plat : sur un sol en pente, il couperait le relief et la
+         * ligne d'intersection scintillerait au moindre mouvement de la caméra.
+         * Le rayon (6 m) étant plus petit qu'une maille du terrain, le sol sous
+         * le disque est une facette inclinée dont le point haut est un coin : on
+         * pose donc le disque au-dessus du plus haut des quatre coins, avec une
+         * marge, pour qu'il ne traverse jamais le sol.
+         */
+        float top = ground;
+        top       = std::fmax(top, m_terrain->heightAt(heliPos.x + radius, heliPos.z + radius));
+        top       = std::fmax(top, m_terrain->heightAt(heliPos.x + radius, heliPos.z - radius));
+        top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z + radius));
+        top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z - radius));
+
+        const mat4 shadowModel =
+            glm::translate(mat4(1.0f), vec3{heliPos.x, top + 0.30f, heliPos.z}) *
             glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ});
         m_flatShader->use();
         m_flatShader->setMat4("u_view", view);
@@ -359,10 +468,11 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
      * des variables d'environnement pour observer plusieurs angles sans
      * recompiler.
      */
-    float angle  = 2.4f;
-    float radius = 14.0f;
-    float height = 6.0f;
+    float angle   = 2.4f;
+    float radius  = 14.0f;
+    float height  = 6.0f;
     float targetY = 1.8f;
+    float agl     = 140.0f;  /* hauteur de vol au-dessus du sol pour la capture (m) */
     if (const char* e = std::getenv("ARTOUSTE_SHOT_ANGLE")) {
         angle = std::strtof(e, nullptr);
     }
@@ -375,15 +485,26 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETY")) {
         targetY = std::strtof(e, nullptr);
     }
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_AGL")) {
+        agl = std::strtof(e, nullptr);
+    }
+
+    /* L'appareil est placé en vol au-dessus de la côte (sa position de départ),
+       de sorte que la capture montre le relief réel et la mer sous lui. */
+    const vec3 shotPos{m_startPos.x, m_terrain->heightAt(m_startPos.x, m_startPos.z) + agl,
+                       m_startPos.z};
+    const mat4 base = glm::translate(mat4(1.0f), shotPos);
 
     if (std::getenv("ARTOUSTE_SHOT_COCKPIT") != nullptr) {
         m_camera.setFovYDeg(70.0f);
-        m_camera.setLookAt(COCKPIT_EYE, COCKPIT_EYE + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
+        m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
+        const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
+        m_camera.setLookAt(eye, eye + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
                            vec3{0.0f, 1.0f, 0.0f});
     } else {
-        m_camera.orbit(vec3{0.0f, targetY, 0.0f}, radius, height, angle);
+        m_camera.setNear(0.5f);
+        m_camera.orbit(shotPos + vec3{0.0f, targetY, 0.0f}, radius, height, angle);
     }
-    const mat4 base = mat4(1.0f);
 
     ui::HudData hud;
     hud.airspeedKt    = 92.0f;
@@ -451,9 +572,9 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_viewMode = (app->m_viewMode + 1) % 3;
             }
             break;
-        case GLFW_KEY_R:  /* replace l'appareil à sa position de départ */
+        case GLFW_KEY_R:  /* replace l'appareil à sa position de départ (la côte) */
             if (app != nullptr) {
-                app->m_flight.reset();
+                app->m_flight.reset(app->m_startPos);
                 app->m_input->reset();
             }
             break;

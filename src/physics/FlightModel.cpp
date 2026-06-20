@@ -43,8 +43,9 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     const float baseThrust  = (MASS * G / COLL_HOVER) * collective;
 
     /* Effet de sol : près du sol, la poussée est renforcée ; ce gain diminue avec
-     * la hauteur. */
-    const float height       = m_body.position.y > 0.0f ? m_body.position.y : 0.0f;
+     * la hauteur au-dessus du relief. */
+    const float agl          = m_body.position.y - m_groundHeight;  /* hauteur sol (m) */
+    const float height       = agl > 0.0f ? agl : 0.0f;
     const float groundEffect = 1.0f + GE_MAX * (1.0f - clamp(height / GE_HEIGHT, 0.0f, 1.0f));
 
     /* Effet de translation : la portance augmente avec la vitesse horizontale.
@@ -94,9 +95,9 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     m_body.angularVelocity.y = clampAbs(m_body.angularVelocity.y, MAX_OMEGA);
     m_body.angularVelocity.z = clampAbs(m_body.angularVelocity.z, MAX_OMEGA);
 
-    /* Contact avec le sol : l'appareil ne descend pas sous le terrain. */
-    if (m_body.position.y < 0.0f) {
-        m_body.position.y = 0.0f;
+    /* Contact avec le sol : l'appareil ne descend pas sous le relief. */
+    if (m_body.position.y < m_groundHeight) {
+        m_body.position.y = m_groundHeight;
         if (m_body.velocity.y < 0.0f) {
             m_body.velocity.y = 0.0f;
         }
@@ -105,8 +106,8 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* Posé sur les patins : tant que la poussée ne dépasse pas le poids, l'appareil
      * reste collé au sol, sans glisser ni tourner. Dès que le collectif suffit à
      * le soulever, il décolle normalement. */
-    if (m_body.position.y <= 0.0f && m_lastThrust <= MASS * G) {
-        m_body.position.y      = 0.0f;
+    if (m_body.position.y <= m_groundHeight && m_lastThrust <= MASS * G) {
+        m_body.position.y      = m_groundHeight;
         m_body.velocity        = vec3{0.0f, 0.0f, 0.0f};
         m_body.angularVelocity = vec3{0.0f, 0.0f, 0.0f};
     }

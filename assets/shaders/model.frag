@@ -34,5 +34,21 @@ void main() {
 
     float light = 0.40 + 0.45 * diffuse + 0.45 * headlight;
 
-    frag_color = vec4(albedo.rgb * min(light, 1.2), albedo.a * u_opacity);
+    vec3  color = albedo.rgb * min(light, 1.2);
+    float alpha = albedo.a * u_opacity;
+
+    /*
+     * Verrière (u_opacity < 1) : une vitre vue de face est presque invisible, au
+     * point de sembler absente. On ajoute un reflet de Fresnel (plus fort aux
+     * angles rasants) qui éclaircit et opacifie les bords : la cabine se lit
+     * alors comme du verre depuis l'intérieur, sans assombrir la vue de face.
+     * abs() rend l'effet identique des deux côtés de la vitre.
+     */
+    if (u_opacity < 0.999) {
+        float fresnel = pow(1.0 - abs(dot(n, viewDir)), 3.0);
+        color = mix(color, vec3(0.85, 0.90, 0.95), fresnel * 0.6);
+        alpha = clamp(alpha + fresnel * 0.5, 0.0, 1.0);
+    }
+
+    frag_color = vec4(color, alpha);
 }

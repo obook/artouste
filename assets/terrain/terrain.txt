@@ -1,0 +1,15 @@
+# Terrain Artouste - cote basque (Hendaye -> Biarritz, La Rhune)
+# Donnees IGN Geoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en metres
+cols 256
+rows 256
+width_m 21027.7
+height_m 23377.2
+elev_min 0.00
+elev_max 895.85
+lon_min -1.81
+lon_max -1.55
+lat_min 43.3
+lat_max 43.51
+ortho_width 1842
+ortho_height 2048

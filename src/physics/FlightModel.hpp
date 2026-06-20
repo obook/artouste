@@ -28,6 +28,16 @@ public:
         m_body.position.y = altitude;
     }
 
+    /* Réinitialise à une position donnée (par exemple posé sur la côte). */
+    void reset(const vec3& position) noexcept {
+        m_body          = RigidBody{};
+        m_body.position = position;
+    }
+
+    /* Altitude du sol (m) sous l'appareil : le contact se fait à cette hauteur
+       plutôt qu'au niveau de la mer, pour suivre le relief du terrain. */
+    void setGroundHeight(float h) noexcept { m_groundHeight = h; }
+
     [[nodiscard]] const RigidBody& body() const noexcept { return m_body; }
 
     /* Dernière poussée calculée, en newtons : utile pour le débogage et l'affichage. */
@@ -35,7 +45,8 @@ public:
 
 private:
     RigidBody m_body;
-    float     m_lastThrust = 0.0f;
+    float     m_lastThrust   = 0.0f;
+    float     m_groundHeight = 0.0f;
 };
 
 }  /* namespace artouste::physics */

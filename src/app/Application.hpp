@@ -64,12 +64,16 @@ private:
     int         m_height = 720;
 
     render::Camera                            m_camera;
-    std::unique_ptr<render::Shader>           m_shader;        /* géométrie à couleur (terrain) */
+    vec3                                      m_startPos{0.0f, 0.0f, 0.0f};  /* point de départ (côte) */
+    std::unique_ptr<render::Shader>           m_shader;        /* géométrie à couleur (repli) */
     std::unique_ptr<render::Shader>           m_modelShader;   /* géométrie texturée (modèle) */
+    std::unique_ptr<render::Shader>           m_terrainShader; /* terrain réel drapé d'orthophoto */
+    std::unique_ptr<render::Shader>           m_seaShader;     /* plan de mer avec brume */
     std::unique_ptr<render::Shader>           m_skyShader;     /* ciel en dégradé */
     std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (ombre) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
+    std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain>          m_terrain;
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */

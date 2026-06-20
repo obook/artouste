@@ -474,7 +474,7 @@ void Application::mainLoop() {
             }
         }
 
-        renderScene(base, m_rotorAngle);
+        renderScene(base, m_rotorAngle, m_flight.turbine().rotorFraction());
 
         ui::HudData hud;
         hud.altitudeM    = body.position.y;
@@ -498,7 +498,7 @@ void Application::mainLoop() {
     }
 }
 
-void Application::renderScene(const mat4& base, float rotorAngle) {
+void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction) {
     const vec3 lightDir = glm::normalize(vec3{0.4f, 1.0f, 0.35f});
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
@@ -605,8 +605,11 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
     }
 
     /*
-     * Ombre portée : un disque sombre translucide posé sur le relief sous
-     * l'appareil. Il s'estompe et s'élargit à mesure que la hauteur augmente.
+     * Ombre portée, en deux disques de taille fixe (pas d'animation de taille) :
+     *  - le fuselage : petit disque dense, toujours présent ;
+     *  - le rotor : grand disque plus clair dont seule l'opacité suit le régime,
+     *    invisible rotor arrêté. Ainsi l'ombre reste cohérente avec l'état des
+     *    pales sans grandir ni rétrécir. Les deux s'estompent avec l'altitude.
      */
     const vec3  heliPos     = vec3(base[3]);
     const float ground      = m_terrain->heightAt(heliPos.x, heliPos.z);
@@ -617,7 +620,7 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
         const float scaleXZ = 1.0f + altitude * 0.02f;
-        const float radius  = 6.0f * scaleXZ;  /* rayon du disque (m), cf. disc(6, ...) */
+        const float radius  = 6.0f * scaleXZ;  /* rayon du disque rotor (m), cf. disc(6, ...) */
 
         /*
          * Le disque est plat : sur un sol en pente, il couperait le relief et la
@@ -633,15 +636,27 @@ void Application::renderScene(const mat4& base, float rotorAngle) {
         top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z + radius));
         top       = std::fmax(top, m_terrain->heightAt(heliPos.x - radius, heliPos.z - radius));
 
-        const mat4 shadowModel =
-            glm::translate(mat4(1.0f), vec3{heliPos.x, top + 0.30f, heliPos.z}) *
-            glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ});
+        const vec3 shadowPos{heliPos.x, top + 0.30f, heliPos.z};
         m_flatShader->use();
         m_flatShader->setMat4("u_view", view);
         m_flatShader->setMat4("u_proj", proj);
-        m_flatShader->setMat4("u_model", shadowModel);
+
+        /* Disque rotor : grand et clair, qui apparait en fondu avec le régime. */
+        const float rotorShadowAlpha = shadowAlpha * 0.55f * clamp(rotorFraction, 0.0f, 1.0f);
+        if (rotorShadowAlpha > 0.01f) {
+            m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), shadowPos) *
+                                                 glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
+            m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, rotorShadowAlpha});
+            m_shadowDisc->draw();
+        }
+
+        /* Fuselage : petit disque dense, toujours présent. */
+        const float bodyScale = scaleXZ * (2.8f / 6.0f);  /* empreinte fuselage ~2,8 m */
+        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), shadowPos) *
+                                             glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
         m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, shadowAlpha});
         m_shadowDisc->draw();
+
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
@@ -731,7 +746,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
      * mesurer), puis elles se stabilisent.
      */
     for (int i = 0; i < 3; ++i) {
-        renderScene(base, 1.3f);
+        renderScene(base, 1.3f, 1.0f);
         m_hud.render(hud, m_hudMode, false);
     }
     glFinish();

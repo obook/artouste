@@ -54,7 +54,7 @@ private:
     bool initGL();
     void initScene();
     void mainLoop();
-    void renderScene(const mat4& base, float rotorAngle);
+    void renderScene(const mat4& base, float rotorAngle, float rotorFraction);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 

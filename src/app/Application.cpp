@@ -76,6 +76,17 @@ constexpr float   BEACON_PERIOD = 1.2f;            /* période du clignotement (
 constexpr float   BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
 
 /*
+ * Feux de navigation et de queue, aux positions du modèle (all-lights.xml d'Émmanuel),
+ * exprimées ici en repère corps. Allumés en continu quand la turbine tourne. On respecte
+ * la convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite), blanc à
+ * la queue.
+ */
+const vec3        NAV_LEFT_POS{4.24f, 0.92f, -0.77f};   /* feu de navigation bâbord (rouge) */
+const vec3        NAV_RIGHT_POS{4.24f, 0.92f, 0.77f};   /* feu de navigation tribord (vert) */
+const vec3        TAIL_LIGHT_POS{-3.96f, 2.13f, 0.20f}; /* feu blanc de queue */
+constexpr float   NAV_RADIUS = 0.07f;                   /* rayon du coeur d'un feu (m) */
+
+/*
  * Tuyère : sortie de la turbine, derrière le bloc moteur, au départ de la poutre.
  * La turbine est haute sur le pont moteur (derrière le mât) : la sortie est donc en
  * arrière de l'origine (X négatif) et en hauteur, pas dans le carter (plus bas, plus
@@ -816,6 +827,18 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     if (beaconPhase < BEACON_ON) {
         drawGlow(bodyToWorld(BEACON_POS), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
     }
+
+    /* --- Feux de navigation et de queue -------------------------------------- */
+    /* Allumés en continu : un coeur vif entouré d'un halo doux pour qu'ils se lisent
+       comme de petites lampes. */
+    const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
+        const vec3 w = bodyToWorld(bodyPos);
+        drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f});
+        drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f});
+    };
+    drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
+    drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
+    drawLight(TAIL_LIGHT_POS, vec3{1.0f, 1.0f, 0.95f});  /* queue : blanc */
 
     /* --- Tuyère -------------------------------------------------------------- */
     /* Air chaud rejeté par la turbine : pas de flamme, mais une distorsion thermique.

@@ -43,9 +43,11 @@ public:
        'rudder' est la commande de palonnier ([-1, +1]) : elle fait basculer les
        pédales et, en vue cockpit, les jambes du pilote.
        'cyclicLong' et 'cyclicLat' ([-1, +1]) inclinent le manche cyclique (tangage
-       et roulis) ; en vue cockpit, l'avant-bras droit du pilote suit le manche. */
+       et roulis) ; en vue cockpit, l'avant-bras droit du pilote suit le manche.
+       'collective' ([0, +1]) lève le levier de collectif (commande de la main gauche). */
     void draw(Shader& shader, const mat4& base, float rotorAngle, bool fullPilot = true,
-              float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f) const;
+              float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
+              float collective = 0.0f) const;
 
     /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
        translucide à haut régime, voir le code mis en commentaire). 'base' est la
@@ -85,9 +87,16 @@ private:
     Model              m_grip;          /* poignée (manche) : suit rigidement le manche */
     vec3               m_elbowLocal{0.0f};  /* jonction réelle haut du bras / avant-bras */
     vec3               m_wristLocal{0.0f};  /* jonction réelle avant-bras / poignée */
+    Model              m_armUpperLeft;  /* haut du bras gauche, fixe (au repos) */
+    Model              m_forearmLeft;   /* avant-bras gauche, avec la main (plie au coude vers le collectif) */
+    vec3               m_elbowLeftLocal{0.0f};  /* jonction réelle haut du bras gauche / avant-bras */
+    vec3               m_handLeftLocal{0.0f};   /* bout de l'avant-bras gauche (la main, au repos) */
+    vec3               m_collectiveGripLocal{0.0f};  /* poignée au bout du levier (repère du levier) */
     Model              m_pedalLeft;     /* pédale gauche (paloG, animée au palonnier) */
     Model              m_pedalRight;    /* pédale droite (paloD, animée au palonnier) */
     Model              m_cyclic;        /* manche cyclique (recopié devant chaque siège) */
+    Model              m_collectiveBase;  /* embase du levier de collectif (fixe) */
+    Model              m_collectiveLever; /* levier de collectif (pivote avec la commande) */
     Model              m_panel;
     std::vector<Gauge> m_gauges;
     Model              m_mainHub;

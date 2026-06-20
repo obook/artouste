@@ -745,7 +745,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
            à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
            fait basculer pédales et jambes. */
         m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
-                           cyclicLong, cyclicLat);
+                           cyclicLong, cyclicLat, collective);
 
         /*
          * Disque rotor (mis en commentaire, à reprendre plus tard).
@@ -897,7 +897,17 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
                            vec3{0.0f, 1.0f, 0.0f});
     } else {
         m_camera.setNear(0.5f);
-        m_camera.orbit(shotPos + vec3{0.0f, targetY, 0.0f}, radius, height, angle);
+        /* Décalages horizontaux du point visé (le repère corps est aligné sur le monde
+           en capture) : pratique pour centrer la cabine, en avant de l'origine. */
+        float targetX = 0.0f;
+        float targetZ = 0.0f;
+        if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETX")) {
+            targetX = std::strtof(e, nullptr);
+        }
+        if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETZ")) {
+            targetZ = std::strtof(e, nullptr);
+        }
+        m_camera.orbit(shotPos + vec3{targetX, targetY, targetZ}, radius, height, angle);
     }
 
     ui::HudData hud;
@@ -923,6 +933,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     float shotRudder = 0.0f;
     float shotCyclicLong = 0.0f;
     float shotCyclicLat = 0.0f;
+    float shotCollective = 0.0f;
     if (const char* e = std::getenv("ARTOUSTE_SHOT_RUDDER")) {
         shotRudder = std::strtof(e, nullptr);
     }
@@ -932,8 +943,14 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     if (const char* e = std::getenv("ARTOUSTE_SHOT_CYCLIC_LAT")) {
         shotCyclicLat = std::strtof(e, nullptr);
     }
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_COLLECTIVE")) {
+        shotCollective = std::strtof(e, nullptr);
+    }
     for (int i = 0; i < 3; ++i) {
-        renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat);
+        /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
+           0,1 s tombe dans la phase allumée du flash). */
+        renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat, shotCollective,
+                    1.0f, 0.1f);
         m_hud.render(hud, m_hudMode, false);
     }
     glFinish();

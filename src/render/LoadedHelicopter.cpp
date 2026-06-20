@@ -77,6 +77,22 @@ const vec3 PEDALS_COPILOT_OFFSET = fgToAssimp(vec3{-4.46341f, 0.38800f, -0.83315
 const vec3 CYCLIC_PILOT_OFFSET   = fgToAssimp(vec3{-4.18685f, -0.38800f, -0.80400f});
 const vec3 CYCLIC_COPILOT_OFFSET = fgToAssimp(vec3{-4.18685f, 0.38800f, -0.80400f});
 
+/* Levier de collectif (modèle Interior/.../collective/collective.ac), un par siège,
+   à gauche de chaque pilote : c'est la commande que la main gauche tire pour monter.
+   Le modèle FlightGear le pose presque à plat au plancher, où il est masqué par le bas
+   de cabine ; on le replace bien en vue, entre les sièges, et on le redresse (le vrai
+   collectif monte en biais). Coordonnées dans le repère du modèle (avant correction) :
+   x avant/arrière (négatif vers l'avant), y vertical, z latéral (négatif = côté droit,
+   place du pilote). Le levier pivote autour de sa base et on l'anime au collectif. */
+/* Levier de collectif, un par siège, à gauche de chaque pilote. Le modèle FlightGear
+   le pose presque à plat au plancher, où il est masqué ; on le replace bien en vue,
+   redressé (le vrai collectif monte en biais), et on l'anime avec la commande. */
+const vec3 COLLECTIVE_PILOT_OFFSET   = vec3{-3.74f, -0.70f, -0.24f};  /* à gauche du pilote (siège droit) */
+const vec3 COLLECTIVE_COPILOT_OFFSET = vec3{-3.74f, -0.70f, 0.24f};   /* à gauche du copilote (siège gauche) */
+constexpr float COLLECTIVE_STAND_DEG = 30.0f;  /* redressement de base du levier (au repos) */
+constexpr float COLLECTIVE_RAISE_DEG = 16.0f;  /* levée supplémentaire à plein collectif */
+constexpr float COLLECTIVE_SCALE     = 1.3f;   /* léger grossissement pour la lisibilité */
+
 /* Description des cadrans de la planche de bord : le fichier .ac de chacun et sa
    position relative au panneau (coordonnées FlightGear). Ils forment deux rangées
    de quatre. Leurs aiguilles sont figées (purement décoratives). */
@@ -179,7 +195,14 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
        déformer. Le pilote cockpit ne garde que l'avant-bras gauche. */
     skipCockpit.push_back("avantbrasd");
     skipCockpit.push_back("manche");
-    m_pilot        = loadPart(dir / "Pilot/general_pilot.ac", skipBody);
+    /* Le bras GAUCHE est aussi reconstruit (haut fixe + avant-bras articulé) pour que
+       la main vienne se poser sur la poignée du collectif. On le retire donc du pilote
+       entier comme du pilote cockpit, dans les deux cas il est redessiné à part. */
+    skipCockpit.push_back("avantbrasg");
+    std::vector<std::string> skipPilot = skipBody;
+    skipPilot.push_back("=brasg");
+    skipPilot.push_back("avantbrasg");
+    m_pilot        = loadPart(dir / "Pilot/general_pilot.ac", skipPilot);
     m_pilotCockpit = loadPart(dir / "Pilot/general_pilot.ac", skipCockpit);
     /* Bras droit en trois segments : haut du bras (brasD), avant-bras (avantbrasD)
        et poignée (manche), chacun isolé. */
@@ -215,6 +238,28 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_elbowLocal = junction(m_armUpper, m_forearm);
     m_wristLocal = junction(m_forearm, m_grip);
 
+    /* Bras gauche en deux segments : haut du bras (brasG) et avant-bras (avantbrasG,
+       qui inclut la main). Le coude est leur jonction réelle ; la main est le bout de
+       l'avant-bras le plus éloigné du coude. */
+    m_armUpperLeft = loadPart(dir / "Pilot/general_pilot.ac",
+                              {"tete", "casque", "corps", "=brasd", "avantbras", "manche",
+                               "cuisse", "jambe", "pied"});
+    m_forearmLeft  = loadPart(dir / "Pilot/general_pilot.ac",
+                              {"tete", "casque", "corps", "=brasg", "=brasd", "avantbrasd",
+                               "manche", "cuisse", "jambe", "pied"});
+    m_elbowLeftLocal = junction(m_armUpperLeft, m_forearmLeft);
+    /* Main gauche = sommet de l'avant-bras le plus loin du coude. */
+    {
+        float best = -1.0f;
+        for (const vec3& p : m_forearmLeft.positions()) {
+            const float d = glm::length(p - m_elbowLeftLocal);
+            if (d > best) {
+                best = d;
+                m_handLeftLocal = p;
+            }
+        }
+    }
+
     /* Jambes isolées (gauche et droite) pour les faire pivoter au palonnier : on
        écarte tout sauf cuisse/jambe/pied du côté voulu. */
     m_legLeft  = loadPart(dir / "Pilot/general_pilot.ac",
@@ -230,6 +275,24 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_pedalRight = loadPart(dir / "Interior/Panel/Instruments/pedals/pedals.ac", {"palog"});
     /* Manche cyclique : la colonne complète, recopiée devant chaque siège. */
     m_cyclic = loadPart(dir / "Interior/Panel/Instruments/yokes/yoke.ac", skipBody);
+
+    /* Levier de collectif, chargé en deux morceaux pour pouvoir animer le levier
+       (qui pivote) sans bouger son embase (fixée au plancher). */
+    const std::filesystem::path collectivePath =
+        dir / "Interior/Panel/Instruments/collective/collective.ac";
+    m_collectiveBase  = loadPart(collectivePath, {"collective"});  /* ne garde que l'embase */
+    m_collectiveLever = loadPart(collectivePath, {"base"});        /* ne garde que le levier */
+    /* Poignée = bout du levier le plus en avant (x le plus négatif dans son repère),
+       là où la main gauche vient se poser. */
+    {
+        float minX = 1e30f;
+        for (const vec3& p : m_collectiveLever.positions()) {
+            if (p.x < minX) {
+                minX = p.x;
+                m_collectiveGripLocal = p;
+            }
+        }
+    }
 
     /* Planche de bord et ses cadrans (sans animation). */
     /* Planche de bord : on écarte aussi les capots (sur1..sur6) posés au-dessus
@@ -265,7 +328,7 @@ void LoadedHelicopter::setGendarmerieLivery(bool on) {
 
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
                             bool fullPilot, float rudder, float cyclicLong,
-                            float cyclicLat) const {
+                            float cyclicLat, float collective) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -400,6 +463,59 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
         : root * glm::translate(mat4(1.0f), CYCLIC_PILOT_OFFSET);
     drawModel(m_cyclic, pilotCyclic, Pass::Opaque);
     drawModel(m_cyclic, root * glm::translate(mat4(1.0f), CYCLIC_COPILOT_OFFSET), Pass::Opaque);
+
+    /* Levier de collectif à chaque siège : embase fixe au plancher, levier qui pivote
+       autour de sa base. Il est modelé le long de l'axe X (poignée vers l'avant) ; on
+       le redresse d'un angle de repos puis on le lève encore avec la commande, le tout
+       en tournant autour de l'axe latéral (Z). Un angle négatif relève la poignée. */
+    const float leverDeg = -(COLLECTIVE_STAND_DEG + COLLECTIVE_RAISE_DEG * clamp(collective, 0.0f, 1.0f));
+    const mat4  leverRot = glm::rotate(mat4(1.0f), glm::radians(leverDeg), vec3{0.0f, 0.0f, 1.0f});
+    /* Transformation du levier relative à son embase (grossissement puis pivot). */
+    const mat4  leverLocal = glm::scale(mat4(1.0f), vec3{COLLECTIVE_SCALE}) * leverRot;
+
+    struct Seat {
+        vec3 pilot;       /* origine du pilote sur ce siège */
+        vec3 collective;  /* origine du levier de collectif de ce siège */
+    };
+    const Seat seats[] = {
+        {PILOT_OFFSET, COLLECTIVE_PILOT_OFFSET},
+        {COPILOT_OFFSET, COLLECTIVE_COPILOT_OFFSET},
+    };
+    for (const Seat& s : seats) {
+        /* Embase et levier du collectif. */
+        const mat4 colAt = glm::translate(mat4(1.0f), s.collective);
+        drawModel(m_collectiveBase, root * colAt * glm::scale(mat4(1.0f), vec3{COLLECTIVE_SCALE}),
+                  Pass::Opaque);
+        drawModel(m_collectiveLever, root * colAt * leverLocal, Pass::Opaque);
+
+        /* Bras gauche : haut du bras laissé au repos (rattaché à l'épaule), avant-bras
+           qui pivote au coude pour amener la main sur la poignée du levier. Même
+           méthode que le bras droit sur le cyclique (rotation + léger étirement le long
+           de l'os pour atteindre exactement la poignée, sans trou). */
+        const mat4 pilotBaseL = root * glm::translate(mat4(1.0f), s.pilot);
+        drawModel(m_armUpperLeft, pilotBaseL, Pass::Opaque);
+
+        const vec3  gripModel = vec3(colAt * leverLocal * vec4(m_collectiveGripLocal, 1.0f));
+        const vec3  elbow = s.pilot + m_elbowLeftLocal;
+        const vec3  hand0 = s.pilot + m_handLeftLocal;          /* main au repos */
+        const vec3  hand1 = gripModel;                          /* poignée du collectif */
+        const float len0  = glm::length(hand0 - elbow);
+        const float len1  = glm::length(hand1 - elbow);
+        const vec3  d0    = (hand0 - elbow) / glm::max(len0, 1e-4f);
+        const vec3  d1    = (hand1 - elbow) / glm::max(len1, 1e-4f);
+        mat4        aim   = mat4(1.0f);
+        const vec3  axis  = glm::cross(d0, d1);
+        const float sinA  = glm::length(axis);
+        if (sinA > 1e-4f) {
+            aim = glm::rotate(mat4(1.0f), std::atan2(sinA, glm::dot(d0, d1)), axis / sinA);
+        }
+        const float stretch = len0 > 1e-4f ? len1 / len0 : 1.0f;
+        const mat4  scaleM  = mat4(mat3(1.0f) + (stretch - 1.0f) * glm::outerProduct(d0, d0));
+        const mat4  foreArmL = pilotBaseL * glm::translate(mat4(1.0f), m_elbowLeftLocal) * aim *
+                               scaleM * glm::translate(mat4(1.0f), -m_elbowLeftLocal);
+        drawModel(m_forearmLeft, foreArmL, Pass::Opaque);
+    }
+
     drawModel(m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
     for (const Gauge& gauge : m_gauges) {
         drawModel(gauge.model, root * glm::translate(mat4(1.0f), gauge.offset), Pass::Opaque);

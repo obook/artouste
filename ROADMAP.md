@@ -1,8 +1,12 @@
 # ROADMAP
 
+## Plateforme
+
+- [ ] Étudier une version pour Microsoft Windows
+
 ## Super HUD
 
-- [ ] Superposer à l'image des instruments à définir en vert transparent uniquement pour ne par géner la vue afin de permettre un pilotage réaliste, la liste des instruments est à rechercher dans docs/tableau-de-bord, l'implémentation se fait un par un, raccourci clavier/manette cyclique hud au 4 coins, hud superposé, pas de hud.
+- [x] Superposer à l'image des instruments à définir en vert transparent uniquement pour ne par géner la vue afin de permettre un pilotage réaliste, la liste des instruments est à rechercher dans docs/tableau-de-bord, l'implémentation se fait un par un, raccourci clavier/manette cyclique hud au 4 coins, hud superposé, pas de hud.
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
@@ -27,6 +31,8 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 - [ ] Il manque le skin du rotor arrière
 
 - [x] Il manque une map pour se situer
+
+- [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 
 ### Ombre hélicopter
 

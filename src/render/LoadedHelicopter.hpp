@@ -47,7 +47,8 @@ public:
        'collective' ([0, +1]) lève le levier de collectif (commande de la main gauche). */
     void draw(Shader& shader, const mat4& base, float rotorAngle, bool fullPilot = true,
               float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
-              float collective = 0.0f, float rollRad = 0.0f, float pitchRad = 0.0f) const;
+              float collective = 0.0f, float rollRad = 0.0f, float pitchRad = 0.0f,
+              float altitudeFt = 0.0f) const;
 
     /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
        translucide à haut régime, voir le code mis en commentaire). 'base' est la
@@ -110,6 +111,15 @@ private:
     Model              m_aiFloat;
     vec3               m_aiOffset{0.0f};
     bool               m_hasAi = false;
+
+    /* Altimètre animé : cadran statique + trois aiguilles (centaines, milliers et
+       dizaines de milliers de pieds) qui tournent autour de X avec l'altitude. */
+    Model              m_altStatic;
+    Model              m_altN100;
+    Model              m_altN1000;
+    Model              m_altN10000;
+    vec3               m_altOffset{0.0f};
+    bool               m_hasAlt = false;
     Model              m_mainHub;
     Model              m_mainBlade;
     Model              m_tailHub;

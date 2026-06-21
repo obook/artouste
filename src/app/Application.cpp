@@ -896,12 +896,14 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         const vec3  rgt    = glm::normalize(vec3(base[2]));
         const float pitchR = std::asin(clamp(fwd.y, -1.0f, 1.0f));
         const float rollR  = std::atan2(-rgt.y, upv.y);
+        /* Altitude au-dessus du niveau de la mer (y = 0), en pieds, pour l'altimètre. */
+        const float altitudeFt = base[3].y * 3.28084f;
 
         /* En vue cockpit, le pilote est dessiné sans tête ni casque (la caméra est
            à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
            fait basculer pédales et jambes. */
         m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
-                           cyclicLong, cyclicLat, collective, rollR, pitchR);
+                           cyclicLong, cyclicLat, collective, rollR, pitchR, altitudeFt);
 
         /*
          * Disque rotor (mis en commentaire, à reprendre plus tard).

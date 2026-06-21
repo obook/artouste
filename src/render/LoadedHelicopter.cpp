@@ -100,11 +100,10 @@ struct GaugeDef {
     const char* file;
     vec3        fgOffset;
 };
-/* L'horizon artificiel (ai.ac) n'est PAS dans cette liste : il est chargé et
-   dessiné à part pour être animé (voir m_aiStatic / m_aiCard / m_aiFloat). Sa
-   position dans le panneau est AI_FG_OFFSET ci-dessous. */
+/* L'horizon artificiel (ai.ac) et l'altimètre (alt.ac) ne sont PAS dans cette
+   liste : ils sont chargés et dessinés à part pour être animés (voir m_ai* et
+   m_alt*). Leurs positions sont AI_FG_OFFSET / ALT_FG_OFFSET dans le chargement. */
 const GaugeDef GAUGES[] = {
-    {"Interior/Panel/Instruments/alt/alt.ac", vec3{-0.222f, -0.181f, 0.112f}},
     {"Interior/Panel/Instruments/vsi/vsi.ac", vec3{-0.208f, -0.060f, 0.112f}},
     {"Interior/Panel/Instruments/asi/asi.ac", vec3{-0.207f, 0.181f, 0.112f}},
     {"Interior/Panel/Instruments/vor/vor.ac", vec3{-0.223f, -0.181f, -0.014f}},
@@ -330,6 +329,28 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
         m_hasAi = !m_aiStatic.empty() || !m_aiCard.empty() || !m_aiFloat.empty();
     }
 
+    /* Altimètre animé : on charge alt.ac en quatre morceaux (cadran + 3 aiguilles).
+       Les noms needle100 / needle1000 / needle10000 se contiennent en sous-chaîne :
+       on les isole donc par NOM EXACT (préfixe '=' du filtre). */
+    {
+        const vec3                  altFgOffset{-0.222f, -0.181f, 0.112f};
+        const std::filesystem::path altFile = dir / "Interior/Panel/Instruments/alt/alt.ac";
+        m_altOffset = PANEL_OFFSET + fgToAssimp(altFgOffset);
+        /* Cadran statique : on écarte les 3 aiguilles (par nom exact) et le verre. */
+        m_altStatic = loadPart(
+            altFile, {"=needle100", "=needle1000", "=needle10000", "vitre", "blur", "disc"});
+        /* Aiguille des centaines : on garde needle100, on écarte les deux autres. */
+        m_altN100 = loadPart(altFile, {"fond", "button", "face", "inhg", "=needle1000",
+                                       "=needle10000", "vitre", "blur", "disc"});
+        /* Aiguille des milliers. */
+        m_altN1000 = loadPart(altFile, {"fond", "button", "face", "inhg", "=needle100",
+                                        "=needle10000", "vitre", "blur", "disc"});
+        /* Aiguille des dizaines de milliers. */
+        m_altN10000 = loadPart(altFile, {"fond", "button", "face", "inhg", "=needle100",
+                                         "=needle1000", "vitre", "blur", "disc"});
+        m_hasAlt = !m_altN100.empty() || !m_altN1000.empty() || !m_altN10000.empty();
+    }
+
     /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale
        est chargée par rotor, puis recopiée et tournée à l'affichage. */
     m_mainHub   = loadPart(dir / "Externals/MainRotor/mainrotor.ac", skipRotor);
@@ -351,7 +372,7 @@ void LoadedHelicopter::setGendarmerieLivery(bool on) {
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
                             bool fullPilot, float rudder, float cyclicLong,
                             float cyclicLat, float collective, float rollRad,
-                            float pitchRad) const {
+                            float pitchRad, float altitudeFt) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -561,6 +582,21 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
         drawModel(m_aiStatic, aiBase, Pass::Opaque);
         drawModel(m_aiCard, rollM, Pass::Opaque);
         drawModel(m_aiFloat, floatM, Pass::Opaque);
+    }
+
+    /* Altimètre animé (d'après alt.xml) : les trois aiguilles tournent autour de X
+       avec l'altitude (en pieds), aux facteurs FlightGear : 0.36 deg/ft (centaines,
+       un tour par 1000 ft), 0.036 (milliers) et 0.0036 (dizaines de milliers). */
+    if (m_hasAlt) {
+        const mat4 altBase = root * glm::translate(mat4(1.0f), m_altOffset);
+        const auto needleM = [&](float factor) {
+            return altBase *
+                   glm::rotate(mat4(1.0f), glm::radians(factor * altitudeFt), vec3{-1.0f, 0.0f, 0.0f});
+        };
+        drawModel(m_altStatic, altBase, Pass::Opaque);
+        drawModel(m_altN10000, needleM(0.0036f), Pass::Opaque);
+        drawModel(m_altN1000, needleM(0.036f), Pass::Opaque);
+        drawModel(m_altN100, needleM(0.36f), Pass::Opaque);
     }
 
     drawModel(m_mainHub, mainBase, Pass::Opaque);

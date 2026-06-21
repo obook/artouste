@@ -33,6 +33,14 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
     - [ ] Défaut à corriger : des "moustaches" noires apparaissent sur le cadran
       (les traits de l'échelle de tangage du float ressortent en noir). À nettoyer.
 
+- [x] Animer l'altimètre du tableau de bord
+
+    Le cadran alt.ac est chargé en quatre morceaux (cadran + aiguilles des centaines,
+    milliers et dizaines de milliers de pieds, isolées par nom exact car leurs noms
+    se contiennent en sous-chaîne) ; chaque aiguille tourne autour de X selon
+    l'altitude au-dessus du niveau de la mer, aux facteurs FlightGear (alt.xml). À
+    confirmer en vol (sens et calage des aiguilles).
+
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 
 

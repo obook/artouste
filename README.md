@@ -45,23 +45,24 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
-## Démarrage rapide (spécial débutant)
+## Démarrage rapide
 
-> Première fois aux commandes ? Trois étapes suffisent pour décoller.
-
-1. **Activez le mode assisté** (touche `M`, ou croix directionnelle haut). Cette
-   couche de confort compense le lacet, recentre le cyclique et borne le collectif :
-   l'appareil pardonne les erreurs.
-2. **Démarrez la turbine** (touche `T`, ou bouton `Start`), puis **patientez**.
-   La turbine monte d'abord seule en régime (environ 48 secondes, au son du
-   sifflement qui grimpe), le frein rotor se lâche, et les pales accélèrent à leur
-   tour (environ 15 secondes de plus). Comptez donc près d'une minute : tant que le
-   rotor n'a pas atteint son régime de vol, l'appareil ne décolle pas. Le HUD
-   (touche `H`) indique la phase de la turbine ; attendez l'état "EN RÉGIME".
-3. **Montez, puis déplacez-vous.** Une fois le rotor en régime, augmentez doucement
-   le collectif (`W`/`Z`, ou gâchette RT) pour décoller, puis inclinez l'appareil au
-   cyclique (flèches, ou stick gauche) pour avancer. Réduisez le collectif (`S`, ou
-   gâchette LT) pour redescendre.
+> [!TIP]
+> **Première fois aux commandes ?** Trois étapes suffisent pour décoller.
+>
+> 1. **Activez le mode assisté** (touche `M`, ou croix directionnelle haut). Cette
+>    couche de confort compense le lacet, recentre le cyclique et borne le collectif :
+>    l'appareil pardonne les erreurs.
+> 2. **Démarrez la turbine** (touche `T`, ou bouton `Start`), puis **patientez**.
+>    La turbine monte d'abord seule en régime (environ 48 secondes, au son du
+>    sifflement qui grimpe), le frein rotor se lâche, et les pales accélèrent à leur
+>    tour (environ 15 secondes de plus). Comptez donc près d'une minute : tant que le
+>    rotor n'a pas atteint son régime de vol, l'appareil ne décolle pas. Le HUD
+>    (touche `H`) indique la phase de la turbine ; attendez l'état "EN RÉGIME".
+> 3. **Montez, puis déplacez-vous.** Une fois le rotor en régime, augmentez doucement
+>    le collectif (`W`/`Z`, ou gâchette RT) pour décoller, puis inclinez l'appareil au
+>    cyclique (flèches, ou stick gauche) pour avancer. Réduisez le collectif (`S`, ou
+>    gâchette LT) pour redescendre.
 
 ## Commandes
 

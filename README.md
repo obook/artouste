@@ -49,7 +49,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 > [!TIP]
 > **Première fois aux commandes ?**
-> Voici les quatre étapes pour effectuer votre premier vol aux commandes de l'**Alouette II SE.3130**.
+> Voici les quatre étapes pour effectuer sans stress votre premier vol aux commandes de l'**Alouette II SE.3130**.
 >
 > 1. **Activez le HUD complet** avec tous les instruments : touche `H` | bouton `B`.
 > 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.

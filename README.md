@@ -173,6 +173,78 @@ tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helip
 blender --background --python tools/helipad/make_helipad.py
 ```
 
+## Terrain (choix de la map)
+
+Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par
+exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne) et
+`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau).
+Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
+`ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
+`helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
+ligne : `lon lat nom`) et `buildings.bin` (bâtiments 3D). L'hélipad de la zone de
+départ est toujours présent en plus de ceux de `helipads.txt`.
+
+### Modifier la configuration
+
+Le fichier `assets/config.txt` règle le lancement. C'est un simple fichier texte,
+modifiable dans **n'importe quel éditeur**. Chaque ligne est une `clé valeur` ;
+une ligne qui commence par `#` est un commentaire (ignoré). Pour l'instant, la
+seule clé est `terrain`, qui choisit la map chargée au démarrage.
+
+Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
+`assets/config.txt` et remplace :
+
+```
+terrain ossau
+```
+
+par :
+
+```
+terrain cote-landes
+```
+
+Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
+doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau` ou
+`cote-landes`).
+
+Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
+priorité, pratique pour essayer une map ponctuellement :
+
+```bash
+ARTOUSTE_TERRAIN=cote-landes ./build/bin/artouste
+```
+
+### Régénérer ou ajouter un terrain
+
+Les terrains sont produits hors-ligne par `tools/fetch_terrain.py` (données IGN
+Géoplateforme, Licence Ouverte Etalab 2.0). Le script prend le nom de la zone en
+argument et écrit dans `assets/terrain/<zone>/` :
+
+```bash
+tools/.venv/bin/pip install Pillow numpy scipy   # une fois
+tools/.venv/bin/python tools/fetch_terrain.py cote-landes
+```
+
+Pour ajouter une zone, copier une entrée du dictionnaire `ZONES` en tête du
+script (bornes géographiques, mer ou montagne, point de départ, lieux
+remarquables, hélipads). Voir `docs/TERRAIN.md` pour les détails du pipeline.
+
+### Bâtiments 3D (BD TOPO)
+
+Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur
+hauteur réelle (murs + toit plat). Ils sont produits à part par
+`tools/fetch_buildings.py`, qui interroge le service WFS et écrit
+`assets/terrain/<zone>/buildings.bin` (les bâtiments de moins de 2 m, cabanes et
+abris, sont écartés) :
+
+```bash
+tools/.venv/bin/python tools/fetch_buildings.py cote-landes
+```
+
+Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
+bâtiments. La côte basco-landaise en compte environ 156 000.
+
 ## Licence
 
 Ce projet est distribué sous licence **GPL v2** (voir `LICENSE`), comme le

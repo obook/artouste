@@ -6,7 +6,8 @@
 
     Code rendu portable (recherche du dossier du binaire via GetModuleFileNameW sous
     Windows), build CMake autonome (dépendances et runtime MSVC en statique, GLAD
-    pré-généré dans `third_party/`). Validé : la version Windows compile et tourne.
+    pré-généré dans `third_party/`). Validé : la version Windows compile et tourne,
+    tests 100% fonctionnels (suite Catch2 verte sur Windows).
 
 - [x] Release automatisée Linux et Windows livrée
 
@@ -25,11 +26,15 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Réalisme
 
-- [ ] Configuration
+- [x] Configuration
 
     Module de chargement de la configuration
 
-    Quelques éléments seront configurable par un fichier .json, chargé et appliqué au lancement, il est éditable à la main, la première variable est la position de la caméra intérieur
+    Fichier `assets/config.txt` au format "clé valeur" (parser maison, comme
+    `terrain.txt`), chargé et appliqué au lancement, éditable à la main (voir
+    `src/app/Config.cpp`). Première clé en place : `terrain` (choix de la map).
+    La variable d'environnement `ARTOUSTE_TERRAIN` a la priorité. Reste à exposer
+    en clés : la position de la caméra intérieure, et d'autres réglages au besoin.
 
 - [x] balise de sécurité est un feu clignotant rouge situé sur le fuselage (strombo) : l'aspect est celui d'un cylindre avec le premier quart du haut clignotant en rouge vif clignotant (l'original est en rotation, voir 21-165-05.webp)
 
@@ -120,13 +125,34 @@ ou sortir de France.
 
 ### Changement de terrain (menu ou configuration)
 
-- [ ] Permettre de choisir le terrain, par un menu et/ou par le fichier de
-  configuration (voir l'item "Configuration" plus haut). Le moteur sait déjà charger
-  un dossier de terrain ; il suffirait de ranger chaque terrain dans son sous-dossier
-  `assets/terrain/<nom>/` (avec `heightmap.png`, `ortho.jpg`, `terrain.txt`) et
-  d'exposer le nom choisi au lancement, puis à chaud. Le point de départ et les
-  bornes géographiques étant déjà lus dans `terrain.txt`, le changement reste local
-  au chargement du terrain.
+- [x] Permettre de choisir le terrain par le fichier de configuration. Chaque
+  terrain est rangé dans son sous-dossier `assets/terrain/<nom>/` (`heightmap.png`,
+  `ortho.jpg`, `terrain.txt`, `landmarks.txt`) ; la clé `terrain` de
+  `assets/config.txt` (ou la variable d'environnement `ARTOUSTE_TERRAIN`) choisit
+  lequel charger au lancement. Le script `tools/fetch_terrain.py` est paramétré par
+  zone (dictionnaire `ZONES`, nom passé en argument). Terrain livré : `ossau`
+  (montagne). Zone décrite et prête à générer : `cote-landes` (côte basco-landaise,
+  Bayonne -> Vieux-Boucau) -- lancer `tools/fetch_terrain.py cote-landes`.
+
+    Reste possible plus tard : un menu en jeu et le changement de terrain à chaud
+    (sans relancer). Le moteur recharge déjà tout au démarrage ; un changement à
+    chaud demanderait de reconstruire le terrain et de replacer l'appareil.
+
+### Bâtiments 3D
+
+- [x] Bâtiments en volume sur les terrains de plaine (ville côtière). Emprises au
+  sol de la BD TOPO de l'IGN (WFS), extrudées à leur hauteur réelle (murs + toit
+  plat), murs clairs et toits tuile. Outil hors-ligne `tools/fetch_buildings.py`
+  (filtre les constructions < 2 m) -> `assets/terrain/<zone>/buildings.bin` ;
+  rendu par `render::Buildings` en un maillage statique unique, éclairé et noyé
+  dans la même brume que le terrain. Côte basco-landaise : ~156 000 bâtiments.
+
+    Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
+  niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
+
+### Manuel
+
+- [ ] Fournir un PDF propre dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
 
 ## Quelques observations
 

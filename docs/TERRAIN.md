@@ -14,11 +14,20 @@ Données : IGN Géoplateforme, gratuit (Licence Ouverte Etalab 2.0), France uniq
 - Texture : BD ORTHO, via le service WMS (`ORTHOIMAGERY.ORTHOPHOTOS`), une seule
   image `ortho.jpg` (2064x2048) drapée sur le relief.
 
-Pipeline : script Python hors-ligne -> `assets/terrain/{heightmap.png (16 bits),
-ortho.jpg, terrain.txt}`. Au runtime (`src/render/Terrain.cpp`) : `stb_image`
-charge tout, un seul maillage 512x512 (~520k triangles), une seule texture drapée,
-les altitudes restent en RAM pour le contact sol (`heightAt`), repli sur un damier
-plat si les données manquent.
+Pipeline : script Python hors-ligne -> `assets/terrain/<zone>/{heightmap.png
+(16 bits), ortho.jpg, terrain.txt, landmarks.txt, helipads.txt (facultatif)}`.
+Chaque terrain a son propre
+sous-dossier (par exemple `ossau/` ou `cote-landes/`) ; celui chargé au lancement
+est choisi par la clé `terrain` de `assets/config.txt` (ou la variable
+d'environnement `ARTOUSTE_TERRAIN`). Au runtime (`src/render/Terrain.cpp`) :
+`stb_image` charge tout, un seul maillage 512x512 (~520k triangles), une seule
+texture drapée, les altitudes restent en RAM pour le contact sol (`heightAt`),
+repli sur un damier plat si les données manquent.
+
+Le script `tools/fetch_terrain.py` prend le nom de la zone en argument
+(`python3 tools/fetch_terrain.py cote-landes`) ; les zones sont décrites dans le
+dictionnaire `ZONES` en tête du script (bornes, mer ou montagne, point de départ,
+lieux remarquables). Ajouter une zone = copier une entrée et changer les bornes.
 
 Emprise : ~17,9 x 17,8 km (vallée d'Ossau : lac d'Artouste, pic du Midi d'Ossau,
 0 à 2937 m). Terrain de montagne, sans mer.

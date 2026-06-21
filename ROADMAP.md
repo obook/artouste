@@ -81,6 +81,42 @@ Dear ImGui : interface HUD en overlay OpenGL, très utilisé dans les simulateur
 IGN Géoportail
 Pour les textures de sol sur la France, l'IGN propose des flux WMTS gratuits (orthophotos, cartes IGN) accessibles via une clé API gratuite. La couverture Pyrénées est excellente.
 
+### Sources de terrain possibles
+
+Liste des sources envisageables pour produire de nouveaux terrains (relief +
+texture). L'actuelle est l'IGN ; les autres sont des pistes pour étendre la zone
+ou sortir de France.
+
+- IGN Géoplateforme (actuel) : RGE ALTI (relief 1-5 m) + BD ORTHO (orthophoto),
+  France uniquement, gratuit (Licence Ouverte Etalab 2.0). Le script
+  `tools/fetch_terrain.py` génère n'importe quelle emprise française en changeant
+  les bornes lon/lat. C'est la meilleure qualité pour les Pyrénées et les Alpes.
+- Scènes FlightGear (TerraSync) : décor mondial libre, déjà cohérent avec le projet
+  (le modèle et les sons de l'Alouette viennent de FlightGear). Relief et sol sont
+  stockés en tuiles BTG (géométrie TerraGear) avec des fichiers de placement STG,
+  construits à partir de SRTM et d'une classification de sol (CORINE / OSM). Deux
+  voies : extraire l'altitude des BTG pour alimenter notre heightmap, ou charger
+  directement les maillages BTG. Couverture mondiale, mais relief plus grossier que
+  l'IGN en France.
+- Copernicus DEM GLO-30 : relief mondial à 30 m, gratuit, format GeoTIFF (lecture
+  via GDAL ou libgeotiff). Utile pour une zone hors de France.
+- SRTM (30 m, ~90 m hors USA) : relief quasi mondial, gratuit, mais ancien et
+  troué en haute montagne.
+- OpenStreetMap + SRTM (chaîne TerraGear / osm2city) : pour fabriquer soi-même des
+  scènes façon FlightGear, avec bâtiments et réseau routier.
+- Tuiles terrain-RGB et satellite (Mapbox, MapTiler) : relief encodé en PNG et
+  imagerie mondiale, simples à draper, mais sous conditions d'utilisation et clé API.
+
+### Changement de terrain (menu ou configuration)
+
+- [ ] Permettre de choisir le terrain, par un menu et/ou par le fichier de
+  configuration (voir l'item "Configuration" plus haut). Le moteur sait déjà charger
+  un dossier de terrain ; il suffirait de ranger chaque terrain dans son sous-dossier
+  `assets/terrain/<nom>/` (avec `heightmap.png`, `ortho.jpg`, `terrain.txt`) et
+  d'exposer le nom choisi au lancement, puis à chaud. Le point de départ et les
+  bornes géographiques étant déjà lus dans `terrain.txt`, le changement reste local
+  au chargement du terrain.
+
 ## Quelques observations
 
 - [ ] FUEL_BURN_MAX_LPH = 194.0f : nos fiches indiquent 155 kg/h à puissance maxi. Avec kérosène à 0,8 kg/L, cela donne environ 194 L/h. La conversion est juste.

@@ -12,6 +12,17 @@ set(CMAKE_CXX_STANDARD          20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF)
 
+# --- Build autonome (un seul exécutable à distribuer) ------------------------
+# Les bibliothèques tierces sont liées en statique pour qu'il n'y ait aucune DLL
+# ni .so à livrer à côté du binaire. Sous MSVC, on lie aussi le runtime C++ en
+# statique (/MT) : la release ne dépend alors pas du redistribuable Visual C++.
+
+set(BUILD_SHARED_LIBS OFF)
+
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # --- Type de build par défaut ------------------------------------------------
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -73,15 +84,21 @@ if(ARTOUSTE_BUILD_TESTS)
 endif()
 
 # --- Installation et packaging (M7) ------------------------------------------
-# Le binaire et les shaders sont installes cote a cote ; le modele et les sons
-# (tiers, GPL) ne sont pas redistribues : l'application retombe sur le rendu
-# procedural et reste silencieuse s'ils sont absents.
+# Release complete et jouable : le binaire et l'ensemble des ressources sont
+# installes cote a cote (shaders, modele 3D, sons, terrain, textures). Le modele
+# et les sons FlightGear (GPL) sont redistribues avec leur fichier COPYING, deja
+# present dans assets/models/Alouette-II/. Le terrain (IGN) est sous Licence
+# Ouverte Etalab. Au lancement, le binaire trouve "assets" a cote de lui.
 
 install(TARGETS artouste RUNTIME DESTINATION .)
-install(DIRECTORY assets/shaders DESTINATION assets)
-install(FILES README.md DESTINATION . OPTIONAL)
+install(DIRECTORY assets/ DESTINATION assets)
+install(FILES README.md LICENSE DESTINATION . OPTIONAL)
 
-set(CPACK_GENERATOR "TGZ")
+if(WIN32)
+    set(CPACK_GENERATOR "ZIP")
+else()
+    set(CPACK_GENERATOR "TGZ")
+endif()
 set(CPACK_PACKAGE_NAME "artouste")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME

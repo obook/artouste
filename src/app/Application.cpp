@@ -9,6 +9,15 @@
  * Licence : GPL v2
  */
 
+/* Sous Windows, pour retrouver le dossier du binaire (GetModuleFileNameW).
+ * WIN32_LEAN_AND_MEAN et NOMINMAX evitent que <windows.h> tire des macros
+ * min/max qui entreraient en conflit avec GLM et la bibliotheque standard. */
+#if defined(_WIN32)
+#  define WIN32_LEAN_AND_MEAN
+#  define NOMINMAX
+#  include <windows.h>
+#endif
+
 #include "app/Application.hpp"
 
 #include <glad/glad.h>
@@ -162,6 +171,28 @@ void glfwErrorCallback(int code, const char* description) {
  * puis chemin connu à la compilation (développement), puis dossier "assets"
  * placé à côté de l'exécutable (version packagée).
  */
+/* Dossier contenant le binaire en cours d'exécution, ou un chemin vide si on ne
+ * sait pas le déterminer. Sert à trouver les ressources installées à côté du
+ * binaire (cas d'une release). Portable : GetModuleFileNameW sous Windows,
+ * /proc/self/exe sous Linux. */
+std::filesystem::path executableDir() {
+    namespace fs = std::filesystem;
+#if defined(_WIN32)
+    wchar_t buf[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+    if (n > 0 && n < MAX_PATH) {
+        return fs::path(buf, buf + n).parent_path();
+    }
+#else
+    std::error_code ec;
+    const fs::path  exe = fs::canonical("/proc/self/exe", ec);
+    if (!ec) {
+        return exe.parent_path();
+    }
+#endif
+    return fs::path();
+}
+
 std::filesystem::path resolveAssetDir() {
     namespace fs = std::filesystem;
     if (const char* env = std::getenv("ARTOUSTE_ASSETS")) {
@@ -169,16 +200,17 @@ std::filesystem::path resolveAssetDir() {
             return fs::path(env);
         }
     }
-    if (fs::exists(ARTOUSTE_ASSET_DIR)) {
-        return fs::path(ARTOUSTE_ASSET_DIR);
-    }
-    std::error_code  ec;
-    const fs::path   exe = fs::canonical("/proc/self/exe", ec);
-    if (!ec) {
-        const fs::path local = exe.parent_path() / "assets";
+    /* Ressources installées à côté du binaire (release) : prioritaires sur le
+       chemin de compilation, qui n'existe que sur la machine de développement. */
+    const fs::path exeDir = executableDir();
+    if (!exeDir.empty()) {
+        const fs::path local = exeDir / "assets";
         if (fs::exists(local)) {
             return local;
         }
+    }
+    if (fs::exists(ARTOUSTE_ASSET_DIR)) {
+        return fs::path(ARTOUSTE_ASSET_DIR);
     }
     return fs::path("assets");
 }

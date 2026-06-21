@@ -23,6 +23,11 @@ struct Config {
        "ossau" ou "cote-landes"). Chaque sous-dossier contient son propre
        terrain.txt, heightmap.png, ortho.jpg et landmarks.txt. */
     std::string terrain = "ossau";
+
+    /* Démarrage immédiat : si vrai, la turbine et le rotor sont d'emblée au régime
+       au lancement (au lieu de la séquence de démarrage). Pratique pour les tests,
+       afin de pouvoir décoller tout de suite. */
+    bool turbineRunning = false;
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

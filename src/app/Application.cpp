@@ -387,6 +387,19 @@ void Application::initScene() {
         m_flight.reset(m_parkPos);
     }
 
+    /* Démarrage immédiat (gain de temps en test) : turbine et rotor d'emblée au
+       régime, au lieu de la séquence de démarrage (~1 min). Activé par la clé
+       `turbine_demarree` de la config, ou la variable d'environnement
+       ARTOUSTE_TURBINE_DEMARREE (prioritaire). */
+    bool turbineRunning = config.turbineRunning;
+    if (const char* env = std::getenv("ARTOUSTE_TURBINE_DEMARREE"); env != nullptr && env[0] != '\0') {
+        turbineRunning = (env[0] != '0');
+    }
+    if (turbineRunning) {
+        m_flight.turbine().forceRunning();
+        std::printf("[scène] démarrage immédiat : turbine et rotor au régime.\n");
+    }
+
     m_helicopter = std::make_unique<render::HelicopterModel>();
     m_input      = std::make_unique<input::InputSystem>(m_window);
     m_hud.init(m_window);
@@ -790,7 +803,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
     const vec3  heliPos     = vec3(base[3]);
     const float ground      = m_terrain->heightAt(heliPos.x, heliPos.z);
     const float altitude    = heliPos.y - ground > 0.0f ? heliPos.y - ground : 0.0f;
-    const float shadowAlpha = 0.22f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
+    const float shadowAlpha = 0.26f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
     if (shadowAlpha > 0.01f) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -836,7 +849,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
             rotorCenter =
                 vec3(base * vec4(render::LoadedHelicopter::ROTOR_FORWARD_OFFSET, 0.0f, 0.0f, 1.0f));
         }
-        const float rotorShadowAlpha = shadowAlpha * 0.55f * clamp(rotorFraction, 0.0f, 1.0f);
+        const float rotorShadowAlpha = shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f);
         if (rotorShadowAlpha > 0.01f) {
             const vec3 rotorShadowPos{rotorCenter.x, topUnder(rotorCenter, radius) + 0.30f,
                                       rotorCenter.z};
@@ -850,8 +863,11 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
            comme l'ombre du rotor -- les deux disques sont ainsi concentriques sous le
            rotor. */
         const vec3  bodyCenter = rotorCenter;
-        const float bodyScale  = scaleXZ * (2.8f / 6.0f);  /* empreinte fuselage ~2,8 m */
-        const float bodyRadius = 2.8f * scaleXZ;
+        /* Disque toujours présent (même rotor arrêté), dimensionné à l'empreinte de
+           l'appareil posé (~5 m) pour rester bien visible au départ, et non un petit
+           disque caché sous la cabine. */
+        const float bodyScale  = scaleXZ * (5.0f / 6.0f);
+        const float bodyRadius = 5.0f * scaleXZ;
         const vec3  bodyShadowPos{bodyCenter.x, topUnder(bodyCenter, bodyRadius) + 0.30f,
                                   bodyCenter.z};
         m_shadowShader->setMat4("u_model", glm::translate(mat4(1.0f), bodyShadowPos) *
@@ -994,14 +1010,14 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     /* Étiquette 3D + point minimap d'un lieu (nom + position WGS84), s'il tombe dans
        l'emprise du terrain courant. Projetée légèrement au-dessus du sol. */
     const mat4 viewProj = m_camera.proj() * m_camera.view();
-    const auto addLabel = [&](const render::Landmark& place) {
+    const auto addLabel = [&](const render::Landmark& place, const char* displayName) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(place.lon, place.lat, x, z);
         if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
             return;  /* hors du terrain courant */
         }
         ui::HudLabel label;
-        label.name = place.name.c_str();
+        label.name = displayName;
         label.mapU = x / (2.0f * halfW) + 0.5f;
         label.mapV = z / (2.0f * halfH) + 0.5f;
 
@@ -1018,12 +1034,14 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         hud.labels.push_back(label);
     };
 
-    /* Lieux remarquables, puis hélipads : mêmes étiquettes 3D et points sur la minimap. */
+    /* Lieux remarquables (étiquetés par leur nom), puis hélipads (tous étiquetés
+       "Hélisurface", le terme d'aire de poser ; leur ville est déjà donnée par le
+       lieu remarquable voisin). */
     for (const render::Landmark& lm : m_terrain->landmarks()) {
-        addLabel(lm);
+        addLabel(lm, lm.name.c_str());
     }
     for (const render::Landmark& pad : m_terrain->helipads()) {
-        addLabel(pad);
+        addLabel(pad, "Hélisurface");
     }
 }
 

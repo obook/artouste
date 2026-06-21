@@ -17,7 +17,8 @@ out vec4 frag_color;
 uniform float u_alpha;  /* opacité au centre du disque */
 
 void main() {
-    /* Plein jusqu'à 20 % du rayon, puis dégradé doux jusqu'au bord. */
-    float a = u_alpha * (1.0 - smoothstep(0.2, 1.0, v_edge));
+    /* Plein jusqu'à 55 % du rayon (l'ombre reste lisible, y compris sur un pad
+       clair), puis dégradé doux jusqu'au bord (contour flou). */
+    float a = u_alpha * (1.0 - smoothstep(0.55, 1.0, v_edge));
     frag_color = vec4(0.0, 0.0, 0.0, a);
 }

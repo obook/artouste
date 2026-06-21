@@ -188,8 +188,14 @@ départ est toujours présent en plus de ceux de `helipads.txt`.
 
 Le fichier `assets/config.txt` règle le lancement. C'est un simple fichier texte,
 modifiable dans **n'importe quel éditeur**. Chaque ligne est une `clé valeur` ;
-une ligne qui commence par `#` est un commentaire (ignoré). Pour l'instant, la
-seule clé est `terrain`, qui choisit la map chargée au démarrage.
+une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibles :
+
+- `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
+- `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
+  régime** (au lieu de la séquence de démarrage d'environ une minute), pratique
+  pour décoller tout de suite en test ; `0` (défaut) pour un démarrage normal à
+  froid. La variable d'environnement `ARTOUSTE_TURBINE_DEMARREE` a la priorité
+  (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :

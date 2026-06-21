@@ -8,3 +8,9 @@
 #   cote-landes  cote basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
 # La variable d'environnement ARTOUSTE_TERRAIN, si definie, a la priorite.
 terrain ossau
+
+# turbine_demarree : 1 = turbine et rotor d'emblee au regime au lancement (au lieu
+# de la sequence de demarrage d'environ une minute), pratique pour decoller tout de
+# suite en test ; 0 = demarrage normal a froid. La variable d'environnement
+# ARTOUSTE_TURBINE_DEMARREE, si definie, a la priorite.
+turbine_demarree 0

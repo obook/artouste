@@ -56,6 +56,8 @@ Config loadConfig(const std::filesystem::path& path) {
             if (!value.empty()) {
                 cfg.terrain = value;
             }
+        } else if (key == "turbine_demarree") {
+            cfg.turbineRunning = (value == "1" || value == "oui" || value == "true");
         } else {
             std::fprintf(stderr, "[Config] clé inconnue ignorée : %s\n", key.c_str());
         }

@@ -82,12 +82,14 @@ void Turbine::update(float dt, float collective) noexcept {
     }
 
     /* Température de la tuyère : cible déduite du régime turbine (la tuyère chauffe
-     * en montant en régime) et de la charge collective (plus on tire de puissance,
-     * plus elle chauffe), rejointe avec une inertie thermique. */
+     * en montant en régime) et de la charge collective, rejointe avec une inertie
+     * thermique. La charge intervient au carré : la tuyère reste fraîche en
+     * croisière et ne chauffe vraiment qu'à fort collectif, si bien que l'alerte
+     * (480 degrés) n'apparaît qu'au-delà des trois quarts du collectif. */
     const float load   = collective < 0.0f ? 0.0f : (collective > 1.0f ? 1.0f : collective);
     const float target = EXHAUST_TEMP_AMBIENT_C
                        + (EXHAUST_TEMP_IDLE_C - EXHAUST_TEMP_AMBIENT_C) * m_turbine
-                       + (EXHAUST_TEMP_MAX_C - EXHAUST_TEMP_IDLE_C) * m_turbine * load;
+                       + (EXHAUST_TEMP_MAX_C - EXHAUST_TEMP_IDLE_C) * m_turbine * load * load;
     const float ease   = 1.0f - std::exp(-dt / EXHAUST_TEMP_TAU);
     m_exhaustC += (target - m_exhaustC) * ease;
 }

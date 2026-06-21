@@ -49,7 +49,7 @@ inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (
  * 500 degrés en continu maxi, 550 degrés en transitoire. */
 inline constexpr float EXHAUST_TEMP_AMBIENT_C = 15.0f;   /* tuyère froide, turbine coupée */
 inline constexpr float EXHAUST_TEMP_IDLE_C    = 400.0f;  /* turbine au régime, charge minimale */
-inline constexpr float EXHAUST_TEMP_MAX_C     = 520.0f;  /* plein collectif, charge maximale */
+inline constexpr float EXHAUST_TEMP_MAX_C     = 550.0f;  /* plein collectif (limite transitoire du manuel) */
 inline constexpr float EXHAUST_TEMP_TAU       = 4.0f;    /* s : inertie thermique (montée et descente) */
 inline constexpr float EXHAUST_TEMP_WARN_C    = 480.0f;  /* voyant orange : surveiller (limite haute du vol normal) */
 inline constexpr float EXHAUST_TEMP_MAXI_C    = 500.0f;  /* voyant rouge : limite continue franchie */

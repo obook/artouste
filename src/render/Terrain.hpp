@@ -56,6 +56,30 @@ public:
     [[nodiscard]] float startX() const noexcept { return m_startX; }
     [[nodiscard]] float startZ() const noexcept { return m_startZ; }
 
+    /* Le calage fournit-il les bornes géographiques (longitude / latitude) ? */
+    [[nodiscard]] bool hasGeo() const noexcept { return m_hasGeo; }
+
+    /* Longitude et latitude (degrés WGS84) d'un point du monde (x = est, z = sud).
+       L'emprise est centrée sur l'origine : colonne ouest = -halfWidth, rangée nord
+       = -halfHeight. */
+    void lonLatAt(float x, float z, float& lon, float& lat) const noexcept {
+        const float colFrac = x / m_widthM + 0.5f;
+        const float rowFrac = z / m_heightM + 0.5f;
+        lon = m_lonMin + colFrac * (m_lonMax - m_lonMin);
+        lat = m_latMax - rowFrac * (m_latMax - m_latMin);
+    }
+
+    /* Conversion inverse : longitude / latitude -> position au sol (x est, z sud). */
+    void worldAt(float lon, float lat, float& x, float& z) const noexcept {
+        const float colFrac = (lon - m_lonMin) / (m_lonMax - m_lonMin);
+        const float rowFrac = (m_latMax - lat) / (m_latMax - m_latMin);
+        x = (colFrac - 0.5f) * m_widthM;
+        z = (rowFrac - 0.5f) * m_heightM;
+    }
+
+    /* Identifiant OpenGL de l'orthophoto (pour l'afficher dans la minimap). */
+    [[nodiscard]] unsigned int orthoTexId() const noexcept { return m_ortho.id(); }
+
 private:
     void buildFlatFallback();
 
@@ -76,6 +100,11 @@ private:
     bool               m_hasStart = false; /* le calage fournit un point de départ */
     float              m_startX = 0.0f;    /* point de départ : est (m) */
     float              m_startZ = 0.0f;    /* point de départ : sud (m) */
+    bool               m_hasGeo = false;   /* le calage fournit les bornes lon/lat */
+    float              m_lonMin = 0.0f;
+    float              m_lonMax = 0.0f;
+    float              m_latMin = 0.0f;
+    float              m_latMax = 0.0f;
 };
 
 }  /* namespace artouste::render */

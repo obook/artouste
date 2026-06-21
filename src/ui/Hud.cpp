@@ -249,6 +249,12 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         corner("hud_tr", ImVec2(w - m, m), ImVec2(1.0f, 0.0f));
         ImGui::Text("IAS  %4.0f kt", static_cast<double>(data.airspeedKt));
         ImGui::Text("HDG  %03.0f", static_cast<double>(data.headingDeg));
+        if (data.geoValid) {
+            ImGui::Text("LAT  %.4f %c", static_cast<double>(std::fabs(data.latDeg)),
+                        data.latDeg >= 0.0f ? 'N' : 'S');
+            ImGui::Text("LON  %.4f %c", static_cast<double>(std::fabs(data.lonDeg)),
+                        data.lonDeg >= 0.0f ? 'E' : 'W');
+        }
         ImGui::End();
 
         corner("hud_bl", ImVec2(m, h - m), ImVec2(0.0f, 1.0f));
@@ -328,6 +334,57 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         }
     }
     /* mode Off : aucun affichage de vol. */
+
+    /* Repérage : étiquettes des lieux remarquables et minimap (sauf en mode "rien"). */
+    if (mode != HudMode::Off) {
+        ImDrawList* dl = ImGui::GetForegroundDrawList();
+
+        /* Étiquettes projetées sur la scène : un point jaune et le nom (avec ombre). */
+        for (const HudLabel& lab : data.labels) {
+            if (!lab.onScreen) {
+                continue;
+            }
+            const float x = lab.fx * w;
+            const float y = lab.fy * h;
+            dl->AddCircleFilled(ImVec2(x, y), 3.0f, IM_COL32(255, 230, 90, 230));
+            const ImVec2 ts = ImGui::CalcTextSize(lab.name);
+            const ImVec2 tp(x - ts.x * 0.5f, y - ts.y - 7.0f);
+            dl->AddText(ImVec2(tp.x + 1.0f, tp.y + 1.0f), IM_COL32(0, 0, 0, 200), lab.name);
+            dl->AddText(tp, IM_COL32(255, 240, 140, 255), lab.name);
+        }
+
+        /* Minimap : orthophoto (nord en haut), points remarquables et appareil. En
+           mode coins, sous le panneau d'altitude (coin haut-gauche) ; en mode
+           superposé, calée tout en haut et un peu plus petite pour passer au-dessus
+           du ruban d'altitude vertical (qui occupe le bord gauche). */
+        if (data.mapTexId != 0) {
+            const bool   overlay = (mode == HudMode::Overlay);
+            const float  sz = overlay ? 136.0f : 150.0f;
+            const ImVec2 p0(m, overlay ? m : m + 56.0f);
+            const ImVec2 p1(p0.x + sz, p0.y + sz);
+            dl->AddRectFilled(ImVec2(p0.x - 2.0f, p0.y - 2.0f), ImVec2(p1.x + 2.0f, p1.y + 2.0f),
+                              IM_COL32(0, 0, 0, 120));
+            /* L'orthophoto est chargée retournée verticalement : nord en haut -> uv (0,1)-(1,0). */
+            dl->AddImage(static_cast<ImTextureID>(data.mapTexId), p0, p1, ImVec2(0.0f, 1.0f),
+                         ImVec2(1.0f, 0.0f));
+            dl->AddRect(p0, p1, IM_COL32(255, 255, 255, 160));
+            for (const HudLabel& lab : data.labels) {
+                const ImVec2 q(p0.x + lab.mapU * sz, p0.y + lab.mapV * sz);
+                dl->AddCircleFilled(q, 2.5f, IM_COL32(255, 230, 90, 255));
+                dl->AddCircle(q, 2.5f, IM_COL32(0, 0, 0, 160));
+            }
+            /* Marqueur de l'appareil : triangle orienté selon le cap (nord en haut). */
+            const ImVec2 c(p0.x + data.mapHeliU * sz, p0.y + data.mapHeliV * sz);
+            const float  a = data.mapHeadingDeg * 3.14159265f / 180.0f;
+            const ImVec2 fwd(std::sin(a), -std::cos(a));
+            const ImVec2 rgt(-fwd.y, fwd.x);
+            const ImVec2 tip(c.x + fwd.x * 7.0f, c.y + fwd.y * 7.0f);
+            const ImVec2 bl(c.x - fwd.x * 4.0f + rgt.x * 4.0f, c.y - fwd.y * 4.0f + rgt.y * 4.0f);
+            const ImVec2 br(c.x - fwd.x * 4.0f - rgt.x * 4.0f, c.y - fwd.y * 4.0f - rgt.y * 4.0f);
+            dl->AddTriangleFilled(tip, bl, br, IM_COL32(255, 70, 70, 255));
+            dl->AddTriangle(tip, bl, br, IM_COL32(0, 0, 0, 180));
+        }
+    }
 
     if (paused) {
         constexpr ImGuiWindowFlags flags =

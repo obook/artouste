@@ -11,9 +11,22 @@
 
 #pragma once
 
+#include <vector>
+
 struct GLFWwindow;
 
 namespace artouste::ui {
+
+/* Lieu remarquable à signaler : étiquette posée sur la scène 3D (si visible) et
+   point sur la minimap. */
+struct HudLabel {
+    const char* name     = "";
+    float       fx       = 0.0f;   /* position écran de l'étiquette (fraction 0-1) */
+    float       fy       = 0.0f;
+    bool        onScreen = false;  /* le lieu est devant la caméra et dans le cadre */
+    float       mapU     = 0.0f;   /* position sur la minimap : 0 ouest -> 1 est */
+    float       mapV     = 0.0f;   /* 0 nord -> 1 sud */
+};
 
 /* Mode d'affichage du HUD, parcouru en boucle par la touche H / le bouton B. */
 enum class HudMode {
@@ -37,6 +50,16 @@ struct HudData {
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */
     bool        assist        = false;  /* mode assisté actif : affiche un repère */
+    bool        geoValid      = false;  /* coordonnées géographiques disponibles */
+    float       lonDeg        = 0.0f;   /* longitude (degrés, + est) */
+    float       latDeg        = 0.0f;   /* latitude (degrés, + nord) */
+
+    /* Repérage : lieux remarquables et minimap. */
+    std::vector<HudLabel> labels;          /* lieux à étiqueter (scène 3D + carte) */
+    unsigned int          mapTexId   = 0;  /* orthophoto pour la minimap (0 = pas de carte) */
+    float                 mapHeliU   = 0.0f;  /* position de l'appareil sur la carte (0-1) */
+    float                 mapHeliV   = 0.0f;
+    float                 mapHeadingDeg = 0.0f;  /* cap, pour orienter le marqueur */
 };
 
 class Hud {

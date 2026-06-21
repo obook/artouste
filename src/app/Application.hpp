@@ -64,6 +64,10 @@ private:
        cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge
        à la sortie de la turbine, d'intensité croissante avec le régime). */
     void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
+
+    /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
+       scène et données de la minimap (position de l'appareil, points). */
+    void buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 

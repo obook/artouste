@@ -98,6 +98,22 @@ const vec3        NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
 constexpr float   NOZZLE_RADIUS = 0.24f;
 
 /*
+ * Lieux remarquables du terrain (nom + coordonnées WGS84) : étiquetés sur la scène
+ * et pointés sur la minimap. Ceux hors de l'emprise du terrain courant sont ignorés.
+ */
+struct Landmark {
+    const char* name;
+    float       lon;
+    float       lat;
+};
+const Landmark LANDMARKS[] = {
+    {"Lac d'Artouste", -0.3325f, 42.8589f},
+    {"Pic du Midi d'Ossau", -0.4380f, 42.8430f},
+    {"Pic Palas", -0.3600f, 42.8400f},
+    {"Fabrèges", -0.4130f, 42.9050f},
+};
+
+/*
  * Rotor principal (animation visuelle) :
  *   - ROTOR_SPIN_RATE : vitesse de rotation à plein régime, en rad/s. Volontairement
  *     ralentie par rapport à la réalité pour éviter l'effet stroboscopique.
@@ -560,6 +576,14 @@ void Application::mainLoop() {
         hud.fuelLiters    = m_flight.fuelLiters();
         hud.turbine       = m_flight.turbine().label();
         hud.assist        = m_assist.active();
+        if (m_terrain->hasGeo()) {  /* longitude / latitude de l'appareil */
+            float lon = 0.0f, lat = 0.0f;
+            m_terrain->lonLatAt(body.position.x, body.position.z, lon, lat);
+            hud.geoValid = true;
+            hud.lonDeg   = lon;
+            hud.latDeg   = lat;
+        }
+        buildNavHud(hud, body.position, headingDeg);
         m_hud.render(hud, m_hudMode, m_paused);
 
         glfwSwapBuffers(m_window);
@@ -867,6 +891,47 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     glDisable(GL_BLEND);
 }
 
+void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg) {
+    if (!m_terrain || !m_terrain->hasGeo()) {
+        return;
+    }
+    const float halfW = m_terrain->halfWidth();
+    const float halfH = m_terrain->halfHeight();
+
+    /* Minimap : orthophoto + position de l'appareil (fractions 0-1 dans l'emprise). */
+    hud.mapTexId      = m_terrain->orthoTexId();
+    hud.mapHeliU      = heliPos.x / (2.0f * halfW) + 0.5f;
+    hud.mapHeliV      = heliPos.z / (2.0f * halfH) + 0.5f;
+    hud.mapHeadingDeg = headingDeg;
+
+    /* Étiquettes : on projette chaque lieu remarquable (situé dans l'emprise) sur
+       l'écran, légèrement au-dessus du sol. */
+    const mat4 viewProj = m_camera.proj() * m_camera.view();
+    for (const Landmark& lm : LANDMARKS) {
+        float x = 0.0f, z = 0.0f;
+        m_terrain->worldAt(lm.lon, lm.lat, x, z);
+        if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
+            continue;  /* hors du terrain courant */
+        }
+        ui::HudLabel label;
+        label.name = lm.name;
+        label.mapU = x / (2.0f * halfW) + 0.5f;
+        label.mapV = z / (2.0f * halfH) + 0.5f;
+
+        const float y    = m_terrain->heightAt(x, z) + 25.0f;
+        const vec4  clip = viewProj * vec4{x, y, z, 1.0f};
+        if (clip.w > 0.1f) {
+            const vec3 ndc = vec3(clip) / clip.w;
+            if (ndc.z < 1.0f && std::fabs(ndc.x) < 1.02f && std::fabs(ndc.y) < 1.02f) {
+                label.fx       = ndc.x * 0.5f + 0.5f;
+                label.fy       = 1.0f - (ndc.y * 0.5f + 0.5f);
+                label.onScreen = true;
+            }
+        }
+        hud.labels.push_back(label);
+    }
+}
+
 void Application::captureScreenshot(const std::filesystem::path& path) {
     int fbw = 0;
     int fbh = 0;
@@ -955,6 +1020,14 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.fuelLiters    = 480.0f;
     hud.turbine       = "EN RÉGIME";
     hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */
+    if (m_terrain->hasGeo()) {  /* coordonnées du point de capture */
+        float lon = 0.0f, lat = 0.0f;
+        m_terrain->lonLatAt(shotPos.x, shotPos.z, lon, lat);
+        hud.geoValid = true;
+        hud.lonDeg   = lon;
+        hud.latDeg   = lat;
+    }
+    buildNavHud(hud, shotPos, hud.headingDeg);
 
     /*
      * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres
@@ -978,12 +1051,20 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     if (const char* e = std::getenv("ARTOUSTE_SHOT_COLLECTIVE")) {
         shotCollective = std::strtof(e, nullptr);
     }
+    /* Mode du HUD pour la capture : coins par défaut, ou via ARTOUSTE_SHOT_HUDMODE. */
+    ui::HudMode shotHud = m_hudMode;
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_HUDMODE")) {
+        const std::string v = e;
+        shotHud = (v == "overlay") ? ui::HudMode::Overlay
+                  : (v == "off")   ? ui::HudMode::Off
+                                   : ui::HudMode::Corners;
+    }
     for (int i = 0; i < 3; ++i) {
         /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
            0,1 s tombe dans la phase allumée du flash). */
         renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat, shotCollective,
                     1.0f, 0.1f);
-        m_hud.render(hud, m_hudMode, false);
+        m_hud.render(hud, shotHud, false);
     }
     glFinish();
 

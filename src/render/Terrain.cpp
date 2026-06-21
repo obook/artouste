@@ -30,7 +30,8 @@ namespace {
  */
 bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float& widthM,
                   float& heightM, float& elevMin, float& elevMax, bool& drawSea,
-                  bool& hasStart, float& startX, float& startZ) {
+                  bool& hasStart, float& startX, float& startZ, bool& hasGeo, float& lonMin,
+                  float& lonMax, float& latMin, float& latMax) {
     std::ifstream file(path);
     if (!file) {
         return false;
@@ -38,6 +39,7 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
     bool hasCols = false, hasRows = false, hasW = false, hasH = false, hasMin = false,
          hasMax = false;
     bool hasStartX = false, hasStartZ = false;
+    bool hasLonMin = false, hasLonMax = false, hasLatMin = false, hasLatMax = false;
     std::string key;
     while (file >> key) {
         if (!key.empty() && key[0] == '#') {
@@ -64,11 +66,20 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> startX, hasStartX = true;
         } else if (key == "start_z") {
             file >> startZ, hasStartZ = true;
+        } else if (key == "lon_min") {
+            file >> lonMin, hasLonMin = true;
+        } else if (key == "lon_max") {
+            file >> lonMax, hasLonMax = true;
+        } else if (key == "lat_min") {
+            file >> latMin, hasLatMin = true;
+        } else if (key == "lat_max") {
+            file >> latMax, hasLatMax = true;
         } else {
             std::getline(file, key);  /* clé ignorée : on saute sa valeur */
         }
     }
     hasStart = hasStartX && hasStartZ;
+    hasGeo   = hasLonMin && hasLonMax && hasLatMin && hasLatMax;
     return hasCols && hasRows && hasW && hasH && hasMin && hasMax;
 }
 
@@ -80,7 +91,8 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     const std::filesystem::path ortho  = dir / "ortho.jpg";
 
     if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
-                      m_drawSea, m_hasStart, m_startX, m_startZ)) {
+                      m_drawSea, m_hasStart, m_startX, m_startZ, m_hasGeo, m_lonMin, m_lonMax,
+                      m_latMin, m_latMax)) {
         std::fprintf(stderr, "[Terrain] calage absent (%s), repli sur un sol plat.\n",
                      meta.string().c_str());
         buildFlatFallback();

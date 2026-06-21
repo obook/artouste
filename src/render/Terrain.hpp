@@ -46,6 +46,16 @@ public:
     [[nodiscard]] float halfHeight() const noexcept { return 0.5f * m_heightM; }
     [[nodiscard]] float maxElevation() const noexcept { return m_elevMax; }
 
+    /* Faut-il dessiner le plan de mer ? Faux pour un terrain de montagne (sans mer),
+       où un plan bleu sous le relief serait incongru. Vrai par défaut (bord de mer). */
+    [[nodiscard]] bool drawsSea() const noexcept { return m_drawSea; }
+
+    /* Le calage fournit-il un point de départ propre au terrain (sinon l'appelant
+       garde le sien) ? Coordonnées monde en mètres (X est, Z sud). */
+    [[nodiscard]] bool  hasStart() const noexcept { return m_hasStart; }
+    [[nodiscard]] float startX() const noexcept { return m_startX; }
+    [[nodiscard]] float startZ() const noexcept { return m_startZ; }
+
 private:
     void buildFlatFallback();
 
@@ -62,6 +72,10 @@ private:
     float              m_heightM = 0.0f;  /* dimension nord-sud au sol (m) */
     float              m_elevMin = 0.0f;
     float              m_elevMax = 0.0f;
+    bool               m_drawSea = true;   /* dessiner le plan de mer (bord de mer) */
+    bool               m_hasStart = false; /* le calage fournit un point de départ */
+    float              m_startX = 0.0f;    /* point de départ : est (m) */
+    float              m_startZ = 0.0f;    /* point de départ : sud (m) */
 };
 
 }  /* namespace artouste::render */

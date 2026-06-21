@@ -29,13 +29,15 @@ namespace {
  * et range les valeurs attendues. Renvoie faux si une clé manque.
  */
 bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float& widthM,
-                  float& heightM, float& elevMin, float& elevMax) {
+                  float& heightM, float& elevMin, float& elevMax, bool& drawSea,
+                  bool& hasStart, float& startX, float& startZ) {
     std::ifstream file(path);
     if (!file) {
         return false;
     }
     bool hasCols = false, hasRows = false, hasW = false, hasH = false, hasMin = false,
          hasMax = false;
+    bool hasStartX = false, hasStartZ = false;
     std::string key;
     while (file >> key) {
         if (!key.empty() && key[0] == '#') {
@@ -54,10 +56,19 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> elevMin, hasMin = true;
         } else if (key == "elev_max") {
             file >> elevMax, hasMax = true;
+        } else if (key == "sea") {  /* 0 = pas de plan de mer (terrain de montagne) */
+            int v = 1;
+            file >> v;
+            drawSea = (v != 0);
+        } else if (key == "start_x") {
+            file >> startX, hasStartX = true;
+        } else if (key == "start_z") {
+            file >> startZ, hasStartZ = true;
         } else {
             std::getline(file, key);  /* clé ignorée : on saute sa valeur */
         }
     }
+    hasStart = hasStartX && hasStartZ;
     return hasCols && hasRows && hasW && hasH && hasMin && hasMax;
 }
 
@@ -68,7 +79,8 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     const std::filesystem::path height = dir / "heightmap.png";
     const std::filesystem::path ortho  = dir / "ortho.jpg";
 
-    if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax)) {
+    if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
+                      m_drawSea, m_hasStart, m_startX, m_startZ)) {
         std::fprintf(stderr, "[Terrain] calage absent (%s), repli sur un sol plat.\n",
                      meta.string().c_str());
         buildFlatFallback();

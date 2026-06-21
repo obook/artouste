@@ -315,10 +315,12 @@ void Application::initScene() {
      * reste à l'origine sur le sol plat de repli.
      */
     if (m_terrain->textured()) {
-        constexpr float START_X = -9140.0f;  /* m à l'est du centre (négatif = ouest) */
-        constexpr float START_Z = 3006.0f;   /* m au sud du centre */
-        const float     ground  = m_terrain->heightAt(START_X, START_Z);
-        m_startPos              = vec3{START_X, ground, START_Z};
+        /* Point de départ : celui fourni par le terrain (calage), sinon la côte de
+           Hendaye par défaut. Négatif en X = ouest, positif en Z = sud. */
+        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : -9140.0f;
+        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : 3006.0f;
+        const float ground  = m_terrain->heightAt(START_X, START_Z);
+        m_startPos          = vec3{START_X, ground, START_Z};
         /* L'appareil se gare mât rotor centré sur le H : son origine (que la
            physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
            de départ (cap initial = +X, orientation identité au reset). */
@@ -583,19 +585,22 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
      * profondeur, de sorte que le terrain (dessiné après) le recouvre toujours.
      * Cela supprime le z-fighting au loin, y compris en vue cockpit où le faible
      * plan rapproché (near) dégrade fortement la précision de profondeur. */
-    m_seaShader->use();
-    m_seaShader->setMat4("u_view", view);
-    m_seaShader->setMat4("u_proj", proj);
-    m_seaShader->setMat4("u_model", mat4(1.0f));
-    m_seaShader->setVec3("u_seaColor", SEA_COLOR);
-    m_seaShader->setVec3("u_lightDir", lightDir);
-    m_seaShader->setVec3("u_camPos", m_camera.position());
-    m_seaShader->setVec3("u_fogColor", FOG_COLOR);
-    m_seaShader->setFloat("u_fogStart", FOG_START);
-    m_seaShader->setFloat("u_fogEnd", FOG_END);
-    glDepthMask(GL_FALSE);
-    m_sea->draw();
-    glDepthMask(GL_TRUE);
+    /* En montagne (terrain sans mer), on ne dessine pas le plan de mer. */
+    if (m_terrain->drawsSea()) {
+        m_seaShader->use();
+        m_seaShader->setMat4("u_view", view);
+        m_seaShader->setMat4("u_proj", proj);
+        m_seaShader->setMat4("u_model", mat4(1.0f));
+        m_seaShader->setVec3("u_seaColor", SEA_COLOR);
+        m_seaShader->setVec3("u_lightDir", lightDir);
+        m_seaShader->setVec3("u_camPos", m_camera.position());
+        m_seaShader->setVec3("u_fogColor", FOG_COLOR);
+        m_seaShader->setFloat("u_fogStart", FOG_START);
+        m_seaShader->setFloat("u_fogEnd", FOG_END);
+        glDepthMask(GL_FALSE);
+        m_sea->draw();
+        glDepthMask(GL_TRUE);
+    }
 
     /*
      * Terrain : orthophoto réelle drapée sur le relief, avec brume au loin.
@@ -631,14 +636,18 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
      * démarre et que le reset (touche X ou R) le ramène.
      */
     if (m_helipad) {
-        /* Le sol de la côte est en pente : on pose le disque juste au-dessus du
-           plus haut point du relief sous l'emprise du pad, pour qu'il ne soit
-           pas à moitié enfoui côté amont. */
+        /* Le sol peut être en pente : on pose le disque juste au-dessus du point le
+           plus haut du relief sous l'emprise du pad. On échantillonne sur une petite
+           grille couvrant tout le pad (pas seulement les 4 cardinaux), sinon le point
+           haut d'une pente oblique passe entre les mailles et un bord s'enfonce. */
         constexpr float padRadius = 7.0f;
         float           padTop    = m_startPos.y;
-        for (const vec2 d : {vec2{padRadius, 0.0f}, vec2{-padRadius, 0.0f}, vec2{0.0f, padRadius},
-                             vec2{0.0f, -padRadius}}) {
-            padTop = std::fmax(padTop, m_terrain->heightAt(m_startPos.x + d.x, m_startPos.z + d.y));
+        for (int ix = -2; ix <= 2; ++ix) {
+            for (int iz = -2; iz <= 2; ++iz) {
+                const float sx = m_startPos.x + 0.5f * padRadius * static_cast<float>(ix);
+                const float sz = m_startPos.z + 0.5f * padRadius * static_cast<float>(iz);
+                padTop          = std::fmax(padTop, m_terrain->heightAt(sx, sz));
+            }
         }
         const mat4 padModel =
             glm::translate(mat4(1.0f), vec3{m_startPos.x, padTop + 0.06f, m_startPos.z});

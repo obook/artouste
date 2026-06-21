@@ -88,23 +88,16 @@ target_include_directories(imgui SYSTEM PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 # ---------------------------------------------------------------------------
-# GLAD - loader OpenGL 4.1 core.
-# Le repo Dav1dde/glad embarque un CMakeLists qui génère les sources à la
-# configure-time via un script Python (python3 requis sur la machine de
-# build). On force le profil 4.1 core, suffisant pour ce projet.
+# GLAD - loader OpenGL 4.1 core. Les sources sont pré-générées et versionnées
+# dans third_party/glad (profil 4.1 core), plutôt que générées au build par le
+# script Python de Dav1dde/glad. On évite ainsi toute dépendance à Python et au
+# réseau pendant la compilation : build reproductible et portable. La génération
+# au build échouait d'ailleurs sur certains serveurs d'intégration, en récupérant
+# un spec OpenGL XML invalide.
 # ---------------------------------------------------------------------------
-set(GLAD_PROFILE      "core"   CACHE STRING "" FORCE)
-set(GLAD_API          "gl=4.1" CACHE STRING "" FORCE)
-set(GLAD_GENERATOR    "c"      CACHE STRING "" FORCE)
-set(GLAD_NO_LOADER    OFF      CACHE BOOL   "" FORCE)
-set(GLAD_REPRODUCIBLE ON       CACHE BOOL   "" FORCE)
-
-FetchContent_Declare(glad
-    GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    GIT_TAG        v0.1.36
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(glad)
+add_library(glad STATIC ${CMAKE_SOURCE_DIR}/third_party/glad/src/glad.c)
+target_include_directories(glad SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/third_party/glad/include)
+target_link_libraries(glad PUBLIC ${CMAKE_DL_LIBS})
 
 # ---------------------------------------------------------------------------
 # stb_image - header-only, on en fait une INTERFACE

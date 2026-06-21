@@ -96,15 +96,14 @@ ctest --test-dir build --output-on-failure
 ./build/bin/artouste
 ```
 
-Dépendances récupérées automatiquement (FetchContent) : GLFW, GLAD, GLM,
-Dear ImGui, Assimp, stb, miniaudio, Catch2. Prérequis système : pilotes
-OpenGL, bibliothèques X11/Wayland, Python 3 (pour la génération de GLAD), et un
+Dépendances récupérées automatiquement (FetchContent) : GLFW, GLM, Dear ImGui,
+Assimp, stb, miniaudio, Catch2 ; GLAD est versionné dans `third_party/`.
+Prérequis système : pilotes OpenGL, bibliothèques de développement X11, et un
 compilateur C++20.
 
 ## Compilation (Windows)
 
-Avec Visual Studio 2022 (MSVC) et CMake. Python 3 doit être installé et dans le
-PATH (génération de GLAD). Dans une invite de commande Developer :
+Avec Visual Studio 2022 (MSVC) et CMake. Dans une invite de commande Developer :
 
 ```bat
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release

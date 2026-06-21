@@ -96,8 +96,10 @@ jobs:
         with:
           path: artefacts
 
-      - name: Créer la release GitHub
+      # La release et son texte sont créés à la main ; ici on ne fait qu'attacher
+      # les archives, sans toucher au corps de la release (pas de notes générées).
+      - name: Attacher les archives à la release
         uses: softprops/action-gh-release@v2
         with:
           files: artefacts/**/artouste-*
-          generate_release_notes: true
+          generate_release_notes: false

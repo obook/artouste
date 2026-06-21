@@ -279,7 +279,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         ImGui::Text("PALONNIER");
         ImGui::ProgressBar(data.pedals * 0.5f + 0.5f, ImVec2(140.0f, 0.0f), "");
         if (data.assist) {
-            ImGui::TextColored(ImVec4(0.4f, 0.9f, 1.0f, 1.0f), "MODE ASSISTE");
+            ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
         }
         ImGui::End();
 
@@ -352,9 +352,15 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             wy -= 20.0f;
         }
 
-        /* Repère du mode assisté, discret, en bas a gauche. */
+        /* Repère du mode assisté, en bas à gauche, dans le même style que les
+         * instruments : panneau gris semi-transparent et texte vert. */
         if (data.assist) {
-            dl->AddText(ImVec2(m, h - 24.0f), IM_COL32(110, 220, 255, 255), "MODE ASSISTE");
+            const char*  txt = "MODE ASSISTE";
+            const ImVec2 ts  = ImGui::CalcTextSize(txt);
+            const ImVec2 tp(m, h - 26.0f);
+            panelRect(dl, ImVec2(tp.x - 6.0f, tp.y - 4.0f),
+                      ImVec2(tp.x + ts.x + 6.0f, tp.y + ts.y + 4.0f), 4.0f);
+            dl->AddText(tp, HUD_GREEN, txt);
         }
     }
     /* mode Off : aucun affichage de vol. */

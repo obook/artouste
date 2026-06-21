@@ -35,7 +35,7 @@ float clampAbs(float v, float limit) noexcept {
 void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* Turbine : on fait avancer son régime avant tout le reste, car la poussée
      * et l'anti-couple en dépendent. Rotor à l'arrêt -> rotorFraction = 0. */
-    m_turbine.update(dt);
+    m_turbine.update(dt, controls.collective);
     const float rotorFraction = m_turbine.rotorFraction();
 
     const vec3 worldUp{0.0f, 1.0f, 0.0f};

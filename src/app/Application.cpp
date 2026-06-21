@@ -573,6 +573,7 @@ void Application::mainLoop() {
         hud.rotorPct      = rotorFraction * 100.0f;          /* régime rotor, en pourcentage */
         hud.rotorRpm      = rotorFraction * 360.0f;          /* régime rotor nominal : 360 tr/min */
         hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
+        hud.exhaustTempC  = m_flight.turbine().exhaustTempC();  /* température tuyère (T4) */
         hud.fuelLiters    = m_flight.fuelLiters();
         hud.turbine       = m_flight.turbine().label();
         hud.assist        = m_assist.active();
@@ -1017,6 +1018,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.rotorPct      = 100.0f;
     hud.rotorRpm      = 360.0f;
     hud.turbineRpm    = 33500.0f;
+    hud.exhaustTempC  = 445.0f;   /* tuyère en croisière normale */
     hud.fuelLiters    = 480.0f;
     hud.turbine       = "EN RÉGIME";
     hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */

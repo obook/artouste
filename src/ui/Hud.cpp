@@ -288,12 +288,13 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         altitudeTape(dl, 24.0f, h * 0.5f, 60.0f, h * 0.28f, data.altitudeM);
 
         /* Valeurs pré-formatées (formats littéraux : pas de format dynamique). */
-        char nr[16], turb[16], ias[16], vs[16], coll[16], fuel[16];
+        char nr[16], turb[16], ias[16], vs[16], coll[16], tmp[16], fuel[16];
         std::snprintf(nr,   sizeof(nr),   "%.0f",  static_cast<double>(data.rotorRpm));
         std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
         std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKt));
         std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));
         std::snprintf(coll, sizeof(coll), "%.0f",  static_cast<double>(data.collectivePct));
+        std::snprintf(tmp,  sizeof(tmp),  "%.0f",  static_cast<double>(data.exhaustTempC));
         std::snprintf(fuel, sizeof(fuel), "%.0f",  static_cast<double>(data.fuelLiters));
 
         struct G {
@@ -307,6 +308,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             {data.airspeedKt,    0.0f, 140.0f,   95.0f,    105.0f,   "IAS kt",    ias},
             {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs},
             {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll},
+            {data.exhaustTempC,  0.0f, 550.0f,   400.0f,   480.0f,   "TMP C",     tmp},
             {data.fuelLiters,    0.0f, physics::FUEL_CAPACITY_L, physics::FUEL_LOW_L,
              physics::FUEL_CAPACITY_L, "CARB L", fuel},
         };
@@ -321,11 +323,25 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
                   gauges[i].text);
         }
 
-        /* Voyant d'alerte : carburant sous la réserve. */
-        if (data.fuelLiters < physics::FUEL_LOW_L) {
-            const char* warn = "CARBURANT BAS";
-            dl->AddText(ImVec2(w * 0.5f - ImGui::CalcTextSize(warn).x * 0.5f, y - r - 26.0f),
-                        IM_COL32(255, 70, 70, 255), warn);
+        /* Voyants d'alerte, empilés au-dessus du rang d'instruments (du plus bas au
+         * plus haut). Orange = surveiller, rouge = limite franchie. */
+        struct Warn { bool on; ImU32 col; const char* text; };
+        const ImU32 orange = IM_COL32(255, 170, 40, 255);
+        const ImU32 red    = IM_COL32(255, 70, 70, 255);
+        const Warn  warns[] = {
+            {data.exhaustTempC > physics::EXHAUST_TEMP_WARN_C
+                 && data.exhaustTempC <= physics::EXHAUST_TEMP_MAXI_C, orange, "TEMPERATURE"},
+            {data.exhaustTempC > physics::EXHAUST_TEMP_MAXI_C, red, "TEMPERATURE MAXI"},
+            {data.fuelLiters < physics::FUEL_LOW_L, red, "CARBURANT BAS"},
+        };
+        float wy = y - r - 26.0f;
+        for (const Warn& wn : warns) {
+            if (!wn.on) {
+                continue;
+            }
+            dl->AddText(ImVec2(w * 0.5f - ImGui::CalcTextSize(wn.text).x * 0.5f, wy),
+                        wn.col, wn.text);
+            wy -= 20.0f;
         }
 
         /* Repère du mode assisté, discret, en bas a gauche. */

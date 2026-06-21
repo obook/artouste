@@ -12,6 +12,8 @@
 
 #include "physics/constants.hpp"
 
+#include <cmath>
+
 namespace artouste::physics {
 
 void Turbine::toggle() noexcept {
@@ -29,7 +31,7 @@ void Turbine::toggle() noexcept {
     }
 }
 
-void Turbine::update(float dt) noexcept {
+void Turbine::update(float dt, float collective) noexcept {
     switch (m_state) {
         case State::Demarrage:
             /* La turbine monte seule en régime ; le rotor reste immobile, pales
@@ -78,12 +80,23 @@ void Turbine::update(float dt) noexcept {
         case State::Regime:
             break;  /* états stables : rien à faire */
     }
+
+    /* Température de la tuyère : cible déduite du régime turbine (la tuyère chauffe
+     * en montant en régime) et de la charge collective (plus on tire de puissance,
+     * plus elle chauffe), rejointe avec une inertie thermique. */
+    const float load   = collective < 0.0f ? 0.0f : (collective > 1.0f ? 1.0f : collective);
+    const float target = EXHAUST_TEMP_AMBIENT_C
+                       + (EXHAUST_TEMP_IDLE_C - EXHAUST_TEMP_AMBIENT_C) * m_turbine
+                       + (EXHAUST_TEMP_MAX_C - EXHAUST_TEMP_IDLE_C) * m_turbine * load;
+    const float ease   = 1.0f - std::exp(-dt / EXHAUST_TEMP_TAU);
+    m_exhaustC += (target - m_exhaustC) * ease;
 }
 
 void Turbine::forceRunning() noexcept {
-    m_state   = State::Regime;
-    m_turbine = 1.0f;
-    m_rotor   = 1.0f;
+    m_state    = State::Regime;
+    m_turbine  = 1.0f;
+    m_rotor    = 1.0f;
+    m_exhaustC = EXHAUST_TEMP_IDLE_C;  /* tuyère déjà chaude (régime établi, charge minimale) */
 }
 
 const char* Turbine::label() const noexcept {

@@ -41,6 +41,19 @@ inline constexpr float ROTOR_ENGAGE_TIME  = 15.0f;  /* s : rotor de 0 à 100 % (
 inline constexpr float TURBINE_STOP_TIME  = 30.0f;  /* s : extinction, turbine de 100 % à 0 */
 inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (forte inertie, plus lent que la turbine) */
 
+/* --- Température de la tuyère (gaz d'échappement, T4) -------------------------- */
+/* Modèle thermique simple : la température vise une cible déduite du régime
+ * turbine (la tuyère chauffe quand la turbine monte en régime) et de la charge
+ * collective (plus on tire de puissance, plus elle chauffe), qu'elle rejoint avec
+ * une inertie. Repères du manuel (PANEL.md) : 400 à 480 degrés en vol normal,
+ * 500 degrés en continu maxi, 550 degrés en transitoire. */
+inline constexpr float EXHAUST_TEMP_AMBIENT_C = 15.0f;   /* tuyère froide, turbine coupée */
+inline constexpr float EXHAUST_TEMP_IDLE_C    = 400.0f;  /* turbine au régime, charge minimale */
+inline constexpr float EXHAUST_TEMP_MAX_C     = 520.0f;  /* plein collectif, charge maximale */
+inline constexpr float EXHAUST_TEMP_TAU       = 4.0f;    /* s : inertie thermique (montée et descente) */
+inline constexpr float EXHAUST_TEMP_WARN_C    = 480.0f;  /* voyant orange : surveiller (limite haute du vol normal) */
+inline constexpr float EXHAUST_TEMP_MAXI_C    = 500.0f;  /* voyant rouge : limite continue franchie */
+
 /* --- Carburant ---------------------------------------------------------------- */
 /* Réservoir et consommation de l'Alouette II (d'après PANEL.md : ~580 L, 110 kg/h
  * en croisière, 155 kg/h à pleine puissance, autonomie ~4 h). On raisonne en

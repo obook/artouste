@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include "physics/constants.hpp"
+
 namespace artouste::physics {
 
 class Turbine {
@@ -37,8 +39,10 @@ public:
      * Pendant une transition, bascule simplement vers l'autre sens. */
     void toggle() noexcept;
 
-    /* Avance d'un pas de temps : fait évoluer les régimes selon l'état courant. */
-    void update(float dt) noexcept;
+    /* Avance d'un pas de temps : fait évoluer les régimes selon l'état courant.
+     * Le collectif [0, 1] sert à la charge thermique de la tuyère (plus on tire de
+     * puissance, plus elle chauffe). */
+    void update(float dt, float collective) noexcept;
 
     /* Met directement la turbine et le rotor en régime établi (100 %). Utile pour
      * les tests et pour un éventuel démarrage immédiat. */
@@ -49,6 +53,9 @@ public:
 
     /* Régime de la turbine [0, 1] : sert au son (sifflement de la turbine). */
     [[nodiscard]] float turbineFraction() const noexcept { return m_turbine; }
+
+    /* Température de la tuyère (gaz d'échappement, T4), en degrés Celsius. */
+    [[nodiscard]] float exhaustTempC() const noexcept { return m_exhaustC; }
 
     [[nodiscard]] State state() const noexcept { return m_state; }
 
@@ -64,6 +71,7 @@ private:
     float m_turbine = 0.0f;  /* régime turbine [0, 1] */
     float m_rotor   = 0.0f;  /* régime rotor   [0, 1] */
     float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
+    float m_exhaustC = EXHAUST_TEMP_AMBIENT_C;  /* température tuyère, degrés Celsius */
 };
 
 }  /* namespace artouste::physics */

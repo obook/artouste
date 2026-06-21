@@ -49,19 +49,18 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 > [!TIP]
 > **Première fois aux commandes ?**
-> Voici les quatres étapes pour effectuer votre premier pilotage l'**Alouette II SE.3130**.
+> Voici les quatre étapes pour effectuer votre premier vol aux commandes de l'**Alouette II SE.3130**.
 >
-> 1. **Activez le HUD complet** avec tous les instruments : touche `H` ou croix directionnelle haut.
-> 2. **Activez le mode assisté** : touche `M`, ou croix directionnelle haut, un message à l'écran le confirme.
-> 3. **Démarrez**, la préparation avant de pouvoir décoller prend environ 60 secondes.
-> * Démarrez la turbine avec la touche `T` ou le bouton `Start`
-> * La turbine monte seule en régime jusqu'à 33 500 tr/min
-> * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteind son régime de vol de 360 tr/m. Le HUD indique l'état `"EN RÉGIME"` ou `33500`
-> 4. **Décollage et vol** Une fois le rotor en régime :
-> * augmentez doucement le collectif (`W`/`Z`, ou gâchette RT) jusqu'à 55% environ pour décoller de quelques mètres du sol
-> * inclinez l'appareil au cyclique (flèches, ou stick gauche) pour avancer
-> * compenser le couple avec le palonnier ( `D` / `A`/`Q`  | stick droit (X))
-> * Réduisez le collectif (`S`, ou gâchette LT) pour redescendre.
+> 1. **Activez le HUD complet** avec tous les instruments : touche `H` | bouton `B`.
+> 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
+> 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
+>    * La turbine monte seule en régime jusqu'à 33 500 tr/min
+>    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `33500`
+> 4. **Décollage et vol.** Une fois le rotor en régime :
+>    * augmentez doucement le collectif (`W` ou `Z` | gâchette RT) jusqu'à un peu plus de 50% pour décoller de quelques mètres du sol
+>    * inclinez l'appareil au cyclique (flèches du clavier | stick gauche) pour avancer
+>    * compensez le couple avec le palonnier (`D` - droite / `A` ou `Q` - gauche | stick droit)
+>    * réduisez le collectif (`S` | gâchette LT) pour redescendre.
 
 ## Commandes
 

@@ -1,6 +1,8 @@
 # Artouste
 
-Artouste est un simulateur de vol personnel consacré au pilotage 3D de l'hélicoptère **Aérospatiale Alouette II** (SE.3130). Il cherche à restituer fidèlement la séquence de démarrage de la turbine, les sensations de vol sans servo-commandes et le son caractéristique de sa turbine et de ses trois pales.
+Artouste est un simulateur de vol personnel consacré au pilotage 3D de l'hélicoptère **Aérospatiale Alouette II** SE.3130.
+
+Son objectif est de restituer fidèlement la séquence de démarrage de la turbine Turboméca puis des rotors, le comportement en vol de cet appareil sans servo-commandes dans une  ambiance sonore caractéristique de sa turbine et de ses trois pales.
 
 Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retrouver les sensations remarquables de pilotage de cet appareil.
 
@@ -20,7 +22,7 @@ Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années
 
 ### Films français
 
-Tout l'or du monde (1961), Le Fanfaron (1962), Fantômas (1964), Le Grand Restaurant (1966), Le Tatoué (1968) avec Louis de Funès convainquant le pilote de l'amener à Paris, La Horse (1969), Peau d'Âne (1970), Le Gendarme en balade (1970), Le Far West (1972) avec Jacques Brel suspendu sous l'Alouette, Le Guignolo (1980) avec Belmondo survolant Venise accroché en dessous, La Fille de l'air (1992), Les Rivières pourpres (2000), Les Vacances du Petit Nicolas (2014).
+Tout l'or du monde (1961), Le Fanfaron (1962), Fantômas (1964), Le Grand Restaurant (1966), Le Tatoué (1968) avec Louis de Funès, La Horse (1969), Peau d'Âne (1970), Le Gendarme en balade (1970), Le Far West (1972) avec Jacques Brel, Le Guignolo (1980) avec Belmondo, La Fille de l'air (1992), Les Rivières pourpres (2000), Les Vacances du Petit Nicolas (2014).
 
 ### Films internationaux
 
@@ -30,24 +32,36 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 ## Fonctionnalités du simulateur
 
-- Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques,
-  anti-couple), effet de sol et effet de translation, intégration à pas fixe.
-- Démarrage et arrêt de la turbine Artouste en deux temps (la turbine monte en
-  régime, puis le rotor s'accélère) : il faut la lancer pour décoller.
+- Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
+- Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en   régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
 - Entrées clavier et manette Xbox (détection automatique de la source).
-- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le
-  cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la
-  physique. La bascule est progressive.
-- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite
-  suit) et levier de collectif (la main gauche se pose dessus et le suit).
+- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le   cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la   physique. La bascule est progressive.
+- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite   suit) et levier de collectif (la main gauche se pose dessus et le suit).
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
   instruments ronds verts superposés (Super HUD), ou rien.
-- Son moteur et rotor, ciel en dégradé, ombre portée (rotor centré sur le mât).
-- Effets moteur quand la turbine tourne : strombo (gyrophare rouge sur le toit de
-  la cabine, tiers haut clignotant en rotation) et tuyère (distorsion thermique de
-  l'air chaud, léger halo bleuté à la sortie de la turbine).
+- Son du moteur et et rotor, ciel en dégradé, ombre portée.
+- Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
+  la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
+
+## Démarrage rapide (spécial débutant)
+
+> Première fois aux commandes ? Trois étapes suffisent pour décoller.
+
+1. **Activez le mode assisté** (touche `M`, ou croix directionnelle haut). Cette
+   couche de confort compense le lacet, recentre le cyclique et borne le collectif :
+   l'appareil pardonne les erreurs.
+2. **Démarrez la turbine** (touche `T`, ou bouton `Start`), puis **patientez**.
+   La turbine monte d'abord seule en régime (environ 48 secondes, au son du
+   sifflement qui grimpe), le frein rotor se lâche, et les pales accélèrent à leur
+   tour (environ 15 secondes de plus). Comptez donc près d'une minute : tant que le
+   rotor n'a pas atteint son régime de vol, l'appareil ne décolle pas. Le HUD
+   (touche `H`) indique la phase de la turbine ; attendez l'état "EN RÉGIME".
+3. **Montez, puis déplacez-vous.** Une fois le rotor en régime, augmentez doucement
+   le collectif (`W`/`Z`, ou gâchette RT) pour décoller, puis inclinez l'appareil au
+   cyclique (flèches, ou stick gauche) pour avancer. Réduisez le collectif (`S`, ou
+   gâchette LT) pour redescendre.
 
 ## Commandes
 

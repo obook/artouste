@@ -33,6 +33,16 @@ class Model {
 public:
     Model() = default;
 
+    /* Move-only : le modèle possède ses maillages (Mesh, non copiable) et ses
+       textures (unique_ptr). On déclare explicitement la copie supprimée et le
+       déplacement par défaut. Sans cette déclaration, MSVC tente d'instancier la
+       copie de std::vector<Part> (donc la copie d'un Mesh, supprimée) en générant
+       les fonctions spéciales de Model, et la compilation échoue. */
+    Model(const Model&)            = delete;
+    Model& operator=(const Model&) = delete;
+    Model(Model&&)                 = default;
+    Model& operator=(Model&&)      = default;
+
     /* Dessine les parties retenues par la passe demandée. L'appelant a déjà
        fixé la matrice u_model ; on règle ici, pour chaque partie, son opacité
        (u_opacity) et sa texture (unité 0). 'opacityScale' multiplie l'opacité de

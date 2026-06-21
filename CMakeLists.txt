@@ -54,6 +54,9 @@ if(MSVC)
     target_compile_options(artouste_warnings INTERFACE
         /W4 /permissive- /Zc:__cplusplus
     )
+    # getenv et consorts sont standard et portables : on coupe les avertissements
+    # MSVC qui poussent vers leurs variantes _s non portables.
+    target_compile_definitions(artouste_warnings INTERFACE _CRT_SECURE_NO_WARNINGS)
     if(ARTOUSTE_WARNINGS_AS_ERRORS)
         target_compile_options(artouste_warnings INTERFACE /WX)
     endif()

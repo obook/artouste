@@ -3,16 +3,16 @@
 """
 fetch_terrain.py
 Télécharge les données du terrain réel d'Artouste depuis la Géoplateforme IGN,
-sur la côte basque (Hendaye -> Biarritz, avec La Rhune en arrière-plan) :
+sur la vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau, ~2884 m) :
 
   - le relief, échantillonné sur une grille via l'API altimétrie (RGE ALTI),
     enregistré en carte d'altitude PNG 16 bits (heightmap.png) ;
   - l'orthophoto (BD ORTHO) via le service WMS, enregistrée en ortho.jpg ;
   - les métadonnées de calage (terrain.txt) lues par le moteur.
 
-La BD ORTHO ne couvre que les terres : la mer revient en blanc. On recolore
-donc ces pixels blancs en bleu, ce qui conserve le trait de côte net de la
-photo (bien plus fin que le pas du MNT).
+Zone de montagne sans mer (RECOLOR_SEA = False) : on ne bleuit donc pas le blanc
+de la photo, qui serait de la neige ou des glaciers. Le blanc de no-data en
+bordure de couverture est comblé par une teinte de rocaille (voir fill_nodata).
 
 Données : IGN Géoplateforme, Licence Ouverte Etalab 2.0.
 Dépendances : Python 3, Pillow (PIL), NumPy, SciPy. Aucun GDAL requis.

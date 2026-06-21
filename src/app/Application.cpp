@@ -322,19 +322,19 @@ void Application::initScene() {
     const std::vector<unsigned int> seaIdx = {0, 1, 2, 0, 2, 3};
     m_sea = std::make_unique<render::Mesh>(seaVerts, seaIdx);
 
-    /* Terrain réel de la côte basque (relief IGN + orthophoto drapée). */
+    /* Terrain réel de la vallée d'Ossau (relief IGN + orthophoto drapée). */
     m_terrain = std::make_unique<render::Terrain>(assets / "terrain");
 
     /*
-     * Position de départ : posé sur la côte de Hendaye, l'océan à l'ouest et le
-     * relief (jusqu'à La Rhune) vers l'est. Si le terrain réel est absent, on
-     * reste à l'origine sur le sol plat de repli.
+     * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du
+     * massif (lac de Fabrèges, station du téléphérique d'Artouste), face au relief.
+     * Si le terrain réel est absent, on reste à l'origine sur le sol plat de repli.
      */
     if (m_terrain->textured()) {
-        /* Point de départ : celui fourni par le terrain (calage), sinon la côte de
-           Hendaye par défaut. Négatif en X = ouest, positif en Z = sud. */
-        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : -9140.0f;
-        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : 3006.0f;
+        /* Point de départ : celui fourni par le terrain (calage), sinon Fabrèges
+           par défaut. Négatif en X = ouest, positif en Z = sud. */
+        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : 158.0f;
+        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
         const float ground  = m_terrain->heightAt(START_X, START_Z);
         m_startPos          = vec3{START_X, ground, START_Z};
         /* L'appareil se gare mât rotor centré sur le H : son origine (que la

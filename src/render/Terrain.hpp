@@ -1,9 +1,10 @@
 /*
  * Terrain.hpp
- * Terrain réel de la côte basque (Hendaye -> Biarritz). Le relief vient d'une
- * carte d'altitude (heightmap) issue du MNT de l'IGN, et l'orthophoto réelle
- * est drapée dessus comme une texture. Si les données sont absentes, on retombe
- * sur un simple damier plat afin que le simulateur reste utilisable.
+ * Terrain réel de la vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau). Le
+ * relief vient d'une carte d'altitude (heightmap) issue du MNT de l'IGN, et
+ * l'orthophoto réelle est drapée dessus comme une texture. Si les données sont
+ * absentes, on retombe sur un simple damier plat afin que le simulateur reste
+ * utilisable.
  *
  * Repère monde du projet : X vers l'est, Z vers le sud, Y vers le haut. Le
  * terrain est centré sur l'origine.

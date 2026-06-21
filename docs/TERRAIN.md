@@ -9,27 +9,28 @@ marche.
 Données : IGN Géoplateforme, gratuit (Licence Ouverte Etalab 2.0), France uniquement.
 
 - Relief : RGE ALTI, via l'API altimétrie REST (`elevation.json`), échantillonné
-  point par point sur une grille 256x256 (un appel par rangée, voir
+  point par point sur une grille 512x512 (un appel par rangée, voir
   `tools/fetch_terrain.py`).
 - Texture : BD ORTHO, via le service WMS (`ORTHOIMAGERY.ORTHOPHOTOS`), une seule
-  image `ortho.jpg` (1842x2048). La mer, blanche en BD ORTHO, est recolorée par le
-  script pour garder un trait de côte net.
+  image `ortho.jpg` (2064x2048) drapée sur le relief.
 
 Pipeline : script Python hors-ligne -> `assets/terrain/{heightmap.png (16 bits),
 ortho.jpg, terrain.txt}`. Au runtime (`src/render/Terrain.cpp`) : `stb_image`
-charge tout, un seul maillage 256x256 (~130k triangles), une seule texture drapée,
+charge tout, un seul maillage 512x512 (~520k triangles), une seule texture drapée,
 les altitudes restent en RAM pour le contact sol (`heightAt`), repli sur un damier
 plat si les données manquent.
 
-Emprise : ~21 x 23 km (Hendaye -> Biarritz -> La Rhune, 0 à 896 m).
+Emprise : ~17,9 x 17,8 km (vallée d'Ossau : lac d'Artouste, pic du Midi d'Ossau,
+0 à 2937 m). Terrain de montagne, sans mer.
 
 Conséquences chiffrées :
 
-- Maille ~82-92 m (21000 / 255). Le relief est lissé : La Rhune est une bosse
-  douce, pas une vraie montagne. La limite vient de la grille, pas de la source.
-- Texture ~11 m/pixel (correcte vue d'hélico).
+- Maille ~35 m (17900 / 511). Le relief reste lissé par rapport à la source native
+  (RGE ALTI à 1-5 m), mais le pic du Midi d'Ossau et la vallée sont bien marqués.
+  La limite vient de la grille, pas de la source.
+- Texture ~9 m/pixel (correcte vue d'hélico).
 - Aucune dépendance lourde au runtime (seulement `stb_image`). Code court, lisible.
-- Zone figée et petite : au-delà des ~21 km, c'est la mer plate.
+- Zone figée et petite : au-delà de l'emprise, le sol est plat au niveau 0.
 
 ## Les autres pistes, comparées
 
@@ -42,8 +43,8 @@ Conséquences chiffrées :
 | SRTM | 30 m (~90 m hors USA) | quasi-monde | gratuit | vieux, trous en montagne |
 | Copernicus GLO-90 / ASTER | 90 m | Monde | gratuit | trop grossier pour la montagne |
 
-RGE ALTI est la meilleure source pour la France (donc Pyrénées, Alpes, côte
-basque). Copernicus n'a d'intérêt que pour sortir de France.
+RGE ALTI est la meilleure source pour la France (donc Pyrénées, dont la vallée
+d'Ossau, et Alpes). Copernicus n'a d'intérêt que pour sortir de France.
 
 ### Axe 2 - Source de la texture
 

@@ -187,7 +187,7 @@ Terrain::Terrain(const std::filesystem::path& dir) {
         std::fprintf(stderr, "[Terrain] orthophoto absente (%s), relief sans texture.\n",
                      ortho.string().c_str());
     } else {
-        std::printf("[Terrain] côte basque chargée : %.0f x %.0f m, altitude max %.0f m.\n",
+        std::printf("[Terrain] vallée d'Ossau chargée : %.0f x %.0f m, altitude max %.0f m.\n",
                     static_cast<double>(m_widthM), static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
     }

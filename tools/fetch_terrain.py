@@ -332,7 +332,18 @@ def fetch_ortho(aspect):
     # blanche et la plage (non bleutées) pour garder un trait de côte net.
     arr = np.array(Image.open(raw).convert("RGB")).astype(np.float32)
     r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
-    nodata = (r > 250) & (g > 250) & (b > 250)
+    # Le blanc "sans donnée" de la BD ORTHO est l'océan au large, hors couverture :
+    # une grande plage blanche qui touche les bords de l'image. Le sable très clair
+    # (la dune du Pilat) est blanc lui aussi, mais à l'intérieur des terres ; on ne
+    # retient donc comme mer que le blanc relié au bord, sinon la dune serait bleuie.
+    white = (r > 250) & (g > 250) & (b > 250)
+    labels, n_white = ndimage.label(white)
+    nodata = np.zeros_like(white)
+    if n_white:
+        border = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+        border.discard(0)
+        if border:
+            nodata = np.isin(labels, list(border))
     water = (b > r + 2) & (b > g - 4) & (arr.max(axis=2) < 155)  # eau bleutée, pas l'écume
     sea = nodata | water
 

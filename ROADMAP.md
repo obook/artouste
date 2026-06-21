@@ -50,12 +50,21 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Terrain
 
+> Réalisé, mais par une autre voie que les pistes ci-dessous : terrain réel de la
+> vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau) issu de l'IGN Géoplateforme
+> (relief RGE ALTI, texture BD ORTHO), via le script hors-ligne
+> `tools/fetch_terrain.py` qui produit `assets/terrain/{heightmap.png, ortho.jpg,
+> terrain.txt}`. Au runtime, `stb_image` charge le tout (sans GDAL), un maillage
+> unique est drapé de l'orthophoto, les altitudes servent au contact sol. Détails
+> et comparaison des autres pistes dans `docs/TERRAIN.md`. Les pistes notées plus
+> bas (Copernicus DEM, GDAL, LOD) restent des évolutions possibles.
+
 Pour le terrain en C++/OpenGL, les pistes les plus directes :
-- [ ] Données d'élévation
+- [x] Données d'élévation
 
 Le Copernicus DEM (GLO-30, résolution 30 m) couvre l'Europe entière et est en accès libre. Pour une zone Pyrénées/Alpes où l'Alouette II opérait en sauvetage montagne, c'est la source la plus précise disponible gratuitement. Les fichiers sont au format GeoTIFF, lisibles en C++ avec la bibliothèque libgeotiff ou GDAL.
 
-- [ ] Pipeline terrain typique en C++/OpenGL
+- [x] Pipeline terrain typique en C++/OpenGL
 GeoTIFF (Copernicus DEM)
   -> GDAL (lecture, reprojection, extraction zone)
   -> Heightmap (tableau float 2D)
@@ -63,7 +72,7 @@ GeoTIFF (Copernicus DEM)
   -> Texture satellite (Mapbox, WMTS IGN Géoportail)
   -> Rendu avec LOD (Level of Detail) selon distance caméra
   
-- [ ] Librairies C++ utiles
+- [x] Librairies C++ utiles
 GDAL : lecture de tous les formats géographiques, incontournable.
 GLM : mathématiques 3D pour OpenGL.
 stb_image : chargement des textures.

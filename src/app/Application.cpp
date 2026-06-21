@@ -888,11 +888,20 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_modelShader->setVec3("u_lightDir", lightDir);
         m_modelShader->setVec3("u_camPos", m_camera.position());
         m_modelShader->setInt("u_texture", 0);
+        /* Assiette réelle (roulis, tangage) extraite de l'orientation rendue, pour
+           animer l'horizon artificiel du tableau de bord. Axes du corps dans le
+           monde : avant = colonne 0, haut = colonne 1, droite = colonne 2. */
+        const vec3  fwd    = glm::normalize(vec3(base[0]));
+        const vec3  upv    = glm::normalize(vec3(base[1]));
+        const vec3  rgt    = glm::normalize(vec3(base[2]));
+        const float pitchR = std::asin(clamp(fwd.y, -1.0f, 1.0f));
+        const float rollR  = std::atan2(-rgt.y, upv.y);
+
         /* En vue cockpit, le pilote est dessiné sans tête ni casque (la caméra est
            à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
            fait basculer pédales et jambes. */
         m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
-                           cyclicLong, cyclicLat, collective);
+                           cyclicLong, cyclicLat, collective, rollR, pitchR);
 
         /*
          * Disque rotor (mis en commentaire, à reprendre plus tard).

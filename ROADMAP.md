@@ -23,6 +23,16 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Il manque le skin du rotor arrière
 
+- [x] Animer l'horizon artificiel (indicateur d'assiette) du tableau de bord
+
+    Le cadran ai.ac est chargé en trois morceaux (statique, carte de roulis,
+    barre d'horizon) et animé selon l'assiette réelle, comme l'animation FlightGear
+    (ai.xml) : la carte tourne avec le roulis, la barre tourne aussi et se translate
+    avec le tangage. Les autres cadrans restent figés pour l'instant.
+
+    - [ ] Défaut à corriger : des "moustaches" noires apparaissent sur le cadran
+      (les traits de l'échelle de tangage du float ressortent en noir). À nettoyer.
+
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 
 

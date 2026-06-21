@@ -100,10 +100,12 @@ struct GaugeDef {
     const char* file;
     vec3        fgOffset;
 };
+/* L'horizon artificiel (ai.ac) n'est PAS dans cette liste : il est chargé et
+   dessiné à part pour être animé (voir m_aiStatic / m_aiCard / m_aiFloat). Sa
+   position dans le panneau est AI_FG_OFFSET ci-dessous. */
 const GaugeDef GAUGES[] = {
     {"Interior/Panel/Instruments/alt/alt.ac", vec3{-0.222f, -0.181f, 0.112f}},
     {"Interior/Panel/Instruments/vsi/vsi.ac", vec3{-0.208f, -0.060f, 0.112f}},
-    {"Interior/Panel/Instruments/ai/ai.ac", vec3{-0.231f, 0.060f, 0.112f}},
     {"Interior/Panel/Instruments/asi/asi.ac", vec3{-0.207f, 0.181f, 0.112f}},
     {"Interior/Panel/Instruments/vor/vor.ac", vec3{-0.223f, -0.181f, -0.014f}},
     {"Interior/Panel/Instruments/hi/hi.ac", vec3{-0.223f, -0.060f, -0.014f}},
@@ -308,6 +310,26 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
         m_gauges.push_back(std::move(gauge));
     }
 
+    /* Horizon artificiel animé : on charge ai.ac en trois morceaux par filtrage des
+       objets (voir ai.xml). On garde, pour chaque morceau, uniquement les objets
+       voulus en écartant tous les autres. */
+    {
+        const vec3                  aiFgOffset{-0.231f, 0.060f, 0.112f};
+        const std::filesystem::path aiFile = dir / "Interior/Panel/Instruments/ai/ai.ac";
+        m_aiOffset = PANEL_OFFSET + fgToAssimp(aiFgOffset);
+        /* Statique (lunette + symbole avion + repères fixes) : on écarte les objets
+           mobiles (carte de roulis et barre d'horizon) et le verre. */
+        m_aiStatic = loadPart(aiFile, {"background", "scale", "float", "vitre", "blur", "disc"});
+        /* Carte de roulis : on ne garde que background et scale. */
+        m_aiCard   = loadPart(
+            aiFile, {"bouton", "face", "float", "fond", "markings", "vitre", "blur", "disc"});
+        /* Barre d'horizon : on ne garde que float. */
+        m_aiFloat  = loadPart(
+            aiFile,
+            {"background", "bouton", "face", "fond", "markings", "scale", "vitre", "blur", "disc"});
+        m_hasAi = !m_aiStatic.empty() || !m_aiCard.empty() || !m_aiFloat.empty();
+    }
+
     /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale
        est chargée par rotor, puis recopiée et tournée à l'affichage. */
     m_mainHub   = loadPart(dir / "Externals/MainRotor/mainrotor.ac", skipRotor);
@@ -328,7 +350,8 @@ void LoadedHelicopter::setGendarmerieLivery(bool on) {
 
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
                             bool fullPilot, float rudder, float cyclicLong,
-                            float cyclicLat, float collective) const {
+                            float cyclicLat, float collective, float rollRad,
+                            float pitchRad) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -520,6 +543,26 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
     for (const Gauge& gauge : m_gauges) {
         drawModel(gauge.model, root * glm::translate(mat4(1.0f), gauge.offset), Pass::Opaque);
     }
+
+    /* Horizon artificiel animé (d'après ai.xml de FlightGear). Roulis : la carte
+       (sky/sol) et la barre tournent autour de X. Tangage : seule la barre se
+       translate verticalement (comme FlightGear), la carte reste en place. Ce cadran
+       est un disque plat (un vrai horizon est une sphère) : un grand déplacement
+       laisserait déborder le ciel sur le sol ou découvrirait le fond noir. On garde
+       donc un tangage discret (facteur -0.0004 m/deg, borné a +-0.008 m). Le repère
+       de la géométrie chargée a la verticale en Y (assimp réoriente le .ac). Le
+       symbole avion et la lunette (m_aiStatic) restent fixes. */
+    if (m_hasAi) {
+        const mat4  aiBase = root * glm::translate(mat4(1.0f), m_aiOffset);
+        const mat4  rollM  = aiBase * glm::rotate(mat4(1.0f), rollRad, vec3{1.0f, 0.0f, 0.0f});
+        const float pitchOffset =
+            glm::clamp(-0.0004f * glm::degrees(pitchRad), -0.008f, 0.008f);
+        const mat4 floatM = rollM * glm::translate(mat4(1.0f), vec3{0.0f, pitchOffset, 0.0f});
+        drawModel(m_aiStatic, aiBase, Pass::Opaque);
+        drawModel(m_aiCard, rollM, Pass::Opaque);
+        drawModel(m_aiFloat, floatM, Pass::Opaque);
+    }
+
     drawModel(m_mainHub, mainBase, Pass::Opaque);
     for (int k = 0; k < MAIN_BLADES; ++k) {
         drawModel(m_mainBlade, mainBladeMat(k), Pass::Opaque);

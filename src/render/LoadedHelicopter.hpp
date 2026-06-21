@@ -47,7 +47,7 @@ public:
        'collective' ([0, +1]) lève le levier de collectif (commande de la main gauche). */
     void draw(Shader& shader, const mat4& base, float rotorAngle, bool fullPilot = true,
               float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
-              float collective = 0.0f) const;
+              float collective = 0.0f, float rollRad = 0.0f, float pitchRad = 0.0f) const;
 
     /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
        translucide à haut régime, voir le code mis en commentaire). 'base' est la
@@ -99,6 +99,17 @@ private:
     Model              m_collectiveLever; /* levier de collectif (pivote avec la commande) */
     Model              m_panel;
     std::vector<Gauge> m_gauges;
+
+    /* Horizon artificiel (indicateur d'assiette) animé : on charge le cadran ai.ac
+       en trois morceaux, pour reproduire l'animation FlightGear (ai.xml). Le statique
+       (lunette, repères, symbole avion) ne bouge pas ; la carte (background, scale)
+       tourne avec le roulis ; la barre d'horizon (float) tourne avec le roulis ET se
+       translate avec le tangage. */
+    Model              m_aiStatic;
+    Model              m_aiCard;
+    Model              m_aiFloat;
+    vec3               m_aiOffset{0.0f};
+    bool               m_hasAi = false;
     Model              m_mainHub;
     Model              m_mainBlade;
     Model              m_tailHub;

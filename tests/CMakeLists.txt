@@ -30,5 +30,8 @@ set_target_properties(artouste_tests PROPERTIES
     CXX_EXTENSIONS        OFF
 )
 
-include(Catch)
-catch_discover_tests(artouste_tests)
+# On enregistre toute la suite comme un seul test ctest (un seul appel du binaire),
+# plutôt qu'un test par cas (catch_discover_tests). Cela évite la réinvocation par
+# nom de CTest, qui sous Windows corrompt les noms de tests accentués (é, è, à) dans
+# les arguments de ligne de commande et fait échouer le filtrage.
+add_test(NAME artouste_tests COMMAND artouste_tests)

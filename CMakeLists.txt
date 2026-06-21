@@ -53,6 +53,9 @@ add_library(artouste_warnings INTERFACE)
 if(MSVC)
     target_compile_options(artouste_warnings INTERFACE
         /W4 /permissive- /Zc:__cplusplus
+        # Sources et chaines en UTF-8 : indispensable pour que les accents francais
+        # (commentaires, libelles du HUD, messages) soient corrects avec MSVC.
+        /utf-8
     )
     # getenv et consorts sont standard et portables : on coupe les avertissements
     # MSVC qui poussent vers leurs variantes _s non portables.

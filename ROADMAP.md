@@ -26,6 +26,8 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Il manque le skin du rotor arrière
 
+- [x] Il manque une map pour se situer
+
 ### Ombre hélicopter
 
 - [ ] Elle est trop foncée/sombre

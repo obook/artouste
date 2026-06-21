@@ -1,0 +1,3 @@
+# Helipads - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime) (un par ligne : lon lat nom)
+# Positions approximatives, a affiner sur place.
+-1.116442178115823 44.596643236436016 Aérodrome de La Teste

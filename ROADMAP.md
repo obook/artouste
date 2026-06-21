@@ -64,6 +64,10 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 > unique est drapé de l'orthophoto, les altitudes servent au contact sol. Détails
 > et comparaison des autres pistes dans `docs/TERRAIN.md`. Les pistes notées plus
 > bas (Copernicus DEM, GDAL, LOD) restent des évolutions possibles.
+>
+> Plusieurs maps sont désormais livrées et choisies par la clé `terrain` de la
+> configuration : `ossau` (montagne), `cote-landes` (côte basco-landaise) et
+> `arcachon` (bassin d'Arcachon, du Cap Ferret à Marcheprime, de Biscarrosse à Arès).
 
 Pour le terrain en C++/OpenGL, les pistes les plus directes :
 - [x] Données d'élévation
@@ -121,7 +125,8 @@ ou sortir de France.
   plat), murs clairs et toits tuile. Outil hors-ligne `tools/fetch_buildings.py`
   (filtre les constructions < 2 m) -> `assets/terrain/<zone>/buildings.bin` ;
   rendu par `render::Buildings` en un maillage statique unique, éclairé et noyé
-  dans la même brume que le terrain. Côte basco-landaise : ~156 000 bâtiments.
+  dans la même brume que le terrain. Côte basco-landaise : ~156 000 bâtiments ;
+  bassin d'Arcachon : ~187 000 bâtiments.
 
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
   niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.

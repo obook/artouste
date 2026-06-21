@@ -176,8 +176,10 @@ blender --background --python tools/helipad/make_helipad.py
 ## Terrain (choix de la map)
 
 Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par
-exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne) et
-`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau).
+exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
+`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau)
+et `assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
+de Biscarrosse à Arès).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -211,8 +213,8 @@ terrain cote-landes
 ```
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
-doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau` ou
-`cote-landes`).
+doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
+`cote-landes` ou `arcachon`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :
@@ -254,8 +256,8 @@ alourdir la scène ; en montagne (Ossau), le seuil est à 0 pour garder les caba
 et bergeries, utiles au repérage.
 
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
-bâtiments. La côte basco-landaise en compte environ 156 000, la vallée d'Ossau
-environ 765.
+bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise
+environ 156 000, la vallée d'Ossau environ 765.
 
 ## Licence
 

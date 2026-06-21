@@ -105,6 +105,34 @@ ZONES = {
             ("Hossegor", -1.4438385382046726, 43.661316497891036),
         ],
     },
+    # Bassin d'Arcachon et son arrière-pays : de la côte atlantique et du Cap Ferret
+    # à l'ouest jusqu'à Marcheprime à l'est (vers Bordeaux), et de Lège / Arès au nord
+    # jusqu'à Biscarrosse et ses étangs au sud. Bord de mer : l'océan, le bassin et
+    # les grands étangs (Cazaux-Sanguinet) sont aplanis en eau unie.
+    "arcachon": {
+        "bbox": (-1.28, -0.83, 44.36, 44.80),
+        "recolor_sea": True,
+        "start": (-1.111, 44.596),  # aérodrome de La Teste, replat boisé loin de l'eau
+        "title": "bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime)",
+        "landmarks": [
+            ("Arcachon", -1.1683, 44.6586),
+            ("Cap Ferret", -1.2486, 44.6336),
+            ("Dune du Pilat", -1.2114, 44.5886),
+            ("La Teste-de-Buch", -1.1450, 44.6314),
+            ("Gujan-Mestras", -1.0697, 44.6361),
+            ("Biganos", -0.9744, 44.6453),
+            ("Audenge", -1.0186, 44.6839),
+            ("Andernos-les-Bains", -1.1044, 44.7436),
+            ("Arès", -1.1392, 44.7686),
+            ("Marcheprime", -0.8506, 44.6953),
+            ("Biscarrosse", -1.1664, 44.3936),
+            ("Biscarrosse-Plage", -1.2461, 44.4564),
+        ],
+        # Coordonnées relevées sur Google Maps.
+        "helipads": [
+            ("Aérodrome de La Teste", -1.116442178115823, 44.596643236436016),
+        ],
+    },
 }
 DEFAULT_ZONE = "ossau"
 

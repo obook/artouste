@@ -1,0 +1,14 @@
+# Lieux remarquables - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+-1.1683 44.6586 Arcachon
+-1.2486 44.6336 Cap Ferret
+-1.2114 44.5886 Dune du Pilat
+-1.145 44.6314 La Teste-de-Buch
+-1.0697 44.6361 Gujan-Mestras
+-0.9744 44.6453 Biganos
+-1.0186 44.6839 Audenge
+-1.1044 44.7436 Andernos-les-Bains
+-1.1392 44.7686 Arès
+-0.8506 44.6953 Marcheprime
+-1.1664 44.3936 Biscarrosse
+-1.2461 44.4564 Biscarrosse-Plage

@@ -67,7 +67,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Retravailler les sons, en ajoutant ceux d'Émmanuel.
 
-- [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale 
+- [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale
+
+### Mode demo
+
+- [ ] Prévoir un mode démo automatique d'environ 60 secondes, démarrage rapide turbine 10 secondes puis collectif 10 secondes, vol au dessus de batiments, vue sur la mer, attérissage élégants sur pad, plan de vol et changement des vues à définir.
 
 ## Terrain
 
@@ -155,6 +159,12 @@ ou sortir de France.
 
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
   niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
+  
+- [ ] Mettre aussi les batiments pour la carte Artouste 
+
+### Sons
+
+- [ ] pendant le début de montée de la rurbine, j'entends les pales => mettre le son des pales lorsque elles ont à 70% de 360 tr/min
 
 ### Manuel
 

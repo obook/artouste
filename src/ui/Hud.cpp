@@ -241,6 +241,12 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
     const float  m       = 14.0f;  /* marge depuis les bords */
 
     if (mode == HudMode::Corners) {
+        /* Même vert instrument que le Super HUD, pour unifier les deux affichages.
+         * Les textes d'alerte (TextColored) gardent leur couleur propre ; la barre
+         * du palonnier passe au vert via la couleur d'histogramme. */
+        ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, HUD_GREEN);
+
         corner("hud_tl", ImVec2(m, m), ImVec2(0.0f, 0.0f));
         ImGui::Text("ALT  %5.0f m", static_cast<double>(data.altitudeM));
         ImGui::Text("V/S  %+5.0f ft/min", static_cast<double>(data.varioFpm));
@@ -276,6 +282,8 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
             ImGui::TextColored(ImVec4(0.4f, 0.9f, 1.0f, 1.0f), "MODE ASSISTE");
         }
         ImGui::End();
+
+        ImGui::PopStyleColor(2);
     } else if (mode == HudMode::Overlay) {
         /* Super HUD : rang d'instruments ronds verts superposés en bas de l'image
          * (Priorité 1 de PANEL.md), assez bas pour ne pas gêner la vue de vol. */

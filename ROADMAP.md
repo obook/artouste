@@ -2,7 +2,13 @@
 
 ## Plateforme
 
-- [ ] Étudier une version pour Microsoft Windows
+- [x] Étudier une version pour Microsoft Windows
+
+    Portage implémenté : code rendu portable (recherche du dossier du binaire via
+    GetModuleFileNameW sous Windows), build CMake autonome (dépendances et runtime
+    MSVC en statique), et CI GitHub Actions qui publie les exécutables Linux et
+    Windows (voir `.github/workflows/release.yml`). À valider au premier build
+    Windows de la CI.
 
 ## Super HUD
 

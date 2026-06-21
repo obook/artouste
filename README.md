@@ -78,6 +78,15 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Reset position          | `R`            | bouton `X`           |
 | Quitter                 | `Échap`        | `LB` + `RB`          |
 
+## Téléchargement
+
+Des exécutables prêts à l'emploi pour Linux et Windows sont publiés dans la
+section [Releases](https://github.com/obook/artouste/releases) du dépôt. Chaque
+archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
+`artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
+sont construites automatiquement par GitHub Actions à chaque version
+(voir `.github/workflows/release.yml`).
+
 ## Compilation (Linux)
 
 ```bash
@@ -89,7 +98,23 @@ ctest --test-dir build --output-on-failure
 
 Dépendances récupérées automatiquement (FetchContent) : GLFW, GLAD, GLM,
 Dear ImGui, Assimp, stb, miniaudio, Catch2. Prérequis système : pilotes
-OpenGL, bibliothèques X11/Wayland, et un compilateur C++20.
+OpenGL, bibliothèques X11/Wayland, Python 3 (pour la génération de GLAD), et un
+compilateur C++20.
+
+## Compilation (Windows)
+
+Avec Visual Studio 2022 (MSVC) et CMake. Python 3 doit être installé et dans le
+PATH (génération de GLAD). Dans une invite de commande Developer :
+
+```bat
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j
+ctest --test-dir build -C Release --output-on-failure
+build\Release\artouste.exe
+```
+
+Les bibliothèques tierces et le runtime C++ sont liés en statique : l'exécutable
+est autonome, sans DLL ni redistribuable Visual C++ à installer.
 
 ### Avec VSCode
 
@@ -110,8 +135,9 @@ cmake --build build -j
 cd build && cpack
 ```
 
-Produit une archive `artouste-<version>-<système>.tar.gz` contenant le binaire
-et les shaders.
+Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
+`.zip` sous Windows) contenant le binaire autonome et toutes les ressources
+(shaders, modèle 3D, sons, terrain, textures), prête à distribuer.
 
 ## Modèle 3D et sons
 

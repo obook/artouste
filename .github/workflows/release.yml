@@ -1,0 +1,103 @@
+name: Release
+
+# Construit les exécutables Linux et Windows et publie une release GitHub avec
+# les deux archives. Se déclenche au push d'un tag de version (v1.2.3), ou
+# manuellement depuis l'onglet Actions.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GLFW a besoin des en-têtes X11 et OpenGL ; GLAD génère ses sources via
+      # Python (déjà présent sur le runner).
+      - name: Installer les dépendances système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorg-dev libgl1-mesa-dev
+
+      # Accélère les builds suivants : on garde les sources tierces clonées par
+      # FetchContent (assimp est volumineux).
+      - name: Cache des dépendances FetchContent
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-linux-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configurer
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compiler
+        run: cmake --build build -j
+
+      - name: Tester
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Empaqueter
+        run: cd build && cpack
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artouste-linux
+          path: build/artouste-*.tar.gz
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache des dépendances FetchContent
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-windows-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configurer
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compiler
+        run: cmake --build build --config Release -j
+
+      - name: Tester
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Empaqueter
+        run: cd build && cpack -C Release
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artouste-windows
+          path: build/artouste-*.zip
+          if-no-files-found: error
+
+  release:
+    name: Publier la release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    # Une release n'est créée que pour un tag, pas pour un lancement manuel.
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Récupérer les artefacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artefacts
+
+      - name: Créer la release GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artefacts/**/artouste-*
+          generate_release_notes: true

@@ -52,7 +52,12 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Ombre hélicopter
 
-- [ ] Elle est trop foncée/sombre
+- [x] Elle est trop foncée/sombre
+
+    Ombre éclaircie (opacité 0,22 au lieu de 0,35) et adoucie : dégradé radial
+    plein au centre puis estompé jusqu'à zéro sur le pourtour (contour flou, plus
+    de disque noir net), via le shader `shadow` et la primitive `softDisc`. Les
+    deux disques (rotor et fuselage) sont centrés sur l'axe du rotor principal.
 
 ### Turbine
 
@@ -127,12 +132,13 @@ ou sortir de France.
 
 - [x] Permettre de choisir le terrain par le fichier de configuration. Chaque
   terrain est rangé dans son sous-dossier `assets/terrain/<nom>/` (`heightmap.png`,
-  `ortho.jpg`, `terrain.txt`, `landmarks.txt`) ; la clé `terrain` de
-  `assets/config.txt` (ou la variable d'environnement `ARTOUSTE_TERRAIN`) choisit
-  lequel charger au lancement. Le script `tools/fetch_terrain.py` est paramétré par
-  zone (dictionnaire `ZONES`, nom passé en argument). Terrain livré : `ossau`
-  (montagne). Zone décrite et prête à générer : `cote-landes` (côte basco-landaise,
-  Bayonne -> Vieux-Boucau) -- lancer `tools/fetch_terrain.py cote-landes`.
+  `ortho.jpg`, `terrain.txt`, `landmarks.txt`, et selon le terrain `helipads.txt`
+  et `buildings.bin`) ; la clé `terrain` de `assets/config.txt` (ou la variable
+  d'environnement `ARTOUSTE_TERRAIN`) choisit lequel charger au lancement. Le script
+  `tools/fetch_terrain.py` est paramétré par zone (dictionnaire `ZONES`, nom passé en
+  argument). Terrains livrés : `ossau` (montagne) et `cote-landes` (côte
+  basco-landaise, Bayonne -> Vieux-Boucau, avec hélipads, villes-repères et
+  bâtiments 3D).
 
     Reste possible plus tard : un menu en jeu et le changement de terrain à chaud
     (sans relancer). Le moteur recharge déjà tout au démarrage ; un changement à

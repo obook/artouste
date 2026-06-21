@@ -24,6 +24,8 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] L'ombre des pales est centrée sur le centre de gravité, il faut le centrer sur le rotor principal
 
+- [ ] Il manque le skin du rotor arrière
+
 ### Ombre hélicopter
 
 - [ ] Elle est trop foncée/sombre

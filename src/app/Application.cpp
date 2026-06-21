@@ -25,6 +25,7 @@
 #include <GLFW/glfw3.h>
 
 #include "app/Clock.hpp"
+#include "app/Config.hpp"
 #include "input/InputSystem.hpp"
 #include "physics/RigidBody.hpp"
 #include "render/HelicopterModel.hpp"
@@ -34,6 +35,7 @@
 #include "render/ModelLoader.hpp"
 #include "render/Primitives.hpp"
 #include "render/Shader.hpp"
+#include "render/Buildings.hpp"
 #include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
 #include "util/Math.hpp"
@@ -105,22 +107,6 @@ constexpr float   NAV_RADIUS = 0.07f;                   /* rayon du coeur d'un f
  */
 const vec3        NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
 constexpr float   NOZZLE_RADIUS = 0.24f;
-
-/*
- * Lieux remarquables du terrain (nom + coordonnées WGS84) : étiquetés sur la scène
- * et pointés sur la minimap. Ceux hors de l'emprise du terrain courant sont ignorés.
- */
-struct Landmark {
-    const char* name;
-    float       lon;
-    float       lat;
-};
-const Landmark LANDMARKS[] = {
-    {"Lac d'Artouste", -0.3325f, 42.8589f},
-    {"Pic du Midi d'Ossau", -0.4380f, 42.8430f},
-    {"Pic Palas", -0.3600f, 42.8400f},
-    {"Fabrèges", -0.4130f, 42.9050f},
-};
 
 /*
  * Rotor principal (animation visuelle) :
@@ -228,6 +214,7 @@ Application::~Application() {
     m_input.reset();
     m_loadedHeli.reset();
     m_helicopter.reset();
+    m_buildings.reset();
     m_terrain.reset();
     m_sea.reset();
     m_shadowDisc.reset();
@@ -236,6 +223,8 @@ Application::~Application() {
     m_helipadModel.reset();
     m_sky.reset();
     m_flatShader.reset();
+    m_shadowShader.reset();
+    m_buildingShader.reset();
     m_skyShader.reset();
     m_seaShader.reset();
     m_terrainShader.reset();
@@ -316,9 +305,13 @@ void Application::initScene() {
                                                      assets / "shaders" / "sky.frag");
     m_flatShader  = std::make_unique<render::Shader>(assets / "shaders" / "flat.vert",
                                                      assets / "shaders" / "flat.frag");
+    m_shadowShader = std::make_unique<render::Shader>(assets / "shaders" / "shadow.vert",
+                                                      assets / "shaders" / "shadow.frag");
+    m_buildingShader = std::make_unique<render::Shader>(assets / "shaders" / "building.vert",
+                                                        assets / "shaders" / "building.frag");
     m_sky         = std::make_unique<render::Skybox>();
 
-    const auto discData = render::primitives::disc(6.0f, 48, vec3{0.0f, 0.0f, 0.0f});
+    const auto discData = render::primitives::softDisc(6.0f, 48);
     m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
 
     /* Petite sphère unité, réutilisée (mise à l'échelle au dessin) pour le flash du
@@ -354,8 +347,25 @@ void Application::initScene() {
     const std::vector<unsigned int> seaIdx = {0, 1, 2, 0, 2, 3};
     m_sea = std::make_unique<render::Mesh>(seaVerts, seaIdx);
 
-    /* Terrain réel de la vallée d'Ossau (relief IGN + orthophoto drapée). */
-    m_terrain = std::make_unique<render::Terrain>(assets / "terrain");
+    /*
+     * Terrain réel (relief IGN + orthophoto drapée). Le terrain à charger est un
+     * sous-dossier de assets/terrain/ (par exemple "ossau" ou "cote-landes"),
+     * choisi par la clé "terrain" du fichier de configuration. La variable
+     * d'environnement ARTOUSTE_TERRAIN, si elle est définie, a la priorité (pratique
+     * pour tester une autre map sans toucher au fichier).
+     */
+    const app::Config config = app::loadConfig(assets / "config.txt");
+    std::string        terrainName = config.terrain;
+    if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
+        terrainName = env;
+    }
+    std::printf("[scène] terrain : %s\n", terrainName.c_str());
+    const std::filesystem::path terrainDir = assets / "terrain" / terrainName;
+    m_terrain = std::make_unique<render::Terrain>(terrainDir);
+
+    /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
+       Absents (fichier buildings.bin manquant) : rien n'est dessiné. */
+    m_buildings = std::make_unique<render::Buildings>(terrainDir, *m_terrain);
 
     /*
      * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du
@@ -688,54 +698,86 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
     }
 
     /*
-     * Hélipad de la zone de départ : posé à plat au point de départ, juste au-dessus
-     * du sol pour rester visible sans accrocher le relief. C'est là que l'appareil
-     * démarre et que le reset (touche X ou R) le ramène.
+     * Bâtiments 3D extrudés (BD TOPO) : éclairés et noyés dans la même brume que le
+     * terrain pour un raccord cohérent au loin. Maillage statique unique ; rien si
+     * le terrain n'en fournit pas.
+     */
+    if (m_buildings && m_buildings->built()) {
+        m_buildingShader->use();
+        m_buildingShader->setMat4("u_view", view);
+        m_buildingShader->setMat4("u_proj", proj);
+        m_buildingShader->setMat4("u_model", mat4(1.0f));
+        m_buildingShader->setVec3("u_lightDir", lightDir);
+        m_buildingShader->setVec3("u_camPos", m_camera.position());
+        m_buildingShader->setVec3("u_fogColor", FOG_COLOR);
+        m_buildingShader->setFloat("u_fogStart", FOG_START);
+        m_buildingShader->setFloat("u_fogEnd", FOG_END);
+        m_buildings->draw();
+    }
+
+    /*
+     * Hélipads : celui de la zone de départ (où l'appareil démarre et où le reset,
+     * touche X ou R, le ramène), plus ceux propres au terrain (hôpital, ports...)
+     * listés dans helipads.txt. Chacun est posé à plat juste au-dessus du sol pour
+     * rester visible sans accrocher le relief.
      */
     if (m_helipad) {
-        /* Le sol peut être en pente : on pose le disque juste au-dessus du point le
-           plus haut du relief sous l'emprise du pad. On échantillonne sur une petite
-           grille couvrant tout le pad (pas seulement les 4 cardinaux), sinon le point
-           haut d'une pente oblique passe entre les mailles et un bord s'enfonce. */
-        constexpr float padRadius = 7.0f;
-        float           padTop    = m_startPos.y;
-        for (int ix = -2; ix <= 2; ++ix) {
-            for (int iz = -2; iz <= 2; ++iz) {
-                const float sx = m_startPos.x + 0.5f * padRadius * static_cast<float>(ix);
-                const float sz = m_startPos.z + 0.5f * padRadius * static_cast<float>(iz);
-                padTop          = std::fmax(padTop, m_terrain->heightAt(sx, sz));
+        /* Le disque du pad est quasiment dans le plan du sol : avec le test de
+           profondeur, les deux se disputaient la profondeur et le pad se brisait en
+           damier (z-fighting), surtout posé au ras de l'eau (Capbreton). Le pad est un
+           décalque au sol, dessiné AVANT l'appareil : on désactive son test de
+           profondeur, il se pose donc simplement sur ce qui est déjà rendu (terrain ou
+           mer) sans jamais se disputer la profondeur. Il n'écrit pas non plus la
+           profondeur ; l'appareil, dessiné après, le recouvre proprement. */
+        glDepthMask(GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
+
+        /* Pose un hélipad à plat au point (x, z) du monde, juste au-dessus du sol.
+           On cale le disque sur la hauteur du sol AU CENTRE, c'est-à-dire le niveau
+           où repose l'appareil : ainsi les patins touchent toujours le pad. (Sur une
+           forte pente, le bord amont du disque peut affleurer le relief, moindre mal
+           comparé à un pad qui flotterait au-dessus des patins.) */
+        const auto drawPad = [&](float x, float z) {
+            const float padTop  = m_terrain->heightAt(x, z);
+            const mat4 padModel = glm::translate(mat4(1.0f), vec3{x, padTop + 0.08f, z});
+            if (m_helipadModel) {
+                /* Version texturée (modèle Blender), dessinée avec le shader des modèles. */
+                m_modelShader->use();
+                m_modelShader->setMat4("u_view", view);
+                m_modelShader->setMat4("u_proj", proj);
+                m_modelShader->setMat4("u_model", padModel);
+                m_modelShader->setVec3("u_lightDir", lightDir);
+                m_modelShader->setVec3("u_camPos", m_camera.position());
+                m_modelShader->setInt("u_texture", 0);
+                m_helipadModel->draw(*m_modelShader, render::Pass::Opaque);
+            } else {
+                /* Repli procédural (aplats de couleur). */
+                m_shader->use();
+                m_shader->setMat4("u_view", view);
+                m_shader->setMat4("u_proj", proj);
+                m_shader->setMat4("u_model", padModel);
+                m_shader->setVec3("u_lightDir", lightDir);
+                m_helipad->draw();
+            }
+        };
+
+        /* Hélipad de départ. */
+        drawPad(m_startPos.x, m_startPos.z);
+
+        /* Hélipads du terrain, convertis de lon/lat en position monde et ignorés
+           s'ils tombent hors de l'emprise courante. */
+        const float halfW = m_terrain->halfWidth();
+        const float halfH = m_terrain->halfHeight();
+        for (const render::Landmark& pad : m_terrain->helipads()) {
+            float x = 0.0f, z = 0.0f;
+            m_terrain->worldAt(pad.lon, pad.lat, x, z);
+            if (std::fabs(x) <= halfW && std::fabs(z) <= halfH) {
+                drawPad(x, z);
             }
         }
-        const mat4 padModel =
-            glm::translate(mat4(1.0f), vec3{m_startPos.x, padTop + 0.06f, m_startPos.z});
 
-        /* Le pad est quasiment dans le plan du terrain : sans précaution, les deux
-           surfaces se disputent la profondeur et scintillent (z-fighting). Le décalage
-           de polygones biaise la profondeur du pad vers l'avant pour qu'il l'emporte
-           toujours proprement sur le sol, quelle que soit la distance. */
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(-1.0f, -1.0f);
-        if (m_helipadModel) {
-            /* Version texturée (modèle Blender), dessinée avec le shader des modèles. */
-            m_modelShader->use();
-            m_modelShader->setMat4("u_view", view);
-            m_modelShader->setMat4("u_proj", proj);
-            m_modelShader->setMat4("u_model", padModel);
-            m_modelShader->setVec3("u_lightDir", lightDir);
-            m_modelShader->setVec3("u_camPos", m_camera.position());
-            m_modelShader->setInt("u_texture", 0);
-            m_helipadModel->draw(*m_modelShader, render::Pass::Opaque);
-        } else {
-            /* Repli procédural (aplats de couleur). */
-            m_shader->use();
-            m_shader->setMat4("u_view", view);
-            m_shader->setMat4("u_proj", proj);
-            m_shader->setMat4("u_model", padModel);
-            m_shader->setVec3("u_lightDir", lightDir);
-            m_helipad->draw();
-        }
-        glPolygonOffset(0.0f, 0.0f);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
     }
 
     /*
@@ -748,11 +790,18 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
     const vec3  heliPos     = vec3(base[3]);
     const float ground      = m_terrain->heightAt(heliPos.x, heliPos.z);
     const float altitude    = heliPos.y - ground > 0.0f ? heliPos.y - ground : 0.0f;
-    const float shadowAlpha = 0.35f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
+    const float shadowAlpha = 0.22f * clamp(1.0f - altitude / 40.0f, 0.0f, 1.0f);
     if (shadowAlpha > 0.01f) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        /* Posée sur un hélipad, l'ombre (juste au-dessus du sol) se retrouve très
+           proche en profondeur du disque du pad : avec le test de profondeur, elle se
+           dessinait en damier sur le pad (z-fighting). L'ombre est un décalque au sol
+           dessiné AVANT l'appareil ; on désactive donc son test de profondeur, si bien
+           qu'elle se fond simplement sur ce qui est déjà au sol (terrain ou pad) sans
+           jamais se disputer la profondeur. L'appareil, dessiné après, la recouvre. */
         glDepthMask(GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
         const float scaleXZ = 1.0f + altitude * 0.02f;
         const float radius  = 6.0f * scaleXZ;  /* rayon du disque rotor (m), cf. disc(6, ...) */
 
@@ -775,9 +824,9 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
             return t;
         };
 
-        m_flatShader->use();
-        m_flatShader->setMat4("u_view", view);
-        m_flatShader->setMat4("u_proj", proj);
+        m_shadowShader->use();
+        m_shadowShader->setMat4("u_view", view);
+        m_shadowShader->setMat4("u_proj", proj);
 
         /* Disque rotor : centré sous l'axe du mât (et non sous le centre de
            l'appareil), pour que l'ombre des pales tombe au bon endroit. Le mât est
@@ -791,21 +840,26 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         if (rotorShadowAlpha > 0.01f) {
             const vec3 rotorShadowPos{rotorCenter.x, topUnder(rotorCenter, radius) + 0.30f,
                                       rotorCenter.z};
-            m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), rotorShadowPos) *
-                                                 glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
-            m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, rotorShadowAlpha});
+            m_shadowShader->setMat4("u_model", glm::translate(mat4(1.0f), rotorShadowPos) *
+                                                   glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
+            m_shadowShader->setFloat("u_alpha", rotorShadowAlpha);
             m_shadowDisc->draw();
         }
 
-        /* Fuselage : petit disque dense, toujours présent, sous le centre de l'appareil. */
+        /* Fuselage : petit disque dense centré sur l'axe du rotor principal (le mât),
+           comme l'ombre du rotor -- les deux disques sont ainsi concentriques sous le
+           rotor. */
+        const vec3  bodyCenter = rotorCenter;
         const float bodyScale  = scaleXZ * (2.8f / 6.0f);  /* empreinte fuselage ~2,8 m */
         const float bodyRadius = 2.8f * scaleXZ;
-        const vec3  bodyShadowPos{heliPos.x, topUnder(heliPos, bodyRadius) + 0.30f, heliPos.z};
-        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), bodyShadowPos) *
-                                             glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
-        m_flatShader->setVec4("u_color", vec4{0.0f, 0.0f, 0.0f, shadowAlpha});
+        const vec3  bodyShadowPos{bodyCenter.x, topUnder(bodyCenter, bodyRadius) + 0.30f,
+                                  bodyCenter.z};
+        m_shadowShader->setMat4("u_model", glm::translate(mat4(1.0f), bodyShadowPos) *
+                                               glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
+        m_shadowShader->setFloat("u_alpha", shadowAlpha);
         m_shadowDisc->draw();
 
+        glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
@@ -937,17 +991,17 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     hud.mapHeliV      = heliPos.z / (2.0f * halfH) + 0.5f;
     hud.mapHeadingDeg = headingDeg;
 
-    /* Étiquettes : on projette chaque lieu remarquable (situé dans l'emprise) sur
-       l'écran, légèrement au-dessus du sol. */
+    /* Étiquette 3D + point minimap d'un lieu (nom + position WGS84), s'il tombe dans
+       l'emprise du terrain courant. Projetée légèrement au-dessus du sol. */
     const mat4 viewProj = m_camera.proj() * m_camera.view();
-    for (const Landmark& lm : LANDMARKS) {
+    const auto addLabel = [&](const render::Landmark& place) {
         float x = 0.0f, z = 0.0f;
-        m_terrain->worldAt(lm.lon, lm.lat, x, z);
+        m_terrain->worldAt(place.lon, place.lat, x, z);
         if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
-            continue;  /* hors du terrain courant */
+            return;  /* hors du terrain courant */
         }
         ui::HudLabel label;
-        label.name = lm.name;
+        label.name = place.name.c_str();
         label.mapU = x / (2.0f * halfW) + 0.5f;
         label.mapV = z / (2.0f * halfH) + 0.5f;
 
@@ -962,6 +1016,14 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
             }
         }
         hud.labels.push_back(label);
+    };
+
+    /* Lieux remarquables, puis hélipads : mêmes étiquettes 3D et points sur la minimap. */
+    for (const render::Landmark& lm : m_terrain->landmarks()) {
+        addLabel(lm);
+    }
+    for (const render::Landmark& pad : m_terrain->helipads()) {
+        addLabel(pad);
     }
 }
 

@@ -138,6 +138,25 @@ MeshData disc(float radius, int segments, const vec3& color) {
     return out;
 }
 
+MeshData softDisc(float radius, int segments) {
+    MeshData   out;
+    const vec3 up{0.0f, 1.0f, 0.0f};
+    /* Centre : facteur de bord 0 (canal rouge à 0). */
+    out.vertices.push_back({vec3{0.0f, 0.0f, 0.0f}, up, vec3{0.0f, 0.0f, 0.0f}});
+    /* Pourtour : facteur de bord 1 (canal rouge à 1), lu par le shader d'ombre. */
+    const vec3 edge{1.0f, 1.0f, 1.0f};
+    for (int i = 0; i <= segments; ++i) {
+        const float a = static_cast<float>(i) * (TWO_PI / static_cast<float>(segments));
+        out.vertices.push_back({vec3{radius * std::cos(a), 0.0f, radius * std::sin(a)}, up, edge});
+    }
+    for (int i = 1; i <= segments; ++i) {
+        out.indices.push_back(0);
+        out.indices.push_back(static_cast<unsigned int>(i));
+        out.indices.push_back(static_cast<unsigned int>(i + 1));
+    }
+    return out;
+}
+
 MeshData sphere(float radius, int rings, int sectors, const vec3& color) {
     MeshData out;
     /* Grille de sommets en (latitude, longitude). La latitude va du pôle bas au

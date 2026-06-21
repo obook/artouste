@@ -26,6 +26,7 @@ struct GLFWwindow;
 namespace artouste::render {
 class Shader;
 class Terrain;
+class Buildings;
 class HelicopterModel;
 class LoadedHelicopter;
 class Skybox;
@@ -89,7 +90,9 @@ private:
     std::unique_ptr<render::Shader>           m_terrainShader; /* terrain réel drapé d'orthophoto */
     std::unique_ptr<render::Shader>           m_seaShader;     /* plan de mer avec brume */
     std::unique_ptr<render::Shader>           m_skyShader;     /* ciel en dégradé */
-    std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (ombre) */
+    std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (lueurs) */
+    std::unique_ptr<render::Shader>           m_shadowShader;  /* ombre portée douce (dégradé) */
+    std::unique_ptr<render::Shader>           m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
     std::unique_ptr<render::Mesh>             m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -97,6 +100,7 @@ private:
     std::unique_ptr<render::Model>           m_helipadModel;  /* hélipad texturé (modèle Blender) */
     std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain>          m_terrain;
+    std::unique_ptr<render::Buildings>        m_buildings;     /* bâtiments 3D (BD TOPO extrudée) */
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;

@@ -48,6 +48,13 @@ struct MeshData {
 [[nodiscard]] MeshData disc(float radius, int segments, const vec3& color);
 
 /*
+ * Disque plat dégradé (plan XZ, normale +Y) pour l'ombre portée douce : le canal
+ * rouge de la couleur vaut 0 au centre et 1 sur le pourtour. Le shader d'ombre s'en
+ * sert pour estomper l'opacité vers le bord (contour flou).
+ */
+[[nodiscard]] MeshData softDisc(float radius, int segments);
+
+/*
  * Sphère UV centrée sur l'origine, de rayon donné. 'rings' compte les tranches
  * en latitude, 'sectors' les quartiers en longitude. Sert aux petites lueurs
  * (strombo, tuyère) dessinées avec le shader plat.

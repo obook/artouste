@@ -1,0 +1,10 @@
+# Configuration du simulateur Artouste (format "cle valeur", editable a la main).
+# Une cle et sa valeur par ligne ; une ligne commencant par # est un commentaire.
+# Toute cle absente garde sa valeur par defaut.
+
+# terrain : sous-dossier de assets/terrain/ a charger au lancement.
+# Terrains disponibles :
+#   ossau        vallee d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
+#   cote-landes  cote basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
+# La variable d'environnement ARTOUSTE_TERRAIN, si definie, a la priorite.
+terrain ossau

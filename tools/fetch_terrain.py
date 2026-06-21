@@ -2,23 +2,26 @@
 # -*- coding: utf-8 -*-
 """
 fetch_terrain.py
-Télécharge les données du terrain réel d'Artouste depuis la Géoplateforme IGN,
-sur la vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau, ~2884 m) :
+Télécharge les données d'un terrain réel d'Artouste depuis la Géoplateforme IGN.
+Plusieurs zones sont décrites dans le dictionnaire ZONES ci-dessous ; on en choisit
+une au lancement (par défaut "ossau"). Pour chaque zone, le script produit :
 
   - le relief, échantillonné sur une grille via l'API altimétrie (RGE ALTI),
     enregistré en carte d'altitude PNG 16 bits (heightmap.png) ;
   - l'orthophoto (BD ORTHO) via le service WMS, enregistrée en ortho.jpg ;
-  - les métadonnées de calage (terrain.txt) lues par le moteur.
+  - les métadonnées de calage (terrain.txt) lues par le moteur ;
+  - les lieux remarquables de la zone (landmarks.txt).
 
-Zone de montagne sans mer (RECOLOR_SEA = False) : on ne bleuit donc pas le blanc
-de la photo, qui serait de la neige ou des glaciers. Le blanc de no-data en
-bordure de couverture est comblé par une teinte de rocaille (voir fill_nodata).
+Chaque zone porte son drapeau RECOLOR_SEA : en bord de mer (True), la mer de la
+BD ORTHO (blanche au large, en mosaïque près du bord) est aplanie en une couleur
+unie ; en montagne (False), on ne bleuit pas le blanc de la photo (neige, glaciers)
+et on comble seulement le no-data de bordure par une teinte de rocaille.
 
 Données : IGN Géoplateforme, Licence Ouverte Etalab 2.0.
 Dépendances : Python 3, Pillow (PIL), NumPy, SciPy. Aucun GDAL requis.
 
-Usage : python3 tools/fetch_terrain.py
-Sortie : assets/terrain/{heightmap.png, ortho.jpg, terrain.txt}
+Usage : python3 tools/fetch_terrain.py [zone]   (zone par défaut : ossau)
+Sortie : assets/terrain/<zone>/{heightmap.png, ortho.jpg, terrain.txt, landmarks.txt}
 
 Auteur : O. Booklage
 Licence : GPL v2
@@ -40,12 +43,66 @@ import numpy as np
 from PIL import Image, ImageFilter
 from scipy import ndimage
 
-# --- Zone et résolution ------------------------------------------------------
-# Emprise géographique (WGS84) : vallée d'Ossau, autour du lac d'Artouste et du
-# pic du Midi d'Ossau (2884 m). C'est le lieu-titre du projet (la turbine Artouste
-# de l'Alouette II est nommée d'après ce massif). Entièrement en France.
-LON_MIN, LON_MAX = -0.52, -0.30
-LAT_MIN, LAT_MAX = 42.80, 42.96
+# --- Zones disponibles -------------------------------------------------------
+# Chaque zone décrit une emprise géographique (WGS84), son comportement vis-à-vis
+# de la mer (recolor_sea), son point de départ du vol et ses lieux remarquables.
+# Pour ajouter une zone : copier une entrée et changer les bornes. La sortie va
+# dans assets/terrain/<nom>/.
+#
+#   bbox        : (lon_min, lon_max, lat_min, lat_max)
+#   recolor_sea : True en bord de mer (mer aplanie), False en montagne (sans mer).
+#                 Pilote aussi le plan de mer du moteur (clé "sea" du calage).
+#   start       : (lon, lat) du point de départ ; le script affine sur le replat
+#                 le plus proche (voir find_flat_start).
+#   title       : libellé écrit en commentaire dans terrain.txt.
+#   landmarks   : liste de (nom, lon, lat) étiquetés sur la scène et la minimap.
+#   helipads    : liste de (nom, lon, lat) où poser un hélipad (hôpital, port...).
+#                 Facultatif ; l'hélipad de départ du vol est ajouté à part.
+ZONES = {
+    # Vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau, ~2884 m) : le lieu-titre
+    # du projet (la turbine Artouste de l'Alouette II est nommée d'après ce massif).
+    # Montagne sans mer.
+    "ossau": {
+        "bbox": (-0.52, -0.30, 42.80, 42.96),
+        "recolor_sea": False,
+        "start": (-0.413, 42.905),  # Fabrèges, fond de vallée plat (~1230 m)
+        "title": "vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)",
+        "landmarks": [
+            ("Lac d'Artouste", -0.3325, 42.8589),
+            ("Pic du Midi d'Ossau", -0.4380, 42.8430),
+            ("Pic Palas", -0.3600, 42.8400),
+            ("Fabrèges", -0.4130, 42.9050),
+        ],
+    },
+    # Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud
+    # jusqu'à Vieux-Boucau-les-Bains au nord. Bord de mer : l'océan à l'ouest est
+    # hors couverture BD ORTHO (blanc) et se fait aplanir en mer unie.
+    "cote-landes": {
+        "bbox": (-1.62, -1.30, 43.46, 43.81),
+        "recolor_sea": True,
+        "start": (-1.43, 43.66),  # arrière-plage plate vers Hossegor / Capbreton
+        "title": "côte basco-landaise (Bayonne -> Vieux-Boucau)",
+        "landmarks": [
+            ("Bayonne", -1.4750, 43.4933),
+            ("Anglet", -1.5150, 43.4850),
+            ("Boucau", -1.4711, 43.5269),
+            ("Tarnos", -1.4606, 43.5408),
+            ("Ondres", -1.4510, 43.5650),
+            ("Labenne", -1.4347, 43.5917),
+            ("Capbreton", -1.4310, 43.6420),
+            ("Hossegor", -1.3950, 43.6640),
+            ("Seignosse", -1.3780, 43.6890),
+            ("Vieux-Boucau", -1.4010, 43.7880),
+        ],
+        # Coordonnées relevées sur Google Maps.
+        "helipads": [
+            ("Hopital de Bayonne", -1.4800367078111412, 43.48262235303451),
+            ("Capbreton", -1.4457112839188175, 43.65393627677582),
+            ("Hossegor", -1.4438385382046726, 43.661316497891036),
+        ],
+    },
+}
+DEFAULT_ZONE = "ossau"
 
 # Nombre de points de la grille d'altitude (et de sommets du maillage).
 COLS = 512  # axe ouest -> est (longitude)
@@ -54,24 +111,24 @@ ROWS = 512  # axe nord -> sud (latitude)
 # Taille de l'orthophoto téléchargée (le moteur la drape sur le maillage).
 ORTHO_HEIGHT = 2048
 
-# Recoloration de la mer : utile en bord de mer (la BD ORTHO rend la mer en
-# blanc), mais à éviter en montagne, où le blanc est de la neige ou des glaciers
-# qu'il ne faut surtout pas bleuir. À mettre à False pour une zone sans mer.
-# RECOLOR_SEA pilote aussi le plan de mer du moteur (clé "sea" du calage) : pas de
-# mer en montagne.
-RECOLOR_SEA = False
-
-# Point de départ du vol (WGS84) : Fabrèges, le fond de vallée plat à l'entrée du
-# massif (lac de Fabrèges, station du téléphérique d'Artouste, ~1230 m). Le moteur
-# lit cette position (clés start_x / start_z du calage) et y pose l'appareil. Le
-# script affine ensuite sur le replat le plus proche (voir find_flat_start).
-START_LON, START_LAT = -0.413, 42.905
-
 # Couleur de repli de la mer si l'on ne trouve pas assez de pixels d'eau
 # photographiés pour la mesurer. La vraie couleur est échantillonnée sur la mer
 # de la photo (voir fetch_ortho) ; elle doit rester proche du plan de mer du
 # moteur (SEA_COLOR dans Application.cpp).
 SEA_FALLBACK = (43, 65, 70)
+
+# --- Réglages de la zone choisie (fixés par select_zone) ---------------------
+# Emprise géographique (WGS84), recoloration de la mer, point de départ du vol,
+# libellé, lieux remarquables et dossier de sortie. Valeurs renseignées au
+# lancement à partir de l'entrée ZONES sélectionnée.
+LON_MIN, LON_MAX = 0.0, 0.0
+LAT_MIN, LAT_MAX = 0.0, 0.0
+RECOLOR_SEA = False
+START_LON, START_LAT = 0.0, 0.0
+ZONE_TITLE = ""
+ZONE_LANDMARKS = []
+ZONE_HELIPADS = []
+OUT_DIR = ""
 
 # --- Services IGN ------------------------------------------------------------
 ALTI_URL = "https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json"
@@ -83,12 +140,30 @@ WMS_LAYER = "ORTHOIMAGERY.ORTHOPHOTOS"
 # ramène au niveau de la mer (0 m).
 NODATA = -1000.0
 
-OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "terrain")
+# Racine des terrains : chaque zone est rangée dans un sous-dossier portant son nom.
+TERRAIN_ROOT = os.path.join(os.path.dirname(__file__), "..", "assets", "terrain")
 
 
 # Nombre maximal de points par requête : au-delà, l'URL de l'API dépasse sa limite
 # de longueur (erreur HTTP 414). On découpe donc une rangée en plusieurs morceaux.
 MAX_PTS_PER_REQUEST = 200
+
+
+def select_zone(name):
+    """Fixe les réglages globaux (emprise, mer, départ, sortie) pour la zone donnée."""
+    global LON_MIN, LON_MAX, LAT_MIN, LAT_MAX, RECOLOR_SEA, START_LON, START_LAT
+    global ZONE_TITLE, ZONE_LANDMARKS, ZONE_HELIPADS, OUT_DIR
+    if name not in ZONES:
+        connues = ", ".join(sorted(ZONES))
+        raise RuntimeError(f"zone inconnue : {name} (zones connues : {connues})")
+    zone = ZONES[name]
+    LON_MIN, LON_MAX, LAT_MIN, LAT_MAX = zone["bbox"]
+    RECOLOR_SEA = zone["recolor_sea"]
+    START_LON, START_LAT = zone["start"]
+    ZONE_TITLE = zone["title"]
+    ZONE_LANDMARKS = zone["landmarks"]
+    ZONE_HELIPADS = zone.get("helipads", [])
+    OUT_DIR = os.path.join(TERRAIN_ROOT, name)
 
 
 def fetch_chunk(lat, lons):
@@ -275,7 +350,7 @@ def write_metadata(elev_min, elev_max, width_m, height_m, ortho_w, start_x, star
     """Écrit le fichier de calage lu par le moteur (clés simples, une par ligne)."""
     path = os.path.join(OUT_DIR, "terrain.txt")
     with open(path, "w", encoding="utf-8") as out:
-        out.write("# Terrain Artouste - vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)\n")
+        out.write(f"# Terrain Artouste - {ZONE_TITLE}\n")
         out.write("# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0\n")
         out.write("# width_m / height_m : dimensions au sol du maillage, en mètres\n")
         out.write(f"cols {COLS}\n")
@@ -298,7 +373,36 @@ def write_metadata(elev_min, elev_max, width_m, height_m, ortho_w, start_x, star
     print(f"[meta] {path} écrit")
 
 
+def write_landmarks():
+    """Écrit les lieux remarquables de la zone (un par ligne : lon lat nom)."""
+    path = os.path.join(OUT_DIR, "landmarks.txt")
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(f"# Lieux remarquables - {ZONE_TITLE} (un par ligne : lon lat nom)\n")
+        out.write("# Le nom est le reste de la ligne et peut contenir des espaces et des accents.\n")
+        for name, lon, lat in ZONE_LANDMARKS:
+            out.write(f"{lon} {lat} {name}\n")
+    print(f"[lieux] {path} écrit ({len(ZONE_LANDMARKS)} lieu(x))")
+
+
+def write_helipads():
+    """Écrit les hélipads de la zone (un par ligne : lon lat nom). Aucun fichier si
+       la zone n'en déclare pas (l'hélipad de départ est géré à part par le moteur)."""
+    if not ZONE_HELIPADS:
+        return
+    path = os.path.join(OUT_DIR, "helipads.txt")
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(f"# Helipads - {ZONE_TITLE} (un par ligne : lon lat nom)\n")
+        out.write("# Positions approximatives, a affiner sur place.\n")
+        for name, lon, lat in ZONE_HELIPADS:
+            out.write(f"{lon} {lat} {name}\n")
+    print(f"[helipads] {path} écrit ({len(ZONE_HELIPADS)} helipad(s))")
+
+
 def main():
+    # Zone choisie : premier argument, sinon la zone par défaut.
+    zone = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_ZONE
+    select_zone(zone)
+    print(f"[zone] {zone} -> {OUT_DIR}")
     os.makedirs(OUT_DIR, exist_ok=True)
 
     # Dimensions métriques de l'emprise (projection équirectangulaire locale,
@@ -316,6 +420,8 @@ def main():
     ortho_w = fetch_ortho(width_m / height_m)
     start_x, start_z = find_flat_start(grid, width_m, height_m)
     write_metadata(elev_min, elev_max, width_m, height_m, ortho_w, start_x, start_z)
+    write_landmarks()
+    write_helipads()
     print(f"[ok] terminé en {time.time() - start:.0f} s")
 
 

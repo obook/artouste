@@ -20,9 +20,19 @@
 #include "render/Texture.hpp"
 
 #include <filesystem>
+#include <string>
 #include <vector>
 
 namespace artouste::render {
+
+/* Lieu remarquable du terrain (nom + position WGS84) : étiqueté sur la scène et
+   pointé sur la minimap. Chaque terrain a ses propres lieux, lus de landmarks.txt
+   dans son dossier. */
+struct Landmark {
+    std::string name;
+    float       lon = 0.0f;
+    float       lat = 0.0f;
+};
 
 class Terrain {
 public:
@@ -81,8 +91,25 @@ public:
     /* Identifiant OpenGL de l'orthophoto (pour l'afficher dans la minimap). */
     [[nodiscard]] unsigned int orthoTexId() const noexcept { return m_ortho.id(); }
 
+    /* Lieux remarquables propres à ce terrain (vide si le terrain n'en fournit pas). */
+    [[nodiscard]] const std::vector<Landmark>& landmarks() const noexcept { return m_landmarks; }
+
+    /* Hélipads propres à ce terrain (hôpitaux, ports... où poser l'appareil).
+       Vide si le terrain n'en fournit pas ; ne compte pas l'hélipad de départ. */
+    [[nodiscard]] const std::vector<Landmark>& helipads() const noexcept { return m_helipads; }
+
 private:
     void buildFlatFallback();
+    /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
+       absent : out reste vide. label sert à la trace affichée. */
+    void loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
+                    const char* label);
+    /* Aplanit le relief sous le point de départ et chaque hélipad (plateforme
+       plate, pour que sol, disque et appareil posé soient à la même hauteur). */
+    void flattenPads();
+    /* Met à plat les noeuds du relief dans un rayon (mètres) autour de la cellule
+       (colf, rowf), à la hauteur interpolée en ce point. */
+    void flattenAround(float colf, float rowf, float radiusM);
 
     Mesh    m_mesh;
     Texture m_ortho;
@@ -106,6 +133,9 @@ private:
     float              m_lonMax = 0.0f;
     float              m_latMin = 0.0f;
     float              m_latMax = 0.0f;
+
+    std::vector<Landmark> m_landmarks;  /* lieux remarquables propres au terrain */
+    std::vector<Landmark> m_helipads;   /* hélipads propres au terrain (hors départ) */
 };
 
 }  /* namespace artouste::render */

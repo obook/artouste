@@ -15,9 +15,11 @@
 
 #include <stb_image.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace artouste::render {
@@ -90,6 +92,10 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     const std::filesystem::path height = dir / "heightmap.png";
     const std::filesystem::path ortho  = dir / "ortho.jpg";
 
+    /* Lieux remarquables et hélipads du terrain (facultatifs : absent = aucun). */
+    loadPlaces(dir / "landmarks.txt", m_landmarks, "lieu(x) remarquable(s)");
+    loadPlaces(dir / "helipads.txt", m_helipads, "hélipad(s)");
+
     if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
                       m_drawSea, m_hasStart, m_startX, m_startZ, m_hasGeo, m_lonMin, m_lonMax,
                       m_latMin, m_latMax)) {
@@ -121,6 +127,12 @@ Terrain::Terrain(const std::filesystem::path& dir) {
         m_heights[k] = m_elevMin + (static_cast<float>(pixels[k]) / 65535.0f) * span;
     }
     stbi_image_free(pixels);
+
+    /* Plateformes d'hélipad : on aplanit le relief sous le point de départ et sous
+       chaque hélipad, pour que le sol et l'appareil posé s'accordent à une même
+       hauteur (sinon, sur une maille en pente, l'appareil s'enfonce ou se pose en
+       travers). À faire avant de construire le maillage, qui en hérite. */
+    flattenPads();
 
     /* --- Construction du maillage du relief ---------------------------------- */
     const float halfW = 0.5f * m_widthM;
@@ -187,9 +199,92 @@ Terrain::Terrain(const std::filesystem::path& dir) {
         std::fprintf(stderr, "[Terrain] orthophoto absente (%s), relief sans texture.\n",
                      ortho.string().c_str());
     } else {
-        std::printf("[Terrain] vallée d'Ossau chargée : %.0f x %.0f m, altitude max %.0f m.\n",
+        std::printf("[Terrain] terrain chargé : %.0f x %.0f m, altitude max %.0f m.\n",
                     static_cast<double>(m_widthM), static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
+    }
+}
+
+void Terrain::loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
+                         const char* label) {
+    /* Format : un lieu par ligne "lon lat nom", le nom étant le reste de la ligne
+       (il peut contenir des espaces). Ligne vide ou commençant par # ignorée. */
+    std::ifstream file(path);
+    if (!file) {
+        return;  /* fichier absent pour ce terrain : tableau vide */
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        Landmark           lm;
+        if (!(iss >> lm.lon >> lm.lat)) {
+            continue;  /* ligne vide, commentaire ou mal formée */
+        }
+        std::getline(iss, lm.name);
+        const std::size_t first = lm.name.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            continue;  /* coordonnées sans nom : on ignore */
+        }
+        const std::size_t last = lm.name.find_last_not_of(" \t\r\n");
+        lm.name                = lm.name.substr(first, last - first + 1);
+        out.push_back(std::move(lm));
+    }
+    std::printf("[Terrain] %zu %s chargé(s).\n", out.size(), label);
+}
+
+void Terrain::flattenPads() {
+    if (m_heights.empty() || m_cols < 2 || m_rows < 2) {
+        return;
+    }
+    /* Rayon aplani : le disque (7 m) plus la longueur de l'appareil, pour qu'il
+       repose à plat même posé un peu décalé sur le pad. */
+    constexpr float PAD_RADIUS_M = 12.0f;
+    if (m_hasStart) {
+        const float colf = (m_startX / m_widthM + 0.5f) * static_cast<float>(m_cols - 1);
+        const float rowf = (m_startZ / m_heightM + 0.5f) * static_cast<float>(m_rows - 1);
+        flattenAround(colf, rowf, PAD_RADIUS_M);
+    }
+    if (m_hasGeo) {
+        for (const Landmark& pad : m_helipads) {
+            const float colf = (pad.lon - m_lonMin) / (m_lonMax - m_lonMin)
+                               * static_cast<float>(m_cols - 1);
+            const float rowf = (m_latMax - pad.lat) / (m_latMax - m_latMin)
+                               * static_cast<float>(m_rows - 1);
+            flattenAround(colf, rowf, PAD_RADIUS_M);
+        }
+    }
+}
+
+void Terrain::flattenAround(float colf, float rowf, float radiusM) {
+    if (colf < 0.0f || colf > static_cast<float>(m_cols - 1) || rowf < 0.0f
+        || rowf > static_cast<float>(m_rows - 1)) {
+        return;  /* hélipad hors de l'emprise : rien à aplanir */
+    }
+    const auto H = [&](int c, int r) -> float& {
+        return m_heights[static_cast<std::size_t>(r) * static_cast<std::size_t>(m_cols)
+                         + static_cast<std::size_t>(c)];
+    };
+
+    /* Hauteur cible : altitude interpolée au centre du pad, lue avant modification. */
+    const int   c0 = std::clamp(static_cast<int>(std::floor(colf)), 0, m_cols - 2);
+    const int   r0 = std::clamp(static_cast<int>(std::floor(rowf)), 0, m_rows - 2);
+    const float fc = colf - static_cast<float>(c0);
+    const float fr = rowf - static_cast<float>(r0);
+    const float target = (H(c0, r0) * (1.0f - fc) + H(c0 + 1, r0) * fc) * (1.0f - fr)
+                         + (H(c0, r0 + 1) * (1.0f - fc) + H(c0 + 1, r0 + 1) * fc) * fr;
+
+    /* Rayon converti en nombre de cellules sur chaque axe (la maille est plus
+       large nord-sud qu'est-ouest), puis on met à plat tous les noeuds couverts. */
+    const float dCol = radiusM / (m_widthM / static_cast<float>(m_cols - 1));
+    const float dRow = radiusM / (m_heightM / static_cast<float>(m_rows - 1));
+    const int   cmin = std::clamp(static_cast<int>(std::floor(colf - dCol)), 0, m_cols - 1);
+    const int   cmax = std::clamp(static_cast<int>(std::ceil(colf + dCol)), 0, m_cols - 1);
+    const int   rmin = std::clamp(static_cast<int>(std::floor(rowf - dRow)), 0, m_rows - 1);
+    const int   rmax = std::clamp(static_cast<int>(std::ceil(rowf + dRow)), 0, m_rows - 1);
+    for (int r = rmin; r <= rmax; ++r) {
+        for (int c = cmin; c <= cmax; ++c) {
+            H(c, r) = target;
+        }
     }
 }
 

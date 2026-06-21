@@ -1,0 +1,12 @@
+# Lieux remarquables - côte basco-landaise (Bayonne -> Vieux-Boucau) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+-1.475 43.4933 Bayonne
+-1.515 43.485 Anglet
+-1.4711 43.5269 Boucau
+-1.4606 43.5408 Tarnos
+-1.451 43.565 Ondres
+-1.4347 43.5917 Labenne
+-1.431 43.642 Capbreton
+-1.395 43.664 Hossegor
+-1.378 43.689 Seignosse
+-1.401 43.788 Vieux-Boucau

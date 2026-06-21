@@ -1,0 +1,18 @@
+# Terrain Artouste - côte basco-landaise (Bayonne -> Vieux-Boucau)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 512
+rows 512
+width_m 25781.7
+height_m 38962.0
+elev_min 0.00
+elev_max 119.92
+lon_min -1.62
+lon_max -1.3
+lat_min 43.46
+lat_max 43.81
+ortho_width 1355
+ortho_height 2048
+sea 1
+start_x 1151.2
+start_z -2108.0

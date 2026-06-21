@@ -15,6 +15,10 @@ set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+# On ne compile que le backend X11 sous Linux : evite de dependre de
+# wayland-scanner et des protocoles Wayland sur la machine de build (les serveurs
+# d'integration n'ont que X11). XWayland couvre les sessions Wayland a l'execution.
+set(GLFW_BUILD_WAYLAND  OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git

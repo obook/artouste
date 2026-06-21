@@ -34,8 +34,11 @@ jobs:
           path: build/_deps
           key: deps-linux-${{ hashFiles('cmake/Dependencies.cmake') }}
 
+      # CMAKE_POLICY_VERSION_MINIMUM=3.5 : les runners ont CMake 4.x, qui refuse le
+      # vieux cmake_minimum_required de certaines dependances (GLAD). Cette option
+      # leur accorde une compatibilite minimale.
       - name: Configurer
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
       - name: Compiler
         run: cmake --build build -j
@@ -66,7 +69,7 @@ jobs:
           key: deps-windows-${{ hashFiles('cmake/Dependencies.cmake') }}
 
       - name: Configurer
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
       - name: Compiler
         run: cmake --build build --config Release -j

@@ -1135,7 +1135,8 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->toggleGendarmerieLivery();
             }
             break;
-        case GLFW_KEY_M:  /* bascule le mode assisté (confort de pilotage) */
+        case GLFW_KEY_M:          /* bascule le mode assisté (confort de pilotage) */
+        case GLFW_KEY_SEMICOLON:  /* position de la touche "M" sur un clavier AZERTY */
             if (app != nullptr) {
                 app->m_assist.toggle();
             }

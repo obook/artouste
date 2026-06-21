@@ -1,28 +1,12 @@
 # ROADMAP
 
-## Plateforme
-
-- [x] Portage Windows livré
-
-    Code rendu portable (recherche du dossier du binaire via GetModuleFileNameW sous
-    Windows), build CMake autonome (dépendances et runtime MSVC en statique, GLAD
-    pré-généré dans `third_party/`). Validé : la version Windows compile et tourne,
-    tests 100% fonctionnels (suite Catch2 verte sur Windows).
-
-- [x] Release automatisée Linux et Windows livrée
-
-    CI GitHub Actions (`.github/workflows/release.yml`) : au push d'un tag `v*`, elle
-    compile Linux et Windows, teste, empaquette et publie une release GitHub avec les
-    deux archives autonomes (binaire + ressources complètes). Première release :
-    `v0.1.0`.
-
 ## Super HUD
 
 - [x] Superposer à l'image des instruments à définir en vert transparent uniquement pour ne par géner la vue afin de permettre un pilotage réaliste, la liste des instruments est à rechercher dans docs/tableau-de-bord, l'implémentation se fait un par un, raccourci clavier/manette cyclique hud au 4 coins, hud superposé, pas de hud.
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
-- [x] Mettre l'altitude dans le même style que la boussole, mais à gauche et verticalement
+- [ ] le texte de la valeur de la bousole comme celui de l'altimètre : juste un cadre gris clair et le texte vet dedans
 
 ## Réalisme
 
@@ -36,32 +20,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
     La variable d'environnement `ARTOUSTE_TERRAIN` a la priorité. Reste à exposer
     en clés : la position de la caméra intérieure, et d'autres réglages au besoin.
 
-- [x] balise de sécurité est un feu clignotant rouge situé sur le fuselage (strombo) : l'aspect est celui d'un cylindre avec le premier quart du haut clignotant en rouge vif clignotant (l'original est en rotation, voir 21-165-05.webp)
-
-- [x] tuyère : Distorsion thermique visuelle localisée par l'air chaud, léger halo bleuté comme sur une gazinière à feu bas
-
-- [x] Mode assisté : couche de confort (touche M / croix haut), voir src/physics/FlightAssist
-
-- [x] L'ombre des pales est centrée sur le centre de gravité, il faut le centrer sur le rotor principal
 
 - [ ] Il manque le skin du rotor arrière
 
-- [x] Il manque une map pour se situer
-
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 
-### Ombre hélicopter
-
-- [x] Elle est trop foncée/sombre
-
-    Ombre éclaircie (opacité 0,22 au lieu de 0,35) et adoucie : dégradé radial
-    plein au centre puis estompé jusqu'à zéro sur le pourtour (contour flou, plus
-    de disque noir net), via le shader `shadow` et la primitive `softDisc`. Les
-    deux disques (rotor et fuselage) sont centrés sur l'axe du rotor principal.
-
-### Turbine
-
-- [x] Il faut un décalage de quelques secondes entre la turbine max et le laché de frein qui permet la rotation des pales
 
 ### Sons
 
@@ -132,21 +95,6 @@ ou sortir de France.
 - Tuiles terrain-RGB et satellite (Mapbox, MapTiler) : relief encodé en PNG et
   imagerie mondiale, simples à draper, mais sous conditions d'utilisation et clé API.
 
-### Changement de terrain (menu ou configuration)
-
-- [x] Permettre de choisir le terrain par le fichier de configuration. Chaque
-  terrain est rangé dans son sous-dossier `assets/terrain/<nom>/` (`heightmap.png`,
-  `ortho.jpg`, `terrain.txt`, `landmarks.txt`, et selon le terrain `helipads.txt`
-  et `buildings.bin`) ; la clé `terrain` de `assets/config.txt` (ou la variable
-  d'environnement `ARTOUSTE_TERRAIN`) choisit lequel charger au lancement. Le script
-  `tools/fetch_terrain.py` est paramétré par zone (dictionnaire `ZONES`, nom passé en
-  argument). Terrains livrés : `ossau` (montagne) et `cote-landes` (côte
-  basco-landaise, Bayonne -> Vieux-Boucau, avec hélipads, villes-repères et
-  bâtiments 3D).
-
-    Reste possible plus tard : un menu en jeu et le changement de terrain à chaud
-    (sans relancer). Le moteur recharge déjà tout au démarrage ; un changement à
-    chaud demanderait de reconstruire le terrain et de replacer l'appareil.
 
 ### Bâtiments 3D
 
@@ -160,7 +108,11 @@ ou sortir de France.
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
   niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
   
-- [ ] Mettre aussi les batiments pour la carte Artouste 
+- [x] Mettre aussi les batiments pour la carte Artouste
+
+    Fait : `tools/fetch_buildings.py ossau` genere assets/terrain/ossau/buildings.bin
+    (~765 batiments). En montagne le seuil de hauteur est abaisse a 0 (cle
+    `height_min` de ZONES) pour garder les cabanes et bergeries.
 
 ### Sons
 

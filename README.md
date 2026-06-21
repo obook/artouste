@@ -241,15 +241,21 @@ remarquables, hélipads). Voir `docs/TERRAIN.md` pour les détails du pipeline.
 Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur
 hauteur réelle (murs + toit plat). Ils sont produits à part par
 `tools/fetch_buildings.py`, qui interroge le service WFS et écrit
-`assets/terrain/<zone>/buildings.bin` (les bâtiments de moins de 2 m, cabanes et
-abris, sont écartés) :
+`assets/terrain/<zone>/buildings.bin` :
 
 ```bash
 tools/.venv/bin/python tools/fetch_buildings.py cote-landes
+tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
 
+Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
+en ville, les bâtiments de moins de 2 m (cabanes, abris) sont écartés pour ne pas
+alourdir la scène ; en montagne (Ossau), le seuil est à 0 pour garder les cabanes
+et bergeries, utiles au repérage.
+
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
-bâtiments. La côte basco-landaise en compte environ 156 000.
+bâtiments. La côte basco-landaise en compte environ 156 000, la vallée d'Ossau
+environ 765.
 
 ## Licence
 

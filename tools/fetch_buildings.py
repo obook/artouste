@@ -11,8 +11,10 @@ Même producteur et même licence que le relief et l'orthophoto (IGN Géoplatefo
 Licence Ouverte Etalab 2.0). La zone (bornes géographiques) est lue dans le
 dictionnaire ZONES de fetch_terrain.py, partagé avec la génération du terrain.
 
-Filtre : on écarte les bâtiments sans hauteur ou plus bas que HEIGHT_MIN (cabanes,
-abris de jardin), pour ne garder que les vraies constructions.
+Filtre par zone : on écarte les bâtiments plus bas que le seuil de la zone (clé
+"height_min" de ZONES, HEIGHT_MIN par défaut). En ville ce seuil écarte les cabanes
+et abris pour ne pas alourdir la scène ; en montagne il est abaissé à 0 pour garder
+les cabanes et bergeries, utiles au repérage.
 
 Format de buildings.bin (petit-boutiste) :
     magie   : 4 octets "ABLD"
@@ -56,9 +58,15 @@ WFS_LAYER = "BDTOPO_V3:batiment"
 # où le service plafonnerait une page.
 PAGE = 5000
 
-# Hauteur minimale retenue (mètres). En dessous : cabanes, abris, garages isolés
-# qu'on écarte pour ne pas alourdir la scène de bruit.
+# Hauteur minimale retenue par défaut (mètres). En dessous : cabanes, abris,
+# garages isolés, qu'on écarte en ville pour ne pas alourdir la scène de bruit.
+# Une zone peut abaisser ce seuil via sa clé "height_min" (en montagne, on garde
+# les cabanes et bergeries, peu nombreuses et utiles au repérage).
 HEIGHT_MIN = 2.0
+
+# Hauteur de rendu minimale (mètres) : un bâtiment plus bas (cabane, ou sans
+# hauteur renseignée) est extrudé au moins à cette valeur pour rester visible.
+MIN_RENDER_HEIGHT = 2.0
 
 # En-tête du fichier binaire.
 MAGIC = b"ABLD"
@@ -131,7 +139,11 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "buildings.bin")
 
-    print(f"[batiments] zone {zone} : WFS BD TOPO sur {bbox}")
+    # Seuil de hauteur propre à la zone (défaut HEIGHT_MIN). En montagne, on l'abaisse
+    # pour garder les cabanes et bergeries.
+    height_min = ZONES[zone].get("height_min", HEIGHT_MIN)
+
+    print(f"[batiments] zone {zone} : WFS BD TOPO sur {bbox} (hauteur >= {height_min} m)")
     start = time.time()
 
     buildings = []   # liste de (hauteur, anneau [(lon, lat), ...])
@@ -143,9 +155,14 @@ def main():
             break
         for f in feats:
             examined += 1
+            # Hauteur BD TOPO (parfois absente : on la traite comme 0 pour le filtre).
             height = f["properties"].get("hauteur")
-            if height is None or height < HEIGHT_MIN:
+            h = float(height) if height is not None else 0.0
+            if h < height_min:
                 continue
+            # Cabane ou hauteur manquante : on extrude au moins MIN_RENDER_HEIGHT pour
+            # qu'elle reste visible (sans effet sur les bâtiments déjà plus hauts).
+            h = max(h, MIN_RENDER_HEIGHT)
             for ring in rings_of(f.get("geometry")):
                 # L'anneau GeoJSON est refermé (dernier point = premier) : on retire
                 # le doublon, le moteur referme l'emprise.
@@ -153,14 +170,14 @@ def main():
                 if len(pts) >= 2 and pts[0] == pts[-1]:
                     pts = pts[:-1]
                 if len(pts) >= 3:
-                    buildings.append((float(height), pts))
+                    buildings.append((h, pts))
         index += len(feats)
         print(f"[batiments]   {index} examines, {len(buildings)} retenus...")
 
     write_buildings(path, buildings)
     size_mo = os.path.getsize(path) / (1024 * 1024)
     print(f"[batiments] {path} ecrit : {len(buildings)} batiments "
-          f"(sur {examined} examines, filtre hauteur >= {HEIGHT_MIN} m), "
+          f"(sur {examined} examines, filtre hauteur >= {height_min} m), "
           f"{size_mo:.1f} Mo")
     print(f"[ok] termine en {time.time() - start:.0f} s")
 

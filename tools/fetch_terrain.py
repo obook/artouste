@@ -66,6 +66,9 @@ ZONES = {
         "bbox": (-0.52, -0.30, 42.80, 42.96),
         "recolor_sea": False,
         "start": (-0.413, 42.905),  # Fabrèges, fond de vallée plat (~1230 m)
+        # Montagne : on garde les petites constructions (cabanes, bergeries, granges),
+        # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
+        "height_min": 0.0,
         "title": "vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)",
         "landmarks": [
             ("Lac d'Artouste", -0.3325, 42.8589),

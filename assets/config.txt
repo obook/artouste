@@ -6,6 +6,7 @@
 # Terrains disponibles :
 #   ossau        vallee d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
 #   cote-landes  cote basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
+#   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 # La variable d'environnement ARTOUSTE_TERRAIN, si definie, a la priorite.
 terrain ossau
 

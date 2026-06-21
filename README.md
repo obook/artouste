@@ -55,7 +55,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 > 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
 > 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min
->    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `33500`
+>    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `360`
 > 4. **Décollage et vol.** Une fois le rotor en régime :
 >    * augmentez doucement le collectif (`W` ou `Z` | gâchette RT) jusqu'à un peu plus de 50% pour décoller de quelques mètres du sol
 >    * inclinez l'appareil au cyclique (flèches du clavier | stick gauche) pour avancer

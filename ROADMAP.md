@@ -2,13 +2,18 @@
 
 ## Plateforme
 
-- [x] Étudier une version pour Microsoft Windows
+- [x] Portage Windows livré
 
-    Portage implémenté : code rendu portable (recherche du dossier du binaire via
-    GetModuleFileNameW sous Windows), build CMake autonome (dépendances et runtime
-    MSVC en statique), et CI GitHub Actions qui publie les exécutables Linux et
-    Windows (voir `.github/workflows/release.yml`). À valider au premier build
-    Windows de la CI.
+    Code rendu portable (recherche du dossier du binaire via GetModuleFileNameW sous
+    Windows), build CMake autonome (dépendances et runtime MSVC en statique, GLAD
+    pré-généré dans `third_party/`). Validé : la version Windows compile et tourne.
+
+- [x] Release automatisée Linux et Windows livrée
+
+    CI GitHub Actions (`.github/workflows/release.yml`) : au push d'un tag `v*`, elle
+    compile Linux et Windows, teste, empaquette et publie une release GitHub avec les
+    deux archives autonomes (binaire + ressources complètes). Première release :
+    `v0.1.0`.
 
 ## Super HUD
 

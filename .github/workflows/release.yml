@@ -68,7 +68,10 @@ jobs:
           path: build/_deps
           key: deps-windows-${{ hashFiles('cmake/Dependencies.cmake') }}
 
+      # En bash (present sur le runner) : PowerShell decoupe sinon l'argument
+      # -DCMAKE_POLICY_VERSION_MINIMUM=3.5 au point decimal.
       - name: Configurer
+        shell: bash
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
       - name: Compiler

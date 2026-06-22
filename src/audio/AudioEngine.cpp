@@ -1,8 +1,9 @@
 /*
  * AudioEngine.cpp
- * Implémentation du moteur audio avec miniaudio : chargement des boucles
- * moteur et rotor, puis modulation de leur volume et de leur hauteur selon
- * le collectif et la vitesse air.
+ * Moteur audio avec miniaudio : cycle de vie (construction, libération),
+ * chargement des boucles moteur et rotor (init) et modulation continue de leur
+ * volume et de leur hauteur selon l'état de vol (update). La pause, le son de
+ * démarrage et la musique sont dans AudioEngineControl.cpp.
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -11,71 +12,20 @@
 
 #include "audio/AudioEngine.hpp"
 
+/* L'implémentation de miniaudio (volumineuse) n'est générée qu'ici, dans cette
+   seule unité de compilation. Les autres fichiers audio n'incluent que les
+   déclarations (via AudioEngineImpl.hpp). */
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
+
+#include "audio/AudioEngineImpl.hpp"
 
 #include <cstdio>
 #include <string>
 
 namespace artouste::audio {
 
-namespace {
-
-float clamp01(float v) noexcept {
-    return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
-}
-
-constexpr float START_VOLUME = 0.7f;  /* volume de base du son de démarrage */
-constexpr float MUSIC_VOLUME = 0.5f;  /* volume de la musique de la démo (sous les sons moteur) */
-
-/* Rendu sonore propre à une vue : volumes relatifs de la turbine et des pales
- * (le mixage), et un facteur de timbre (l'égalisation, approchée par la hauteur :
- * < 1 assombrit le son, comme étouffé dans la cabine). */
-struct ViewMix {
-    float turbineVol;
-    float rotorVol;
-    float tone;
-};
-
-ViewMix viewMix(AudioEngine::View view) noexcept {
-    switch (view) {
-        case AudioEngine::View::Interior:
-            return {0.80f, 0.70f, 0.90f};  /* cabine : étouffé et plus sombre */
-        case AudioEngine::View::Fly:
-            return {0.90f, 1.00f, 1.00f};  /* extérieur : souffle des pales présent */
-        case AudioEngine::View::Rear:
-            break;
-    }
-    return {1.00f, 1.00f, 1.00f};  /* poursuite : équilibré et clair */
-}
-
-/* Décalage de hauteur dû à l'effet Doppler. closingSpeed > 0 = la caméra se
- * rapproche -> son plus aigu. On borne la vitesse pour éviter les extrêmes. */
-float dopplerPitch(float closingSpeed) noexcept {
-    constexpr float SOUND_SPEED = 340.0f;  /* m/s */
-    const float v = closingSpeed < -120.0f ? -120.0f : (closingSpeed > 120.0f ? 120.0f : closingSpeed);
-    return SOUND_SPEED / (SOUND_SPEED - v);
-}
-
-}  /* namespace */
-
-struct AudioEngine::Impl {
-    ma_engine engine{};
-    ma_sound  engineSound{};   /* boucle turbine, vue extérieure */
-    ma_sound  rotorSound{};    /* boucle rotor,   vue extérieure */
-    ma_sound  engineInside{};  /* boucle turbine, vue cabine */
-    ma_sound  rotorInside{};   /* boucle rotor,   vue cabine */
-    ma_sound  startSound{};    /* son ponctuel de démarrage turbine (non bouclé) */
-    ma_sound  musicSound{};     /* musique de la démo (bouclée, chargée à la première lecture) */
-    bool      engineInit         = false;
-    bool      engineLoaded       = false;
-    bool      rotorLoaded        = false;
-    bool      engineInsideLoaded = false;
-    bool      rotorInsideLoaded  = false;
-    bool      startLoaded        = false;
-    bool      musicLoaded        = false;
-    bool      paused             = false;  /* boucles suspendues (pause du jeu) */
-};
+using namespace audio_detail;
 
 AudioEngine::AudioEngine() : m_impl(std::make_unique<Impl>()) {}
 
@@ -206,87 +156,6 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
         ma_sound_set_volume(&m_impl->startSound, START_VOLUME * mix.turbineVol);
         ma_sound_set_pitch(&m_impl->startSound, muffle * doppler);
     }
-}
-
-void AudioEngine::setPaused(bool paused) {
-    if (!m_impl->engineInit || paused == m_impl->paused) {
-        return;  /* audio inactif, ou état déjà à jour : rien à faire */
-    }
-    m_impl->paused = paused;
-
-    /* Suspend ou reprend chaque boucle chargée. ma_sound_stop garde la position,
-     * ma_sound_start reprend là où on s'était arrêté. */
-    const auto applyTo = [paused](ma_sound& sound, bool loaded) {
-        if (!loaded) {
-            return;
-        }
-        if (paused) {
-            ma_sound_stop(&sound);
-        } else {
-            ma_sound_start(&sound);
-        }
-    };
-    applyTo(m_impl->engineSound, m_impl->engineLoaded);
-    applyTo(m_impl->rotorSound, m_impl->rotorLoaded);
-    applyTo(m_impl->engineInside, m_impl->engineInsideLoaded);
-    applyTo(m_impl->rotorInside, m_impl->rotorInsideLoaded);
-    /* Le son de démarrage est ponctuel : on le coupe en pause, sans le reprendre
-     * automatiquement (il ne doit pas rejouer tout seul à la reprise). */
-    if (paused && m_impl->startLoaded) {
-        ma_sound_stop(&m_impl->startSound);
-    }
-}
-
-void AudioEngine::playStartSound() {
-    if (!m_impl->engineInit || !m_impl->startLoaded) {
-        return;
-    }
-    /* Rejoue le son de démarrage depuis le début (déclenché à l'entrée en phase
-     * de démarrage de la turbine). */
-    ma_sound_seek_to_pcm_frame(&m_impl->startSound, 0);
-    ma_sound_set_volume(&m_impl->startSound, START_VOLUME);
-    ma_sound_start(&m_impl->startSound);
-}
-
-void AudioEngine::stopStartSound() {
-    if (!m_impl->engineInit || !m_impl->startLoaded) {
-        return;
-    }
-    ma_sound_stop(&m_impl->startSound);
-}
-
-void AudioEngine::playMusic(const std::filesystem::path& file) {
-    if (!m_impl->engineInit) {
-        return;
-    }
-    /* Chargement paresseux à la première lecture (en streaming, pour un long titre).
-       Fichier absent ou illisible : on reste silencieux, sans erreur. */
-    if (!m_impl->musicLoaded) {
-        if (!std::filesystem::exists(file)) {
-            return;
-        }
-        if (ma_sound_init_from_file(&m_impl->engine, file.string().c_str(),
-                                    MA_SOUND_FLAG_STREAM, nullptr, nullptr,
-                                    &m_impl->musicSound) != MA_SUCCESS) {
-            return;
-        }
-        ma_sound_set_looping(&m_impl->musicSound, MA_TRUE);
-        m_impl->musicLoaded = true;
-    }
-    /* (Re)lance la musique depuis le début. */
-    ma_sound_seek_to_pcm_frame(&m_impl->musicSound, 0);
-    ma_sound_set_volume(&m_impl->musicSound, MUSIC_VOLUME);
-    ma_sound_start(&m_impl->musicSound);
-}
-
-void AudioEngine::stopMusic() {
-    if (m_impl->engineInit && m_impl->musicLoaded) {
-        ma_sound_stop(&m_impl->musicSound);
-    }
-}
-
-bool AudioEngine::ready() const noexcept {
-    return m_impl->engineInit && (m_impl->engineLoaded || m_impl->rotorLoaded);
 }
 
 }  /* namespace artouste::audio */

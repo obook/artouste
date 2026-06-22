@@ -44,10 +44,11 @@ import urllib.parse
 import urllib.request
 import json
 
-# On réutilise la description des zones (bornes, dossier de sortie) du script de
+# On réutilise la description des zones (bornes, dossier de sortie) du paquet
 # terrain : une seule source de vérité pour l'emprise géographique.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fetch_terrain import ZONES, TERRAIN_ROOT, DEFAULT_ZONE  # noqa: E402
+from terrain.zones import ZONES, DEFAULT_ZONE  # noqa: E402
+from terrain.config import TERRAIN_ROOT  # noqa: E402
 
 # --- Service WFS BD TOPO -----------------------------------------------------
 WFS_URL = "https://data.geopf.fr/wfs/ows"

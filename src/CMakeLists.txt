@@ -3,8 +3,16 @@
 add_executable(artouste
     main.cpp
     app/Application.cpp
+    app/ApplicationScene.cpp
+    app/ApplicationLoop.cpp
+    app/ApplicationInput.cpp
+    app/ApplicationRender.cpp
+    app/ApplicationGround.cpp
+    app/ApplicationHud.cpp
+    app/ApplicationCapture.cpp
     app/Config.cpp
     app/DemoPilot.cpp
+    audio/AudioEngineControl.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp
     input/InputSystem.cpp
@@ -17,6 +25,7 @@ add_executable(artouste
     render/Primitives.cpp
     render/Camera.cpp
     render/Terrain.cpp
+    render/TerrainSetup.cpp
     render/Buildings.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp
@@ -24,7 +33,10 @@ add_executable(artouste
     render/Model.cpp
     render/ModelLoader.cpp
     render/LoadedHelicopter.cpp
+    render/LoadedHelicopterInstruments.cpp
+    render/LoadedHelicopterDraw.cpp
     ui/Hud.cpp
+    ui/HudOverlay.cpp
     audio/AudioEngine.cpp
 )
 

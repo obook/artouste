@@ -79,6 +79,14 @@ public:
     [[nodiscard]] bool ready() const noexcept { return m_ready; }
 
 private:
+    /* Sous-affichages d'une image, appelés par render() selon le mode. 'w'/'h' sont
+       les dimensions de l'écran, 'm' la marge depuis les bords. */
+    void renderCorners(const HudData& data, float w, float h, float m);
+    void renderOverlay(const HudData& data, float w, float h, float m);
+    void renderLabels(const HudData& data, float w, float h);
+    void renderMinimap(const HudData& data, HudMode mode, float m);
+    void renderBanners(bool paused, bool confirmReset, bool confirmDemo, float w, float h);
+
     bool m_ready = false;
 };
 

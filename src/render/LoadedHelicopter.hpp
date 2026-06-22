@@ -76,6 +76,31 @@ private:
         vec3  offset;
     };
 
+    /* Petit raccourci de rendu : fixe la matrice du modèle puis dessine la pièce. */
+    void drawModel(Shader& shader, const Model& model, const mat4& transform, Pass pass) const;
+
+    /* Chargement des six instruments animés du tableau de bord (horizon, altimètre,
+       vario, compas, anémomètre, couplemètre), chacun découpé en cadran fixe et
+       parties mobiles. Appelé par le constructeur. */
+    void loadInstruments(const std::filesystem::path& dir);
+
+    /* Dessine la cellule : fuselage, intérieur, pilotes, et les commandes animées
+       (jambes, bras du pilote, palonnier, manche cyclique, levier de collectif). */
+    void drawAirframe(Shader& shader, const mat4& root, bool fullPilot, float rudder,
+                      float cyclicLong, float cyclicLat, float collective) const;
+
+    /* Dessine la planche de bord et les six instruments animés selon l'état de vol. */
+    void drawInstruments(Shader& shader, const mat4& root, float rollRad, float pitchRad,
+                         float altitudeFt, float varioFpm, float headingRad, float airspeedKt,
+                         float torquePct) const;
+
+    /* Dessine les rotors (moyeux et pales, principaux et de queue), animés à partir
+       de l'angle du rotor principal. */
+    void drawRotors(Shader& shader, const mat4& root, float rotorAngle) const;
+
+    /* Passe transparente : marquages de la livrée Gendarmerie puis vitrages. */
+    void drawLivery(Shader& shader, const mat4& root) const;
+
     Model              m_fuselage;
     const Texture*     m_liveryGendarmerie = nullptr;  /* livrée bleue (fuselage) */
     bool               m_gendarmerie = false;          /* livrée Gendarmerie active (marquages) */

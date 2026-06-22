@@ -57,15 +57,58 @@ private:
     bool initGL();
     void initScene();
     void mainLoop();
+
+    /* Auxiliaires de la boucle principale : chacun prend en charge une étape, pour
+       que mainLoop reste un enchaînement lisible plutôt qu'un long bloc unique. */
+
+    /* Commandes effectives de l'image : commandes du pilote automatique en mode
+       démo, sinon commandes du pilote passées par le mode assisté. Met aussi à jour
+       la vue et le HUD quand la démo les impose. */
+    physics::Controls computeControls(const physics::Controls& rawInput, float frameDt);
+
+    /* Boutons et croix de la manette (hors commandes de vol) : vue, turbine, HUD,
+       pause, reset, livrée, ainsi que les réponses Oui/Non des panneaux de
+       confirmation. Neutralisés pendant la démo. */
+    void handleActionButtons();
+
+    /* Place la caméra selon la vue courante (poursuite, cockpit ou orbite) et gère
+       le cut net au changement de vue. */
+    void updateCamera(const mat4& base, const vec3& renderPos, float yaw, float t,
+                      float frameDt);
+
+    /* Module les boucles sonores (rotor, turbine, vent), déclenche le son de
+       démarrage et calcule l'effet Doppler de la vue orbite. */
+    void updateAudio(const physics::RigidBody& body, const physics::Controls& controls,
+                     float airspeed, float turbineFraction, float rotorFraction, float frameDt);
+
+    /* Fait tourner le rotor principal au prorata du régime, ou le ramène en douceur
+       à sa position de parking quand la turbine est coupée. */
+    void advanceRotor(float rotorFraction, float frameDt);
+
     void renderScene(const mat4& base, float rotorAngle, float rotorFraction,
                      float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
                      float collective = 0.0f, float turbineFraction = 0.0f,
                      float timeSeconds = 0.0f);
 
+    /* Hélipads (départ + ceux du terrain) posés à plat au sol, dessinés avant
+       l'appareil sans test de profondeur pour éviter le z-fighting au ras du sol. */
+    void drawHelipads(const mat4& view, const mat4& proj, const vec3& lightDir);
+
+    /* Ombre portée au sol (deux disques : fuselage et rotor), estompée avec
+       l'altitude et posée au-dessus du relief pour ne pas le traverser en pente. */
+    void drawGroundShadow(const mat4& base, float rotorFraction, const mat4& view,
+                          const mat4& proj);
+
     /* Lueurs liées au moteur : strombo (flash rouge anti-collision au-dessus de la
        cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge
        à la sortie de la turbine, d'intensité croissante avec le régime). */
     void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
+
+    /* Remplit les données instrumentales du HUD (altitude, vitesse, cap, régimes...)
+       à partir de l'état physique courant. */
+    void fillHud(ui::HudData& hud, const physics::RigidBody& body, const vec3& forward,
+                 const physics::Controls& controls, float airspeed, float turbineFraction,
+                 float rotorFraction);
 
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
        scène et données de la minimap (position de l'appareil, points). */

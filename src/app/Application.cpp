@@ -1075,16 +1075,20 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     }
 
     /* --- Feux de navigation et de queue -------------------------------------- */
-    /* Allumés en continu : un coeur vif entouré d'un halo doux pour qu'ils se lisent
-       comme de petites lampes. */
-    const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
-        const vec3 w = bodyToWorld(bodyPos);
-        drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f});
-        drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f});
-    };
-    drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
-    drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
-    drawLight(TAIL_LIGHT_POS, vec3{1.0f, 1.0f, 0.95f});  /* queue : blanc */
+    /* Les feux de position (rouge bâbord, vert tribord, blanc de queue) ne servent
+       qu'à la nuit. Le vol de nuit n'étant pas modélisé, ils restent éteints de jour ;
+       on garde le code (et les positions) prêt pour une future ambiance nocturne. */
+    constexpr bool NAV_LIGHTS_ON = false;
+    if (NAV_LIGHTS_ON) {
+        const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
+            const vec3 w = bodyToWorld(bodyPos);
+            drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f});
+            drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f});
+        };
+        drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
+        drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
+        drawLight(TAIL_LIGHT_POS, vec3{1.0f, 1.0f, 0.95f});  /* queue : blanc */
+    }
 
     /* --- Tuyère -------------------------------------------------------------- */
     /* Air chaud rejeté par la turbine : pas de flamme, mais une distorsion thermique.

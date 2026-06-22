@@ -39,10 +39,12 @@ constexpr float TAIL_BLADE_RISE = 0.031f;
 constexpr int   TAIL_BLADES     = 2;
 
 /* Vitesses de rotation purement décoratives (en radians par seconde). Elles sont
-   volontairement ralenties pour éviter l'effet stroboscopique. Le rotor de queue
-   tourne environ 5 fois plus vite que le rotor principal, comme dans la réalité. */
+   volontairement ralenties pour éviter l'effet stroboscopique. Le rotor de queue,
+   bipale, tourne environ 3,5 fois plus vite que le rotor principal : moins que le
+   rapport réel (~5,9x), mais au-delà il franchit le seuil stroboscopique (90 deg par
+   image à 60 fps) et paraît ralentir, surtout quand la cadence baisse en vol. */
 constexpr float MAIN_SPIN = 15.0f;
-constexpr float TAIL_SPIN = 75.0f;
+constexpr float TAIL_SPIN = 52.5f;  /* 3,5 x MAIN_SPIN */
 
 /* Convertit une position exprimée dans le repère FlightGear (x avant/arrière,
    y latéral, z vertical) vers le repère du modèle (x, y vertical, z latéral). */

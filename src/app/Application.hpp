@@ -128,6 +128,7 @@ private:
     /* Changement de vue : cut net (voir Camera::cut). On garde la vue précédente pour
        détecter le changement. */
     int                                       m_prevCamView = -1;  /* vue précédente (caméra), -1 au départ */
+    float                                     m_orbitStart  = 0.0f;  /* instant d'entrée en vue orbite (démo : un tour complet) */
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */

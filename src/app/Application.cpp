@@ -622,6 +622,9 @@ void Application::mainLoop() {
             if (m_prevCamView >= 0) {
                 m_camera.cut();
             }
+            if (m_viewMode == 2) {
+                m_orbitStart = t;  /* début d'un segment orbite (pour le tour complet en démo) */
+            }
             m_prevCamView = m_viewMode;
         }
 
@@ -636,7 +639,15 @@ void Application::mainLoop() {
         } else if (m_viewMode == 2) {  /* orbite */
             m_camera.setFovYDeg(60.0f);
             m_camera.setNear(0.5f);
-            m_camera.orbit(lookTarget, 15.0f, 6.0f, t * 0.25f);
+            /* En démo, la caméra fait un tour complet (360 deg) autour de l'appareil
+               sur la durée du segment orbite ; en pilotage manuel, rotation lente
+               continue. (DEMO_ORBIT_TURN doit valoir la durée du segment orbite de la
+               démo, voir DemoPilot.) */
+            constexpr float DEMO_ORBIT_TURN = 14.0f;  /* s pour un tour complet en démo */
+            const float angle = m_demo.active()
+                                    ? (t - m_orbitStart) * (TWO_PI / DEMO_ORBIT_TURN)
+                                    : t * 0.25f;
+            m_camera.orbit(lookTarget, 15.0f, 6.0f, angle);
         } else {  /* poursuite */
             m_camera.setFovYDeg(60.0f);
             m_camera.setNear(0.5f);

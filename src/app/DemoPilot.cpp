@@ -231,10 +231,17 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     } else if (m_retour && dist < 200.0f) {
         out.viewMode = 0;  /* approche : vue de poursuite */
     } else {
-        /* En route : on fait défiler les trois vues à tour de rôle (poursuite,
-           cockpit, orbite), une dizaine de secondes chacune, pour varier les angles. */
-        const float bande = tVol - DUREE_MONTEE;
-        out.viewMode = static_cast<int>(bande / 10.0f) % 3;  /* 0 -> 1 -> 2 -> 0 ... */
+        /* En route : on fait défiler les trois vues. L'orbite dure plus longtemps
+           (14 s) pour laisser la caméra faire un tour complet autour de l'appareil
+           (durée à garder en phase avec DEMO_ORBIT_TURN côté application). */
+        const float bande = std::fmod(tVol - DUREE_MONTEE, 30.0f);
+        if (bande < 8.0f) {
+            out.viewMode = 0;  /* poursuite */
+        } else if (bande < 16.0f) {
+            out.viewMode = 1;  /* cockpit */
+        } else {
+            out.viewMode = 2;  /* orbite (14 s : un tour complet) */
+        }
     }
 
     /* Détection de la pose : au retour, près du pad et au sol -> on entame la séquence

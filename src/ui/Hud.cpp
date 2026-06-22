@@ -151,13 +151,18 @@ void headingTape(ImDrawList* dl, float cx, float top, float halfWidth, float hei
     }
     dl->PopClipRect();
 
-    /* Repère central fixe (triangle pointant vers le ruban) et cap courant chiffré. */
+    /* Repère central fixe (triangle pointant vers le ruban) et cap courant chiffré.
+     * La valeur reçoit son propre cadre gris clair, comme celle de l'altimètre. */
     dl->AddTriangleFilled(ImVec2(cx - 6.0f, top - 1.0f), ImVec2(cx + 6.0f, top - 1.0f),
                           ImVec2(cx, top + 7.0f), HUD_BRIGHT);
     const int hdg = (static_cast<int>(heading + 0.5f) % 360 + 360) % 360;
     char      hbuf[8];
     std::snprintf(hbuf, sizeof(hbuf), "%03d", hdg);
-    centeredText(dl, cx, top - 20.0f, HUD_BRIGHT, hbuf);
+    const ImVec2 sz = ImGui::CalcTextSize(hbuf);
+    const float  ty = top - 20.0f;
+    panelRect(dl, ImVec2(cx - sz.x * 0.5f - 4.0f, ty - 2.0f),
+              ImVec2(cx + sz.x * 0.5f + 4.0f, ty + sz.y + 2.0f), 3.0f);
+    centeredText(dl, cx, ty, HUD_BRIGHT, hbuf);
 }
 
 /* Ruban d'altitude vertical, à gauche de l'image : même principe que la boussole

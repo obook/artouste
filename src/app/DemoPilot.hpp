@@ -30,8 +30,9 @@ public:
     /* Ce que la démo demande à l'application à chaque image. */
     struct Output {
         physics::Controls controls;            /* commandes à appliquer à l'appareil */
-        int               viewMode = 2;        /* vue souhaitée (0 poursuite, 1 cockpit, 2 orbite) */
-        bool              finished = false;    /* la minute est écoulée : à relancer en boucle */
+        int               viewMode   = 2;      /* vue souhaitée (0 poursuite, 1 cockpit, 2 orbite) */
+        bool              cutTurbine = false;  /* couper la turbine (une fois posé) */
+        bool              finished   = false;  /* séquence d'arrêt terminée : relancer la démo */
     };
 
     /* (Re)lance la démo au temps zéro. returnPad est le pad de départ et d'arrivée (on
@@ -60,6 +61,9 @@ private:
     float m_rotorReadyTime = -1.0f; /* instant (m_elapsed) où le rotor a atteint son régime, < 0 tant qu'on attend */
     bool  m_retour        = false;  /* étape : false = aller (vers la dune), true = retour (vers le pad) */
     float m_collective    = 0.0f;   /* collectif lissé (monte/descend progressivement) */
+    bool  m_landed        = false;  /* posé sur le pad : on entame la séquence d'arrêt */
+    bool  m_turbineCut    = false;  /* la coupure de la turbine a déjà été demandée */
+    float m_stoppedTime   = -1.0f;  /* instant (m_elapsed) où le rotor s'est arrêté, < 0 sinon */
 
     vec3 m_returnPad{0.0f};  /* pad de départ et d'arrivée */
     vec3 m_dunePoint{0.0f};  /* point à survoler (Dune du Pilat) */

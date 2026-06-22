@@ -22,6 +22,7 @@ constexpr float ROTOR_PRET      = 0.99f; /* régime rotor à atteindre avant de 
 constexpr float DELAI_DECOLLAGE = 3.0f;  /* s : attente sur le pad après le plein régime rotor avant de décoller */
 constexpr float DUREE_MONTEE    = 5.0f;  /* s : décollage vertical avant de partir vers la dune */
 constexpr float COLLECTIF_RATE  = 0.35f; /* 1/s : vitesse de variation du collectif (levier monté en douceur) */
+constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
 constexpr float T_MAX        = 720.0f; /* garde-fou : on relance la démo au plus tard à cet instant (12 min) */
 
 /* --- Réglages du vol --------------------------------------------------------- */
@@ -39,6 +40,8 @@ constexpr float GAIN_CYCLIQUE   = 0.08f;   /* cyclique par (m/s) d'écart de vit
 constexpr float CYCLIQUE_MAX    = 0.45f;   /* cyclique maximal : borne l'inclinaison à une assiette réaliste */
 constexpr float GAIN_ALT_RETOUR = 0.20f;   /* hauteur visée (m) par mètre de distance au pad (descente du retour) */
 constexpr float DIST_CAP_MIN    = 30.0f;   /* en deçà, on ne pivote plus le nez (la cible est trop proche) */
+constexpr float VZ_POSE         = -0.4f;   /* m/s : vitesse de descente visée pour une pose très douce */
+constexpr float GAIN_VZ_POSE    = 0.15f;   /* collectif par (m/s) d'écart de vitesse verticale, à la pose */
 
 /* --- Détection de la pose ---------------------------------------------------- */
 constexpr float DIST_POSE = 15.0f;  /* distance horizontale au pad sous laquelle on est "arrivé" (m) */
@@ -83,6 +86,9 @@ void DemoPilot::start(const vec3& returnPad, const vec3& dunePoint) noexcept {
     m_rotorReadyTime = -1.0f;  /* on attendra le plein régime rotor avant de décoller */
     m_retour         = false;  /* on commence par l'aller, vers la dune */
     m_collective     = 0.0f;   /* levier au repos */
+    m_landed         = false;
+    m_turbineCut     = false;
+    m_stoppedTime    = -1.0f;
     m_returnPad      = returnPad;
     m_dunePoint      = dunePoint;
 }
@@ -133,6 +139,27 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
         return out;
     }
 
+    /* Phase d'arrêt : une fois posé, commandes neutres (l'appareil reste au sol),
+       coupure de la turbine, puis attente de l'arrêt complet des pales (par la roue
+       libre) et de quelques secondes avant de relancer la démo. Conforme à la
+       procédure : collectif à zéro, coupure carburant, le rotor ralentit puis s'arrête. */
+    if (m_landed) {
+        out.viewMode = 2;  /* orbite : on voit le rotor ralentir puis s'immobiliser */
+        if (!m_turbineCut) {
+            out.cutTurbine = true;  /* demande à l'application de couper la turbine (une fois) */
+            m_turbineCut   = true;
+        }
+        if (rotorFraction <= 0.0f) {        /* pales arrêtées */
+            if (m_stoppedTime < 0.0f) {
+                m_stoppedTime = m_elapsed;  /* instant de l'arrêt complet du rotor */
+            }
+            if (m_elapsed - m_stoppedTime >= DELAI_REDEMARRAGE) {
+                out.finished = true;        /* 5 s écoulées : on relance la démo */
+            }
+        }
+        return out;  /* commandes neutres : collectif 0, l'appareil reste posé */
+    }
+
     /* Phase 3 : vol guidé vers la cible courante. À l'aller, on vise la Dune du Pilat
        en montant à l'altitude de survol ; arrivé au-dessus, on fait demi-tour. Au
        retour, on vise le pad de départ en descendant pour s'y poser. */
@@ -145,12 +172,9 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
         cible        = m_returnPad;
         const float dPad = std::sqrt((m_returnPad.x - position.x) * (m_returnPad.x - position.x) +
                                      (m_returnPad.z - position.z) * (m_returnPad.z - position.z));
-        /* Descente proportionnelle à la distance au pad ; juste au-dessus, on vise sous
-           le sol pour poser pour de bon (sinon l'effet de sol tiendrait un stationnaire). */
+        /* Descente proportionnelle à la distance au pad. Tout près du pad (pose), c'est
+           un asservissement en vitesse verticale qui prend le relais (voir plus bas). */
         hauteurCible = clamp(GAIN_ALT_RETOUR * dPad, 0.0f, ALT_SURVOL);
-        if (dPad < DIST_POSE) {
-            hauteurCible = -4.0f;
-        }
     }
 
     const float dx   = cible.x - position.x;
@@ -184,7 +208,17 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     out.controls.cyclicLateral =
         clamp(GAIN_CYCLIQUE * glm::dot(ecartV, droite), -CYCLIQUE_MAX, CYCLIQUE_MAX);
 
-    out.controls.collective = rampeCollectif(collectifPour(hauteurCible, agl, velocity.y), dt);
+    /* Collectif : en vol, on suit la hauteur visée ; tout près du pad au retour, on
+       passe à une descente douce à vitesse verticale contrôlée (~0,4 m/s), pour une
+       pose très douce et robuste à l'effet de sol (réduction de collectif en finale,
+       conforme à la procédure). */
+    float collectifCible;
+    if (m_retour && dist < DIST_POSE) {
+        collectifCible = saturate(physics::COLL_HOVER + GAIN_VZ_POSE * (VZ_POSE - velocity.y));
+    } else {
+        collectifCible = collectifPour(hauteurCible, agl, velocity.y);
+    }
+    out.controls.collective = rampeCollectif(collectifCible, dt);
 
     /* Vues : variété en route (cockpit / orbite par bandes de temps), poursuite à
        l'approche du pad au retour, orbite pour la pose. */
@@ -193,12 +227,19 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     } else if (m_retour && dist < 200.0f) {
         out.viewMode = 0;  /* approche : vue de poursuite */
     } else {
+        /* En route : on fait défiler les trois vues à tour de rôle (poursuite,
+           cockpit, orbite), une dizaine de secondes chacune, pour varier les angles. */
         const float bande = tVol - DUREE_MONTEE;
-        out.viewMode = (std::fmod(bande, 16.0f) < 8.0f) ? 1 : 2;  /* alterne cockpit / orbite */
+        out.viewMode = static_cast<int>(bande / 10.0f) % 3;  /* 0 -> 1 -> 2 -> 0 ... */
     }
 
-    /* Fin : reposé près du pad au retour, ou garde-fou de durée. */
-    if ((m_retour && dist < DIST_POSE && agl < AGL_POSE) || m_elapsed > T_MAX) {
+    /* Détection de la pose : au retour, près du pad et au sol -> on entame la séquence
+       d'arrêt (traitée en tête de update au tour suivant). Le garde-fou de durée relance
+       directement la démo si le vol s'éternise. */
+    if (m_retour && dist < DIST_POSE && agl < AGL_POSE) {
+        m_landed = true;
+    }
+    if (m_elapsed > T_MAX) {
         out.finished = true;
     }
 

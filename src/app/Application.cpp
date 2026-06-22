@@ -498,10 +498,19 @@ void Application::mainLoop() {
             const DemoPilot::Output demoOut =
                 m_demo.update(frameDt, demoBody.position, demoBody.velocity, demoHeading, demoGround,
                               m_flight.turbine().rotorFraction());
-            controls   = demoOut.controls;
+            controls = demoOut.controls;
+            /* Fin de vol : la démo demande de couper la turbine une fois posée. */
+            if (demoOut.cutTurbine) {
+                m_flight.turbine().toggle();
+            }
+            /* À chaque changement de vue de la démo, on fait aussi défiler le mode HUD
+               (coins -> superposé -> rien), pour varier l'affichage en vol. */
+            if (demoOut.viewMode != m_viewMode) {
+                m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
+            }
             m_viewMode = demoOut.viewMode;
             if (demoOut.finished) {
-                startDemo();  /* minute écoulée : on rejoue la démo en boucle */
+                startDemo();  /* la démo est terminée : on la rejoue en boucle */
             }
         } else {
             controls = m_assist.apply(rawInput, frameDt);

@@ -471,21 +471,30 @@ void Application::mainLoop() {
 
         /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour
          * pouvoir jouer à la manette seule. */
-        if (m_input->hudTogglePressed()) {  /* B : fait défiler les modes HUD (comme H) */
-            m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
-        }
-        if (m_input->pauseTogglePressed()) {  /* Back : pause/reprise (comme P) */
-            m_paused = !m_paused;
-        }
-        if (m_input->resetPressed()) {  /* X : replace l'appareil au départ (comme R) */
-            m_flight.reset(m_parkPos);
-            m_input->reset();
-        }
-        if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
-            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
-        }
-        if (m_input->liveryTogglePressed()) {  /* A : bascule la livrée (comme L) */
-            toggleGendarmerieLivery();
+        if (m_confirmReset) {
+            /* Panneau de confirmation affiché : A = Oui, B = Non. Les autres actions
+             * des boutons sont neutralisées tant qu'on n'a pas répondu. */
+            if (m_input->liveryTogglePressed()) {  /* A : Oui -> reset */
+                resetToStart();
+            } else if (m_input->hudTogglePressed()) {  /* B : Non -> on annule */
+                m_confirmReset = false;
+            }
+        } else {
+            if (m_input->hudTogglePressed()) {  /* B : fait défiler les modes HUD (comme H) */
+                m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
+            }
+            if (m_input->pauseTogglePressed()) {  /* Back : pause/reprise (comme P) */
+                m_paused = !m_paused;
+            }
+            if (m_input->resetPressed()) {  /* X : demande la confirmation du reset (comme R) */
+                m_confirmReset = true;
+            }
+            if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
+                glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+            }
+            if (m_input->liveryTogglePressed()) {  /* A : bascule la livrée (comme L) */
+                toggleGendarmerieLivery();
+            }
         }
 
         /* Hauteur du relief sous l'appareil : sert au contact avec le sol. */
@@ -494,7 +503,7 @@ void Application::mainLoop() {
 
         /* État physique avant le dernier pas, conservé pour interpoler le rendu. */
         physics::RigidBody prevBody = m_flight.body();
-        if (m_paused) {
+        if (m_paused || m_confirmReset) {  /* le panneau de confirmation fige aussi le vol */
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
             accumulator += frameDt;
@@ -640,7 +649,7 @@ void Application::mainLoop() {
             hud.latDeg   = lat;
         }
         buildNavHud(hud, body.position, headingDeg);
-        m_hud.render(hud, m_hudMode, m_paused);
+        m_hud.render(hud, m_hudMode, m_paused, m_confirmReset);
 
         glfwSwapBuffers(m_window);
     }
@@ -1228,6 +1237,12 @@ void Application::toggleGendarmerieLivery() {
     m_loadedHeli->setGendarmerieLivery(m_gendarmerieLivery);
 }
 
+void Application::resetToStart() {
+    m_flight.reset(m_parkPos);
+    m_input->reset();
+    m_confirmReset = false;
+}
+
 void Application::onResize(int width, int height) {
     m_width  = width;
     m_height = height;
@@ -1250,6 +1265,17 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         return;
     }
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+
+    /* Panneau de confirmation du reset affiché : seules les réponses Oui/Non sont
+       prises en compte (O ou Entrée = Oui, N = Non), tout le reste est ignoré. */
+    if (app != nullptr && app->m_confirmReset) {
+        if (key == GLFW_KEY_O || key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
+            app->resetToStart();
+        } else if (key == GLFW_KEY_N) {
+            app->m_confirmReset = false;
+        }
+        return;
+    }
 
     switch (key) {
         case GLFW_KEY_ESCAPE:
@@ -1276,10 +1302,9 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_assist.toggle();
             }
             break;
-        case GLFW_KEY_R:  /* replace l'appareil à sa position de départ (la côte) */
+        case GLFW_KEY_R:  /* demande la confirmation avant de replacer l'appareil au départ */
             if (app != nullptr) {
-                app->m_flight.reset(app->m_parkPos);
-                app->m_input->reset();
+                app->m_confirmReset = true;
             }
             break;
         case GLFW_KEY_H:  /* fait défiler les modes HUD : coins -> superposé -> rien */

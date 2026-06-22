@@ -75,6 +75,9 @@ private:
     /* Bascule la livrée Gendarmerie (partagée par la touche L et le bouton A). */
     void toggleGendarmerieLivery();
 
+    /* Replace l'appareil au départ (appelé une fois la confirmation acceptée). */
+    void resetToStart();
+
     static void resizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -111,6 +114,7 @@ private:
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
+    bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */
     bool                                      m_gendarmerieLivery = true;  /* livrée Gendarmerie par défaut (touche L / bouton A) */
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */

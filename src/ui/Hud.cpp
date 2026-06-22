@@ -235,7 +235,7 @@ void Hud::shutdown() {
     m_ready = false;
 }
 
-void Hud::render(const HudData& data, HudMode mode, bool paused) {
+void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmReset) {
     if (!m_ready) {
         return;
     }
@@ -455,14 +455,24 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
         }
     }
 
-    if (paused) {
-        constexpr ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags bannerFlags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* Le panneau de confirmation du reset est prioritaire sur le bandeau de pause. */
+    if (confirmReset) {
+        ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.75f);
+        ImGui::Begin("confirm_reset", nullptr, bannerFlags);
+        ImGui::Text("       RÉINITIALISER ?");
+        ImGui::Text("Replacer l'appareil au départ");
+        ImGui::Text("A / O : Oui        B / N : Non");
+        ImGui::End();
+    } else if (paused) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.65f);
-        ImGui::Begin("pause", nullptr, flags);
+        ImGui::Begin("pause", nullptr, bannerFlags);
         ImGui::Text("        PAUSE");
         ImGui::Text("P : reprendre    Échap : quitter");
         ImGui::End();

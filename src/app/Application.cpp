@@ -1381,7 +1381,9 @@ void Application::startDemo() {
     m_flight.turbine().stopNow();
     m_flight.turbine().startFast();
     m_demo.start(returnPad, dune);
-    m_audio.playMusic(m_musicPath);  /* musique de la démo (silencieux si le fichier est absent) */
+    /* Musique de la démo mise de côté pour l'instant : on ne la lance pas.
+       (Tout le mécanisme reste en place ; décommenter pour la réactiver.) */
+    /* m_audio.playMusic(m_musicPath); */
 }
 
 void Application::toggleDemo() {

@@ -8,10 +8,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Réalisme
 
-- [ ] Il manque le skin du rotor arrière
-
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
-
 
 ### Sons
 
@@ -20,6 +17,12 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 - [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale
 
 ### Mode demo
+
+- [ ] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
+
+- [ ] Mode démo : décollage encore plus lent et doux
+
+- [ ] On ne sait pas quand et de quelle manière on est sorti du mode démo, trouver une solution
 
 ## Terrain
 
@@ -103,14 +106,6 @@ ou sortir de France.
   
 - [ ] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
-### Sons
-
-- [ ] pendant le début de montée de la rurbine, j'entends les pales => mettre le son des pales lorsque elles ont à 70% de 360 tr/min
-
-### Manuel
-
-- [ ] Fournir un PDF propre dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
-
 ## Quelques observations à traiter
 
 - [ ] FUEL_BURN_MAX_LPH = 194.0f : nos fiches indiquent 155 kg/h à puissance maxi. Avec kérosène à 0,8 kg/L, cela donne environ 194 L/h. La conversion est juste.
@@ -121,9 +116,12 @@ ou sortir de France.
 
 - [ ] HudMode::Overlay avec "instruments ronds verts superposés (Super HUD)" : ce mode n'est pas dans nos fiches. C'est une bonne idée, à documenter dans PANEL.md.
 
-- [ ] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
-
-- [ ] Mode démo : décollage encore plus lent et doux
-
 - [ ] Mettre un PDF du README dans les archives des binaires dans les releases
 
+### Sons
+
+- [ ] pendant le début de montée de la rurbine, j'entends les pales => mettre le son des pales lorsque elles ont à 70% de 360 tr/min
+
+### Manuel
+
+- [ ] Fournir un PDF propre dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.

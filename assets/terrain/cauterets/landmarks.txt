@@ -7,6 +7,6 @@
 -0.1456 42.77 Vignemale
 0.0 42.873 Luz-Saint-Sauveur
 0.0175 42.7847 Gèdre
-0.0086 42.7335 Gavarnie
+-0.0086 42.7335 Gavarnie
 -0.0386 42.6975 Brèche de Roland
 -0.009 42.6963 Cirque de Gavarnie

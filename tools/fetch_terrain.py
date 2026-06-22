@@ -152,7 +152,7 @@ ZONES = {
             ("Vignemale", -0.1456, 42.7700),
             ("Luz-Saint-Sauveur", 0.0000, 42.8730),
             ("Gèdre", 0.0175, 42.7847),
-            ("Gavarnie", 0.0086, 42.7335),
+            ("Gavarnie", -0.0086, 42.7335),
             ("Brèche de Roland", -0.0386, 42.6975),
             ("Cirque de Gavarnie", -0.0090, 42.6963),
         ],
@@ -162,7 +162,7 @@ ZONES = {
         "helipads": [
             ("Cauterets", -0.1120, 42.8880),
             ("Pont d'Espagne", -0.1440, 42.8560),
-            ("Gavarnie", 0.0090, 42.7330),
+            ("Gavarnie", -0.0090, 42.7330),
             ("Luz-Saint-Sauveur", 0.0000, 42.8730),
             ("Refuge des Oulettes de Gaube", -0.1412, 42.7929),
             ("Refuge des Sarradets", -0.0333, 42.6959),

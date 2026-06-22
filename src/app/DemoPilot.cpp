@@ -22,6 +22,8 @@ constexpr float ROTOR_PRET      = 0.99f; /* régime rotor à atteindre avant de 
 constexpr float DELAI_DECOLLAGE = 3.0f;  /* s : attente sur le pad après le plein régime rotor avant de décoller */
 constexpr float DUREE_MONTEE    = 5.0f;  /* s : décollage vertical avant de partir vers la dune */
 constexpr float COLLECTIF_RATE  = 0.35f; /* 1/s : vitesse de variation du collectif (levier monté en douceur) */
+constexpr float COLLECTIF_MAX   = 0.72f; /* plafond du collectif : garde la tuyère sous ~480 deg en montée
+                                            (temp = 400 + 150*collectif^2 ; 0,72 -> ~478 deg, zone verte) */
 constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
 constexpr float T_MAX        = 720.0f; /* garde-fou : on relance la démo au plus tard à cet instant (12 min) */
 
@@ -40,12 +42,13 @@ constexpr float GAIN_CYCLIQUE   = 0.08f;   /* cyclique par (m/s) d'écart de vit
 constexpr float CYCLIQUE_MAX    = 0.45f;   /* cyclique maximal : borne l'inclinaison à une assiette réaliste */
 constexpr float GAIN_ALT_RETOUR = 0.20f;   /* hauteur visée (m) par mètre de distance au pad (descente du retour) */
 constexpr float DIST_CAP_MIN    = 30.0f;   /* en deçà, on ne pivote plus le nez (la cible est trop proche) */
-constexpr float VZ_POSE         = -0.4f;   /* m/s : vitesse de descente visée pour une pose très douce */
+constexpr float VZ_POSE         = -0.8f;   /* m/s : vitesse de descente visée à la pose (douce mais sans traîner) */
 constexpr float GAIN_VZ_POSE    = 0.15f;   /* collectif par (m/s) d'écart de vitesse verticale, à la pose */
 
 /* --- Détection de la pose ---------------------------------------------------- */
 constexpr float DIST_POSE = 15.0f;  /* distance horizontale au pad sous laquelle on est "arrivé" (m) */
-constexpr float AGL_POSE  = 1.0f;   /* hauteur-sol sous laquelle on considère l'appareil posé (m) */
+constexpr float AGL_POSE  = 0.2f;   /* hauteur-sol sous laquelle on considère l'appareil vraiment posé (m) :
+                                       on ne coupe la turbine qu'au contact, pour éviter une chute du dernier mètre */
 
 /* Ramène un angle dans l'intervalle [-PI, +PI]. */
 float wrapPi(float a) noexcept {
@@ -94,7 +97,8 @@ void DemoPilot::start(const vec3& returnPad, const vec3& dunePoint) noexcept {
 }
 
 float DemoPilot::rampeCollectif(float cible, float dt) noexcept {
-    const float pas = COLLECTIF_RATE * dt;  /* variation maximale sur ce pas de temps */
+    cible = clamp(cible, 0.0f, COLLECTIF_MAX);  /* limite la température de tuyère en montée */
+    const float pas = COLLECTIF_RATE * dt;      /* variation maximale sur ce pas de temps */
     m_collective += clamp(cible - m_collective, -pas, pas);
     return m_collective;
 }

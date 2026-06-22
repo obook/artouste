@@ -1039,6 +1039,7 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
             if (ndc.z < 1.0f && std::fabs(ndc.x) < 1.02f && std::fabs(ndc.y) < 1.02f) {
                 label.fx       = ndc.x * 0.5f + 0.5f;
                 label.fy       = 1.0f - (ndc.y * 0.5f + 0.5f);
+                label.depth    = clip.w;  /* distance caméra : sert à donner la priorité au plus proche */
                 label.onScreen = true;
             }
         }

@@ -16,7 +16,9 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 
 namespace artouste::ui {
@@ -374,16 +376,46 @@ void Hud::render(const HudData& data, HudMode mode, bool paused) {
     if (mode != HudMode::Off) {
         ImDrawList* dl = ImGui::GetForegroundDrawList();
 
-        /* Étiquettes projetées sur la scène : un point jaune et le nom (avec ombre). */
-        for (const HudLabel& lab : data.labels) {
-            if (!lab.onScreen) {
-                continue;
+        /* Étiquettes projetées sur la scène : un point jaune et le nom (avec ombre).
+           Anti-chevauchement : on traite les lieux du plus proche au plus lointain
+           et on masque le nom de ceux dont le texte recouvrirait une étiquette déjà
+           posée. Le point jaune, lui, reste affiché pour tous : seule la cohue de
+           noms est évitée, pas le repérage des positions. */
+        std::vector<int> order;
+        order.reserve(data.labels.size());
+        for (int i = 0; i < static_cast<int>(data.labels.size()); ++i) {
+            if (data.labels[static_cast<std::size_t>(i)].onScreen) {
+                order.push_back(i);
             }
-            const float x = lab.fx * w;
-            const float y = lab.fy * h;
+        }
+        std::sort(order.begin(), order.end(), [&](int a, int b) {
+            return data.labels[static_cast<std::size_t>(a)].depth
+                 < data.labels[static_cast<std::size_t>(b)].depth;
+        });
+
+        std::vector<ImVec4> placed;  /* boites de noms déjà occupées : (minx, miny, maxx, maxy) */
+        placed.reserve(order.size());
+        for (const int idx : order) {
+            const HudLabel& lab = data.labels[static_cast<std::size_t>(idx)];
+            const float     x   = lab.fx * w;
+            const float     y   = lab.fy * h;
             dl->AddCircleFilled(ImVec2(x, y), 3.0f, IM_COL32(255, 230, 90, 230));
+
             const ImVec2 ts = ImGui::CalcTextSize(lab.name);
             const ImVec2 tp(x - ts.x * 0.5f, y - ts.y - 7.0f);
+            /* Boite du nom, élargie d'une petite marge pour aérer les étiquettes. */
+            const ImVec4 box(tp.x - 2.0f, tp.y - 1.0f, tp.x + ts.x + 2.0f, tp.y + ts.y + 1.0f);
+            bool overlaps = false;
+            for (const ImVec4& p : placed) {
+                if (box.x < p.z && box.z > p.x && box.y < p.w && box.w > p.y) {
+                    overlaps = true;
+                    break;
+                }
+            }
+            if (overlaps) {
+                continue;  /* nom masqué (le point reste) pour garder l'affichage lisible */
+            }
+            placed.push_back(box);
             dl->AddText(ImVec2(tp.x + 1.0f, tp.y + 1.0f), IM_COL32(0, 0, 0, 200), lab.name);
             dl->AddText(tp, IM_COL32(255, 240, 140, 255), lab.name);
         }

@@ -23,6 +23,7 @@ struct HudLabel {
     const char* name     = "";
     float       fx       = 0.0f;   /* position écran de l'étiquette (fraction 0-1) */
     float       fy       = 0.0f;
+    float       depth    = 1e30f;  /* profondeur caméra (plus petit = plus proche), pour trier */
     bool        onScreen = false;  /* le lieu est devant la caméra et dans le cadre */
     float       mapU     = 0.0f;   /* position sur la minimap : 0 ouest -> 1 est */
     float       mapV     = 0.0f;   /* 0 nord -> 1 sud */

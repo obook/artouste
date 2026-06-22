@@ -21,8 +21,10 @@ namespace artouste::app::demo_detail {
 /* --- Découpage du début de la démo ------------------------------------------- */
 inline constexpr float ROTOR_PRET      = 0.99f; /* régime rotor à atteindre avant de décoller (plein régime) */
 inline constexpr float DELAI_DECOLLAGE = 3.0f;  /* s : attente sur le pad après le plein régime rotor avant de décoller */
-inline constexpr float DUREE_MONTEE    = 5.0f;  /* s : décollage vertical avant de partir vers la dune */
-inline constexpr float COLLECTIF_RATE  = 0.35f; /* 1/s : vitesse de variation du collectif (levier monté en douceur) */
+inline constexpr float DUREE_MONTEE    = 7.0f;  /* s : décollage vertical doux avant de partir vers la dune */
+inline constexpr float COLLECTIF_RATE  = 0.25f; /* 1/s : vitesse de variation du collectif (levier monté en douceur) */
+inline constexpr float VZ_DECOLLAGE      = 2.0f;  /* m/s : vitesse de montée visée au décollage (douce, contrôlée) */
+inline constexpr float GAIN_VZ_DECOLLAGE = 0.06f; /* collectif par (m/s) d'écart à la vitesse de montée, au décollage */
 inline constexpr float COLLECTIF_MAX   = 0.72f; /* plafond du collectif : garde la tuyère sous ~480 deg en montée
                                                    (temp = 400 + 150*collectif^2 ; 0,72 -> ~478 deg, zone verte) */
 inline constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
@@ -85,6 +87,16 @@ inline float palonnierVers(const vec3& cible, const vec3& pos, float cap) noexce
    verticale pour ne pas osciller. Centré sur le collectif de sustentation. */
 inline float collectifPour(float hauteurCible, float hauteurSol, float vitesseVerticale) noexcept {
     const float corr = GAIN_ALT * (hauteurCible - hauteurSol) - GAIN_VZ * vitesseVerticale;
+    return saturate(physics::COLL_HOVER + corr);
+}
+
+/* Collectif de décollage : au lieu de tirer le levier à fond (cap à COLLECTIF_MAX) en
+   visant l'altitude de survol, on asservit la VITESSE DE MONTÉE à une valeur douce
+   (VZ_DECOLLAGE). Le collectif reste donc juste au-dessus de la sustentation et
+   l'appareil quitte le pad lentement, sans à-coup. La rampe du levier (rampeCollectif)
+   lisse encore l'instant initial. */
+inline float collectifDecollage(float vitesseVerticale) noexcept {
+    const float corr = GAIN_VZ_DECOLLAGE * (VZ_DECOLLAGE - vitesseVerticale);
     return saturate(physics::COLL_HOVER + corr);
 }
 

@@ -71,10 +71,12 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     const float tVol = depuisRegime - DELAI_DECOLLAGE;  /* temps écoulé depuis le décollage */
 
     if (tVol < DUREE_MONTEE) {
-        /* Phase 3 : décollage vertical pour quitter le pad, sans avancer encore. Le
-           collectif est monté en douceur (rampe) pour un décollage progressif. */
+        /* Phase 3 : décollage vertical pour quitter le pad, sans avancer encore. On
+           asservit la vitesse de montée à une valeur douce (collectifDecollage) plutôt
+           que de tirer le collectif à fond : l'appareil s'élève lentement, en douceur.
+           La rampe (rampeCollectif) lisse encore la mise en action du levier. */
         out.viewMode            = 0;  /* poursuite */
-        out.controls.collective = rampeCollectif(collectifPour(ALT_SURVOL, agl, velocity.y), dt);
+        out.controls.collective = rampeCollectif(collectifDecollage(velocity.y), dt);
         return out;
     }
 

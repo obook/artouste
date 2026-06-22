@@ -180,6 +180,43 @@ tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helip
 blender --background --python tools/helipad/make_helipad.py
 ```
 
+   Compatibilité Blender < 4.1 : la version actuelle du greffon cible Blender 4.3
+   et son importateur appelle `Mesh.set_sharp_from_angle()`, une API qui n'existe
+   qu'à partir de Blender 4.1. Sous Blender 4.0, l'import d'un `.ac` plante donc
+   tant que ce point n'est pas corrigé. Le contournement consiste à garder cet
+   appel dans `io_scene_ac3d/import_ac3d.py` (vers la ligne 585) :
+
+```python
+   if hasattr(me, "set_sharp_from_angle"):
+       me.set_sharp_from_angle(angle=radians(self.crease))
+   elif hasattr(me, "use_auto_smooth"):
+       me.use_auto_smooth = True
+       me.auto_smooth_angle = radians(self.crease)
+```
+
+   Ce correctif ne touche que l'installation locale du greffon, pas le dépôt : les
+   `.ac` et leurs textures étant versionnés, compiler et lancer le simulateur ne
+   demandent ni Blender ni greffon.
+
+## Rotor de queue (régénérer le skin des pales)
+
+Les pales du rotor de queue sont peintes par un outil Blender qui importe
+`blade.ac`, lit les UV et l'envergure, puis colorie les triangles de la pale :
+métal nu en livrée d'origine (`tailrotor.png`), jaune à zébrures rouges en livrée
+Gendarmerie (`tailrotor-gendarmerie.png`). Les deux textures sont versionnées ;
+régénérer ne sert qu'après modification :
+
+```bash
+blender --background --python tools/livree/make_tailrotor.py
+```
+
+Un contrôle rapide des textures produites :
+
+```bash
+tools/.venv/bin/python tools/livree/check_tailrotor.py \
+    assets/models/Alouette-II/Models/Externals/TailRotor/tailrotor-gendarmerie.png --zebra
+```
+
 ## Terrain (choix de la map)
 
 Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par

@@ -44,10 +44,13 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
     m_camera.setAspect(static_cast<float>(fbw) / static_cast<float>(fbh));
 
-    /* Livrée Gendarmerie dans la capture si ARTOUSTE_SHOT_LIVERY est définie
-       (pratique pour vérifier les marquages sans la boucle interactive). */
-    if (m_loadedHeli && std::getenv("ARTOUSTE_SHOT_LIVERY") != nullptr) {
-        m_loadedHeli->setGendarmerieLivery(true);
+    /* Livrée de la capture : ARTOUSTE_SHOT_LIVERY=0 force la livrée d'origine,
+       toute autre valeur force la Gendarmerie. Variable absente : on garde l'état
+       par défaut (Gendarmerie). Pratique pour vérifier les deux livrées. */
+    if (m_loadedHeli) {
+        if (const char* e = std::getenv("ARTOUSTE_SHOT_LIVERY")) {
+            m_loadedHeli->setGendarmerieLivery(e[0] != '0');
+        }
     }
 
     /*

@@ -181,6 +181,10 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_mainBlade = loadPart(dir / "Externals/MainRotor/blade.ac", skipRotor);
     m_tailHub   = loadPart(dir / "Externals/TailRotor/tailrotor.ac", skipRotor);
     m_tailBlade = loadPart(dir / "Externals/TailRotor/blade.ac", skipRotor);
+    /* Livrée Gendarmerie des pales de queue : texture de rechange (jaune zébré
+       rouge), préchargée dans le cache de la pale et activée à la demande. */
+    m_tailBladeLivery =
+        m_tailBlade.acquireTexture(dir / "Externals/TailRotor/tailrotor-gendarmerie.png");
 
     /* Marquages de la livrée Gendarmerie (posés sur les flancs en 3D, voir draw). */
     m_decalGendarmerie = makeDecal(dir / "decal-gendarmerie.png");
@@ -191,6 +195,7 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
 void LoadedHelicopter::setGendarmerieLivery(bool on) {
     m_gendarmerie = on;
     m_fuselage.setLivery(on ? m_liveryGendarmerie : nullptr);
+    m_tailBlade.setLivery(on ? m_tailBladeLivery : nullptr);
 }
 
 void LoadedHelicopter::drawModel(Shader& shader, const Model& model, const mat4& transform,

@@ -103,6 +103,7 @@ private:
 
     Model              m_fuselage;
     const Texture*     m_liveryGendarmerie = nullptr;  /* livrée bleue (fuselage) */
+    const Texture*     m_tailBladeLivery   = nullptr;  /* pales de queue Gendarmerie (jaune zébré rouge) */
     bool               m_gendarmerie = false;          /* livrée Gendarmerie active (marquages) */
     Model              m_interior;
     Model              m_pilot;         /* pilote entier (vues externes) */

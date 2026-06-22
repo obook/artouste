@@ -16,3 +16,11 @@ terrain ossau
 # suite en test ; 0 = demarrage normal a froid. La variable d'environnement
 # ARTOUSTE_TURBINE_DEMARREE, si definie, a la priorite.
 turbine_demarree 0
+
+# demo : 1 = mode demonstration automatique au lancement. L'appareil joue tout seul
+# un vol (demarrage rapide, decollage, montee et vol jusqu'a la Dune du Pilat survolee
+# vers 1500 m, demi-tour et retour se poser sur le pad de depart), rejoue en boucle ;
+# le terrain est alors force sur arcachon. Une entree du pilote ou la touche V coupe
+# la demo. La variable d'environnement ARTOUSTE_DEMO, si definie, a la priorite.
+# 0 = pas de demo.
+demo 0

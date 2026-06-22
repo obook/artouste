@@ -32,11 +32,17 @@ void Turbine::toggle() noexcept {
 }
 
 void Turbine::update(float dt, float collective) noexcept {
+    /* Durées de la montée en régime : raccourcies pendant un démarrage rapide
+     * (mode démo), sinon celles de la séquence réelle. */
+    const float turbineStartTime = m_fastStart ? DEMO_TURBINE_START_TIME : TURBINE_START_TIME;
+    const float rotorBrakeDelay  = m_fastStart ? DEMO_ROTOR_BRAKE_DELAY  : ROTOR_BRAKE_DELAY;
+    const float rotorEngageTime  = m_fastStart ? DEMO_ROTOR_ENGAGE_TIME  : ROTOR_ENGAGE_TIME;
+
     switch (m_state) {
         case State::Demarrage:
             /* La turbine monte seule en régime ; le rotor reste immobile, pales
              * arrêtées. */
-            m_turbine += dt / TURBINE_START_TIME;
+            m_turbine += dt / turbineStartTime;
             if (m_turbine >= 1.0f) {
                 m_turbine    = 1.0f;
                 m_brakeTimer = 0.0f;
@@ -48,17 +54,18 @@ void Turbine::update(float dt, float collective) noexcept {
              * serré : les pales restent immobiles le temps que le pilote le lâche.
              * Ce délai écoulé, on passe à l'embrayage du rotor. */
             m_brakeTimer += dt;
-            if (m_brakeTimer >= ROTOR_BRAKE_DELAY) {
+            if (m_brakeTimer >= rotorBrakeDelay) {
                 m_state = State::Embrayage;  /* frein lâché : le rotor s'engage */
             }
             break;
         case State::Embrayage:
             /* Frein lâché : le rotor s'engage par la roue libre (celle qui permet
              * aussi l'autorotation) et les pales accélèrent jusqu'au régime de vol. */
-            m_rotor += dt / ROTOR_ENGAGE_TIME;
+            m_rotor += dt / rotorEngageTime;
             if (m_rotor >= 1.0f) {
-                m_rotor = 1.0f;
-                m_state = State::Regime;  /* régime établi */
+                m_rotor     = 1.0f;
+                m_fastStart = false;  /* régime atteint : le démarrage rapide est terminé */
+                m_state     = State::Regime;  /* régime établi */
             }
             break;
         case State::Extinction:
@@ -72,6 +79,7 @@ void Turbine::update(float dt, float collective) noexcept {
             if (m_turbine < 0.0f) {
                 m_turbine = 0.0f;
             }
+            m_fastStart = false;  /* une coupure annule le démarrage rapide en cours */
             if (m_rotor <= 0.0f && m_turbine <= 0.0f) {
                 m_state = State::Arret;  /* tout est arrêté */
             }
@@ -95,10 +103,27 @@ void Turbine::update(float dt, float collective) noexcept {
 }
 
 void Turbine::forceRunning() noexcept {
-    m_state    = State::Regime;
-    m_turbine  = 1.0f;
-    m_rotor    = 1.0f;
-    m_exhaustC = EXHAUST_TEMP_IDLE_C;  /* tuyère déjà chaude (régime établi, charge minimale) */
+    m_state     = State::Regime;
+    m_turbine   = 1.0f;
+    m_rotor     = 1.0f;
+    m_fastStart = false;
+    m_exhaustC  = EXHAUST_TEMP_IDLE_C;  /* tuyère déjà chaude (régime établi, charge minimale) */
+}
+
+void Turbine::startFast() noexcept {
+    if (m_state == State::Arret || m_state == State::Extinction) {
+        m_state     = State::Demarrage;  /* relance la turbine, durées DEMO_* */
+        m_fastStart = true;
+    }
+}
+
+void Turbine::stopNow() noexcept {
+    m_state      = State::Arret;
+    m_turbine    = 0.0f;
+    m_rotor      = 0.0f;
+    m_fastStart  = false;
+    m_brakeTimer = 0.0f;
+    m_exhaustC   = EXHAUST_TEMP_AMBIENT_C;
 }
 
 const char* Turbine::label() const noexcept {

@@ -251,10 +251,8 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
 
     if (mode == HudMode::Corners) {
         /* Même vert instrument que le Super HUD, pour unifier les deux affichages.
-         * Les textes d'alerte (TextColored) gardent leur couleur propre ; la barre
-         * du palonnier passe au vert via la couleur d'histogramme. */
+         * Les textes d'alerte (TextColored) gardent leur couleur propre. */
         ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
-        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, HUD_GREEN);
 
         corner("hud_tl", ImVec2(m, m), ImVec2(0.0f, 0.0f));
         ImGui::Text("ALT  %5.0f m", static_cast<double>(data.altitudeM));
@@ -284,15 +282,17 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
         }
         ImGui::End();
 
-        corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
-        ImGui::Text("PALONNIER");
-        ImGui::ProgressBar(data.pedals * 0.5f + 0.5f, ImVec2(140.0f, 0.0f), "");
+        /* Coin bas-droit : uniquement le voyant du mode assisté, affiché quand il est
+           actif (l'ancienne barre de palonnier, peu utile, a été retirée). On ne crée
+           le panneau que s'il y a quelque chose à montrer, pour ne pas laisser une
+           boîte vide. */
         if (data.assist) {
+            corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
             ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
+            ImGui::End();
         }
-        ImGui::End();
 
-        ImGui::PopStyleColor(2);
+        ImGui::PopStyleColor(1);
     } else if (mode == HudMode::Overlay) {
         /* Super HUD : rang d'instruments ronds verts superposés en bas de l'image
          * (Priorité 1 de PANEL.md), assez bas pour ne pas gêner la vue de vol. */

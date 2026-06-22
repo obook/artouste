@@ -4,6 +4,7 @@ add_executable(artouste
     main.cpp
     app/Application.cpp
     app/Config.cpp
+    app/DemoPilot.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp
     input/InputSystem.cpp

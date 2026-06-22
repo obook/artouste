@@ -75,6 +75,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
+| Démo automatique        | `V`            | -                    |
 | Reset position          | `R`            | bouton `X`           |
 | Quitter                 | `Échap`        | `LB` + `RB`          |
 

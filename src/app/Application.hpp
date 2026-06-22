@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "app/DemoPilot.hpp"
 #include "audio/AudioEngine.hpp"
 #include "physics/FlightAssist.hpp"
 #include "physics/FlightModel.hpp"
@@ -78,6 +79,14 @@ private:
     /* Replace l'appareil au départ (appelé une fois la confirmation acceptée). */
     void resetToStart();
 
+    /* Lance (ou relance en boucle) la démonstration automatique : appareil sur le
+       pad de départ, turbine à froid puis démarrage rapide, et chorégraphie jouée
+       par le pilote automatique m_demo. */
+    void startDemo();
+
+    /* Lance la démo si elle est arrêtée, l'arrête sinon (touche V). */
+    void toggleDemo();
+
     static void resizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -109,6 +118,7 @@ private:
     std::unique_ptr<input::InputSystem>       m_input;
     physics::FlightModel                      m_flight;
     physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
+    DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */

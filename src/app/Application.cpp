@@ -355,9 +355,22 @@ void Application::initScene() {
      * pour tester une autre map sans toucher au fichier).
      */
     const app::Config config = app::loadConfig(assets / "config.txt");
+
+    /* Mode démo automatique : clé "demo" de la configuration, surchargée par la
+       variable d'environnement ARTOUSTE_DEMO (prioritaire). */
+    bool demoEnabled = config.demo;
+    if (const char* env = std::getenv("ARTOUSTE_DEMO"); env != nullptr && env[0] != '\0') {
+        demoEnabled = (env[0] != '0');
+    }
+
     std::string        terrainName = config.terrain;
     if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
         terrainName = env;
+    }
+    /* La démo se déroule sur le bassin d'Arcachon (Dune du Pilat à survoler). */
+    if (demoEnabled && terrainName != "arcachon") {
+        std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
+        terrainName = "arcachon";
     }
     std::printf("[scène] terrain : %s\n", terrainName.c_str());
     const std::filesystem::path terrainDir = assets / "terrain" / terrainName;
@@ -395,7 +408,9 @@ void Application::initScene() {
     if (const char* env = std::getenv("ARTOUSTE_TURBINE_DEMARREE"); env != nullptr && env[0] != '\0') {
         turbineRunning = (env[0] != '0');
     }
-    if (turbineRunning) {
+    /* En mode démo, c'est la démo qui pilote la turbine (démarrage rapide) : on
+       ignore donc le démarrage immédiat éventuel. */
+    if (turbineRunning && !demoEnabled) {
         m_flight.turbine().forceRunning();
         std::printf("[scène] démarrage immédiat : turbine et rotor au régime.\n");
     }
@@ -428,6 +443,12 @@ void Application::initScene() {
     if (m_height > 0) {
         m_camera.setAspect(static_cast<float>(m_width) / static_cast<float>(m_height));
     }
+
+    /* Mode démo demandé au lancement : on démarre la démonstration tout de suite. */
+    if (demoEnabled) {
+        std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
+        startDemo();
+    }
 }
 
 void Application::mainLoop() {
@@ -450,28 +471,65 @@ void Application::mainLoop() {
          * Entrées -> commandes, puis intégration de la physique à pas fixe,
          * indépendante de la cadence de rendu.
          */
-        /* Commandes brutes du pilote, puis passage par le mode assisté : s'il est
-         * actif, il corrige et adoucit les commandes ; sinon il les laisse intactes. */
-        const physics::Controls controls = m_assist.apply(m_input->poll(frameDt), frameDt);
+        /* Commandes brutes du pilote (manche, palonnier, collectif). */
+        const physics::Controls rawInput = m_input->poll(frameDt);
 
-        /* Croix directionnelle haut de la manette : bascule le mode assisté (comme la touche M). */
-        if (m_input->assistTogglePressed()) {
+        /* Mode démo : une vraie action du pilote (manche, palonnier ou collectif)
+         * lui rend la main et coupe la démo. */
+        if (m_demo.active()) {
+            const float pilotInput = std::fabs(rawInput.cyclicLateral)
+                                   + std::fabs(rawInput.cyclicLongitudinal)
+                                   + std::fabs(rawInput.pedals)
+                                   + std::fabs(rawInput.collective);
+            if (pilotInput > 0.15f) {
+                m_demo.stop();
+            }
+        }
+
+        /* Commandes effectives : fournies par le pilote automatique en mode démo,
+         * sinon les commandes du pilote passées par le mode assisté (qui les corrige
+         * et les adoucit s'il est actif, sinon les laisse intactes). */
+        physics::Controls controls;
+        if (m_demo.active()) {
+            const physics::RigidBody& demoBody = m_flight.body();
+            const vec3  demoFwd    = demoBody.orientation * vec3{1.0f, 0.0f, 0.0f};
+            const float demoHeading = std::atan2(-demoFwd.z, demoFwd.x);
+            const float demoGround  = m_terrain->heightAt(demoBody.position.x, demoBody.position.z);
+            const DemoPilot::Output demoOut =
+                m_demo.update(frameDt, demoBody.position, demoBody.velocity, demoHeading, demoGround,
+                              m_flight.turbine().rotorFraction());
+            controls   = demoOut.controls;
+            m_viewMode = demoOut.viewMode;
+            if (demoOut.finished) {
+                startDemo();  /* minute écoulée : on rejoue la démo en boucle */
+            }
+        } else {
+            controls = m_assist.apply(rawInput, frameDt);
+        }
+
+        /* Boutons et touches d'action de la manette : neutralisés pendant la démo
+         * (le pilote la coupe en touchant les commandes de vol, ou avec la touche V). */
+        if (m_demo.active()) {
+            /* Rien : la démo ignore les boutons d'action. */
+        } else if (m_input->assistTogglePressed()) {  /* croix haut : mode assisté (touche M) */
             m_assist.toggle();
         }
 
         /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
-        if (m_input->viewTogglePressed()) {
+        if (!m_demo.active() && m_input->viewTogglePressed()) {
             m_viewMode = (m_viewMode + 1) % 3;
         }
 
         /* Bouton Start de la manette : démarre ou coupe la turbine, comme la touche T. */
-        if (m_input->turbineTogglePressed()) {
+        if (!m_demo.active() && m_input->turbineTogglePressed()) {
             m_flight.turbine().toggle();
         }
 
         /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour
          * pouvoir jouer à la manette seule. */
-        if (m_confirmReset) {
+        if (m_demo.active()) {
+            /* Aucune action manette pendant la démo. */
+        } else if (m_confirmReset) {
             /* Panneau de confirmation affiché : A = Oui, B = Non. Les autres actions
              * des boutons sont neutralisées tant qu'on n'a pas répondu. */
             if (m_input->liveryTogglePressed()) {  /* A : Oui -> reset */
@@ -633,7 +691,6 @@ void Application::mainLoop() {
         hud.varioFpm      = body.velocity.y * 196.85f;
         hud.varioMs       = body.velocity.y;
         hud.collectivePct = controls.collective * 100.0f;
-        hud.pedals        = controls.pedals;
         hud.rotorPct      = rotorFraction * 100.0f;          /* régime rotor, en pourcentage */
         hud.rotorRpm      = rotorFraction * 360.0f;          /* régime rotor nominal : 360 tr/min */
         hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
@@ -1243,6 +1300,42 @@ void Application::resetToStart() {
     m_confirmReset = false;
 }
 
+void Application::startDemo() {
+    /* Pad de départ et d'arrivée : là où l'appareil est garé (la démo y revient se
+       poser). Point à survoler : la Dune du Pilat, repérée par son nom dans les lieux
+       remarquables du terrain et convertie en coordonnées monde. Faute de la trouver,
+       on vise le pad lui-même (la démo se contente alors d'un décollage et d'une pose). */
+    const vec3 returnPad = m_startPos;
+    vec3       dune      = returnPad;
+    if (m_terrain) {
+        for (const render::Landmark& lm : m_terrain->landmarks()) {
+            if (lm.name.find("Pilat") != std::string::npos) {
+                float x = 0.0f;
+                float z = 0.0f;
+                m_terrain->worldAt(lm.lon, lm.lat, x, z);
+                dune = vec3{x, m_terrain->heightAt(x, z), z};
+                break;
+            }
+        }
+    }
+
+    /* On repart d'un état propre : appareil sur le pad, turbine à froid, puis on
+       lance le démarrage rapide et la chorégraphie. */
+    resetToStart();
+    m_viewMode = 2;  /* vue d'orbite pour le démarrage */
+    m_flight.turbine().stopNow();
+    m_flight.turbine().startFast();
+    m_demo.start(returnPad, dune);
+}
+
+void Application::toggleDemo() {
+    if (m_demo.active()) {
+        m_demo.stop();  /* le pilote reprend la main */
+    } else {
+        startDemo();
+    }
+}
+
 void Application::onResize(int width, int height) {
     m_width  = width;
     m_height = height;
@@ -1265,6 +1358,12 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         return;
     }
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+
+    /* Pendant la démo, toute touche autre que V rend la main au pilote (la touche V
+       elle-même bascule la démo plus bas). */
+    if (app != nullptr && app->m_demo.active() && key != GLFW_KEY_V) {
+        app->m_demo.stop();
+    }
 
     /* Panneau de confirmation du reset affiché : seules les réponses Oui/Non sont
        prises en compte (O ou Entrée = Oui, N = Non), tout le reste est ignoré. */
@@ -1289,6 +1388,11 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_T:  /* démarre ou coupe la turbine */
             if (app != nullptr) {
                 app->m_flight.turbine().toggle();
+            }
+            break;
+        case GLFW_KEY_V:  /* lance ou arrête la démonstration automatique */
+            if (app != nullptr) {
+                app->toggleDemo();
             }
             break;
         case GLFW_KEY_L:  /* bascule la livrée Gendarmerie nationale */

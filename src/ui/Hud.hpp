@@ -44,7 +44,6 @@ struct HudData {
     float       varioFpm      = 0.0f;
     float       varioMs       = 0.0f;   /* taux de montée en m/s (instrument superposé) */
     float       collectivePct = 0.0f;
-    float       pedals        = 0.0f;   /* [-1, +1] */
     float       rotorPct      = 0.0f;
     float       rotorRpm      = 0.0f;   /* régime rotor en tr/min */
     float       turbineRpm    = 0.0f;   /* régime turbine en tr/min */

@@ -56,7 +56,28 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Mode demo
 
-- [ ] Prévoir un mode démo automatique d'environ 60 secondes, démarrage rapide turbine 10 secondes puis collectif 10 secondes, vol au dessus de batiments, vue sur la mer, attérissage élégants sur pad, plan de vol et changement des vues à définir.
+- [x] Prévoir un mode démo automatique d'environ 60 secondes, démarrage rapide turbine 10 secondes puis collectif 10 secondes, vol au dessus de batiments, vue sur la mer, attérissage élégants sur pad, plan de vol et changement des vues à définir.
+
+    Fait : pilote automatique `app::DemoPilot` (voir `src/app/DemoPilot.cpp`). La démo
+    s'active par la clé `demo` de `config.txt` (ou la variable `ARTOUSTE_DEMO`,
+    prioritaire) ou par la touche `V` en jeu, et impose le terrain `arcachon`. Une
+    entrée du pilote ou la touche `V` la coupe ; sinon elle se rejoue en boucle
+    (mode vitrine). Mission : démarrage rapide de la turbine (`Turbine::startFast`,
+    ~10 s au lieu de 48 s), décollage une fois le rotor au plein régime, montée et vol
+    jusqu'à la **Dune du Pilat survolée vers 1500 m**, demi-tour, retour se poser sur
+    le pad de départ ; changements de vue en route (orbite / cockpit / poursuite). Le
+    guidage est proportionnel : cap vers la cible courante (la dune à l'aller, le pad
+    au retour), asservissement de la vitesse horizontale (qui décroît avec la distance,
+    pour s'arrêter net au-dessus du pad au lieu de tourner autour) et hauteur réglée
+    selon la phase (montée à 1500 m à l'aller, descente liée à la distance au retour).
+    Vol validé en simulation : survol de la dune à 1500 m, retour et pose à quelques
+    mètres du pad (vers 9,6 min). La croisière est tenue à une **assiette réaliste
+    d'environ 10 deg nez bas** (vitesse ~30 m/s, soit ~110 km/h) ; comme la Dune du
+    Pilat est à ~8 km du pad, l'aller-retour dure donc **environ 9 à 10 minutes**.
+
+    - [ ] À régler en vol sur le rendu réel : calage fin des gains (vitesse, assiette,
+      précision de la pose selon le relief). Désynchronisation du son de démarrage
+      (spool 10 s contre `turbine-start.wav` ~48 s) toujours à recaler.
 
 ## Terrain
 

@@ -28,6 +28,13 @@ struct Config {
        au lancement (au lieu de la séquence de démarrage). Pratique pour les tests,
        afin de pouvoir décoller tout de suite. */
     bool turbineRunning = false;
+
+    /* Mode démo automatique : si vrai, l'appareil joue tout seul une démonstration
+       (démarrage rapide, décollage, vol jusqu'à la Dune du Pilat survolée à environ
+       1500 m, demi-tour et retour se poser sur le pad de départ), rejouée en boucle.
+       La démo impose alors le terrain "arcachon". Une entrée du pilote ou la touche V
+       coupe la démo. */
+    bool demo = false;
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

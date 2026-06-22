@@ -48,6 +48,15 @@ public:
      * les tests et pour un éventuel démarrage immédiat. */
     void forceRunning() noexcept;
 
+    /* Lance un démarrage rapide (mode démo) : mêmes étapes que le démarrage normal,
+     * mais avec des durées raccourcies (voir les constantes DEMO_*). Sans effet si
+     * la turbine n'est pas à l'arrêt (ou en extinction). */
+    void startFast() noexcept;
+
+    /* Coupe instantanément la turbine et le rotor (état Arrêt, régimes à zéro).
+     * Sert à remettre la démo à froid avant de rejouer le démarrage rapide. */
+    void stopNow() noexcept;
+
     /* Régime du rotor [0, 1] : portance et rotation des pales. */
     [[nodiscard]] float rotorFraction() const noexcept { return m_rotor; }
 
@@ -70,6 +79,7 @@ private:
     State m_state   = State::Arret;
     float m_turbine = 0.0f;  /* régime turbine [0, 1] */
     float m_rotor   = 0.0f;  /* régime rotor   [0, 1] */
+    bool  m_fastStart  = false;  /* démarrage rapide en cours (mode démo) */
     float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
     float m_exhaustC = EXHAUST_TEMP_AMBIENT_C;  /* température tuyère, degrés Celsius */
 };

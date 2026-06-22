@@ -293,6 +293,7 @@ void Application::initScene() {
     m_rotorAngle = m_parkOffset;
 
     const std::filesystem::path assets = resolveAssetDir();
+    m_musicPath = assets / "music" / "demo.mp3";  /* musique jouée pendant la démo (optionnelle) */
     m_shader = std::make_unique<render::Shader>(assets / "shaders" / "basic.vert",
                                                 assets / "shaders" / "basic.frag");
     m_modelShader = std::make_unique<render::Shader>(assets / "shaders" / "model.vert",
@@ -503,18 +504,24 @@ void Application::mainLoop() {
             if (demoOut.cutTurbine) {
                 m_flight.turbine().toggle();
             }
-            /* À chaque changement de vue de la démo, on fait aussi défiler le mode HUD
-               (coins -> superposé -> rien), pour varier l'affichage en vol. */
-            if (demoOut.viewMode != m_viewMode) {
-                m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
-            }
             m_viewMode = demoOut.viewMode;
+            /* Démo : pas de HUD de vol (les étiquettes des lieux restent affichées, voir
+               le rendu du HUD). */
+            m_hudMode = ui::HudMode::Off;
             if (demoOut.finished) {
                 startDemo();  /* la démo est terminée : on la rejoue en boucle */
             }
         } else {
             controls = m_assist.apply(rawInput, frameDt);
         }
+
+        /* Musique de la démo : coupée dès que la démo s'arrête (entrée pilote, touche V,
+           etc.). Le lancement, lui, se fait dans startDemo(). */
+        const bool demoActiveNow = m_demo.active();
+        if (m_demoWasActive && !demoActiveNow) {
+            m_audio.stopMusic();
+        }
+        m_demoWasActive = demoActiveNow;
 
         /* Boutons et touches d'action de la manette : neutralisés pendant la démo
          * (le pilote la coupe en touchant les commandes de vol, ou avec la touche V). */
@@ -546,6 +553,14 @@ void Application::mainLoop() {
             } else if (m_input->hudTogglePressed()) {  /* B : Non -> on annule */
                 m_confirmReset = false;
             }
+        } else if (m_confirmDemo) {
+            /* Panneau de confirmation de la démo : A = Oui (on lance), B = Non. */
+            if (m_input->liveryTogglePressed()) {
+                m_confirmDemo = false;
+                startDemo();
+            } else if (m_input->hudTogglePressed()) {
+                m_confirmDemo = false;
+            }
         } else {
             if (m_input->hudTogglePressed()) {  /* B : fait défiler les modes HUD (comme H) */
                 m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
@@ -570,7 +585,7 @@ void Application::mainLoop() {
 
         /* État physique avant le dernier pas, conservé pour interpoler le rendu. */
         physics::RigidBody prevBody = m_flight.body();
-        if (m_paused || m_confirmReset) {  /* le panneau de confirmation fige aussi le vol */
+        if (m_paused || m_confirmReset || m_confirmDemo) {  /* un panneau de confirmation fige le vol */
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
             accumulator += frameDt;
@@ -728,7 +743,8 @@ void Application::mainLoop() {
             hud.latDeg   = lat;
         }
         buildNavHud(hud, body.position, headingDeg);
-        m_hud.render(hud, m_hudMode, m_paused, m_confirmReset);
+        /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */
+        m_hud.render(hud, m_hudMode, m_paused, m_confirmReset, m_confirmDemo, m_demo.active());
 
         glfwSwapBuffers(m_window);
     }
@@ -1354,13 +1370,14 @@ void Application::startDemo() {
     m_flight.turbine().stopNow();
     m_flight.turbine().startFast();
     m_demo.start(returnPad, dune);
+    m_audio.playMusic(m_musicPath);  /* musique de la démo (silencieux si le fichier est absent) */
 }
 
 void Application::toggleDemo() {
     if (m_demo.active()) {
         m_demo.stop();  /* le pilote reprend la main */
     } else {
-        startDemo();
+        m_confirmDemo = true;  /* on demande confirmation avant de lancer la démo */
     }
 }
 
@@ -1400,6 +1417,18 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
             app->resetToStart();
         } else if (key == GLFW_KEY_N) {
             app->m_confirmReset = false;
+        }
+        return;
+    }
+
+    /* Panneau de confirmation du lancement de la démo : O ou Entrée = Oui (on lance),
+       N = Non (on annule), le reste est ignoré. */
+    if (app != nullptr && app->m_confirmDemo) {
+        if (key == GLFW_KEY_O || key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
+            app->m_confirmDemo = false;
+            app->startDemo();
+        } else if (key == GLFW_KEY_N) {
+            app->m_confirmDemo = false;
         }
         return;
     }

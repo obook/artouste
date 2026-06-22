@@ -70,7 +70,11 @@ public:
 
     /* Construit et dessine la surimpression d'une image selon le mode choisi,
      * plus le bandeau de pause si paused (le tout en une seule frame ImGui). */
-    void render(const HudData& data, HudMode mode, bool paused, bool confirmReset = false);
+    /* confirmDemo : affiche le panneau de confirmation avant de lancer la démo.
+       forceLabels : afficher les étiquettes des lieux même quand le HUD est éteint
+       (mode Off), sans les instruments ni la minimap. Utile pour la démo. */
+    void render(const HudData& data, HudMode mode, bool paused, bool confirmReset = false,
+                bool confirmDemo = false, bool forceLabels = false);
 
     [[nodiscard]] bool ready() const noexcept { return m_ready; }
 

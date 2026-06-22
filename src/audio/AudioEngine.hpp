@@ -56,6 +56,11 @@ public:
     void playStartSound();
     void stopStartSound();
 
+    /* Musique de la démo : lecture en boucle depuis le fichier donné (rejouée depuis
+     * le début à chaque appel), et arrêt. Fichier absent : silencieux, sans erreur. */
+    void playMusic(const std::filesystem::path& file);
+    void stopMusic();
+
     [[nodiscard]] bool ready() const noexcept;
 
 private:

@@ -84,7 +84,8 @@ private:
        par le pilote automatique m_demo. */
     void startDemo();
 
-    /* Lance la démo si elle est arrêtée, l'arrête sinon (touche V). */
+    /* Touche V : si la démo tourne, l'arrête ; sinon, affiche le panneau de
+       confirmation avant de la lancer (réponse Oui/Non). */
     void toggleDemo();
 
     static void resizeCallback(GLFWwindow* window, int width, int height);
@@ -119,6 +120,8 @@ private:
     physics::FlightModel                      m_flight;
     physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
     DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
+    std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
+    bool                                      m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
@@ -128,6 +131,7 @@ private:
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */
+    bool                                      m_confirmDemo  = false;  /* panneau Oui/Non avant de lancer la démo (touche V) */
     bool                                      m_gendarmerieLivery = true;  /* livrée Gendarmerie par défaut (touche L / bouton A) */
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */

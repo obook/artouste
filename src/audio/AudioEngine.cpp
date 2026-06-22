@@ -26,6 +26,7 @@ float clamp01(float v) noexcept {
 }
 
 constexpr float START_VOLUME = 0.7f;  /* volume de base du son de démarrage */
+constexpr float MUSIC_VOLUME = 0.5f;  /* volume de la musique de la démo (sous les sons moteur) */
 
 /* Rendu sonore propre à une vue : volumes relatifs de la turbine et des pales
  * (le mixage), et un facteur de timbre (l'égalisation, approchée par la hauteur :
@@ -65,12 +66,14 @@ struct AudioEngine::Impl {
     ma_sound  engineInside{};  /* boucle turbine, vue cabine */
     ma_sound  rotorInside{};   /* boucle rotor,   vue cabine */
     ma_sound  startSound{};    /* son ponctuel de démarrage turbine (non bouclé) */
+    ma_sound  musicSound{};     /* musique de la démo (bouclée, chargée à la première lecture) */
     bool      engineInit         = false;
     bool      engineLoaded       = false;
     bool      rotorLoaded        = false;
     bool      engineInsideLoaded = false;
     bool      rotorInsideLoaded  = false;
     bool      startLoaded        = false;
+    bool      musicLoaded        = false;
     bool      paused             = false;  /* boucles suspendues (pause du jeu) */
 };
 
@@ -91,6 +94,9 @@ AudioEngine::~AudioEngine() {
     }
     if (m_impl->startLoaded) {
         ma_sound_uninit(&m_impl->startSound);
+    }
+    if (m_impl->musicLoaded) {
+        ma_sound_uninit(&m_impl->musicSound);
     }
     if (m_impl->engineInit) {
         ma_engine_uninit(&m_impl->engine);
@@ -247,6 +253,36 @@ void AudioEngine::stopStartSound() {
         return;
     }
     ma_sound_stop(&m_impl->startSound);
+}
+
+void AudioEngine::playMusic(const std::filesystem::path& file) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    /* Chargement paresseux à la première lecture (en streaming, pour un long titre).
+       Fichier absent ou illisible : on reste silencieux, sans erreur. */
+    if (!m_impl->musicLoaded) {
+        if (!std::filesystem::exists(file)) {
+            return;
+        }
+        if (ma_sound_init_from_file(&m_impl->engine, file.string().c_str(),
+                                    MA_SOUND_FLAG_STREAM, nullptr, nullptr,
+                                    &m_impl->musicSound) != MA_SUCCESS) {
+            return;
+        }
+        ma_sound_set_looping(&m_impl->musicSound, MA_TRUE);
+        m_impl->musicLoaded = true;
+    }
+    /* (Re)lance la musique depuis le début. */
+    ma_sound_seek_to_pcm_frame(&m_impl->musicSound, 0);
+    ma_sound_set_volume(&m_impl->musicSound, MUSIC_VOLUME);
+    ma_sound_start(&m_impl->musicSound);
+}
+
+void AudioEngine::stopMusic() {
+    if (m_impl->engineInit && m_impl->musicLoaded) {
+        ma_sound_stop(&m_impl->musicSound);
+    }
 }
 
 bool AudioEngine::ready() const noexcept {

@@ -235,7 +235,8 @@ void Hud::shutdown() {
     m_ready = false;
 }
 
-void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmReset) {
+void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmReset,
+                 bool confirmDemo, bool forceLabels) {
     if (!m_ready) {
         return;
     }
@@ -374,8 +375,10 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     }
     /* mode Off : aucun affichage de vol. */
 
-    /* Repérage : étiquettes des lieux remarquables et minimap (sauf en mode "rien"). */
-    if (mode != HudMode::Off) {
+    /* Étiquettes des lieux : affichées avec le HUD, et aussi quand on les force (démo
+       HUD éteint). La minimap, elle, ne s'affiche qu'avec le HUD (plus bas). */
+    const bool showLabels = (mode != HudMode::Off) || forceLabels;
+    if (showLabels) {
         ImDrawList* dl = ImGui::GetForegroundDrawList();
 
         /* Étiquettes projetées sur la scène : un point jaune et le nom (avec ombre).
@@ -421,11 +424,14 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
             dl->AddText(ImVec2(tp.x + 1.0f, tp.y + 1.0f), IM_COL32(0, 0, 0, 200), lab.name);
             dl->AddText(tp, IM_COL32(255, 240, 140, 255), lab.name);
         }
+    }
 
-        /* Minimap : orthophoto (nord en haut), points remarquables et appareil. En
-           mode coins, sous le panneau d'altitude (coin haut-gauche) ; en mode
-           superposé, calée tout en haut et un peu plus petite pour passer au-dessus
-           du ruban d'altitude vertical (qui occupe le bord gauche). */
+    /* Minimap : orthophoto (nord en haut), points remarquables et appareil. Affichée
+       seulement avec le HUD (pas en démo). En mode coins, sous le panneau d'altitude
+       (coin haut-gauche) ; en mode superposé, calée tout en haut et un peu plus petite
+       pour passer au-dessus du ruban d'altitude vertical (qui occupe le bord gauche). */
+    if (mode != HudMode::Off) {
+        ImDrawList* dl = ImGui::GetForegroundDrawList();
         if (data.mapTexId != 0) {
             const bool   overlay = (mode == HudMode::Overlay);
             const float  sz = overlay ? 136.0f : 150.0f;
@@ -460,13 +466,21 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
 
-    /* Le panneau de confirmation du reset est prioritaire sur le bandeau de pause. */
+    /* Les panneaux de confirmation (reset, démo) sont prioritaires sur le bandeau de pause. */
     if (confirmReset) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.75f);
         ImGui::Begin("confirm_reset", nullptr, bannerFlags);
         ImGui::Text("       RÉINITIALISER ?");
         ImGui::Text("Replacer l'appareil au départ");
+        ImGui::Text("A / O : Oui        B / N : Non");
+        ImGui::End();
+    } else if (confirmDemo) {
+        ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.75f);
+        ImGui::Begin("confirm_demo", nullptr, bannerFlags);
+        ImGui::Text("     LANCER LA DÉMO ?");
+        ImGui::Text("Vol automatique (Dune du Pilat)");
         ImGui::Text("A / O : Oui        B / N : Non");
         ImGui::End();
     } else if (paused) {

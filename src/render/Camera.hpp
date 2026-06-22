@@ -32,6 +32,10 @@ public:
     /* Vue imposée (cockpit) : fixée à l'appareil, sans lissage. */
     void setLookAt(const vec3& eye, const vec3& target, const vec3& up) noexcept;
 
+    /* Coupe franche entre deux vues : réinitialise le lissage de la poursuite pour
+       qu'elle se cale instantanément (pas de glissement) au prochain appel. */
+    void cut() noexcept;
+
     void setFovYDeg(float degrees) noexcept { m_fovY = degrees * DEG_TO_RAD; }
 
     /* Distance du plan proche (m). En vue cockpit, la verrière est à quelques

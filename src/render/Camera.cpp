@@ -53,6 +53,14 @@ void Camera::setLookAt(const vec3& eye, const vec3& target, const vec3& up) noex
     m_up       = up;
 }
 
+void Camera::cut() noexcept {
+    /* La poursuite recale son cap net (m_followInit) et saute à sa position : la
+       sentinelle (0,0,0) déclenche le calage instantané au prochain appel de chase().
+       Les vues orbite et cockpit fixent déjà la position directement (cut implicite). */
+    m_followInit = false;
+    m_position   = vec3{0.0f, 0.0f, 0.0f};
+}
+
 mat4 Camera::view() const noexcept {
     return glm::lookAt(m_position, m_target, m_up);
 }

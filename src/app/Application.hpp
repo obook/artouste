@@ -122,6 +122,9 @@ private:
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
+    /* Changement de vue : cut net (voir Camera::cut). On garde la vue précédente pour
+       détecter le changement. */
+    int                                       m_prevCamView = -1;  /* vue précédente (caméra), -1 au départ */
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */

@@ -600,7 +600,16 @@ void Application::mainLoop() {
         const vec3  forward = renderOri * vec3{1.0f, 0.0f, 0.0f};
         const float yaw     = std::atan2(-forward.z, forward.x);
 
-        /* Caméra : poursuite, cockpit (solidaire de l'appareil) ou orbite libre. */
+        /* Caméra : poursuite, cockpit (solidaire de l'appareil) ou orbite libre.
+           Le changement de vue est un cut net : on remet à zéro le lissage de la
+           poursuite pour qu'elle se cale instantanément, sans glissement. */
+        if (m_viewMode != m_prevCamView) {
+            if (m_prevCamView >= 0) {
+                m_camera.cut();
+            }
+            m_prevCamView = m_viewMode;
+        }
+
         const vec3 lookTarget = renderPos + vec3{0.0f, 1.2f, 0.0f};
         if (m_viewMode == 1) {  /* cockpit */
             const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));

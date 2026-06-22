@@ -141,6 +141,14 @@ void Application::resetToStart() {
 }
 
 void Application::startDemo() {
+    /* La démo se déroule sur le bassin d'Arcachon (survol de la Dune du Pilat). Si
+       une autre carte est affichée (choix du menu), on bascule d'abord sur Arcachon :
+       sinon la démo se jouerait sur la carte courante, sans la dune à survoler. */
+    if (m_terrainName != "arcachon") {
+        std::printf("[démo] terrain forcé sur arcachon pour la démonstration.\n");
+        loadTerrain("arcachon");
+    }
+
     /* Pad de départ et d'arrivée : là où l'appareil est garé (la démo y revient se
        poser). Point à survoler : la Dune du Pilat, repérée par son nom dans les lieux
        remarquables du terrain et convertie en coordonnées monde. Faute de la trouver,

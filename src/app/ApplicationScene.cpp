@@ -119,6 +119,7 @@ void Application::initScene() {
     m_rotorAngle = m_parkOffset;
 
     const std::filesystem::path assets = resolveAssetDir();
+    m_assetsDir = assets;  /* mémorisé pour pouvoir recharger un terrain au runtime (démo) */
     m_musicPath = assets / "music" / "demo.mp3";  /* musique jouée pendant la démo (optionnelle) */
     m_shader = std::make_unique<render::Shader>(assets / "shaders" / "basic.vert",
                                                 assets / "shaders" / "basic.frag");
@@ -199,33 +200,7 @@ void Application::initScene() {
         std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
         terrainName = "arcachon";
     }
-    std::printf("[scène] terrain : %s\n", terrainName.c_str());
-    const std::filesystem::path terrainDir = assets / "terrain" / terrainName;
-    m_terrain = std::make_unique<render::Terrain>(terrainDir);
-
-    /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
-       Absents (fichier buildings.bin manquant) : rien n'est dessiné. */
-    m_buildings = std::make_unique<render::Buildings>(terrainDir, *m_terrain);
-
-    /*
-     * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du
-     * massif (lac de Fabrèges, station du téléphérique d'Artouste), face au relief.
-     * Si le terrain réel est absent, on reste à l'origine sur le sol plat de repli.
-     */
-    if (m_terrain->textured()) {
-        /* Point de départ : celui fourni par le terrain (calage), sinon Fabrèges
-           par défaut. Négatif en X = ouest, positif en Z = sud. */
-        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : 158.0f;
-        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
-        const float ground  = m_terrain->heightAt(START_X, START_Z);
-        m_startPos          = vec3{START_X, ground, START_Z};
-        /* L'appareil se gare mât rotor centré sur le H : son origine (que la
-           physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
-           de départ (cap initial = +X, orientation identité au reset). */
-        const float parkX = START_X - render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
-        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, START_Z), START_Z};
-        m_flight.reset(m_parkPos);
-    }
+    loadTerrain(terrainName);
 
     /* Démarrage immédiat (gain de temps en test) : turbine et rotor d'emblée au
        régime, au lieu de la séquence de démarrage (~1 min). Activé par la clé
@@ -275,6 +250,37 @@ void Application::initScene() {
     if (demoEnabled) {
         std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
         startDemo();
+    }
+}
+
+void Application::loadTerrain(const std::string& name) {
+    m_terrainName = name;
+    std::printf("[scène] terrain : %s\n", name.c_str());
+    const std::filesystem::path terrainDir = m_assetsDir / "terrain" / name;
+    m_terrain = std::make_unique<render::Terrain>(terrainDir);
+
+    /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
+       Absents (fichier buildings.bin manquant) : rien n'est dessiné. */
+    m_buildings = std::make_unique<render::Buildings>(terrainDir, *m_terrain);
+
+    /*
+     * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du
+     * massif (lac de Fabrèges, station du téléphérique d'Artouste), face au relief.
+     * Si le terrain réel est absent, on reste à l'origine sur le sol plat de repli.
+     */
+    if (m_terrain->textured()) {
+        /* Point de départ : celui fourni par le terrain (calage), sinon Fabrèges
+           par défaut. Négatif en X = ouest, positif en Z = sud. */
+        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : 158.0f;
+        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
+        const float ground  = m_terrain->heightAt(START_X, START_Z);
+        m_startPos          = vec3{START_X, ground, START_Z};
+        /* L'appareil se gare mât rotor centré sur le H : son origine (que la
+           physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
+           de départ (cap initial = +X, orientation identité au reset). */
+        const float parkX = START_X - render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
+        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, START_Z), START_Z};
+        m_flight.reset(m_parkPos);
     }
 }
 

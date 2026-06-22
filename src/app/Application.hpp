@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <string>
 
 struct GLFWwindow;
 
@@ -57,6 +58,11 @@ private:
     bool initGL();
     void initScene();
     void mainLoop();
+
+    /* Charge (ou recharge) le terrain nommé : relief, bâtiments et position de
+       départ. Réutilisable au runtime, notamment pour basculer sur Arcachon quand
+       la démo est lancée alors qu'une autre carte est affichée. */
+    void loadTerrain(const std::string& name);
 
     /* Auxiliaires de la boucle principale : chacun prend en charge une étape, pour
        que mainLoop reste un enchaînement lisible plutôt qu'un long bloc unique. */
@@ -139,6 +145,8 @@ private:
     int         m_height = 720;
 
     render::Camera                            m_camera;
+    std::filesystem::path                     m_assetsDir;     /* dossier des ressources (pour recharger un terrain au runtime) */
+    std::string                               m_terrainName;   /* nom du terrain courant (sous-dossier de assets/terrain/) */
     vec3                                      m_startPos{0.0f, 0.0f, 0.0f};  /* centre du H (pad) */
     vec3                                      m_parkPos{0.0f, 0.0f, 0.0f};   /* origine de l'appareil au parking : décalée pour centrer le mât sur le H */
     std::unique_ptr<render::Shader>           m_shader;        /* géométrie à couleur (repli) */

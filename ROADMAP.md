@@ -6,7 +6,11 @@
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
-- [ ] le texte de la valeur de la bousole comme celui de l'altimètre : juste un cadre gris clair et le texte vet dedans
+- [x] le texte de la valeur de la bousole comme celui de l'altimètre : juste un cadre gris clair et le texte vet dedans
+
+    Fait : dans le ruban de cap (`headingTape`, `src/ui/Hud.cpp`), la valeur du cap
+    reçoit son propre cadre gris translucide via `panelRect`, exactement comme la
+    valeur de l'altimètre dans `altitudeTape`.
 
 ## Réalisme
 
@@ -66,8 +70,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 > bas (Copernicus DEM, GDAL, LOD) restent des évolutions possibles.
 >
 > Plusieurs maps sont désormais livrées et choisies par la clé `terrain` de la
-> configuration : `ossau` (montagne), `cote-landes` (côte basco-landaise) et
-> `arcachon` (bassin d'Arcachon, du Cap Ferret à Marcheprime, de Biscarrosse à Arès).
+> configuration : `ossau` (montagne), `cote-landes` (côte basco-landaise),
+> `arcachon` (bassin d'Arcachon, du Cap Ferret à Marcheprime, de Biscarrosse à Arès)
+> et `cauterets` (Cauterets - Gavarnie : chemin des cascades, Pont d'Espagne, lac de
+> Gaube sous le Vignemale, cirque de Gavarnie ; montagne, `height_min` à 0 pour
+> garder cabanes et refuges).
 
 Pour le terrain en C++/OpenGL, les pistes les plus directes :
 - [x] Données d'élévation

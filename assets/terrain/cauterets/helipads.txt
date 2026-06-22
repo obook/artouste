@@ -1,0 +1,8 @@
+# Helipads - Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie) (un par ligne : lon lat nom)
+# Positions approximatives, a affiner sur place.
+-0.112 42.888 Cauterets
+-0.144 42.856 Pont d'Espagne
+0.009 42.733 Gavarnie
+0.0 42.873 Luz-Saint-Sauveur
+-0.1412 42.7929 Refuge des Oulettes de Gaube
+-0.0333 42.6959 Refuge des Sarradets

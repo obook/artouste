@@ -133,6 +133,40 @@ ZONES = {
             ("Aérodrome de La Teste", -1.116442178115823, 44.596643236436016),
         ],
     },
+    # Cauterets - Gavarnie (Hautes-Pyrénées) : de la vallée de Cauterets et son
+    # chemin des cascades (jusqu'au Pont d'Espagne et au lac de Gaube, sous le
+    # Vignemale, 3298 m) au sud-est jusqu'au cirque de Gavarnie (classé UNESCO)
+    # et la brèche de Roland. Haute montagne sans mer ; comme pour Ossau on garde
+    # les petites constructions (refuges, granges) utiles au repérage.
+    "cauterets": {
+        "bbox": (-0.16, 0.03, 42.68, 42.90),
+        "recolor_sea": False,
+        "start": (-0.110, 42.886),  # fond de vallée de Cauterets (~930 m), plat
+        "height_min": 0.0,
+        "title": "Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie)",
+        "landmarks": [
+            ("Cauterets", -0.1124, 42.8903),
+            ("Pont d'Espagne", -0.1437, 42.8556),
+            ("Lac de Gaube", -0.1465, 42.8400),
+            ("Vignemale", -0.1456, 42.7700),
+            ("Luz-Saint-Sauveur", 0.0000, 42.8730),
+            ("Gèdre", 0.0175, 42.7847),
+            ("Gavarnie", 0.0086, 42.7335),
+            ("Brèche de Roland", -0.0386, 42.6975),
+            ("Cirque de Gavarnie", -0.0090, 42.6963),
+        ],
+        # Hélistations : bases de secours en vallée (PGHM Cauterets, CRS de Gavarnie,
+        # Luz, parking du Pont d'Espagne) et deux DZ de refuge d'altitude, fidèles au
+        # rôle de l'Alouette II en montagne (secours et ravitaillement des refuges).
+        "helipads": [
+            ("Cauterets", -0.1120, 42.8880),
+            ("Pont d'Espagne", -0.1440, 42.8560),
+            ("Gavarnie", 0.0090, 42.7330),
+            ("Luz-Saint-Sauveur", 0.0000, 42.8730),
+            ("Refuge des Oulettes de Gaube", -0.1412, 42.7929),
+            ("Refuge des Sarradets", -0.0333, 42.6959),
+        ],
+    },
 }
 DEFAULT_ZONE = "ossau"
 

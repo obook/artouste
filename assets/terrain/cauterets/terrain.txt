@@ -1,0 +1,18 @@
+# Terrain Artouste - Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 512
+rows 512
+width_m 15521.5
+height_m 24490.4
+elev_min 0.00
+elev_max 3299.96
+lon_min -0.16
+lon_max 0.03
+lat_min 42.68
+lat_max 42.9
+ortho_width 1298
+ortho_height 2048
+sea 0
+start_x -4115.8
+start_z -10951.2

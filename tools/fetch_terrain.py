@@ -146,6 +146,7 @@ ZONES = {
         "title": "Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie)",
         "landmarks": [
             ("Cauterets", -0.1124, 42.8903),
+            ("Chemin des cascades", -0.1246, 42.8601),  # cascade du Pas de l'Ours
             ("Pont d'Espagne", -0.1437, 42.8556),
             ("Lac de Gaube", -0.1465, 42.8400),
             ("Vignemale", -0.1456, 42.7700),

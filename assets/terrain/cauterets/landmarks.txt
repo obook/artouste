@@ -1,6 +1,7 @@
 # Lieux remarquables - Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie) (un par ligne : lon lat nom)
 # Le nom est le reste de la ligne et peut contenir des espaces et des accents.
 -0.1124 42.8903 Cauterets
+-0.1246 42.8601 Chemin des cascades
 -0.1437 42.8556 Pont d'Espagne
 -0.1465 42.84 Lac de Gaube
 -0.1456 42.77 Vignemale

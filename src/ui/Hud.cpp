@@ -123,7 +123,9 @@ void headingTape(ImDrawList* dl, float cx, float top, float halfWidth, float hei
     const ImVec2 tl{cx - halfWidth, top};
     const ImVec2 br{cx + halfWidth, top + height};
 
-    panelRect(dl, ImVec2(tl.x, top - 24.0f), ImVec2(br.x, br.y + 2.0f), 4.0f);
+    /* Fond du ruban : il épouse le ruban (petite marge symétrique). La valeur du cap,
+       au-dessus, a son propre cadre sombre : inutile d'étendre ce fond vers le haut. */
+    panelRect(dl, ImVec2(tl.x, top - 2.0f), ImVec2(br.x, br.y + 2.0f), 4.0f);
     dl->AddRect(tl, br, HUD_GREEN, 0.0f, 0, 1.5f);
     dl->PushClipRect(tl, br, true);
 

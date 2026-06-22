@@ -898,12 +898,23 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         const float rollR  = std::atan2(-rgt.y, upv.y);
         /* Altitude au-dessus du niveau de la mer (y = 0), en pieds, pour l'altimètre. */
         const float altitudeFt = base[3].y * 3.28084f;
+        /* Vitesse verticale en ft/min (m/s * 196.85), pour le vario. */
+        const float varioFpm = m_flight.body().velocity.y * 196.85f;
+        /* Cap (radians) extrait du vecteur avant, pour le compas du tableau de bord. */
+        const float headingRad = std::atan2(fwd.x, fwd.z);
+        /* Vitesse air en noeuds (vitesse horizontale * 1.94384), pour l'anémomètre. */
+        const float airspeedKt =
+            glm::length(vec2{m_flight.body().velocity.x, m_flight.body().velocity.z}) * 1.94384f;
+        /* Couple estimé en pourcentage, pour le couplemètre : le collectif commande la
+           puissance, atténué par la fraction de régime rotor (0 rotor arrêté). */
+        const float torquePct = collective * 100.0f * rotorFraction;
 
         /* En vue cockpit, le pilote est dessiné sans tête ni casque (la caméra est
            à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
            fait basculer pédales et jambes. */
         m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
-                           cyclicLong, cyclicLat, collective, rollR, pitchR, altitudeFt);
+                           cyclicLong, cyclicLat, collective, rollR, pitchR, altitudeFt, varioFpm,
+                           headingRad, airspeedKt, torquePct);
 
         /*
          * Disque rotor (mis en commentaire, à reprendre plus tard).

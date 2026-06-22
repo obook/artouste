@@ -48,7 +48,8 @@ public:
     void draw(Shader& shader, const mat4& base, float rotorAngle, bool fullPilot = true,
               float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
               float collective = 0.0f, float rollRad = 0.0f, float pitchRad = 0.0f,
-              float altitudeFt = 0.0f) const;
+              float altitudeFt = 0.0f, float varioFpm = 0.0f, float headingRad = 0.0f,
+              float airspeedKt = 0.0f, float torquePct = 0.0f) const;
 
     /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
        translucide à haut régime, voir le code mis en commentaire). 'base' est la
@@ -120,6 +121,34 @@ private:
     Model              m_altN10000;
     vec3               m_altOffset{0.0f};
     bool               m_hasAlt = false;
+
+    /* Vario (VSI) animé : cadran statique + aiguille unique qui tourne autour de X
+       selon la vitesse verticale (table non linéaire relevée sur la face du cadran). */
+    Model              m_vsiStatic;
+    Model              m_vsiNeedle;
+    vec3               m_vsiOffset{0.0f};
+    bool               m_hasVsi = false;
+
+    /* Compas (conservateur de cap) animé : cadran fixe (symbole avion, index) + rose
+       des vents mobile qui tourne autour de X avec le cap. */
+    Model              m_hiStatic;
+    Model              m_hiCard;
+    vec3               m_hiOffset{0.0f};
+    bool               m_hasHi = false;
+
+    /* Anémomètre (ASI) animé : cadran statique + aiguille unique qui tourne autour de X
+       proportionnellement à la vitesse air (face linéaire, ~1.75 deg/kt). */
+    Model              m_asiStatic;
+    Model              m_asiNeedle;
+    vec3               m_asiOffset{0.0f};
+    bool               m_hasAsi = false;
+
+    /* Couplemètre (torque) animé : cadran statique + aiguille unique qui tourne autour
+       de X selon le couple estimé en pourcentage (face linéaire, ~2.73 deg/%). */
+    Model              m_torqueStatic;
+    Model              m_torqueNeedle;
+    vec3               m_torqueOffset{0.0f};
+    bool               m_hasTorque = false;
     Model              m_mainHub;
     Model              m_mainBlade;
     Model              m_tailHub;

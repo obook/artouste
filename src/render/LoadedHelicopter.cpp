@@ -100,17 +100,36 @@ struct GaugeDef {
     const char* file;
     vec3        fgOffset;
 };
-/* L'horizon artificiel (ai.ac) et l'altimètre (alt.ac) ne sont PAS dans cette
-   liste : ils sont chargés et dessinés à part pour être animés (voir m_ai* et
-   m_alt*). Leurs positions sont AI_FG_OFFSET / ALT_FG_OFFSET dans le chargement. */
+/* Les instruments animés (horizon ai.ac, altimètre alt.ac, vario vsi.ac, compas
+   hi.ac, anémomètre asi.ac, couplemètre torque.ac) ne sont PAS dans cette liste : ils
+   sont chargés et dessinés à part (voir m_ai*, m_alt*, m_vsi*, m_hi*, m_asi*, m_torque*).
+   Ne restent ici que les cadrans encore figés (vor, rmi : radionavigation non modélisée). */
 const GaugeDef GAUGES[] = {
-    {"Interior/Panel/Instruments/vsi/vsi.ac", vec3{-0.208f, -0.060f, 0.112f}},
-    {"Interior/Panel/Instruments/asi/asi.ac", vec3{-0.207f, 0.181f, 0.112f}},
     {"Interior/Panel/Instruments/vor/vor.ac", vec3{-0.223f, -0.181f, -0.014f}},
-    {"Interior/Panel/Instruments/hi/hi.ac", vec3{-0.223f, -0.060f, -0.014f}},
     {"Interior/Panel/Instruments/rmi/rmi.ac", vec3{-0.224f, 0.060f, -0.014f}},
-    {"Interior/Panel/Instruments/torque/torque.ac", vec3{-0.223f, 0.181f, -0.014f}},
 };
+
+/* Vario (VSI) : convertit une vitesse verticale (en ft/min) en angle de rotation de
+   l'aiguille (en degrés). Le cadran n'est pas linéaire : la table ci-dessous a été
+   relevée sur la face vsi.png (0 a 9 heures, montée vers le haut, descente vers le
+   bas). On interpole linéairement entre les points, la descente est symétrique de la
+   montée (angle de signe opposé), et au-dela de la pleine échelle l'aiguille reste
+   contre la butée (+/- 2500 ft/min). */
+float vsiNeedleAngleDeg(float fpm) {
+    static const float kFpm[]   = {0.0f, 500.0f, 1000.0f, 2000.0f, 2500.0f};
+    static const float kAngle[] = {0.0f, 36.0f,  66.0f,   116.0f,  151.0f};
+    const int   count = 5;
+    const float mag   = std::fabs(fpm);
+    float       angle = kAngle[count - 1];  /* pleine échelle par défaut (butée) */
+    for (int i = 0; i < count - 1; ++i) {
+        if (mag <= kFpm[i + 1]) {
+            const float t = (mag - kFpm[i]) / (kFpm[i + 1] - kFpm[i]);
+            angle = kAngle[i] + t * (kAngle[i + 1] - kAngle[i]);
+            break;
+        }
+    }
+    return fpm < 0.0f ? -angle : angle;
+}
 
 /* Charge une pièce du modèle et affiche un petit compte-rendu (nom du fichier et
    nombre de parties obtenues), pratique pour vérifier le chargement. */
@@ -351,6 +370,56 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
         m_hasAlt = !m_altN100.empty() || !m_altN1000.empty() || !m_altN10000.empty();
     }
 
+    /* Vario (VSI) animé : on charge vsi.ac en deux morceaux. L'aiguille est l'objet
+       "needle"; le reste (face, fond, vitre) forme le cadran fixe. */
+    {
+        const vec3                  vsiFgOffset{-0.208f, -0.060f, 0.112f};
+        const std::filesystem::path vsiFile = dir / "Interior/Panel/Instruments/vsi/vsi.ac";
+        m_vsiOffset = PANEL_OFFSET + fgToAssimp(vsiFgOffset);
+        /* Cadran : on garde face + fond, on écarte l'aiguille et le verre "vitre"
+           (opaque, il apparaitrait comme un disque noir, comme pour l'altimètre). */
+        m_vsiStatic = loadPart(vsiFile, {"needle", "vitre"});
+        m_vsiNeedle = loadPart(vsiFile, {"face", "fond", "vitre"});   /* l'aiguille seule */
+        m_hasVsi    = !m_vsiNeedle.empty();
+    }
+
+    /* Compas (conservateur de cap) animé : on charge hi.ac en deux morceaux. La rose
+       des vents mobile est l'objet "face"; le reste (lunette "fond", symbole avion et
+       index "front", boutons, bug de cap) est fixe. On écarte le verre "vitre" (opaque,
+       il apparaitrait comme un disque noir, comme pour le vario). */
+    {
+        const vec3                  hiFgOffset{-0.223f, -0.060f, -0.014f};
+        const std::filesystem::path hiFile = dir / "Interior/Panel/Instruments/hi/hi.ac";
+        m_hiOffset = PANEL_OFFSET + fgToAssimp(hiFgOffset);
+        /* Cadran fixe : tout sauf la rose mobile et le verre. */
+        m_hiStatic = loadPart(hiFile, {"face", "vitre"});
+        /* Rose des vents mobile : la "face" seule. */
+        m_hiCard = loadPart(hiFile, {"fond", "front", "vitre", "Hdg-Knob", "HdgBug", "OBS-Knob"});
+        m_hasHi  = !m_hiCard.empty();
+    }
+
+    /* Anémomètre (ASI) animé : on charge asi.ac en deux morceaux (cadran fixe +
+       aiguille "needle"). Verre "vitre" exclu (opaque, disque noir sinon). */
+    {
+        const vec3                  asiFgOffset{-0.207f, 0.181f, 0.112f};
+        const std::filesystem::path asiFile = dir / "Interior/Panel/Instruments/asi/asi.ac";
+        m_asiOffset = PANEL_OFFSET + fgToAssimp(asiFgOffset);
+        m_asiStatic = loadPart(asiFile, {"needle", "vitre"});         /* face + fond */
+        m_asiNeedle = loadPart(asiFile, {"face", "fond", "vitre"});   /* l'aiguille seule */
+        m_hasAsi    = !m_asiNeedle.empty();
+    }
+
+    /* Couplemètre (torque) animé : cadran fixe + aiguille "needle"; verre exclu. */
+    {
+        const vec3                  torqueFgOffset{-0.223f, 0.181f, -0.014f};
+        const std::filesystem::path torqueFile =
+            dir / "Interior/Panel/Instruments/torque/torque.ac";
+        m_torqueOffset = PANEL_OFFSET + fgToAssimp(torqueFgOffset);
+        m_torqueStatic = loadPart(torqueFile, {"needle", "vitre"});        /* face + fond */
+        m_torqueNeedle = loadPart(torqueFile, {"face", "fond", "vitre"});  /* l'aiguille seule */
+        m_hasTorque    = !m_torqueNeedle.empty();
+    }
+
     /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale
        est chargée par rotor, puis recopiée et tournée à l'affichage. */
     m_mainHub   = loadPart(dir / "Externals/MainRotor/mainrotor.ac", skipRotor);
@@ -372,7 +441,8 @@ void LoadedHelicopter::setGendarmerieLivery(bool on) {
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
                             bool fullPilot, float rudder, float cyclicLong,
                             float cyclicLat, float collective, float rollRad,
-                            float pitchRad, float altitudeFt) const {
+                            float pitchRad, float altitudeFt, float varioFpm,
+                            float headingRad, float airspeedKt, float torquePct) const {
     /* Correction commune à tout l'appareil : demi-tour autour de l'axe vertical
        (le nez FlightGear est à l'opposé du nôtre) puis remontée pour poser les
        patins au sol. 'root' est la transformation de base de tout l'hélicoptère. */
@@ -597,6 +667,64 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
         drawModel(m_altN10000, needleM(0.0036f), Pass::Opaque);
         drawModel(m_altN1000, needleM(0.036f), Pass::Opaque);
         drawModel(m_altN100, needleM(0.36f), Pass::Opaque);
+    }
+
+    /* Vario (VSI) animé : l'aiguille tourne autour de X selon la vitesse verticale,
+       suivant la table non linéaire relevée sur le cadran (vsiNeedleAngleDeg). Le
+       calage du zéro (VSI_ZERO_OFFSET_DEG) et le sens de rotation sont a confirmer
+       en vol, comme cela a été fait pour l'altimètre. */
+    if (m_hasVsi) {
+        constexpr float VSI_ZERO_OFFSET_DEG = 0.0f;
+        const mat4      vsiBase = root * glm::translate(mat4(1.0f), m_vsiOffset);
+        const float     angle   = vsiNeedleAngleDeg(varioFpm) + VSI_ZERO_OFFSET_DEG;
+        const mat4      needleMat =
+            vsiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
+        drawModel(m_vsiStatic, vsiBase, Pass::Opaque);
+        drawModel(m_vsiNeedle, needleMat, Pass::Opaque);
+    }
+
+    /* Compas animé : la rose des vents (m_hiCard) tourne autour de X avec le cap, de
+       sorte que le cap courant vienne sous l'index fixe (le symbole avion m_hiStatic
+       ne bouge pas). Le sens et le calage du Nord sont a confirmer en vol (constante
+       HI_ZERO_OFFSET_DEG), comme l'altimètre et le vario. */
+    if (m_hasHi) {
+        constexpr float HI_ZERO_OFFSET_DEG = 0.0f;
+        const mat4      hiBase = root * glm::translate(mat4(1.0f), m_hiOffset);
+        const float     angle  = -glm::degrees(headingRad) + HI_ZERO_OFFSET_DEG;
+        const mat4      cardMat =
+            hiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
+        drawModel(m_hiStatic, hiBase, Pass::Opaque);
+        drawModel(m_hiCard, cardMat, Pass::Opaque);
+    }
+
+    /* Anémomètre animé : l'aiguille tourne autour de X proportionnellement à la vitesse
+       air. La face est linéaire (mesurée sur asi.png) : ~1.75 deg/kt. Le sens et le
+       calage du zéro (ASI_ZERO_OFFSET_DEG) sont a confirmer en vol, comme les autres. */
+    if (m_hasAsi) {
+        constexpr float ASI_DEG_PER_KT      = 1.75f;
+        constexpr float ASI_ZERO_OFFSET_DEG = 0.0f;
+        const float     kt      = airspeedKt < 0.0f ? 0.0f : (airspeedKt > 150.0f ? 150.0f : airspeedKt);
+        const mat4      asiBase = root * glm::translate(mat4(1.0f), m_asiOffset);
+        const float     angle   = ASI_DEG_PER_KT * kt + ASI_ZERO_OFFSET_DEG;
+        const mat4      needleMat =
+            asiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
+        drawModel(m_asiStatic, asiBase, Pass::Opaque);
+        drawModel(m_asiNeedle, needleMat, Pass::Opaque);
+    }
+
+    /* Couplemètre animé : l'aiguille tourne autour de X selon le couple estimé (couple%
+       = collectif * 100 * fraction rotor, calculé par l'appelant). La face est linéaire
+       (mesurée sur torque.png) : ~2.73 deg/%. Sens et calage du zéro a confirmer en vol. */
+    if (m_hasTorque) {
+        constexpr float TORQUE_DEG_PER_PCT     = 2.73f;
+        constexpr float TORQUE_ZERO_OFFSET_DEG = 0.0f;
+        const float     pct = torquePct < 0.0f ? 0.0f : (torquePct > 110.0f ? 110.0f : torquePct);
+        const mat4      torqueBase = root * glm::translate(mat4(1.0f), m_torqueOffset);
+        const float     angle      = TORQUE_DEG_PER_PCT * pct + TORQUE_ZERO_OFFSET_DEG;
+        const mat4      needleMat =
+            torqueBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
+        drawModel(m_torqueStatic, torqueBase, Pass::Opaque);
+        drawModel(m_torqueNeedle, needleMat, Pass::Opaque);
     }
 
     drawModel(m_mainHub, mainBase, Pass::Opaque);

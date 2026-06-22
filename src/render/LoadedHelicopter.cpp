@@ -192,8 +192,10 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
        posé devant le cadran. Faute de l'éclairer comme un vrai verre, elle cache
        le fond gradué et les aiguilles et apparaît comme un trou sombre. */
     const std::vector<std::string> skipGauge{"blur", "disc", "vitre"};
-    /* Nœuds à rendre translucides : la verrière de cabine et les vitres. */
-    const std::vector<std::string> glass{"verriere", "vitre"};
+    /* Nœuds à rendre translucides : la verrière de cabine et les vitres de porte.
+       On vise "vitreporte" (et non "vitre") pour ne pas attraper "tourvitre", qui est
+       l'encadrement métallique des vitrages (structure opaque, pas du verre). */
+    const std::vector<std::string> glass{"verriere", "vitreporte"};
 
     m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
     /* Livrée Gendarmerie nationale : texture bleue de rechange, préchargée dans le

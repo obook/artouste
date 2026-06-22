@@ -8,6 +8,8 @@ Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retro
 
 ![Alouette II en vol dans le simulateur Artouste](docs/artouste-en-vol.png)
 
+Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas sur cet appareil : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
+
 Écrit en C++ moderne et OpenGL, le pilotage est jouable au clavier ou à la manette. Le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
 
 ## Histoire
@@ -40,7 +42,10 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
   instruments ronds verts superposés (Super HUD), ou rien.
-- Son du moteur et et rotor, ciel en dégradé, ombre portée.
+- Mode démo automatique (touche `V`) : l'appareil joue seul un vol panoramique
+  (décollage, survol de la Dune du Pilat vers 1500 m, retour et pose), en boucle.
+  Un panneau de confirmation s'affiche avant le lancement.
+- Son du moteur et du rotor, ciel en dégradé, ombre portée.
 - Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
@@ -143,8 +148,9 @@ Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
 
 Le modèle 3D de l'Alouette II et les sons proviennent du paquet **FlightGear**
 de Emmanuel Baranger (helijah), sous licence GPL. Le sous-ensemble utilisé par
-le simulateur (modèles `.ac`, textures, deux boucles sonores) est inclus dans
-ce dépôt avec le fichier `COPYING` d'origine. Source :
+le simulateur (modèles `.ac`, textures, quatre boucles sonores rotor et turbine en
+intérieur et extérieur, plus le son de démarrage) est inclus dans ce dépôt avec le
+fichier `COPYING` d'origine. Source :
 <http://helijah.free.fr/flightgear/les-appareils/alouette2/appareil.htm>. S'ils
 sont absents, l'application affiche un hélicoptère procédural et reste
 silencieuse.
@@ -178,9 +184,10 @@ blender --background --python tools/helipad/make_helipad.py
 
 Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par
 exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
-`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau)
-et `assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
-de Biscarrosse à Arès).
+`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau),
+`assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
+de Biscarrosse à Arès) et `assets/terrain/cauterets/` (Cauterets - Gavarnie :
+chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -199,6 +206,10 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   pour décoller tout de suite en test ; `0` (défaut) pour un démarrage normal à
   froid. La variable d'environnement `ARTOUSTE_TURBINE_DEMARREE` a la priorité
   (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
+- `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
+  seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
+  La touche `V` lance ou arrête la démo en cours de jeu. La variable d'environnement
+  `ARTOUSTE_DEMO` a la priorité.
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :
@@ -215,7 +226,7 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes` ou `arcachon`).
+`cote-landes`, `arcachon` ou `cauterets`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :

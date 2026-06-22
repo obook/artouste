@@ -38,11 +38,21 @@ void main() {
     /* La mer du terrain est rendue dans la couleur unie du plan de mer (même
        éclairage), partout où l'altitude est ~ 0. Cela donne une surface d'eau
        homogène, sans l'écume ni les sillages blancs de la photo satellite, et un
-       raccord invisible avec le plan de mer au bord du bloc. La condition d'altitude
-       n'affecte que la mer et épargne les terres (qui gardent l'orthophoto). */
-    float sea    = 1.0 - smoothstep(0.0, 3.0, v_worldPos.y);  /* 1 sur la mer (y ~ 0) */
-    vec3  seaLit = u_seaColor * min(light, 1.3);
-    color        = mix(color, seaLit, sea);
+       raccord invisible avec le plan de mer au bord du bloc.
+       Mais sur une côte basse (bassin d'Arcachon), des terres habitées sont aussi
+       sous 3 m : la seule condition d'altitude leur donnait un sol bleu-vert. On
+       ajoute donc un test de couleur sur l'orthophoto. L'eau y a deux signatures :
+       un rouge faible (canal R ~ 0.1-0.2, contre R ~ 0.45+ pour les villes et le
+       sable) ET un bleu nettement supérieur au rouge. Cette dominante bleue évite de
+       teinter les sols sombres mais neutres (ombres, toits foncés) qu'un test sur le
+       seul rouge prenait pour de l'eau. Mêmes conditions que le filtre des bâtiments
+       sur l'eau (voir render/Buildings.cpp), pour que sol et bâtiments s'accordent. */
+    float lowAlt  = 1.0 - smoothstep(0.0, 3.0, v_worldPos.y);   /* 1 près du niveau 0 */
+    float redLow  = 1.0 - smoothstep(0.22, 0.40, albedo.r);     /* 1 si rouge faible */
+    float blueDom = smoothstep(0.04, 0.12, albedo.b - albedo.r);/* 1 si bleu domine (eau, pas une ombre) */
+    float sea     = lowAlt * redLow * blueDom;                  /* eau = bas ET couleur d'eau */
+    vec3  seaLit   = u_seaColor * min(light, 1.3);
+    color          = mix(color, seaLit, sea);
 
     /* Brume : proportion croissante de couleur d'horizon avec la distance. */
     float dist = length(u_camPos - v_worldPos);

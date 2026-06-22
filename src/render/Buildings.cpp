@@ -14,6 +14,8 @@
 #include "render/Terrain.hpp"
 #include "util/Math.hpp"
 
+#include <stb_image.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
@@ -29,6 +31,21 @@ namespace {
    Une légère variation par bâtiment évite l'aspect uniforme d'une ville monochrome. */
 const vec3 WALL_COLOR{0.86f, 0.84f, 0.80f};  /* enduit clair */
 const vec3 ROOF_COLOR{0.62f, 0.32f, 0.24f};  /* tuile terre cuite */
+
+/* Bâtiments au ras de l'eau : la BD TOPO inclut les cabanes ostréicoles bâties sur
+   le bassin (ports de Gujan-Mestras, La Teste, Cap Ferret). Posées sur un sol à
+   l'altitude de l'eau, elles "flottent" sur la mer rendue. On les écarte en repérant
+   les bâtiments dont le sol est bas ET de couleur d'eau dans l'orthophoto. La seule
+   altitude ne suffit pas : la carte de relief est grossière (~70 m/pixel) et rate les
+   chenaux étroits des ports. Dans l'ortho, l'eau a un rouge faible et un bleu nettement
+   supérieur au rouge (b - r grand), ce qui la distingue des ombres et toits sombres
+   (gris neutres) comme des terres habitées (claires). Les trois conditions réunies
+   ciblent l'eau sans toucher les villes côtières basses.
+   WATER_ALT_M : un bâtiment plus haut que ça n'est jamais sur l'eau (ville en hauteur).
+   WATER_RED / WATER_BLUE_BIAS : signature couleur de l'eau (canaux normalisés 0..1). */
+constexpr float WATER_ALT_M      = 4.0f;
+constexpr float WATER_RED        = 0.30f;
+constexpr float WATER_BLUE_BIAS  = 0.08f;
 
 /* Petit générateur pseudo-aléatoire déterministe (sans état global) : à partir
    d'un entier, renvoie un facteur dans [1-amp, 1+amp] pour nuancer une couleur. */
@@ -92,7 +109,26 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     verts.reserve(static_cast<std::size_t>(count) * 25);
     idx.reserve(static_cast<std::size_t>(count) * 45);
 
+    /* Le filtre "bâtiment sur l'eau" ne vaut que pour les terrains de bord de mer
+       (drapeau sea). En montagne (sea 0), le niveau 0 est juste le point le plus bas
+       du relief : on y garde les cabanes et refuges, même au bord d'un lac d'altitude. */
+    const bool filterWater = terrain.drawsSea();
+
+    /* Orthophoto chargée côté CPU (uniquement pour le filtre eau) : on y lit la
+       couleur du sol sous chaque bâtiment. Demi-dimensions du terrain pour convertir
+       une position monde en coordonnées de pixel (origine au centre du bloc). */
+    int            orthoW = 0, orthoH = 0, orthoCh = 0;
+    unsigned char* ortho  = nullptr;
+    if (filterWater) {
+        const std::filesystem::path orthoPath = dir / "ortho.jpg";
+        stbi_set_flip_vertically_on_load(0);  /* rangée 0 = nord, comme le relief */
+        ortho = stbi_load(orthoPath.string().c_str(), &orthoW, &orthoH, &orthoCh, 3);
+    }
+    const float halfW = terrain.halfWidth();
+    const float halfH = terrain.halfHeight();
+
     std::vector<float> px, pz;  /* emprise en coordonnées monde (réutilisé par bâtiment) */
+    std::size_t        skippedWater = 0;  /* bâtiments écartés car bâtis sur l'eau */
     for (std::uint32_t b = 0; b < count; ++b) {
         float         height = 0.0f;
         std::uint16_t npts   = 0;
@@ -124,6 +160,23 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         }
         cx /= static_cast<float>(npts);
         cz /= static_cast<float>(npts);
+
+        /* Cabane bâtie sur l'eau (port ostréicole) : sol bas ET de couleur d'eau dans
+           l'ortho (voir WATER_ALT_M / WATER_RED / WATER_BLUE_BIAS). On la teste au
+           centre de l'emprise et on l'écarte pour ne pas la faire flotter sur le bassin. */
+        if (filterWater && ortho != nullptr && base <= WATER_ALT_M) {
+            const float u  = (cx + halfW) / (2.0f * halfW);   /* 0 = ouest, 1 = est */
+            const float v  = (cz + halfH) / (2.0f * halfH);   /* 0 = nord,  1 = sud */
+            const int   ox = std::clamp(static_cast<int>(u * (orthoW - 1)), 0, orthoW - 1);
+            const int   oy = std::clamp(static_cast<int>(v * (orthoH - 1)), 0, orthoH - 1);
+            const unsigned char* p = ortho + (static_cast<std::size_t>(oy) * orthoW + ox) * 3;
+            const float r = p[0] / 255.0f;
+            const float bl = p[2] / 255.0f;
+            if (r <= WATER_RED && (bl - r) >= WATER_BLUE_BIAS) {
+                ++skippedWater;
+                continue;
+            }
+        }
 
         /* On laisse les hélipads dégagés. Un bâtiment est ignoré s'il gêne un pad,
            dans trois cas : son emprise CONTIENT le pad (gros bâtiment qui le
@@ -209,6 +262,13 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         ++m_count;
     }
 
+    if (ortho != nullptr) {
+        stbi_image_free(ortho);
+    }
+    if (skippedWater > 0) {
+        std::printf("[Buildings] %zu bâtiment(s) sur l'eau écarté(s) (cabanes au ras du bassin).\n",
+                    skippedWater);
+    }
     if (m_count == 0) {
         return;
     }

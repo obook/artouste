@@ -6,44 +6,9 @@
 
 Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
-- [x] le texte de la valeur de la bousole comme celui de l'altimètre : juste un cadre gris clair et le texte vet dedans
-
-    Fait : dans le ruban de cap (`headingTape`, `src/ui/Hud.cpp`), la valeur du cap
-    reçoit son propre cadre gris translucide via `panelRect`, exactement comme la
-    valeur de l'altimètre dans `altitudeTape`.
-
 ## Réalisme
 
-- [x] Configuration
-
-    Module de chargement de la configuration
-
-    Fichier `assets/config.txt` au format "clé valeur" (parser maison, comme
-    `terrain.txt`), chargé et appliqué au lancement, éditable à la main (voir
-    `src/app/Config.cpp`). Première clé en place : `terrain` (choix de la map).
-    La variable d'environnement `ARTOUSTE_TERRAIN` a la priorité. Reste à exposer
-    en clés : la position de la caméra intérieure, et d'autres réglages au besoin.
-
-
 - [ ] Il manque le skin du rotor arrière
-
-- [x] Animer l'horizon artificiel (indicateur d'assiette) du tableau de bord
-
-    Le cadran ai.ac est chargé en trois morceaux (statique, carte de roulis,
-    barre d'horizon) et animé selon l'assiette réelle, comme l'animation FlightGear
-    (ai.xml) : la carte tourne avec le roulis, la barre tourne aussi et se translate
-    avec le tangage. Les autres cadrans restent figés pour l'instant.
-
-    - [ ] Défaut à corriger : des "moustaches" noires apparaissent sur le cadran
-      (les traits de l'échelle de tangage du float ressortent en noir). À nettoyer.
-
-- [x] Animer l'altimètre du tableau de bord
-
-    Le cadran alt.ac est chargé en quatre morceaux (cadran + aiguilles des centaines,
-    milliers et dizaines de milliers de pieds, isolées par nom exact car leurs noms
-    se contiennent en sous-chaîne) ; chaque aiguille tourne autour de X selon
-    l'altitude au-dessus du niveau de la mer, aux facteurs FlightGear (alt.xml). À
-    confirmer en vol (sens et calage des aiguilles).
 
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 
@@ -55,29 +20,6 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 - [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale
 
 ### Mode demo
-
-- [x] Prévoir un mode démo automatique d'environ 60 secondes, démarrage rapide turbine 10 secondes puis collectif 10 secondes, vol au dessus de batiments, vue sur la mer, attérissage élégants sur pad, plan de vol et changement des vues à définir.
-
-    Fait : pilote automatique `app::DemoPilot` (voir `src/app/DemoPilot.cpp`). La démo
-    s'active par la clé `demo` de `config.txt` (ou la variable `ARTOUSTE_DEMO`,
-    prioritaire) ou par la touche `V` en jeu, et impose le terrain `arcachon`. Une
-    entrée du pilote ou la touche `V` la coupe ; sinon elle se rejoue en boucle
-    (mode vitrine). Mission : démarrage rapide de la turbine (`Turbine::startFast`,
-    ~10 s au lieu de 48 s), décollage une fois le rotor au plein régime, montée et vol
-    jusqu'à la **Dune du Pilat survolée vers 1500 m**, demi-tour, retour se poser sur
-    le pad de départ ; changements de vue en route (orbite / cockpit / poursuite). Le
-    guidage est proportionnel : cap vers la cible courante (la dune à l'aller, le pad
-    au retour), asservissement de la vitesse horizontale (qui décroît avec la distance,
-    pour s'arrêter net au-dessus du pad au lieu de tourner autour) et hauteur réglée
-    selon la phase (montée à 1500 m à l'aller, descente liée à la distance au retour).
-    Vol validé en simulation : survol de la dune à 1500 m, retour et pose à quelques
-    mètres du pad (vers 9,6 min). La croisière est tenue à une **assiette réaliste
-    d'environ 10 deg nez bas** (vitesse ~30 m/s, soit ~110 km/h) ; comme la Dune du
-    Pilat est à ~8 km du pad, l'aller-retour dure donc **environ 9 à 10 minutes**.
-
-    - [ ] À régler en vol sur le rendu réel : calage fin des gains (vitesse, assiette,
-      précision de la pose selon le relief). Désynchronisation du son de démarrage
-      (spool 10 s contre `turbine-start.wav` ~48 s) toujours à recaler.
 
 ## Terrain
 
@@ -159,11 +101,7 @@ ou sortir de France.
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
   niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
   
-- [x] Mettre aussi les batiments pour la carte Artouste
-
-    Fait : `tools/fetch_buildings.py ossau` genere assets/terrain/ossau/buildings.bin
-    (~765 batiments). En montagne le seuil de hauteur est abaisse a 0 (cle
-    `height_min` de ZONES) pour garder les cabanes et bergeries.
+- [ ] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
 ### Sons
 

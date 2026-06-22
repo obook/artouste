@@ -1,0 +1,2 @@
+# Les scripts batch Windows doivent rester en CRLF (labels et goto plus fiables).
+*.bat text eol=crlf

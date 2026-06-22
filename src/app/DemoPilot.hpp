@@ -31,6 +31,7 @@ public:
     struct Output {
         physics::Controls controls;            /* commandes à appliquer à l'appareil */
         int               viewMode   = 2;      /* vue souhaitée (0 poursuite, 1 cockpit, 2 orbite) */
+        int               hudStyle   = 0;      /* HUD souhaité (0 aucun, 1 complet, 2 quatre coins) */
         bool              cutTurbine = false;  /* couper la turbine (une fois posé) */
         bool              finished   = false;  /* séquence d'arrêt terminée : relancer la démo */
     };

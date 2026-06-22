@@ -27,6 +27,12 @@ constexpr float COLLECTIF_MAX   = 0.72f; /* plafond du collectif : garde la tuy�
 constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
 constexpr float T_MAX        = 720.0f; /* garde-fou : on relance la démo au plus tard à cet instant (12 min) */
 
+/* --- Cycle des vues en croisière (s) ----------------------------------------- */
+constexpr float DUREE_POURSUITE = 28.0f;  /* vue de poursuite (chase) */
+constexpr float DUREE_COCKPIT   = 28.0f;  /* vue cockpit (intérieur) */
+constexpr float DUREE_ORBITE    = 14.0f;  /* vue orbite (un tour complet, = DEMO_ORBIT_TURN côté application) */
+constexpr float CYCLE_VUES      = DUREE_POURSUITE + DUREE_COCKPIT + DUREE_ORBITE;  /* durée d'un cycle complet */
+
 /* --- Réglages du vol --------------------------------------------------------- */
 constexpr float ALT_SURVOL  = 1500.0f; /* hauteur de survol de la Dune du Pilat (m) */
 constexpr float V_CROISIERE = 35.0f;   /* vitesse de croisière visée (m/s) : assiette de croisière réaliste (~10 deg) */
@@ -231,18 +237,22 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     } else if (m_retour && dist < 200.0f) {
         out.viewMode = 0;  /* approche : vue de poursuite */
     } else {
-        /* En route : on fait défiler les trois vues. L'orbite dure plus longtemps
-           (14 s) pour laisser la caméra faire un tour complet autour de l'appareil
-           (durée à garder en phase avec DEMO_ORBIT_TURN côté application). */
-        const float bande = std::fmod(tVol - DUREE_MONTEE, 30.0f);
-        if (bande < 8.0f) {
+        /* En route : on fait défiler les trois vues. L'orbite, plus courte, laisse la
+           caméra faire un tour complet (durée à garder en phase avec DEMO_ORBIT_TURN
+           côté application). */
+        const float bande = std::fmod(tVol - DUREE_MONTEE, CYCLE_VUES);
+        if (bande < DUREE_POURSUITE) {
             out.viewMode = 0;  /* poursuite */
-        } else if (bande < 16.0f) {
+        } else if (bande < DUREE_POURSUITE + DUREE_COCKPIT) {
             out.viewMode = 1;  /* cockpit */
         } else {
-            out.viewMode = 2;  /* orbite (14 s : un tour complet) */
+            out.viewMode = 2;  /* orbite (un tour complet) */
         }
     }
+
+    /* HUD : il change à chaque cycle de vues et boucle : aucun, puis complet, puis
+       quatre coins. (Pendant le démarrage, la montée et l'arrêt, il reste à 0.) */
+    out.hudStyle = static_cast<int>((tVol - DUREE_MONTEE) / CYCLE_VUES) % 3;
 
     /* Détection de la pose : au retour, près du pad et au sol -> on entame la séquence
        d'arrêt (traitée en tête de update au tour suivant). Le garde-fou de durée relance

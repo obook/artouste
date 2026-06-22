@@ -51,6 +51,10 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
        principal sont traitées à part, en mélange, pour le fondu selon le régime. */
     drawModel(shader, m_fuselage, root, Pass::Opaque);
     drawModel(shader, m_interior, root, Pass::Opaque);
+    /* Arceau de protection du rotor de queue (jaune en livrée Gendarmerie). Il a
+       été retiré du fuselage (alouette.ac) et rechargé en pièce séparée, donc il se
+       dessine simplement à sa place, sans z-fighting. */
+    drawModel(shader, m_tailGuard, root, Pass::Opaque);
     /* En vue cockpit, le pilote est dessiné sans jambes (chargées à part) : on
        affiche alors ses jambes animées au palonnier. Le pilote entier (vues
        externes) et le copilote gardent leurs jambes figées. */

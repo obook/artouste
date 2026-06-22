@@ -104,6 +104,8 @@ private:
     Model              m_fuselage;
     const Texture*     m_liveryGendarmerie = nullptr;  /* livrée bleue (fuselage) */
     const Texture*     m_tailBladeLivery   = nullptr;  /* pales de queue Gendarmerie (jaune zébré rouge) */
+    const Texture*     m_tailGuardLivery   = nullptr;  /* arceau de queue Gendarmerie (jaune uni) */
+    const Texture*     m_tailGuardOrigine  = nullptr;  /* arceau de queue livrée d'origine (gris métal) */
     bool               m_gendarmerie = false;          /* livrée Gendarmerie active (marquages) */
     Model              m_interior;
     Model              m_pilot;         /* pilote entier (vues externes) */
@@ -179,6 +181,7 @@ private:
     Model              m_mainBlade;
     Model              m_tailHub;
     Model              m_tailBlade;
+    Model              m_tailGuard;          /* arceau de protection du rotor de queue */
     Model              m_decalGendarmerie;  /* mot "GENDARMERIE" (flancs de cabine) */
     Model              m_decalReg;          /* immatriculation "F-BRHP" */
     Model              m_decalStripe;       /* liséré blanc (bas de cabine) */

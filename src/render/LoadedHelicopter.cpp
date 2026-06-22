@@ -186,6 +186,13 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_tailBladeLivery =
         m_tailBlade.acquireTexture(dir / "Externals/TailRotor/tailrotor-gendarmerie.png");
 
+    /* Arceau de protection du rotor de queue : isolé de la structure du fuselage
+       (voir tools/livree) pour pouvoir le peindre en jaune en livrée Gendarmerie.
+       Le fuselage lui-même (alouette.ac) ne le contient donc plus. */
+    m_tailGuard        = loadPart(dir / "tailguard.ac", {});
+    m_tailGuardLivery  = m_tailGuard.acquireTexture(dir / "tailguard-gendarmerie.png");
+    m_tailGuardOrigine = m_tailGuard.acquireTexture(dir / "tailguard-origine.png");
+
     /* Marquages de la livrée Gendarmerie (posés sur les flancs en 3D, voir draw). */
     m_decalGendarmerie = makeDecal(dir / "decal-gendarmerie.png");
     m_decalReg         = makeDecal(dir / "decal-fbrhp.png");
@@ -196,6 +203,10 @@ void LoadedHelicopter::setGendarmerieLivery(bool on) {
     m_gendarmerie = on;
     m_fuselage.setLivery(on ? m_liveryGendarmerie : nullptr);
     m_tailBlade.setLivery(on ? m_tailBladeLivery : nullptr);
+    /* L'arceau n'a pas de teinte d'origine satisfaisante dans sa texture (UV chaudes) :
+       on force donc une couleur unie dans les deux cas, jaune en Gendarmerie, gris
+       métal sinon (cohérent avec la pale de queue et le corps en livrée d'origine). */
+    m_tailGuard.setLivery(on ? m_tailGuardLivery : m_tailGuardOrigine);
 }
 
 void LoadedHelicopter::drawModel(Shader& shader, const Model& model, const mat4& transform,

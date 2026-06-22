@@ -683,7 +683,11 @@ void Application::mainLoop() {
         ui::HudData hud;
         hud.altitudeM    = body.position.y;
         hud.airspeedKt   = airspeed * 1.94384f;
-        float headingDeg = glm::degrees(yaw);
+        /* Cap boussole pour le HUD (ruban de cap, texte HDG, fleche de la minimap) :
+           0 = nord, 90 = est, sens horaire. Le repere monde a X vers l'est et Z vers
+           le sud, donc le nord est -Z. (Le lacet 'yaw' ci-dessus, mesure depuis l'est,
+           reste reserve a la camera de poursuite.) */
+        float headingDeg = glm::degrees(std::atan2(forward.x, -forward.z));
         if (headingDeg < 0.0f) {
             headingDeg += 360.0f;
         }
@@ -1093,6 +1097,8 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     hud.mapTexId      = m_terrain->orthoTexId();
     hud.mapHeliU      = heliPos.x / (2.0f * halfW) + 0.5f;
     hud.mapHeliV      = heliPos.z / (2.0f * halfH) + 0.5f;
+    /* headingDeg est déjà un cap boussole (0 = nord, 90 = est, sens horaire), ce
+       qu'attend la flèche de la minimap (nord en haut). */
     hud.mapHeadingDeg = headingDeg;
 
     /* Étiquette 3D + point minimap d'un lieu (nom + position WGS84), s'il tombe dans

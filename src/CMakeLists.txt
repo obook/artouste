@@ -38,6 +38,8 @@ add_executable(artouste
     ui/Hud.cpp
     ui/HudOverlay.cpp
     audio/AudioEngine.cpp
+    audio/RingBuffer.cpp
+    audio/RadioStream.cpp
 )
 
 # Racine des includes du projet : permet les chemins "render/...", "util/...".

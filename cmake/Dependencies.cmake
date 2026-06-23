@@ -159,3 +159,16 @@ target_include_directories(miniaudio SYSTEM INTERFACE ${miniaudio_SOURCE_DIR})
 # ---------------------------------------------------------------------------
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
+
+# ---------------------------------------------------------------------------
+# libcurl (système, OPTIONNEL) - lecture du flux radio internet.
+# Absente : la radio est simplement indisponible, le reste compile normalement.
+# On ne la récupère PAS via FetchContent (elle tire OpenSSL) : c'est la seule
+# dépendance facultative qui peut manquer sans casser le build.
+# ---------------------------------------------------------------------------
+find_package(CURL QUIET)
+if(CURL_FOUND)
+    message(STATUS "libcurl trouvée : radio internet activée.")
+else()
+    message(STATUS "libcurl absente : radio internet désactivée (build normal).")
+endif()

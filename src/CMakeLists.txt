@@ -64,6 +64,13 @@ target_link_libraries(artouste
         ${CMAKE_DL_LIBS}
 )
 
+# Radio internet : libcurl optionnelle. Si présente, on l'ajoute et on définit
+# ARTOUSTE_HAS_CURL ; sinon audio/RadioStream.cpp se compile en coquille vide.
+if(CURL_FOUND)
+    target_link_libraries(artouste PRIVATE CURL::libcurl)
+    target_compile_definitions(artouste PRIVATE ARTOUSTE_HAS_CURL)
+endif()
+
 # clangd / IDE
 set_target_properties(artouste PROPERTIES
     CXX_STANDARD          20

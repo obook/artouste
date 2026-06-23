@@ -43,6 +43,10 @@ public:
     /* Suspend ou reprend la lecture (suit la pause du jeu). */
     void setPaused(bool paused);
 
+    /* Règle le volume du flux dans [0, 1] (sert au crossfade radio/hélico). Pris en
+       compte tout de suite si le son est prêt, sinon mémorisé pour sa création. */
+    void setVolume(float volume);
+
     /* Vrai si un flux est démarré (en cours de mise en route ou en lecture). */
     [[nodiscard]] bool playing() const;
 

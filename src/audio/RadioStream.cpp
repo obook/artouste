@@ -24,6 +24,7 @@ void RadioStream::start(ma_engine*, const std::string&) {}
 void RadioStream::stop() {}
 void RadioStream::poll() {}
 void RadioStream::setPaused(bool) {}
+void RadioStream::setVolume(float) {}
 bool RadioStream::playing() const { return false; }
 
 }  /* namespace artouste::audio */
@@ -146,6 +147,7 @@ struct RadioStream::Impl {
     bool                     soundReady      = false;
     ma_uint32                channels        = 2;
     ma_uint32                sampleRate      = 48000;
+    float                    volume          = RADIO_VOLUME;  /* volume du flux [0, 1] (crossfade) */
 
     /* Callback d'écriture de libcurl : pousse les octets reçus dans le tampon.
        Bloque si le tampon est plein (régule le débit). Renvoie une taille
@@ -281,7 +283,7 @@ void RadioStream::poll() {
         return;
     }
     impl->soundReady = true;
-    ma_sound_set_volume(&impl->sound, RADIO_VOLUME);
+    ma_sound_set_volume(&impl->sound, impl->volume);
     ma_sound_start(&impl->sound);
 }
 
@@ -305,6 +307,14 @@ void RadioStream::setPaused(bool paused) {
         ma_sound_stop(&impl->sound);
     } else {
         ma_sound_start(&impl->sound);
+    }
+}
+
+void RadioStream::setVolume(float volume) {
+    Impl* impl = m_impl.get();
+    impl->volume = volume < 0.0f ? 0.0f : (volume > 1.0f ? 1.0f : volume);
+    if (impl->soundReady) {
+        ma_sound_set_volume(&impl->sound, impl->volume);
     }
 }
 

@@ -46,6 +46,8 @@ void AudioEngine::setPaused(bool paused) {
     if (paused && m_impl->startLoaded) {
         ma_sound_stop(&m_impl->startSound);
     }
+    /* La radio suit la pause du jeu (suspend ou reprend le flux). */
+    m_radio.setPaused(paused);
 }
 
 void AudioEngine::playStartSound() {
@@ -94,6 +96,45 @@ void AudioEngine::stopMusic() {
     if (m_impl->engineInit && m_impl->musicLoaded) {
         ma_sound_stop(&m_impl->musicSound);
     }
+}
+
+void AudioEngine::startRadio(const std::string& url) {
+    if (!m_impl->engineInit) {
+        return;  /* pas de périphérique audio : radio silencieuse */
+    }
+    m_radio.setVolume(m_impl->radioMix);  /* applique la balance courante */
+    m_radio.start(&m_impl->engine, url);
+}
+
+void AudioEngine::stopRadio() {
+    m_radio.stop();
+}
+
+void AudioEngine::toggleRadio(const std::string& url) {
+    if (m_radio.playing()) {
+        m_radio.stop();
+    } else {
+        startRadio(url);
+    }
+}
+
+void AudioEngine::pollRadio() {
+    m_radio.poll();
+}
+
+bool AudioEngine::radioPlaying() const {
+    return m_radio.playing();
+}
+
+void AudioEngine::adjustRadioMix(float delta) {
+    float m = m_impl->radioMix + delta;
+    m = m < 0.0f ? 0.0f : (m > 1.0f ? 1.0f : m);
+    m_impl->radioMix = m;
+    m_radio.setVolume(m);  /* le gain hélico (1 - m) est appliqué dans update() */
+}
+
+float AudioEngine::radioMix() const {
+    return m_impl->radioMix;
 }
 
 bool AudioEngine::ready() const noexcept {

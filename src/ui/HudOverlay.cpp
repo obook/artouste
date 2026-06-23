@@ -93,15 +93,23 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
         wy -= 20.0f;
     }
 
-    /* Repère du mode assisté, en bas à gauche, dans le même style que les
-     * instruments : panneau gris semi-transparent et texte vert. */
-    if (data.assist) {
-        const char*  txt = "MODE ASSISTE";
-        const ImVec2 ts  = ImGui::CalcTextSize(txt);
-        const ImVec2 tp(m, h - 26.0f);
+    /* Voyant de la radio et repère du mode assisté, en bas à gauche, dans le même
+     * style que les instruments : panneau gris semi-transparent et texte vert. Le
+     * voyant radio se place une ligne au-dessus du mode assisté. */
+    const auto badge = [&](const char* txt, float yPos) {
+        const ImVec2 ts = ImGui::CalcTextSize(txt);
+        const ImVec2 tp(m, yPos);
         panelRect(dl, ImVec2(tp.x - 6.0f, tp.y - 4.0f),
                   ImVec2(tp.x + ts.x + 6.0f, tp.y + ts.y + 4.0f), 4.0f);
         dl->AddText(tp, HUD_GREEN, txt);
+    };
+    if (data.radio) {
+        char txt[24];
+        std::snprintf(txt, sizeof(txt), "RADIO %d%%", data.radioMixPct);
+        badge(txt, h - 44.0f);
+    }
+    if (data.assist) {
+        badge("MODE ASSISTE", h - 26.0f);
     }
 }
 

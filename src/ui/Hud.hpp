@@ -51,6 +51,8 @@ struct HudData {
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */
     bool        assist        = false;  /* mode assisté actif : affiche un repère */
+    bool        radio         = false;  /* flux radio en lecture : affiche un voyant "RADIO" */
+    int         radioMixPct   = 0;      /* part de la radio dans le crossfade radio/hélico (0 à 100 %) */
     bool        geoValid      = false;  /* coordonnées géographiques disponibles */
     float       lonDeg        = 0.0f;   /* longitude (degrés, + est) */
     float       latDeg        = 0.0f;   /* latitude (degrés, + nord) */

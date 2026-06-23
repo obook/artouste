@@ -120,9 +120,14 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
        actif (l'ancienne barre de palonnier, peu utile, a été retirée). On ne crée
        le panneau que s'il y a quelque chose à montrer, pour ne pas laisser une
        boîte vide. */
-    if (data.assist) {
+    if (data.assist || data.radio) {
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
-        ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
+        if (data.radio) {
+            ImGui::Text("RADIO %d%%", data.radioMixPct);  /* voyant radio (touche K) + balance (-/+) */
+        }
+        if (data.assist) {
+            ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
+        }
         ImGui::End();
     }
 

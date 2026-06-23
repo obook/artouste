@@ -222,6 +222,15 @@ void Application::initScene() {
     m_hud.init(m_window);
     m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
 
+    /* Flux radio internet : URL de la clé "radio_url" de la config, surchargée par
+       la variable d'environnement ARTOUSTE_RADIO_URL (prioritaire). Vide = pas de
+       radio. On mémorise l'URL sans démarrer le flux : la radio est coupée au
+       lancement, c'est la touche K qui l'allume ou la coupe. */
+    m_radioUrl = config.radioUrl;
+    if (const char* env = std::getenv("ARTOUSTE_RADIO_URL"); env != nullptr && env[0] != '\0') {
+        m_radioUrl = env;
+    }
+
     /*
      * On utilise le vrai modèle FlightGear s'il est présent : le sous-ensemble
      * nécessaire est versionné dans le dépôt (le paquet FlightGear complet, lui,

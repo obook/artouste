@@ -158,6 +158,23 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_paused = !app->m_paused;
             }
             break;
+        case GLFW_KEY_K:  /* allume ou coupe le flux radio internet (en vol libre) */
+            if (app != nullptr) {
+                app->m_audio.toggleRadio(app->m_radioUrl);
+            }
+            break;
+        case GLFW_KEY_MINUS:        /* balance radio/hélico : vers l'hélico (moins de radio) */
+        case GLFW_KEY_KP_SUBTRACT:
+            if (app != nullptr) {
+                app->m_audio.adjustRadioMix(-0.05f);
+            }
+            break;
+        case GLFW_KEY_EQUAL:        /* balance radio/hélico : vers la radio (plus de radio) */
+        case GLFW_KEY_KP_ADD:
+            if (app != nullptr) {
+                app->m_audio.adjustRadioMix(0.05f);
+            }
+            break;
         default:
             break;
     }

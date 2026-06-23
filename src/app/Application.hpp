@@ -172,6 +172,7 @@ private:
     physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
     DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
     std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
+    std::string                               m_radioUrl;      /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
     bool                                      m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;

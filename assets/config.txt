@@ -29,4 +29,4 @@ demo 0
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.
 # La variable d'environnement ARTOUSTE_RADIO_URL, si definie, a la priorite.
 # Exemple (decommenter pour activer) :
-# radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
+radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3

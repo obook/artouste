@@ -46,6 +46,8 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   (décollage, survol de la Dune du Pilat vers 1500 m, retour et pose), en boucle.
   Un panneau de confirmation s'affiche avant le lancement.
 - Son du moteur et du rotor, ciel en dégradé, ombre portée.
+- Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
+  cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
 - Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
@@ -81,6 +83,8 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
 | Démo automatique        | `V`            | -                    |
+| Radio internet (allumer/couper) | `K`    | -                    |
+| Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
 | Quitter                 | `Échap`        | `LB` + `RB`          |
 
@@ -105,7 +109,9 @@ ctest --test-dir build --output-on-failure
 Dépendances récupérées automatiquement (FetchContent) : GLFW, GLM, Dear ImGui,
 Assimp, stb, miniaudio, Catch2 ; GLAD est versionné dans `third_party/`.
 Prérequis système : pilotes OpenGL, bibliothèques de développement X11, et un
-compilateur C++20.
+compilateur C++20. libcurl (paquet de développement) est une dépendance système
+**optionnelle** : présente, elle active la radio internet ; absente, le simulateur
+se compile et tourne normalement sans cette fonctionnalité.
 
 ## Compilation (Windows)
 
@@ -247,6 +253,15 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
   La touche `V` lance ou arrête la démo en cours de jeu. La variable d'environnement
   `ARTOUSTE_DEMO` a la priorité.
+- `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
+  cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
+  **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
+  variable d'environnement `ARTOUSTE_RADIO_URL` a la priorité. La radio est une
+  fonctionnalité optionnelle : sans libcurl à la compilation, URL vide ou réseau
+  coupé, le simulateur reste silencieux sur ce point, sans erreur. Un voyant
+  `RADIO` s'affiche dans le HUD tant que le flux joue, suivi de la part de la radio
+  dans le mixage. Les touches `-` et `+` règlent la **balance radio/hélico** (un
+  crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :

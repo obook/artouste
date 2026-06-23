@@ -75,6 +75,7 @@ struct AudioEngine::Impl {
     bool      startLoaded        = false;
     bool      musicLoaded        = false;
     bool      paused             = false;  /* boucles suspendues (pause du jeu) */
+    float     radioMix           = 0.45f;  /* crossfade radio/hélico : 0 = tout hélico, 1 = tout radio */
 };
 
 }  /* namespace artouste::audio */

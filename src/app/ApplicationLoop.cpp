@@ -176,6 +176,8 @@ void Application::updateAudio(const physics::RigidBody& body, const physics::Con
         m_audio.update(controls.collective, airspeed, turbineFraction, rotorFraction,
                        audioView, m_closingSpeed);
     }
+    /* Finalise l'init du son de la radio dès que le tampon réseau est amorcé. */
+    m_audio.pollRadio();
 }
 
 void Application::advanceRotor(float rotorFraction, float frameDt) {

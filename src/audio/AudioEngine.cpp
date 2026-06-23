@@ -114,6 +114,10 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
     const float   doppler  = dopplerPitch(closingSpeed);
     const bool    interior = (view == View::Interior);
 
+    /* Crossfade radio/hélico : quand la radio joue, l'hélico est atténué de la part
+     * laissée à la radio (gain = 1 - radioMix) ; radio coupée, l'hélico est plein. */
+    const float   helicoGain = m_radio.playing() ? (1.0f - m_impl->radioMix) : 1.0f;
+
     /* Aiguille une source (turbine ou rotor) vers sa boucle extérieure ou sa boucle
      * cabine, selon la vue. En cabine, on préfère la vraie boucle "inside" (déjà
      * étouffée à l'enregistrement) ; à défaut, on étouffe la boucle extérieure via
@@ -135,7 +139,7 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
     /* Turbine : volume et hauteur suivent son régime (silencieuse à l'arrêt, la
      * hauteur grimpe pendant la montée en régime). Le collectif l'accentue un peu. */
     const float c          = clamp01(collective);
-    const float turbineVol = (0.35f + 0.55f * c) * turbine * mix.turbineVol;
+    const float turbineVol = (0.35f + 0.55f * c) * turbine * mix.turbineVol * helicoGain;
     const float turbinePit = 0.55f + 0.35f * turbine + 0.30f * c;
     routeSource(m_impl->engineSound, m_impl->engineLoaded, m_impl->engineInside,
                 m_impl->engineInsideLoaded, turbineVol, turbinePit);
@@ -143,7 +147,7 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
     /* Rotor : ne se fait entendre qu'une fois les pales lancées, un peu plus quand
      * l'appareil avance (translation). Son volume suit le régime rotor. */
     const float a        = airspeed > 40.0f ? 1.0f : airspeed / 40.0f;
-    const float rotorVol = (0.35f + 0.20f * a) * rotor * mix.rotorVol;
+    const float rotorVol = (0.35f + 0.20f * a) * rotor * mix.rotorVol * helicoGain;
     routeSource(m_impl->rotorSound, m_impl->rotorLoaded, m_impl->rotorInside,
                 m_impl->rotorInsideLoaded, rotorVol, 1.0f);
 
@@ -153,7 +157,7 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
      * s'entend pas. Il n'a pas de version cabine : on étouffe par la hauteur. */
     if (m_impl->startLoaded && ma_sound_is_playing(&m_impl->startSound) == MA_TRUE) {
         const float muffle = interior ? mix.tone : 1.0f;
-        ma_sound_set_volume(&m_impl->startSound, START_VOLUME * mix.turbineVol);
+        ma_sound_set_volume(&m_impl->startSound, START_VOLUME * mix.turbineVol * helicoGain);
         ma_sound_set_pitch(&m_impl->startSound, muffle * doppler);
     }
 }

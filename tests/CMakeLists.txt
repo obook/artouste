@@ -2,13 +2,17 @@
 # l'infrastructure (Catch2, ctest) est en place. Le vrai test du modèle
 # de vol arrivera au jalon M3.
 
+find_package(Threads REQUIRED)
+
 add_executable(artouste_tests
     placeholder_tests.cpp
     arcade_flight_tests.cpp
     flight_model_tests.cpp
     flight_assist_tests.cpp
     config_tests.cpp
+    ring_buffer_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
+    ${CMAKE_SOURCE_DIR}/src/audio/RingBuffer.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightModel.cpp
@@ -24,6 +28,7 @@ target_link_libraries(artouste_tests
         artouste_warnings
         glm::glm
         Catch2::Catch2WithMain
+        Threads::Threads
 )
 
 set_target_properties(artouste_tests PROPERTIES

@@ -58,3 +58,16 @@ TEST_CASE("valeur vide : la clé garde son défaut", "[config]") {
     REQUIRE(cfg.terrain == "ossau");
     std::filesystem::remove(path);
 }
+
+TEST_CASE("clé radio_url lue", "[config]") {
+    const auto   path = writeTemp("artouste_cfg_radio.txt",
+                                  "radio_url https://exemple.test/flux.mp3\n");
+    const Config cfg  = loadConfig(path);
+    REQUIRE(cfg.radioUrl == "https://exemple.test/flux.mp3");
+    std::filesystem::remove(path);
+}
+
+TEST_CASE("radio_url absente : chaîne vide par défaut", "[config]") {
+    const Config cfg = loadConfig("/chemin/inexistant/config.txt");
+    REQUIRE(cfg.radioUrl.empty());
+}

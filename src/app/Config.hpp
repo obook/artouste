@@ -35,6 +35,11 @@ struct Config {
        La démo impose alors le terrain "arcachon". Une entrée du pilote ou la touche V
        coupe la démo. */
     bool demo = false;
+
+    /* URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit, allumé
+       par la touche K en vol libre. Vide par défaut = pas de radio. La variable
+       d'environnement ARTOUSTE_RADIO_URL, si définie, a la priorité. */
+    std::string radioUrl = "";
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

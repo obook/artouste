@@ -24,3 +24,9 @@ turbine_demarree 0
 # la demo. La variable d'environnement ARTOUSTE_DEMO, si definie, a la priorite.
 # 0 = pas de demo.
 demo 0
+
+# radio_url : URL d'un flux radio internet (MP3 sur HTTP) joue dans le cockpit.
+# Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.
+# La variable d'environnement ARTOUSTE_RADIO_URL, si definie, a la priorite.
+# Exemple (decommenter pour activer) :
+# radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3

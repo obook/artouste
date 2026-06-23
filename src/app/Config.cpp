@@ -60,6 +60,10 @@ Config loadConfig(const std::filesystem::path& path) {
             cfg.turbineRunning = (value == "1" || value == "oui" || value == "true");
         } else if (key == "demo") {
             cfg.demo = (value == "1" || value == "oui" || value == "true");
+        } else if (key == "radio_url") {
+            if (!value.empty()) {
+                cfg.radioUrl = value;
+            }
         } else {
             std::fprintf(stderr, "[Config] clé inconnue ignorée : %s\n", key.c_str());
         }

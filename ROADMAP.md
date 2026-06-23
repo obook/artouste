@@ -8,7 +8,13 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Réalisme
 
+- [ ] Le tableau de bord est celui qui est standard FlightGear, le changer avec celui sui est préparé dans assets/models/Alouette-II-panel
+
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
+
+- [ ] Ajouter les livées Armée de l'Air, Armée de Terre (ALAT), Marine nationale, Sécurité civile, Belgique (ALFT), Suisse : rotation par changement de livrée -> le rotor de queue  + anneau de sécurité  est le même pour tous.
+
+- [ ] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
 
 ### Sons
 
@@ -16,11 +22,24 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale
 
+- [ ] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux)
+
+
 ### Mode demo
+
+**Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :
+
+1. Décollage du pad (aérodrome de La Teste).
+2. Survol de la Dune du Pilat à 2000 m (passage haut, panorama).
+3. Survol du cap Ferret par son nord en rase-mottes à 30 m.
+4. Survol d'Arcachon à 1000 m.
+5. Retour au pad et pose.
+
+> Note : altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). Arcachon vient des lieux remarquables du terrain (landmarks.txt) ; la Dune du Pilat (lat 44.5846722, lon -1.2075204) et le cap Ferret par son nord (lat 44.6634685, lon -1.2582492) sont des coordonnées explicites.
 
 - [ ] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
 
-- [ ] Mode démo : décollage encore plus lent et doux
+- [ ] Mode démo : décollage encore plus lent et doux, leger piqué avant pour avancer
 
 - [ ] On ne sait pas quand et de quelle manière on est sorti du mode démo, trouver une solution
 
@@ -124,4 +143,4 @@ ou sortir de France.
 
 ### Manuel
 
-- [ ] Fournir un PDF propre dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
+- [ ] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.

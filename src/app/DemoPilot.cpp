@@ -18,17 +18,20 @@ namespace artouste::app {
 
 using namespace demo_detail;
 
-void DemoPilot::start(const vec3& returnPad, const vec3& dunePoint) noexcept {
+void DemoPilot::start(const vec3& returnPad, const std::vector<Waypoint>& route) noexcept {
     m_active         = true;
     m_elapsed        = 0.0f;
     m_rotorReadyTime = -1.0f;  /* on attendra le plein régime rotor avant de décoller */
-    m_retour         = false;  /* on commence par l'aller, vers la dune */
+    m_index          = 0;      /* on commence par le premier point de passage */
     m_collective     = 0.0f;   /* levier au repos */
     m_landed         = false;
     m_turbineCut     = false;
     m_stoppedTime    = -1.0f;
     m_returnPad      = returnPad;
-    m_dunePoint      = dunePoint;
+    m_route          = route;
+    /* Route vide : pas de point à survoler, on passe directement au retour (décollage
+       puis pose sur le pad). */
+    m_returning      = m_route.empty();
 }
 
 float DemoPilot::rampeCollectif(float cible, float dt) noexcept {
@@ -101,30 +104,35 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
         return out;  /* commandes neutres : collectif 0, l'appareil reste posé */
     }
 
-    /* Phase 3 : vol guidé vers la cible courante. À l'aller, on vise la Dune du Pilat
-       en montant à l'altitude de survol ; arrivé au-dessus, on fait demi-tour. Au
-       retour, on vise le pad de départ en descendant pour s'y poser. */
+    /* Phase 3 : vol guidé vers le point courant. Tant qu'il reste des points de passage,
+       on vise le point courant à sa hauteur de survol ; une fois assez proche, on vise le
+       suivant. Après le dernier point, on vise le pad de départ en descendant pour s'y
+       poser. */
     vec3  cible;
     float hauteurCible;
-    if (!m_retour) {
-        cible        = m_dunePoint;
-        hauteurCible = ALT_SURVOL;  /* on monte jusqu'à la hauteur de survol */
+    if (!m_returning) {
+        cible        = m_route[m_index].point;
+        hauteurCible = m_route[m_index].altitude;  /* hauteur de survol propre à ce point */
     } else {
         cible        = m_returnPad;
         const float dPad = std::sqrt((m_returnPad.x - position.x) * (m_returnPad.x - position.x) +
                                      (m_returnPad.z - position.z) * (m_returnPad.z - position.z));
         /* Descente proportionnelle à la distance au pad. Tout près du pad (pose), c'est
            un asservissement en vitesse verticale qui prend le relais (voir plus bas). */
-        hauteurCible = clamp(GAIN_ALT_RETOUR * dPad, 0.0f, ALT_SURVOL);
+        hauteurCible = clamp(GAIN_ALT_RETOUR * dPad, 0.0f, ALT_PLAFOND);
     }
 
     const float dx   = cible.x - position.x;
     const float dz   = cible.z - position.z;
     const float dist = std::sqrt(dx * dx + dz * dz);  /* distance horizontale à la cible (m) */
 
-    /* Aller : une fois au-dessus de la dune, on bascule en retour. */
-    if (!m_retour && dist < RAYON_DUNE) {
-        m_retour = true;
+    /* Une fois assez proche du point courant, on passe au suivant ; après le dernier, on
+       entame le retour vers le pad. */
+    if (!m_returning && dist < RAYON_POINT) {
+        ++m_index;
+        if (m_index >= m_route.size()) {
+            m_returning = true;
+        }
     }
 
     /* On garde le nez pointé vers la cible, sauf tout près (le cap n'aurait plus de
@@ -154,7 +162,7 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
        pose très douce et robuste à l'effet de sol (réduction de collectif en finale,
        conforme à la procédure). */
     float collectifCible;
-    if (m_retour && dist < DIST_POSE) {
+    if (m_returning && dist < DIST_POSE) {
         collectifCible = saturate(physics::COLL_HOVER + GAIN_VZ_POSE * (VZ_POSE - velocity.y));
     } else {
         collectifCible = collectifPour(hauteurCible, agl, velocity.y);
@@ -163,9 +171,9 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
 
     /* Vues : variété en route (cockpit / orbite par bandes de temps), poursuite à
        l'approche du pad au retour, orbite pour la pose. */
-    if (m_retour && dist < 60.0f) {
+    if (m_returning && dist < 60.0f) {
         out.viewMode = 2;  /* pose : vue d'orbite */
-    } else if (m_retour && dist < 200.0f) {
+    } else if (m_returning && dist < 200.0f) {
         out.viewMode = 0;  /* approche : vue de poursuite */
     } else {
         /* En route : on fait défiler les trois vues. L'orbite, plus courte, laisse la
@@ -188,7 +196,7 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     /* Détection de la pose : au retour, près du pad et au sol -> on entame la séquence
        d'arrêt (traitée en tête de update au tour suivant). Le garde-fou de durée relance
        directement la démo si le vol s'éternise. */
-    if (m_retour && dist < DIST_POSE && agl < AGL_POSE) {
+    if (m_returning && dist < DIST_POSE && agl < AGL_POSE) {
         m_landed = true;
     }
     if (m_elapsed > T_MAX) {

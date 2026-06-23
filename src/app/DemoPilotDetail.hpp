@@ -21,14 +21,15 @@ namespace artouste::app::demo_detail {
 /* --- Découpage du début de la démo ------------------------------------------- */
 inline constexpr float ROTOR_PRET      = 0.99f; /* régime rotor à atteindre avant de décoller (plein régime) */
 inline constexpr float DELAI_DECOLLAGE = 3.0f;  /* s : attente sur le pad après le plein régime rotor avant de décoller */
-inline constexpr float DUREE_MONTEE    = 7.0f;  /* s : décollage vertical doux avant de partir vers la dune */
+inline constexpr float DUREE_MONTEE    = 9.0f;  /* s : décollage vertical doux avant de partir vers la dune */
 inline constexpr float COLLECTIF_RATE  = 0.25f; /* 1/s : vitesse de variation du collectif (levier monté en douceur) */
-inline constexpr float VZ_DECOLLAGE      = 2.0f;  /* m/s : vitesse de montée visée au décollage (douce, contrôlée) */
+inline constexpr float VZ_DECOLLAGE      = 1.2f;  /* m/s : vitesse de montée visée au décollage (douce, contrôlée) */
 inline constexpr float GAIN_VZ_DECOLLAGE = 0.06f; /* collectif par (m/s) d'écart à la vitesse de montée, au décollage */
 inline constexpr float COLLECTIF_MAX   = 0.72f; /* plafond du collectif : garde la tuyère sous ~480 deg en montée
                                                    (temp = 400 + 150*collectif^2 ; 0,72 -> ~478 deg, zone verte) */
 inline constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
-inline constexpr float T_MAX        = 720.0f; /* garde-fou : on relance la démo au plus tard à cet instant (12 min) */
+inline constexpr float T_MAX        = 1200.0f; /* garde-fou : on relance la démo au plus tard à cet instant
+                                                  (20 min) ; marge pour la route cap Ferret + Arcachon (~27 km) */
 
 /* --- Cycle des vues en croisière (s) ----------------------------------------- */
 inline constexpr float DUREE_POURSUITE = 28.0f;  /* vue de poursuite (chase) */
@@ -37,15 +38,19 @@ inline constexpr float DUREE_ORBITE    = 14.0f;  /* vue orbite (un tour complet,
 inline constexpr float CYCLE_VUES      = DUREE_POURSUITE + DUREE_COCKPIT + DUREE_ORBITE;  /* durée d'un cycle complet */
 
 /* --- Réglages du vol --------------------------------------------------------- */
-inline constexpr float ALT_SURVOL  = 1500.0f; /* hauteur de survol de la Dune du Pilat (m) */
+inline constexpr float ALT_PLAFOND = 1000.0f; /* plafond pour borner la hauteur visée en descente de retour (m) */
 inline constexpr float V_CROISIERE = 35.0f;   /* vitesse de croisière visée (m/s) : assiette de croisière réaliste (~10 deg) */
-inline constexpr float RAYON_DUNE  = 300.0f;  /* distance à la dune en deçà de laquelle on entame le demi-tour (m) */
+inline constexpr float RAYON_POINT = 300.0f;  /* distance à un point de passage en deçà de laquelle on vise le suivant (m) */
 
 /* --- Gains du guidage proportionnel ------------------------------------------ */
 inline constexpr float GAIN_CAP        = 1.4f;    /* palonnier par radian d'erreur de cap */
 inline constexpr float CAP_MAX         = 0.7f;    /* palonnier maximal (évite de pivoter trop vite) */
 inline constexpr float GAIN_ALT        = 0.020f;  /* collectif par mètre d'erreur d'altitude */
 inline constexpr float GAIN_VZ         = 0.04f;   /* amortissement par la vitesse verticale (m/s) */
+inline constexpr float COLL_ALT_CLAMP  = 0.30f;   /* borne basse du terme d'altitude sur le collectif :
+                                                     limite la vitesse de descente (évite la chute vertigineuse
+                                                     sur un grand écart, ex. 2000 m -> 30 m après la dune).
+                                                     La montée, elle, n'est pas bornée. */
 inline constexpr float GAIN_V_DIST     = 0.14f;   /* vitesse visée (m/s) par mètre de distance à la cible */
 inline constexpr float GAIN_CYCLIQUE   = 0.08f;   /* cyclique par (m/s) d'écart de vitesse */
 inline constexpr float CYCLIQUE_MAX    = 0.45f;   /* cyclique maximal : borne l'inclinaison à une assiette réaliste */
@@ -86,7 +91,17 @@ inline float palonnierVers(const vec3& cible, const vec3& pos, float cap) noexce
 /* Collectif pour rejoindre et tenir une hauteur-sol cible, amorti par la vitesse
    verticale pour ne pas osciller. Centré sur le collectif de sustentation. */
 inline float collectifPour(float hauteurCible, float hauteurSol, float vitesseVerticale) noexcept {
-    const float corr = GAIN_ALT * (hauteurCible - hauteurSol) - GAIN_VZ * vitesseVerticale;
+    /* Terme d'altitude borné par le bas seulement : sans borne, un grand écart en
+       descente (par ex. 2000 m -> 30 m après la dune) saturerait le collectif à zéro et
+       l'appareil tomberait en chute libre. En bornant ce terme négatif, l'amortissement
+       par la vitesse verticale garde la main et la descente se stabilise à une vitesse
+       raisonnable. La montée, elle, garde toute son autorité (de toute façon plafonnée
+       par COLLECTIF_MAX dans rampeCollectif). */
+    float termeAlt = GAIN_ALT * (hauteurCible - hauteurSol);
+    if (termeAlt < -COLL_ALT_CLAMP) {
+        termeAlt = -COLL_ALT_CLAMP;
+    }
+    const float corr = termeAlt - GAIN_VZ * vitesseVerticale;
     return saturate(physics::COLL_HOVER + corr);
 }
 

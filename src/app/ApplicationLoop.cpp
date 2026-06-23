@@ -73,14 +73,20 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
         if (demoOut.cutTurbine) {
             m_flight.turbine().toggle();
         }
-        m_viewMode = demoOut.viewMode;
+        /* La démo impose la vue et le HUD, sauf si l'utilisateur a repris la main
+           dessus (touches C / H pendant la démo) : on respecte alors son choix. */
+        if (!m_demoUserView) {
+            m_viewMode = demoOut.viewMode;
+        }
         /* HUD de la démo : il change à chaque cycle de vues (aucun, complet
            superposé, puis quatre coins). Les étiquettes des lieux restent
            affichées même sans HUD (voir le rendu du HUD). */
-        switch (demoOut.hudStyle) {
-            case 1:  m_hudMode = ui::HudMode::Overlay; break;  /* complet (Super HUD) */
-            case 2:  m_hudMode = ui::HudMode::Corners; break;  /* quatre coins */
-            default: m_hudMode = ui::HudMode::Off;     break;  /* aucun */
+        if (!m_demoUserHud) {
+            switch (demoOut.hudStyle) {
+                case 1:  m_hudMode = ui::HudMode::Overlay; break;  /* complet (Super HUD) */
+                case 2:  m_hudMode = ui::HudMode::Corners; break;  /* quatre coins */
+                default: m_hudMode = ui::HudMode::Off;     break;  /* aucun */
+            }
         }
         if (demoOut.finished) {
             startDemo();  /* la démo est terminée : on la rejoue en boucle */

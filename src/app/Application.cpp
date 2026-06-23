@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <exception>
 #include <string>
+#include <vector>
 
 namespace artouste::app {
 
@@ -141,30 +142,48 @@ void Application::resetToStart() {
 }
 
 void Application::startDemo() {
-    /* La démo se déroule sur le bassin d'Arcachon (survol de la Dune du Pilat). Si
-       une autre carte est affichée (choix du menu), on bascule d'abord sur Arcachon :
-       sinon la démo se jouerait sur la carte courante, sans la dune à survoler. */
+    /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon).
+       Si une autre carte est affichée (choix du menu), on bascule d'abord sur Arcachon :
+       sinon la démo se jouerait sur la carte courante, sans ces lieux à survoler. */
     if (m_terrainName != "arcachon") {
         std::printf("[démo] terrain forcé sur arcachon pour la démonstration.\n");
         loadTerrain("arcachon");
     }
 
     /* Pad de départ et d'arrivée : là où l'appareil est garé (la démo y revient se
-       poser). Point à survoler : la Dune du Pilat, repérée par son nom dans les lieux
-       remarquables du terrain et convertie en coordonnées monde. Faute de la trouver,
-       on vise le pad lui-même (la démo se contente alors d'un décollage et d'une pose). */
+       poser). */
     const vec3 returnPad = m_startPos;
-    vec3       dune      = returnPad;
-    if (m_terrain) {
-        for (const render::Landmark& lm : m_terrain->landmarks()) {
-            if (lm.name.find("Pilat") != std::string::npos) {
-                float x = 0.0f;
-                float z = 0.0f;
-                m_terrain->worldAt(lm.lon, lm.lat, x, z);
-                dune = vec3{x, m_terrain->heightAt(x, z), z};
-                break;
+
+    /* Route de la démo (voir ROADMAP.md, section Mode demo) : Dune du Pilat à 2000 m
+       (passage haut, panorama), puis cap Ferret par son nord en rase-mottes à 30 m, puis
+       Arcachon à 1000 m, avant de revenir se poser au pad. Sans terrain, la route reste
+       vide : la démo se contente alors d'un décollage suivi d'une pose. */
+    std::vector<DemoPilot::Waypoint> route;
+    if (m_terrain != nullptr) {
+        /* Ajoute un point de passage à partir de coordonnées géographiques (lon/lat),
+           converties en position monde, avec sa hauteur de survol. */
+        auto ajouter = [&](float lon, float lat, float altitude) {
+            float x = 0.0f;
+            float z = 0.0f;
+            m_terrain->worldAt(lon, lat, x, z);
+            route.push_back(
+                DemoPilot::Waypoint{vec3{x, m_terrain->heightAt(x, z), z}, altitude});
+        };
+        /* Même chose, mais à partir d'un lieu remarquable du terrain repéré par son nom
+           (rien n'est ajouté si le lieu est absent). */
+        auto ajouterLieu = [&](const char* nom, float altitude) {
+            for (const render::Landmark& lm : m_terrain->landmarks()) {
+                if (lm.name.find(nom) != std::string::npos) {
+                    ajouter(lm.lon, lm.lat, altitude);
+                    return;
+                }
             }
-        }
+        };
+        /* Dune du Pilat et cap Ferret nord : coordonnées explicites du point de survol.
+           Arcachon : repéré par son nom dans les lieux remarquables. */
+        ajouter(-1.2075204f, 44.5846722f, 2000.0f);  /* Dune du Pilat (passage haut) */
+        ajouter(-1.2582492f, 44.6634685f, 30.0f);    /* cap Ferret par son nord (rase-mottes) */
+        ajouterLieu("Arcachon", 1000.0f);            /* Arcachon */
     }
 
     /* On repart d'un état propre : appareil sur le pad, turbine à froid, puis on
@@ -173,7 +192,9 @@ void Application::startDemo() {
     m_viewMode = 2;  /* vue d'orbite pour le démarrage */
     m_flight.turbine().stopNow();
     m_flight.turbine().startFast();
-    m_demo.start(returnPad, dune);
+    m_demoUserView = false;  /* la démo reprend la main sur la vue et le HUD */
+    m_demoUserHud  = false;
+    m_demo.start(returnPad, route);
     /* Musique de la démo mise de côté pour l'instant : on ne la lance pas.
        (Tout le mécanisme reste en place ; décommenter pour la réactiver.) */
     /* m_audio.playMusic(m_musicPath); */

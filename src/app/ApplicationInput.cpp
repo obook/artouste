@@ -19,29 +19,33 @@
 namespace artouste::app {
 
 void Application::handleActionButtons() {
-    /* Boutons et touches d'action de la manette : neutralisés pendant la démo
-     * (le pilote la coupe en touchant les commandes de vol, ou avec la touche V). */
+    /* Pendant la démo, seul le bouton B de la manette sort de la démo (équivalent de la
+     * touche Échap) ; les autres boutons sont ignorés pour ne pas la perturber. Les
+     * touches clavier utiles en démo (radio, HUD, vue) sont gérées dans keyCallback. */
     if (m_demo.active()) {
-        /* Rien : la démo ignore les boutons d'action. */
-    } else if (m_input->assistTogglePressed()) {  /* croix haut : mode assisté (touche M) */
+        if (m_input->hudTogglePressed()) {  /* B : sortir de la démo */
+            m_demo.stop();
+        }
+        return;
+    }
+
+    if (m_input->assistTogglePressed()) {  /* croix haut : mode assisté (touche M) */
         m_assist.toggle();
     }
 
     /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
-    if (!m_demo.active() && m_input->viewTogglePressed()) {
+    if (m_input->viewTogglePressed()) {
         m_viewMode = (m_viewMode + 1) % 3;
     }
 
     /* Bouton Start de la manette : démarre ou coupe la turbine, comme la touche T. */
-    if (!m_demo.active() && m_input->turbineTogglePressed()) {
+    if (m_input->turbineTogglePressed()) {
         m_flight.turbine().toggle();
     }
 
     /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour
      * pouvoir jouer à la manette seule. */
-    if (m_demo.active()) {
-        /* Aucune action manette pendant la démo. */
-    } else if (m_confirmReset) {
+    if (m_confirmReset) {
         /* Panneau de confirmation affiché : A = Oui, B = Non. Les autres actions
          * des boutons sont neutralisées tant qu'on n'a pas répondu. */
         if (m_input->liveryTogglePressed()) {  /* A : Oui -> reset */
@@ -83,10 +87,40 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
     }
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
 
-    /* Pendant la démo, toute touche autre que V rend la main au pilote (la touche V
-       elle-même bascule la démo plus bas). */
-    if (app != nullptr && app->m_demo.active() && key != GLFW_KEY_V) {
-        app->m_demo.stop();
+    /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap
+       sort de la démo (et seulement elle : on ne quitte pas l'application). K et +/-
+       pilotent la radio, H le HUD, C la vue ; pour H et C l'utilisateur reprend la main
+       (la démo cesse alors de les imposer). Tout le reste est ignoré pour ne pas
+       perturber la chorégraphie. */
+    if (app != nullptr && app->m_demo.active()) {
+        switch (key) {
+            case GLFW_KEY_ESCAPE:
+                app->m_demo.stop();
+                break;
+            case GLFW_KEY_K:  /* radio internet on/off */
+                app->m_audio.toggleRadio(app->m_radioUrl);
+                break;
+            case GLFW_KEY_MINUS:
+            case GLFW_KEY_KP_SUBTRACT:  /* balance vers l'hélico */
+                app->m_audio.adjustRadioMix(-0.05f);
+                break;
+            case GLFW_KEY_EQUAL:
+            case GLFW_KEY_KP_ADD:  /* balance vers la radio */
+                app->m_audio.adjustRadioMix(0.05f);
+                break;
+            case GLFW_KEY_H:  /* cycle des modes HUD : l'utilisateur reprend la main */
+                app->m_hudMode =
+                    static_cast<ui::HudMode>((static_cast<int>(app->m_hudMode) + 1) % 3);
+                app->m_demoUserHud = true;
+                break;
+            case GLFW_KEY_C:  /* change de vue : l'utilisateur reprend la main */
+                app->m_viewMode     = (app->m_viewMode + 1) % 3;
+                app->m_demoUserView = true;
+                break;
+            default:
+                break;  /* ignoré : la démo continue */
+        }
+        return;
     }
 
     /* Panneau de confirmation du reset affiché : seules les réponses Oui/Non sont

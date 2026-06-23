@@ -42,9 +42,12 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
   instruments ronds verts superposés (Super HUD), ou rien.
-- Mode démo automatique (touche `V`) : l'appareil joue seul un vol panoramique
-  (décollage, survol de la Dune du Pilat vers 1500 m, retour et pose), en boucle.
-  Un panneau de confirmation s'affiche avant le lancement.
+- Mode démo automatique (touche `V`) : l'appareil joue seul, en boucle, un vol
+  panoramique au-dessus du bassin d'Arcachon (décollage, survol de la Dune du Pilat à
+  2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à 1000 m,
+  retour et pose). Un panneau de confirmation s'affiche avant le lancement. Pendant la
+  démo, seule la touche `Échap` (ou le bouton `B` de la manette) en sort ; la vue
+  (`C`), le HUD (`H`) et la radio (`K`, `-`/`+`) restent actifs sans l'interrompre.
 - Son du moteur et du rotor, ciel en dégradé, ombre portée.
 - Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
   cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
@@ -82,7 +85,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
-| Démo automatique        | `V`            | -                    |
+| Démo : lancer / sortir  | `V` / `Échap`  | sortir : bouton `B`  |
 | Radio internet (allumer/couper) | `K`    | -                    |
 | Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
@@ -251,8 +254,9 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
 - `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
   seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
-  La touche `V` lance ou arrête la démo en cours de jeu. La variable d'environnement
-  `ARTOUSTE_DEMO` a la priorité.
+  La touche `V` lance la démo ; `Échap` (ou le bouton `B` de la manette) en sort.
+  Pendant la démo, la vue (`C`), le HUD (`H`) et la radio (`K`, `-`/`+`) restent
+  actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
 - `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La

@@ -174,6 +174,8 @@ private:
     std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string                               m_radioUrl;      /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
     bool                                      m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
+    bool                                      m_demoUserView = false;  /* en démo : l'utilisateur a repris la main sur la vue (touche C) */
+    bool                                      m_demoUserHud  = false;  /* en démo : l'utilisateur a repris la main sur le HUD (touche H) */
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */

@@ -195,7 +195,7 @@ void Application::initScene() {
     if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
         terrainName = env;
     }
-    /* La démo se déroule sur le bassin d'Arcachon (Dune du Pilat à survoler). */
+    /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon). */
     if (demoEnabled && terrainName != "arcachon") {
         std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
         terrainName = "arcachon";

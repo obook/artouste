@@ -70,6 +70,30 @@ if [ "$DO_CLEAN" -eq 1 ]; then
     rm -rf "$BUILD_DIR"
 fi
 
+# libcurl (paquet de développement) est obligatoire : la radio internet du
+# cockpit en dépend. On vérifie tôt, avec un message actionnable, plutôt que de
+# laisser CMake s'arrêter plus loin de façon plus obscure.
+curl_dev_present() {
+    if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists libcurl; then
+        return 0
+    fi
+    command -v curl-config >/dev/null 2>&1 && return 0
+    for inc in /usr/include /usr/local/include; do
+        [ -f "$inc/curl/curl.h" ] && return 0
+    done
+    return 1
+}
+
+if ! curl_dev_present; then
+    echo "ERREUR : libcurl (paquet de développement) est introuvable." >&2
+    echo "La radio internet du cockpit en a besoin : compilation interrompue." >&2
+    echo "Installe-la puis relance ./build.sh :" >&2
+    echo "  - Debian/Ubuntu : sudo apt install libcurl4-openssl-dev" >&2
+    echo "  - Fedora        : sudo dnf install libcurl-devel" >&2
+    echo "  - Arch          : sudo pacman -S curl" >&2
+    exit 1
+fi
+
 echo ">> Configuration ($BUILD_TYPE)"
 cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
 

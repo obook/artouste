@@ -20,11 +20,12 @@ jobs:
       - uses: actions/checkout@v4
 
       # GLFW a besoin des en-têtes X11 et OpenGL ; GLAD génère ses sources via
-      # Python (déjà présent sur le runner).
+      # Python (déjà présent sur le runner). libcurl (paquet de développement)
+      # est désormais obligatoire : la radio internet du cockpit en dépend.
       - name: Installer les dépendances système
         run: |
           sudo apt-get update
-          sudo apt-get install -y xorg-dev libgl1-mesa-dev
+          sudo apt-get install -y xorg-dev libgl1-mesa-dev libcurl4-openssl-dev
 
       # Accélère les builds suivants : on garde les sources tierces clonées par
       # FetchContent (assimp est volumineux).
@@ -68,11 +69,19 @@ jobs:
           path: build/_deps
           key: deps-windows-${{ hashFiles('cmake/Dependencies.cmake') }}
 
+      # libcurl (radio internet du cockpit) via vcpkg, en statique : tout est
+      # fondu dans artouste.exe, aucune DLL à embarquer dans le zip. Le triplet
+      # -static-md conserve le CRT dynamique (/MD), cohérent avec GLFW/Assimp.
+      - name: Installer libcurl (vcpkg, statique)
+        shell: bash
+        run: vcpkg install curl:x64-windows-static-md
+
       # En bash (present sur le runner) : PowerShell decoupe sinon l'argument
-      # -DCMAKE_POLICY_VERSION_MINIMUM=3.5 au point decimal.
+      # -DCMAKE_POLICY_VERSION_MINIMUM=3.5 au point decimal. La toolchain vcpkg
+      # et le triplet statique exposent libcurl a find_package(CURL).
       - name: Configurer
         shell: bash
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
 
       - name: Compiler
         run: cmake --build build --config Release -j

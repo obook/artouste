@@ -161,14 +161,21 @@ find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 
 # ---------------------------------------------------------------------------
-# libcurl (système, OPTIONNEL) - lecture du flux radio internet.
-# Absente : la radio est simplement indisponible, le reste compile normalement.
-# On ne la récupère PAS via FetchContent (elle tire OpenSSL) : c'est la seule
-# dépendance facultative qui peut manquer sans casser le build.
+# libcurl (système, OBLIGATOIRE) - lecture du flux radio internet.
+# Absente : le build s'arrête. La radio fait partie du cockpit ; on refuse de
+# produire un binaire muet plutôt que de la désactiver en silence. On ne la
+# récupère PAS via FetchContent (elle tire OpenSSL) : elle doit venir du système.
 # ---------------------------------------------------------------------------
 find_package(CURL QUIET)
 if(CURL_FOUND)
     message(STATUS "libcurl trouvée : radio internet activée.")
 else()
-    message(STATUS "libcurl absente : radio internet désactivée (build normal).")
+    message(FATAL_ERROR
+        "libcurl introuvable : la radio internet du cockpit ne peut pas être "
+        "compilée.\n"
+        "Installe le paquet de développement puis relance la compilation :\n"
+        "  - Debian/Ubuntu : sudo apt install libcurl4-openssl-dev\n"
+        "  - Fedora        : sudo dnf install libcurl-devel\n"
+        "  - Arch          : sudo pacman -S curl\n"
+        "  - Windows/vcpkg : vcpkg install curl")
 endif()

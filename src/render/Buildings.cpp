@@ -167,9 +167,10 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         if (filterWater && ortho != nullptr && base <= WATER_ALT_M) {
             const float u  = (cx + halfW) / (2.0f * halfW);   /* 0 = ouest, 1 = est */
             const float v  = (cz + halfH) / (2.0f * halfH);   /* 0 = nord,  1 = sud */
-            const int   ox = std::clamp(static_cast<int>(u * (orthoW - 1)), 0, orthoW - 1);
-            const int   oy = std::clamp(static_cast<int>(v * (orthoH - 1)), 0, orthoH - 1);
-            const unsigned char* p = ortho + (static_cast<std::size_t>(oy) * orthoW + ox) * 3;
+            const int   ox = std::clamp(static_cast<int>(u * static_cast<float>(orthoW - 1)), 0, orthoW - 1);
+            const int   oy = std::clamp(static_cast<int>(v * static_cast<float>(orthoH - 1)), 0, orthoH - 1);
+            const unsigned char* p = ortho + (static_cast<std::size_t>(oy) * static_cast<std::size_t>(orthoW)
+                                              + static_cast<std::size_t>(ox)) * 3;
             const float r = p[0] / 255.0f;
             const float bl = p[2] / 255.0f;
             if (r <= WATER_RED && (bl - r) >= WATER_BLUE_BIAS) {
@@ -185,14 +186,14 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
            attrape le cas du grand bâtiment, que la seule distance au centre ratait. */
         const std::size_t n = px.size();
         const auto inFootprint = [&](float X, float Z) {
-            bool in = false;
+            bool inside = false;
             for (std::size_t i = 0, j = n - 1; i < n; j = i++) {
                 if (((pz[i] > Z) != (pz[j] > Z))
                     && (X < (px[j] - px[i]) * (Z - pz[i]) / (pz[j] - pz[i]) + px[i])) {
-                    in = !in;
+                    inside = !inside;
                 }
             }
-            return in;
+            return inside;
         };
         bool onPad = false;
         for (const auto& p : padCenters) {

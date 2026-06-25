@@ -20,7 +20,6 @@ namespace artouste::input {
 
 namespace {
 
-constexpr int   PAD       = GLFW_JOYSTICK_1;  /* première manette */
 constexpr float DEADZONE  = 0.07f;            /* zone morte ~7 % */
 constexpr float EXPO      = 1.5f;             /* courbe d'expansion */
 
@@ -50,15 +49,28 @@ float triggerTo01(float v) noexcept {
     return (v + 1.0f) * 0.5f;
 }
 
+/* Renvoie le premier slot GLFW occupé par une manette reconnue (mapping SDL
+ * disponible), ou -1 si aucune. On ne se limite pas au slot 0 : un périphérique
+ * virtuel (greffon de streaming, pédalier, etc.) peut occuper ce slot et
+ * reléguer la vraie manette sur un slot suivant. */
+int activePad() noexcept {
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; ++jid) {
+        if (glfwJoystickIsGamepad(jid) == GLFW_TRUE) {
+            return jid;
+        }
+    }
+    return -1;
+}
+
 bool readState(GLFWgamepadstate& state) noexcept {
-    return glfwJoystickIsGamepad(PAD) == GLFW_TRUE &&
-           glfwGetGamepadState(PAD, &state) == GLFW_TRUE;
+    const int jid = activePad();
+    return jid >= 0 && glfwGetGamepadState(jid, &state) == GLFW_TRUE;
 }
 
 }  /* namespace */
 
 bool Gamepad::isPresent() noexcept {
-    return glfwJoystickIsGamepad(PAD) == GLFW_TRUE;
+    return activePad() >= 0;
 }
 
 physics::Controls Gamepad::poll(float dt) noexcept {

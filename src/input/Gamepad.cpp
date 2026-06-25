@@ -31,6 +31,12 @@ constexpr float ACTIVE_THRESHOLD = 0.5f;
 /* Vitesse du levier de collectif, en unités par seconde à pleine gâchette. */
 constexpr float COLLECTIVE_RATE = 0.6f;
 
+/* Drapeau levé par le callback joystick de GLFW à la déconnexion d'une manette,
+ * consommé au prochain poll pour remettre le levier de collectif à zéro. Le
+ * callback et poll s'exécutent sur le même thread (glfwPollEvents) : pas de
+ * concurrence à gérer. */
+bool g_collectiveResetRequested = false;
+
 /* Applique zone morte puis expansion à un axe de stick brut [-1, +1].
  * La zone morte ignore les petits écarts ; l'expansion rend le centre
  * plus doux pour des corrections fines. */
@@ -73,7 +79,20 @@ bool Gamepad::isPresent() noexcept {
     return activePad() >= 0;
 }
 
+void Gamepad::onJoystickEvent(int /*jid*/, int event) noexcept {
+    if (event == GLFW_DISCONNECTED) {
+        g_collectiveResetRequested = true;
+    }
+}
+
 physics::Controls Gamepad::poll(float dt) noexcept {
+    /* Une manette a été débranchée depuis le dernier poll : on remet le levier
+     * de collectif à zéro avant de reprendre la lecture. */
+    if (g_collectiveResetRequested) {
+        g_collectiveResetRequested = false;
+        m_collective = 0.0f;
+    }
+
     physics::Controls controls;
     controls.collective = m_collective;  /* on garde la position du levier */
 

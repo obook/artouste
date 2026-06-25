@@ -34,6 +34,11 @@ public:
      * commande active (clavier ou manette). */
     [[nodiscard]] static bool isActive() noexcept;
 
+    /* À brancher sur glfwSetJoystickCallback. À la déconnexion d'une manette,
+     * demande la remise à zéro du levier de collectif, appliquée au prochain
+     * poll (donc à la reconnexion). */
+    static void onJoystickEvent(int jid, int event) noexcept;
+
     /* Met à jour et renvoie les commandes pour ce pas de temps (dt en secondes).
      * Le collectif est un levier : il garde sa position quand on relâche. */
     [[nodiscard]] physics::Controls poll(float dt) noexcept;

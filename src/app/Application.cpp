@@ -45,6 +45,12 @@ void glfwErrorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);
 }
 
+/* Manette branchée ou débranchée à chaud : on transmet l'évènement à Gamepad,
+ * qui remet le levier de collectif à zéro à la déconnexion. */
+void joystickCallback(int jid, int event) {
+    input::Gamepad::onJoystickEvent(jid, event);
+}
+
 }  /* namespace */
 
 Application::Application() = default;
@@ -107,6 +113,7 @@ bool Application::initWindow() {
     glfwSetWindowUserPointer(m_window, this);
     glfwSetKeyCallback(m_window, keyCallback);
     glfwSetFramebufferSizeCallback(m_window, resizeCallback);
+    glfwSetJoystickCallback(joystickCallback);
     return true;
 }
 

@@ -25,9 +25,12 @@ public:
     Skybox(const Skybox&)            = delete;
     Skybox& operator=(const Skybox&) = delete;
 
-    /* Dessine le ciel en arrière-plan, derrière tout le reste de la scène. */
-    // j ai ajoute sun dir pour la pos du soleil
-    void draw(Shader& shader, const mat4& invViewProj, const vec3& camPos, const vec3& sunDir) const;
+    /* Dessine le ciel en arrière-plan, derrière tout le reste de la scène.
+       'invRotProj' est l'inverse de (projection * rotation caméra SEULE, sans la
+       translation) : le fragment en tire directement la direction du rayon, sans
+       soustraire la position caméra (qui, en milliers de mètres, faisait trembloter
+       le soleil par perte de précision). 'sunDir' donne la position du soleil. */
+    void draw(Shader& shader, const mat4& invRotProj, const vec3& sunDir) const;
 
 private:
     unsigned int m_vao = 0;

@@ -79,20 +79,31 @@ float Application::timeOfDaySeconds(float t) const {
 
 vec3 Application::sunDirection(float t) const {
     /* Course du soleil : midi -> zénith (y max), 6 h / 18 h -> horizon, minuit ->
-       sous l'horizon. Le -pi/2 cale midi (43200 s) sur le zénith. Le décalage fixe
-       en X (0.35) incline légèrement la trajectoire, plus réaliste qu'un plein
-       est-ouest. */
+       sous l'horizon. Le -pi/2 cale midi (43200 s) sur le zénith. Le repère monde a
+       X vers l'est et Z vers le sud (voir ApplicationHud) : le grand axe est-ouest
+       est donc porté par X (lever a l'est, coucher a l'ouest), et le décalage fixe en
+       Z (0.35) incline l'arc vers le sud, comme dans l'hémisphère nord. */
     constexpr float DAY = 86400.0f;
     const float angle = TWO_PI * (timeOfDaySeconds(t) / DAY) - HALF_PI;
-    return glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
+    return glm::normalize(vec3{std::cos(angle), std::sin(angle), 0.35f});
 }
 
 void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction,
                              float rudder, float cyclicLong, float cyclicLat,
                              float collective, float turbineFraction, float timeSeconds) {
     const vec3 lightDir = sunDirection(timeSeconds);
-    const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
+
+    /* Rendu relatif à la caméra : on retranche la position horizontale de la caméra
+       (X, Z seulement, pour ne pas décaler les altitudes) de la vue et de toutes les
+       géométries. Le GPU ne manipule alors que de petites coordonnées près de la
+       caméra, ce qui supprime le tremblement de précision en grandes coordonnées
+       monde. Mathématiquement équivalent : vue_rel * translate(-origine) * modèle =
+       vue * modèle. La position caméra relative sert au brouillard et à l'éclairage. */
+    m_renderOrigin       = vec3{m_camera.position().x, 0.0f, m_camera.position().z};
+    const mat4 toRel     = glm::translate(mat4(1.0f), -m_renderOrigin);
+    const mat4 view      = m_camera.view() * glm::translate(mat4(1.0f), m_renderOrigin);
+    const vec3 camPosRel = m_camera.position() - m_renderOrigin;
 
     /* Couleur de fond assombrie la nuit (le ciel plein écran la recouvre, mais le
        tampon de profondeur, lui, est bien remis à zéro). */
@@ -105,8 +116,11 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
        garde un léger fond bleuté nocturne (facteur plancher) accordé au ciel de nuit. */
     const vec3 fogColor = FOG_COLOR * glm::mix(0.06f, 1.0f, isDay);
 
-    /* Ciel en dégradé (il remplit le fond de l'image). */
-    m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position(), lightDir);
+    /* Ciel en dégradé (il remplit le fond de l'image). On passe l'inverse de
+       (projection * rotation caméra seule) : en retirant la translation (position
+       caméra, en milliers de mètres), le ciel reconstruit la direction du rayon sans
+       soustraction de grands nombres, ce qui supprime le tremblement du soleil. */
+    m_sky->draw(*m_skyShader, glm::inverse(proj * mat4(mat3(view))), lightDir);
 
     /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin.
      * Il est toujours sous la mer du terrain (dessinée à y=0) et n'a jamais à
@@ -119,10 +133,10 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_seaShader->use();
         m_seaShader->setMat4("u_view", view);
         m_seaShader->setMat4("u_proj", proj);
-        m_seaShader->setMat4("u_model", mat4(1.0f));
+        m_seaShader->setMat4("u_model", toRel);
         m_seaShader->setVec3("u_seaColor", SEA_COLOR);
         m_seaShader->setVec3("u_lightDir", lightDir);
-        m_seaShader->setVec3("u_camPos", m_camera.position());
+        m_seaShader->setVec3("u_camPos", camPosRel);
         m_seaShader->setVec3("u_fogColor", fogColor);
         m_seaShader->setFloat("u_fogStart", FOG_START);
         m_seaShader->setFloat("u_fogEnd", FOG_END);
@@ -140,10 +154,10 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_terrainShader->use();
         m_terrainShader->setMat4("u_view", view);
         m_terrainShader->setMat4("u_proj", proj);
-        m_terrainShader->setMat4("u_model", mat4(1.0f));
+        m_terrainShader->setMat4("u_model", toRel);
         m_terrainShader->setVec3("u_lightDir", lightDir);
         m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
-        m_terrainShader->setVec3("u_camPos", m_camera.position());
+        m_terrainShader->setVec3("u_camPos", camPosRel);
         m_terrainShader->setVec3("u_fogColor", fogColor);
         m_terrainShader->setFloat("u_fogStart", FOG_START);
         m_terrainShader->setFloat("u_fogEnd", FOG_END);
@@ -155,7 +169,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_shader->setMat4("u_view", view);
         m_shader->setMat4("u_proj", proj);
         m_shader->setVec3("u_lightDir", lightDir);
-        m_shader->setMat4("u_model", mat4(1.0f));
+        m_shader->setMat4("u_model", toRel);
         m_terrain->draw();
     }
 
@@ -168,9 +182,9 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_buildingShader->use();
         m_buildingShader->setMat4("u_view", view);
         m_buildingShader->setMat4("u_proj", proj);
-        m_buildingShader->setMat4("u_model", mat4(1.0f));
+        m_buildingShader->setMat4("u_model", toRel);
         m_buildingShader->setVec3("u_lightDir", lightDir);
-        m_buildingShader->setVec3("u_camPos", m_camera.position());
+        m_buildingShader->setVec3("u_camPos", camPosRel);
         m_buildingShader->setVec3("u_fogColor", fogColor);
         m_buildingShader->setFloat("u_fogStart", FOG_START);
         m_buildingShader->setFloat("u_fogEnd", FOG_END);
@@ -187,7 +201,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_modelShader->setMat4("u_view", view);
         m_modelShader->setMat4("u_proj", proj);
         m_modelShader->setVec3("u_lightDir", lightDir);
-        m_modelShader->setVec3("u_camPos", m_camera.position());
+        m_modelShader->setVec3("u_camPos", camPosRel);
         m_modelShader->setInt("u_texture", 0);
         /* Assiette réelle (roulis, tangage) extraite de l'orientation rendue, pour
            animer l'horizon artificiel du tableau de bord. Axes du corps dans le
@@ -213,7 +227,10 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         /* En vue cockpit, le pilote est dessiné sans tête ni casque (la caméra est
            à hauteur de ses yeux) : on garde ses bras et ses jambes. Le palonnier
            fait basculer pédales et jambes. */
-        m_loadedHeli->draw(*m_modelShader, base, rotorAngle, m_viewMode != 1, rudder,
+        /* La pose monde 'base' sert aux calculs d'instruments ci-dessus (assiette,
+           altitude, cap) ; pour le DESSIN, on passe la pose relative à l'origine de
+           rendu (toRel * base), cohérente avec la vue et les autres géométries. */
+        m_loadedHeli->draw(*m_modelShader, toRel * base, rotorAngle, m_viewMode != 1, rudder,
                            cyclicLong, cyclicLat, collective, rollR, pitchR, altitudeFt, varioFpm,
                            headingRad, airspeedKt, torquePct);
 
@@ -221,7 +238,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
            pour éviter l'effet stroboscopique, reste à étudier ; voir l'historique
            git pour une ébauche.) */
     } else {
-        m_helicopter->draw(*m_shader, base, rotorAngle);
+        m_helicopter->draw(*m_shader, toRel * base, rotorAngle);
     }
 
     /* Lueurs moteur (strombo + tuyère), dessinées en dernier car translucides. */
@@ -240,19 +257,21 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         return vec3(base * vec4(bodyPos, 1.0f));
     };
 
-    /* Une petite sphère lumineuse de couleur unie, mélangée par-dessus la scène. */
+    /* Une petite sphère lumineuse de couleur unie, mélangée par-dessus la scène.
+       Rendu relatif à la caméra : on retranche m_renderOrigin de la position monde,
+       en accord avec la vue relative posée plus bas. */
     const auto drawGlow = [&](const vec3& worldPos, float radius, const vec4& color) {
         if (color.a <= 0.01f) {
             return;
         }
-        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), worldPos) *
+        m_flatShader->setMat4("u_model", glm::translate(mat4(1.0f), worldPos - m_renderOrigin) *
                                              glm::scale(mat4(1.0f), vec3{radius}));
         m_flatShader->setVec4("u_color", color);
         m_glowSphere->draw();
     };
 
     m_flatShader->use();
-    m_flatShader->setMat4("u_view", m_camera.view());
+    m_flatShader->setMat4("u_view", m_camera.view() * glm::translate(mat4(1.0f), m_renderOrigin));
     m_flatShader->setMat4("u_proj", m_camera.proj());
 
     glEnable(GL_BLEND);

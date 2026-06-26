@@ -13,13 +13,17 @@ in vec2 v_ndc;
 out vec4 frag_color;
 
 uniform mat4 u_invViewProj;
-uniform vec3 u_camPos;
 uniform vec3 u_sunDir;
 
 void main()
 {
+	/* u_invViewProj est construit avec la ROTATION caméra seule (translation
+	   annulée), donc world.xyz est déjà la direction du rayon dans le repère monde.
+	   On évite ainsi de soustraire la position caméra (en milliers de mètres) à un
+	   point lointain de magnitude voisine : cette annulation en float32 faisait
+	   trembloter le rayon, et donc le soleil (coeur très piqué). */
 	vec4 world = u_invViewProj * vec4(v_ndc, 1.0, 1.0);
-	vec3 dir = normalize(world.xyz / world.w - u_camPos);
+	vec3 dir = normalize(world.xyz / world.w);
 
 	//cycle jour nuit
 	float isDay = smoothstep(-0.15, 0.15, u_sunDir.y); 

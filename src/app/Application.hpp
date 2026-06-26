@@ -191,6 +191,13 @@ private:
     ui::Hud                                   m_hud;
     audio::AudioEngine                        m_audio;
     int                                       m_viewMode = 0;  /* 0 poursuite, 1 cockpit, 2 orbite */
+    /* Origine de rendu (rendu relatif à la caméra) : on retranche cette position
+       horizontale (X, Z ; Y laissé à 0 pour préserver les altitudes) de la caméra et
+       de toutes les géométries avant de les confier au GPU. Les coordonnées près de la
+       caméra restent ainsi petites, ce qui supprime le tremblement de précision float32
+       en grandes coordonnées monde (terrain de plusieurs dizaines de km). Posée au
+       début de renderScene, lue par les fonctions de rendu sol/effets. */
+    vec3                                      m_renderOrigin{0.0f};
     /* Changement de vue : cut net (voir Camera::cut). On garde la vue précédente pour
        détecter le changement. */
     int                                       m_prevCamView = -1;  /* vue précédente (caméra), -1 au départ */

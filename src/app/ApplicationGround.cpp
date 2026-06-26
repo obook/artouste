@@ -52,9 +52,13 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
        où repose l'appareil : ainsi les patins touchent toujours le pad. (Sur une
        forte pente, le bord amont du disque peut affleurer le relief, moindre mal
        comparé à un pad qui flotterait au-dessus des patins.) */
+    /* Rendu relatif à la caméra : la vue reçue est déjà relative à m_renderOrigin ;
+       on retranche donc la même origine des positions monde et de u_camPos. */
+    const vec3 camPosRel = m_camera.position() - m_renderOrigin;
     const auto drawPad = [&](float x, float z) {
         const float padTop  = m_terrain->heightAt(x, z);
-        const mat4 padModel = glm::translate(mat4(1.0f), vec3{x, padTop + 0.08f, z});
+        const mat4 padModel = glm::translate(
+            mat4(1.0f), vec3{x - m_renderOrigin.x, padTop + 0.08f, z - m_renderOrigin.z});
         if (m_helipadModel) {
             /* Version texturée (modèle Blender), dessinée avec le shader des modèles. */
             m_modelShader->use();
@@ -62,7 +66,7 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
             m_modelShader->setMat4("u_proj", proj);
             m_modelShader->setMat4("u_model", padModel);
             m_modelShader->setVec3("u_lightDir", lightDir);
-            m_modelShader->setVec3("u_camPos", m_camera.position());
+            m_modelShader->setVec3("u_camPos", camPosRel);
             m_modelShader->setInt("u_texture", 0);
             m_helipadModel->draw(*m_modelShader, render::Pass::Opaque);
         } else {
@@ -160,8 +164,11 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     if (rotorShadowAlpha > 0.01f) {
         const vec3 rotorShadowPos{rotorCenter.x, topUnder(rotorCenter, radius) + 0.30f,
                                   rotorCenter.z};
-        m_shadowShader->setMat4("u_model", glm::translate(mat4(1.0f), rotorShadowPos) *
-                                               glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
+        /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin (origine
+           horizontale), on retranche donc la même origine de la position monde. */
+        m_shadowShader->setMat4("u_model",
+                                glm::translate(mat4(1.0f), rotorShadowPos - m_renderOrigin) *
+                                    glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
         m_shadowShader->setFloat("u_alpha", rotorShadowAlpha);
         m_shadowDisc->draw();
     }
@@ -177,8 +184,9 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     const float bodyRadius = 5.0f * scaleXZ;
     const vec3  bodyShadowPos{bodyCenter.x, topUnder(bodyCenter, bodyRadius) + 0.30f,
                               bodyCenter.z};
-    m_shadowShader->setMat4("u_model", glm::translate(mat4(1.0f), bodyShadowPos) *
-                                           glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
+    m_shadowShader->setMat4("u_model",
+                            glm::translate(mat4(1.0f), bodyShadowPos - m_renderOrigin) *
+                                glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
     m_shadowShader->setFloat("u_alpha", shadowAlpha);
     m_shadowDisc->draw();
 

@@ -112,7 +112,11 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
                               {"tete", "casque", "corps", "=brasg", "=brasd", "avantbrasd",
                                "manche", "cuisse", "jambe", "pied"});
     m_elbowLeftLocal = junction(m_armUpperLeft, m_forearmLeft);
-    /* Main gauche = sommet de l'avant-bras le plus loin du coude. */
+    /* Main gauche = sommet de l'avant-bras le plus loin du coude (le bout des doigts).
+       On garde ce point de référence, dont la distance au coude correspond à la
+       longueur réelle de l'avant-bras : forearmTransform n'étire alors quasiment pas
+       l'os (pas de main déformée). Le réglage de hauteur se fait sur la cible de prise
+       (voir gripModel dans LoadedHelicopterDraw), pas sur ce point. */
     {
         float best = -1.0f;
         for (const vec3& p : m_forearmLeft.positions()) {
@@ -147,7 +151,8 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_collectiveBase  = loadPart(collectivePath, {"collective"});  /* ne garde que l'embase */
     m_collectiveLever = loadPart(collectivePath, {"base"});        /* ne garde que le levier */
     /* Poignée = bout du levier le plus en avant (x le plus négatif dans son repère),
-       là où la main gauche vient se poser. */
+       là où la main gauche vient se poser. C'est bien le pommeau qui est saisi : c'est
+       la PAUME (et non le bout des doigts) qui y est ancrée, voir m_handLeftLocal. */
     {
         float minX = 1e30f;
         for (const vec3& p : m_collectiveLever.positions()) {

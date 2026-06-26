@@ -162,7 +162,18 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
         const mat4 pilotBaseL = root * glm::translate(mat4(1.0f), s.pilot);
         drawModel(shader, m_armUpperLeft, pilotBaseL, Pass::Opaque);
 
-        const vec3 gripModel = vec3(colAt * leverLocal * vec4(m_collectiveGripLocal, 1.0f));
+        /* Cible de prise = pommeau du levier, reculé de GRIP_DROP LE LONG DE LA TIGE
+           (et non à la verticale du monde) : la main saisit la poignée juste sous le
+           pommeau et y reste quel que soit l'angle du levier. Un simple décalage en Y
+           tombait à côté de la tige à collectif bas (levier plus couché), d'où la main
+           qui décrochait. La direction "vers la base" est l'axe +x local du levier
+           transformé dans le monde ; le pivot du levier (sa base) et celui de la main
+           (le coude) diffèrent, mais la cible restant sur la tige, la prise tient. */
+        constexpr float GRIP_DROP = 0.05f;  /* m, recul de la prise sous le pommeau */
+        const mat4 leverWorld = colAt * leverLocal;
+        const vec3 alongShaft = glm::normalize(mat3(leverWorld) * vec3{1.0f, 0.0f, 0.0f});
+        vec3       gripModel   = vec3(leverWorld * vec4(m_collectiveGripLocal, 1.0f));
+        gripModel += alongShaft * GRIP_DROP;
         const vec3 elbow = s.pilot + m_elbowLeftLocal;
         const vec3 hand0 = s.pilot + m_handLeftLocal;          /* main au repos */
         drawModel(shader, m_forearmLeft,

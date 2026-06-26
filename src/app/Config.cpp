@@ -10,6 +10,7 @@
 #include "app/Config.hpp"
 
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -35,8 +36,27 @@ Config loadConfig(const std::filesystem::path& path) {
     Config cfg;
     std::ifstream in(path);
     if (!in) {
-        /* Pas de fichier : on garde les valeurs par défaut, sans erreur. */
-        return cfg;
+        /* Pas de config personnelle : on la crée en recopiant le modèle versionné
+           config.default.txt (rangé à côté), comme un "config.dist" recopié au premier
+           lancement. L'utilisateur édite ensuite sa copie, qui n'est pas suivie par git.
+           Si le modèle manque aussi, on garde les valeurs par défaut, sans erreur. */
+        const std::filesystem::path modele = path.parent_path() / "config.default.txt";
+        std::error_code             ec;
+        if (std::filesystem::exists(modele, ec)) {
+            std::filesystem::copy_file(modele, path, ec);
+            if (!ec) {
+                std::printf("[Config] %s absent : créé depuis %s\n",
+                            path.filename().string().c_str(), modele.filename().string().c_str());
+                in.clear();
+                in.open(path);
+            } else {
+                std::fprintf(stderr, "[Config] création de %s impossible : %s\n",
+                             path.filename().string().c_str(), ec.message().c_str());
+            }
+        }
+        if (!in) {
+            return cfg;
+        }
     }
 
     std::string line;

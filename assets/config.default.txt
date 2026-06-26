@@ -1,4 +1,13 @@
-# Configuration du simulateur Artouste (format "cle valeur", éditable à la main).
+# ============================================================================
+# MODÈLE DE CONFIGURATION (config.default.txt)
+# Ce fichier est le modèle par défaut, versionné avec le projet. Pour l'utiliser,
+# copiez-le et renommez la copie en "config.txt", dans le même dossier, puis éditez
+# "config.txt" (jamais ce modèle). Au premier lancement, si "config.txt" est absent,
+# le simulateur en crée la copie tout seul. "config.txt" est votre configuration
+# personnelle : il n'est pas versionné.
+# ============================================================================
+#
+# Configuration du simulateur Artouste (format "clé valeur", éditable à la main).
 # Une clé et sa valeur par ligne ; une ligne commençant par # est un commentaire.
 # Toute clé absente garde sa valeur par défaut.
 
@@ -8,6 +17,7 @@
 #   cote-landes  côte basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
 #   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 #   cauterets    Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie), montagne
+#   bordeaux     Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac), terre intérieure
 # La variable d'environnement ARTOUSTE_TERRAIN, si définie, a la priorité.
 terrain ossau
 
@@ -33,9 +43,10 @@ radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
 
 # sun_time_scale : vitesse d'écoulement du temps pour le cycle jour/nuit (course du
 # soleil). Durée réelle d'une journée complète = 86400 / sun_time_scale secondes.
-#   1   = temps réel (défaut) : départ à l'heure locale du PC
+#   1   = temps réel : départ à l'heure locale du PC
+#   72  = journée complète en 20 min (défaut)
 #   144 = journée complète en 10 min
 #   0   = temps figé à midi (le soleil ne bouge pas)
 # En temps réel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
 # part de midi, pour démarrer sur une belle lumière. Avec 0, il reste figé à midi.
-sun_time_scale 1
+sun_time_scale 72

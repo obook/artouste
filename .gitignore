@@ -67,3 +67,7 @@ media/
 
 # Fichier de reglages ImGui (genere au runtime)
 imgui.ini
+
+# Config personnelle du joueur : créée au premier lancement en recopiant le modèle
+# versionné assets/config.default.txt. Éditée à la main, elle n'est pas suivie.
+assets/config.txt

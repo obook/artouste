@@ -46,8 +46,9 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant.
 - Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
-  La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : heure
-  réelle du PC par défaut, temps accéléré ou journée figée à midi. La nuit, les deux
+  La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
+  défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
+  temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
 - Mode démo automatique (touche `V`) : l'appareil joue seul, en boucle, un vol
   panoramique au-dessus du bassin d'Arcachon (décollage, survol de la Dune du Pilat à
@@ -240,8 +241,10 @@ Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par
 exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
 `assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau),
 `assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
-de Biscarrosse à Arès) et `assets/terrain/cauterets/` (Cauterets - Gavarnie :
-chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne).
+de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
+chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne) et
+`assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
+de Mérignac, Pessac, Cenon et Lormont).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -252,7 +255,13 @@ départ est toujours présent en plus de ceux de `helipads.txt`.
 
 Le fichier `assets/config.txt` règle le lancement. C'est un simple fichier texte,
 modifiable dans **n'importe quel éditeur**. Chaque ligne est une `clé valeur` ;
-une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibles :
+une ligne qui commence par `#` est un commentaire (ignoré).
+
+Ce fichier est ta configuration personnelle et n'est donc pas versionné. S'il est
+absent au lancement, le simulateur le crée automatiquement en recopiant le modèle
+`assets/config.default.txt` (lui, versionné), puis charge cette copie. Tu peux ainsi
+modifier `assets/config.txt` à ta guise, ou le supprimer pour repartir des valeurs
+par défaut. Les clés disponibles :
 
 - `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
 - `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
@@ -277,11 +286,11 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
 - `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
   la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
-  `86400 / sun_time_scale` secondes. La valeur `1` (défaut) correspond au temps réel,
-  le soleil partant de l'heure locale du PC ; `144` fait défiler une journée entière
-  en dix minutes ; `0` fige le temps à midi (le soleil ne bouge plus). Pour toute
-  valeur autre que `1`, le simulateur démarre à midi, afin d'ouvrir sur une belle
-  lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE` du panneau
+  `86400 / sun_time_scale` secondes. La valeur `72` (défaut) fait défiler une journée
+  entière en vingt minutes ; `144` la réduit à dix minutes ; `1` correspond au temps
+  réel, le soleil partant de l'heure locale du PC ; `0` fige le temps à midi (le soleil
+  ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à midi, afin
+  d'ouvrir sur une belle lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE` du panneau
   supérieur droit.
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
@@ -299,7 +308,7 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon` ou `cauterets`).
+`cote-landes`, `arcachon`, `cauterets` ou `bordeaux`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :
@@ -336,13 +345,14 @@ tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
 
 Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
-en ville, les bâtiments de moins de 2 m (cabanes, abris) sont écartés pour ne pas
-alourdir la scène ; en montagne (Ossau), le seuil est à 0 pour garder les cabanes
-et bergeries, utiles au repérage.
+les bâtiments les plus bas (cabanes, abris) sont écartés pour ne pas alourdir la
+scène. Le seuil usuel en ville est de 2 m, relevé à 5 m sur une agglomération très
+dense comme Bordeaux ; en montagne (Ossau), il descend à 0 pour garder les cabanes et
+bergeries, utiles au repérage.
 
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
 bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise
-environ 156 000, la vallée d'Ossau environ 765.
+environ 156 000, Bordeaux (seuil à 5 m) environ 159 000, la vallée d'Ossau environ 765.
 
 ## Contributions
 

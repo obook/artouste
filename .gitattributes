@@ -1,2 +1,6 @@
 # Les scripts batch Windows doivent rester en CRLF (labels et goto plus fiables).
 *.bat text eol=crlf
+
+# Le fichier de configuration est édité à la main, souvent sous Windows : on le
+# livre en CRLF pour le Bloc-notes. Le parseur tolère aussi LF et un BOM UTF-8.
+assets/config.txt text eol=crlf

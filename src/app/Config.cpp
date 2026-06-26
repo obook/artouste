@@ -40,7 +40,18 @@ Config loadConfig(const std::filesystem::path& path) {
     }
 
     std::string line;
+    bool        firstLine = true;
     while (std::getline(in, line)) {
+        if (firstLine) {
+            /* Un éditeur Windows (Bloc-notes) peut enregistrer en UTF-8 avec BOM ;
+               on retire ces 3 octets de tête pour ne pas fausser la première ligne. */
+            if (line.size() >= 3 && static_cast<unsigned char>(line[0]) == 0xEF &&
+                static_cast<unsigned char>(line[1]) == 0xBB &&
+                static_cast<unsigned char>(line[2]) == 0xBF) {
+                line.erase(0, 3);
+            }
+            firstLine = false;
+        }
         const std::string clean = trim(line);
         if (clean.empty() || clean[0] == '#') {
             continue;  /* ligne vide ou commentaire */

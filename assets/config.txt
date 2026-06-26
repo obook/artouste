@@ -1,41 +1,41 @@
-# Configuration du simulateur Artouste (format "cle valeur", editable a la main).
-# Une cle et sa valeur par ligne ; une ligne commencant par # est un commentaire.
-# Toute cle absente garde sa valeur par defaut.
+# Configuration du simulateur Artouste (format "cle valeur", éditable à la main).
+# Une clé et sa valeur par ligne ; une ligne commençant par # est un commentaire.
+# Toute clé absente garde sa valeur par défaut.
 
-# terrain : sous-dossier de assets/terrain/ a charger au lancement.
+# terrain : sous-dossier de assets/terrain/ à charger au lancement.
 # Terrains disponibles :
-#   ossau        vallee d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
-#   cote-landes  cote basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
+#   ossau        vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
+#   cote-landes  côte basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
 #   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 #   cauterets    Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie), montagne
-# La variable d'environnement ARTOUSTE_TERRAIN, si definie, a la priorite.
+# La variable d'environnement ARTOUSTE_TERRAIN, si définie, a la priorité.
 terrain ossau
 
-# turbine_demarree : 1 = turbine et rotor d'emblee au regime au lancement (au lieu
-# de la sequence de demarrage d'environ une minute), pratique pour decoller tout de
-# suite en test ; 0 = demarrage normal a froid. La variable d'environnement
-# ARTOUSTE_TURBINE_DEMARREE, si definie, a la priorite.
+# turbine_demarree : 1 = turbine et rotor d'emblée au régime au lancement (au lieu
+# de la séquence de démarrage d'environ une minute), pratique pour décoller tout de
+# suite en test ; 0 = démarrage normal à froid. La variable d'environnement
+# ARTOUSTE_TURBINE_DEMARREE, si définie, a la priorité.
 turbine_demarree 0
 
-# demo : 1 = mode demonstration automatique au lancement. L'appareil joue tout seul
-# un vol (demarrage rapide, decollage, montee et vol jusqu'a la Dune du Pilat survolee
-# vers 1500 m, demi-tour et retour se poser sur le pad de depart), rejoue en boucle ;
-# le terrain est alors force sur arcachon. Une entree du pilote ou la touche V coupe
-# la demo. La variable d'environnement ARTOUSTE_DEMO, si definie, a la priorite.
-# 0 = pas de demo.
+# demo : 1 = mode démonstration automatique au lancement. L'appareil joue tout seul
+# un vol (démarrage rapide, décollage, montée et vol jusqu'à la Dune du Pilat survolée
+# vers 1500 m, demi-tour et retour se poser sur le pad de départ), rejoué en boucle ;
+# le terrain est alors forcé sur arcachon. Une entrée du pilote ou la touche V coupe
+# la démo. La variable d'environnement ARTOUSTE_DEMO, si définie, a la priorité.
+# 0 = pas de démo.
 demo 0
 
-# radio_url : URL d'un flux radio internet (MP3 sur HTTP) joue dans le cockpit.
+# radio_url : URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit.
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.
-# La variable d'environnement ARTOUSTE_RADIO_URL, si definie, a la priorite.
-# Exemple (decommenter pour activer) :
+# La variable d'environnement ARTOUSTE_RADIO_URL, si définie, a la priorité.
+# Exemple (décommenter pour activer) :
 radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
 
-# sun_time_scale : vitesse d'ecoulement du temps pour le cycle jour/nuit (course du
-# soleil). Duree reelle d'une journee complete = 86400 / sun_time_scale secondes.
-#   1   = temps reel (defaut) : depart a l'heure locale du PC
-#   144 = journee complete en 10 min
-#   0   = temps fige a midi (le soleil ne bouge pas)
-# En temps reel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
-# part de midi, pour demarrer sur une belle lumiere. Avec 0, il reste fige a midi.
+# sun_time_scale : vitesse d'écoulement du temps pour le cycle jour/nuit (course du
+# soleil). Durée réelle d'une journée complète = 86400 / sun_time_scale secondes.
+#   1   = temps réel (défaut) : départ à l'heure locale du PC
+#   144 = journée complète en 10 min
+#   0   = temps figé à midi (le soleil ne bouge pas)
+# En temps réel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
+# part de midi, pour démarrer sur une belle lumière. Avec 0, il reste figé à midi.
 sun_time_scale 1

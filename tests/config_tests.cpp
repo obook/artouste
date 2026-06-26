@@ -71,3 +71,15 @@ TEST_CASE("radio_url absente : chaîne vide par défaut", "[config]") {
     const Config cfg = loadConfig("/chemin/inexistant/config.txt");
     REQUIRE(cfg.radioUrl.empty());
 }
+
+TEST_CASE("fichier enregistré depuis Windows : BOM UTF-8 et fins de ligne CRLF", "[config]") {
+    /* Reproduit ce que produit le Bloc-notes Windows : BOM UTF-8 en tête et
+       lignes terminées par \r\n. La première ligne (commentaire accentué) doit
+       rester reconnue comme commentaire, et la clé doit être lue normalement. */
+    const std::string content =
+        "\xEF\xBB\xBF# commentaire accentué : vallée d'Ossau\r\nterrain cote-landes\r\n";
+    const auto   path = writeTemp("artouste_cfg_windows.txt", content);
+    const Config cfg  = loadConfig(path);
+    REQUIRE(cfg.terrain == "cote-landes");
+    std::filesystem::remove(path);
+}

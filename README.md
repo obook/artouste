@@ -39,15 +39,23 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Entrées clavier et manette Xbox (détection automatique de la source).
 - Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le   cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la   physique. La bascule est progressive.
 - Commandes animées dans la cabine : palonnier, manche cyclique (la main droite   suit) et levier de collectif (la main gauche se pose dessus et le suit).
-- Trois vues (cycle avec `C`) : poursuite, cockpit, orbite.
+- Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
+  dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
-  instruments ronds verts superposés (Super HUD), ou rien.
+  instruments ronds verts superposés (Super HUD), ou rien. Le panneau supérieur droit
+  affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant.
+- Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
+  l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
+  La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : heure
+  réelle du PC par défaut, temps accéléré ou journée figée à midi. La nuit, les deux
+  feux de position avant s'allument, rouge à bâbord et vert à tribord.
 - Mode démo automatique (touche `V`) : l'appareil joue seul, en boucle, un vol
   panoramique au-dessus du bassin d'Arcachon (décollage, survol de la Dune du Pilat à
   2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à 1000 m,
   retour et pose). Un panneau de confirmation s'affiche avant le lancement. Pendant la
-  démo, seule la touche `Échap` (ou le bouton `B` de la manette) en sort ; la vue
-  (`C`), le HUD (`H`) et la radio (`K`, `-`/`+`) restent actifs sans l'interrompre.
+  démo, la touche `Échap`, ou une action franche sur le manche, en sort ; la vue
+  (`C` ou bouton `Y`), le HUD (`H` ou bouton `B`) et la radio (`K`, `-`/`+`) restent
+  actifs sans l'interrompre.
 - Son du moteur et du rotor, ciel en dégradé, ombre portée.
 - Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
   cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
@@ -80,12 +88,12 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Cyclique                | flèches        | stick gauche         |
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
-| Vue (poursuite/cockpit/orbite) | `C`     | bouton `Y` (jaune)   |
+| Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |
 | Livrée (Gendarmerie/origine) | `L`       | bouton `A` (vert)    |
 | Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
-| Démo : lancer / sortir  | `V` / `Échap`  | sortir : bouton `B`  |
+| Démo : lancer / sortir  | `V` / `Échap`  | sortir : reprendre le manche |
 | Radio internet (allumer/couper) | `K`    | -                    |
 | Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
@@ -254,9 +262,10 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
 - `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
   seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
-  La touche `V` lance la démo ; `Échap` (ou le bouton `B` de la manette) en sort.
-  Pendant la démo, la vue (`C`), le HUD (`H`) et la radio (`K`, `-`/`+`) restent
-  actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
+  La touche `V` lance la démo ; `Échap`, ou une action sur le manche, en sort.
+  Pendant la démo, la vue (`C` ou bouton `Y`), le HUD (`H` ou bouton `B`) et la radio
+  (`K`, `-`/`+`) restent actifs sans l'interrompre. La variable d'environnement
+  `ARTOUSTE_DEMO` a la priorité.
 - `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
@@ -266,6 +275,14 @@ une ligne qui commence par `#` est un commentaire (ignoré). Les clés disponibl
   `RADIO` s'affiche dans le HUD tant que le flux joue, suivi de la part de la radio
   dans le mixage. Les touches `-` et `+` règlent la **balance radio/hélico** (un
   crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
+- `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
+  la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
+  `86400 / sun_time_scale` secondes. La valeur `1` (défaut) correspond au temps réel,
+  le soleil partant de l'heure locale du PC ; `144` fait défiler une journée entière
+  en dix minutes ; `0` fige le temps à midi (le soleil ne bouge plus). Pour toute
+  valeur autre que `1`, le simulateur démarre à midi, afin d'ouvrir sur une belle
+  lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE` du panneau
+  supérieur droit.
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :
@@ -326,6 +343,16 @@ et bergeries, utiles au repérage.
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
 bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise
 environ 156 000, la vallée d'Ossau environ 765.
+
+## Contributions
+
+Le ciel réaliste et la vue d'orbite solaire proviennent d'une contribution de
+[CHAT-DISPARU](https://github.com/CHAT-DISPARU), proposée via une pull request. Elle
+refond le rendu du ciel, dont le dégradé passe désormais du plein jour aux teintes
+orangées du coucher puis à la nuit, avec le disque du soleil et son halo ; elle
+introduit aussi un soleil mobile et une nouvelle vue, l'orbite solaire, où la caméra
+se place face à l'astre. Le cycle jour/nuit réglable et l'horloge du HUD prolongent
+cette base.
 
 ## Licence
 

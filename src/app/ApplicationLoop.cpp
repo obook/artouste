@@ -132,7 +132,19 @@ void Application::updateCamera(const mat4& base, const vec3& renderPos, float ya
                                 ? (t - m_orbitStart) * (TWO_PI / DEMO_ORBIT_TURN)
                                 : t * 0.25f;
         m_camera.orbit(lookTarget, 15.0f, 6.0f, angle);
-    } else {  /* poursuite */
+    }
+    else if (m_viewMode == 3)
+    {  /* orbite solaire */
+        m_camera.setFovYDeg(60.0f);
+        m_camera.setNear(0.5f);
+        
+        //calcul de la pos avec le temps
+        constexpr float SUN_SPEED = 0.05f;
+        const float angle = t * SUN_SPEED;
+        const vec3 sunDir = glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
+        m_camera.orbitSolar(lookTarget, sunDir, 15.0f, 6.0f);
+    }
+    else {  /* poursuite */
         m_camera.setFovYDeg(60.0f);
         m_camera.setNear(0.5f);
         m_camera.chase(lookTarget, yaw, frameDt);
@@ -155,8 +167,8 @@ void Application::updateAudio(const physics::RigidBody& body, const physics::Con
     }
 
     const audio::AudioEngine::View audioView =
-        m_viewMode == 1   ? audio::AudioEngine::View::Interior   /* cockpit */
-        : m_viewMode == 2 ? audio::AudioEngine::View::Fly        /* orbite */
+        m_viewMode == 1 ? audio::AudioEngine::View::Interior   /* cockpit */
+        : (m_viewMode == 2 || m_viewMode == 3) ? audio::AudioEngine::View::Fly /* orbite et orbite solaire */
                           : audio::AudioEngine::View::Rear;       /* poursuite */
 
     /* Effet Doppler : uniquement en vue extérieure libre (orbite). On le déduit

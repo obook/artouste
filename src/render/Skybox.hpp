@@ -26,7 +26,8 @@ public:
     Skybox& operator=(const Skybox&) = delete;
 
     /* Dessine le ciel en arrière-plan, derrière tout le reste de la scène. */
-    void draw(Shader& shader, const mat4& invViewProj, const vec3& camPos) const;
+    // j ai ajoute sun dir pour la pos du soleil
+    void draw(Shader& shader, const mat4& invViewProj, const vec3& camPos, const vec3& sunDir) const;
 
 private:
     unsigned int m_vao = 0;

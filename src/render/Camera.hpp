@@ -19,6 +19,8 @@ class Camera {
 public:
     void setAspect(float aspect) noexcept { m_aspect = aspect; }
 
+    /* Place la caméra sur un cercle par rapport au soleil pour le voir */
+    void orbitSolar(const vec3& target, const vec3& sunDir, float radius, float height) noexcept;
     /* Place la caméra sur un cercle horizontal autour de target. */
     void orbit(const vec3& target, float radius, float height, float angleRad) noexcept;
 

@@ -27,10 +27,11 @@ Skybox::~Skybox() {
     }
 }
 
-void Skybox::draw(Shader& shader, const mat4& invViewProj, const vec3& camPos) const {
+void Skybox::draw(Shader& shader, const mat4& invViewProj, const vec3& camPos, const vec3& sunDir) const {
     shader.use();
     shader.setMat4("u_invViewProj", invViewProj);
     shader.setVec3("u_camPos", camPos);
+    shader.setVec3("u_sunDir", sunDir);
 
     /*
      * On désactive le test et l'écriture de profondeur le temps de

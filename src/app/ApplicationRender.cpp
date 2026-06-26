@@ -65,20 +65,30 @@ constexpr float NAV_RADIUS = 0.07f;                   /* rayon du coeur d'un feu
 const vec3      NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
 constexpr float NOZZLE_RADIUS = 0.24f;
 
+
+//viteesee du cycle jour nuti
+constexpr float SUN_SPEED = 0.05f;
+
 }  /* namespace */
 
 void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction,
                              float rudder, float cyclicLong, float cyclicLat,
                              float collective, float turbineFraction, float timeSeconds) {
-    const vec3 lightDir = glm::normalize(vec3{0.4f, 1.0f, 0.35f});
+    float           angle = timeSeconds * SUN_SPEED;
+    //soleil tourne sur lui donc : sin pour  Y cos pour Z
+    //decalage fixe sur X (0.35f) -> trajectoire soit légèrement inclinée
+    // realiste ...
+    const vec3 lightDir = glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
 
     glClearColor(0.53f, 0.70f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    float   isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f);
+    glClearColor(0.53f * isDay, 0.70f * isDay, 0.92f * isDay, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     /* Ciel en dégradé (il remplit le fond de l'image). */
-    m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position());
+    m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position(), lightDir);
 
     /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin.
      * Il est toujours sous la mer du terrain (dessinée à y=0) et n'a jamais à

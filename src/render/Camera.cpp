@@ -12,6 +12,37 @@
 
 namespace artouste::render {
 
+void Camera::orbitSolar(const vec3& target, const vec3& sunDir, float radius, float height) noexcept
+{
+    m_up = vec3{0.0f, 1.0f, 0.0f};
+
+    // securite / 0 sui soleil au zenit
+    vec3 safeSunDir = sunDir;
+    if (std::abs(safeSunDir.y) > 0.99f)
+    {
+        safeSunDir.x += 0.01f;
+        safeSunDir = glm::normalize(safeSunDir);
+    }
+
+    //cadrage soleil
+    float sunElev = std::max(0.0f, safeSunDir.y);
+    float sunPitch = std::max(0.0f, std::atan2(safeSunDir.y, glm::length(vec2{safeSunDir.x, safeSunDir.z})));
+    float currentRadius = radius + (sunPitch * 12.0f);//recule un peu
+    
+    m_target = target + vec3{0.0f, currentRadius * std::tan(sunPitch / 1.8f), 0.0f};// leve la tete
+    float currentHeight = glm::mix(height, 0.5f, sunElev);//s'abaisse
+    vec3 flatSunDir = glm::normalize(vec3{safeSunDir.x, 0.0f, safeSunDir.z});//pas de plonger sous le sol
+
+    //calcul position
+    //recule direction opposée au soleil ->en face.
+    //on se décale sur le côté (+right) pour decentre l helico
+    //les coeffs (0.8f et 0.6f) magnitude globale du rayon 
+    //pythagore : 0.8^2 + 0.6^2 = 1
+
+    vec3 offset = -flatSunDir * currentRadius;
+    m_position = target + offset + vec3{0.0f, currentHeight, 0.0f};
+}
+
 void Camera::orbit(const vec3& target, float radius, float height, float angleRad) noexcept {
     m_target   = target;
     m_up       = vec3{0.0f, 1.0f, 0.0f};

@@ -35,7 +35,7 @@ void Application::handleActionButtons() {
 
     /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
     if (m_input->viewTogglePressed()) {
-        m_viewMode = (m_viewMode + 1) % 3;
+        m_viewMode = (m_viewMode + 1) % 4;
     }
 
     /* Bouton Start de la manette : démarre ou coupe la turbine, comme la touche T. */
@@ -114,7 +114,7 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->m_demoUserHud = true;
                 break;
             case GLFW_KEY_C:  /* change de vue : l'utilisateur reprend la main */
-                app->m_viewMode     = (app->m_viewMode + 1) % 3;
+                app->m_viewMode     = (app->m_viewMode + 1) % 4;
                 app->m_demoUserView = true;
                 break;
             default:
@@ -152,7 +152,7 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
             break;
         case GLFW_KEY_C:  /* change de vue (poursuite -> cockpit -> orbite) */
             if (app != nullptr) {
-                app->m_viewMode = (app->m_viewMode + 1) % 3;
+                app->m_viewMode = (app->m_viewMode + 1) % 4;
             }
             break;
         case GLFW_KEY_T:  /* démarre ou coupe la turbine */

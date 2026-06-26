@@ -19,12 +19,19 @@
 namespace artouste::app {
 
 void Application::handleActionButtons() {
-    /* Pendant la démo, seul le bouton B de la manette sort de la démo (équivalent de la
-     * touche Échap) ; les autres boutons sont ignorés pour ne pas la perturber. Les
-     * touches clavier utiles en démo (radio, HUD, vue) sont gérées dans keyCallback. */
+    /* Pendant la démo, les boutons B (HUD) et Y (vue) agissent comme les touches H et C
+     * du clavier, sans couper la démo : l'utilisateur reprend simplement la main sur le
+     * HUD ou la vue. Les autres boutons sont ignorés pour ne pas perturber la
+     * chorégraphie. Pour sortir de la démo à la manette, il suffit de reprendre les
+     * commandes (manche), voir updateControls (pilotInput). */
     if (m_demo.active()) {
-        if (m_input->hudTogglePressed()) {  /* B : sortir de la démo */
-            m_demo.stop();
+        if (m_input->hudTogglePressed()) {  /* B : change de HUD, la démo continue */
+            m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
+            m_demoUserHud = true;
+        }
+        if (m_input->viewTogglePressed()) {  /* Y : change de vue, la démo continue */
+            m_viewMode     = (m_viewMode + 1) % 4;
+            m_demoUserView = true;
         }
         return;
     }

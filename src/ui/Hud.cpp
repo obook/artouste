@@ -96,6 +96,21 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     corner("hud_tr", ImVec2(w - m, m), ImVec2(1.0f, 0.0f));
     ImGui::Text("IAS  %4.0f kt", static_cast<double>(data.airspeedKt));
     ImGui::Text("HDG  %03.0f", static_cast<double>(data.headingDeg));
+    /* Heure du simulateur : HH:MM, le deux-points clignote à 1 Hz (police à chasse
+       fixe, donc l'espace garde l'alignement). En temps réel (échelle 1) on
+       n'affiche rien de plus ; sinon on rappelle le facteur (ex. "x144"). */
+    {
+        const int  totalSec = static_cast<int>(data.timeOfDaySec) % 86400;
+        const int  hh       = totalSec / 3600;
+        const int  mm       = (totalSec % 3600) / 60;
+        const char sep      = data.colonOn ? ':' : ' ';
+        if (data.timeScale == 1.0f) {
+            ImGui::Text("HRE  %02d%c%02d", hh, sep, mm);
+        } else {
+            ImGui::Text("HRE  %02d%c%02d  x%g", hh, sep, mm,
+                        static_cast<double>(data.timeScale));
+        }
+    }
     if (data.geoValid) {
         ImGui::Text("LAT  %.4f %c", static_cast<double>(std::fabs(data.latDeg)),
                     data.latDeg >= 0.0f ? 'N' : 'S');

@@ -124,7 +124,7 @@ private:
        à partir de l'état physique courant. */
     void fillHud(ui::HudData& hud, const physics::RigidBody& body, const vec3& forward,
                  const physics::Controls& controls, float airspeed, float turbineFraction,
-                 float rotorFraction);
+                 float rotorFraction, float t);
 
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
        scène et données de la minimap (position de l'appareil, points). */

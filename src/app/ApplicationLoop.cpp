@@ -298,7 +298,7 @@ void Application::mainLoop() {
                     turbineFraction, t);
 
         ui::HudData hud;
-        fillHud(hud, body, forward, controls, airspeed, turbineFraction, rotorFraction);
+        fillHud(hud, body, forward, controls, airspeed, turbineFraction, rotorFraction, t);
         buildNavHud(hud, body.position, hud.headingDeg);
         /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */
         m_hud.render(hud, m_hudMode, m_paused, m_confirmReset, m_confirmDemo, m_demo.active());

@@ -22,7 +22,7 @@ namespace artouste::app {
 
 void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, const vec3& forward,
                           const physics::Controls& controls, float airspeed, float turbineFraction,
-                          float rotorFraction) {
+                          float rotorFraction, float t) {
     hud.altitudeM  = body.position.y;
     hud.airspeedKt = airspeed * 1.94384f;
     /* Cap boussole pour le HUD (ruban de cap, texte HDG, flèche de la minimap) :
@@ -53,6 +53,12 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         hud.lonDeg   = lon;
         hud.latDeg   = lat;
     }
+    /* Heure du simulateur (réelle ou accélérée) : voir Application::timeOfDaySeconds.
+       Le deux-points clignote à 1 Hz sur le temps réel écoulé (allumé une demi-seconde
+       sur deux), comme une horloge digitale. */
+    hud.timeOfDaySec = timeOfDaySeconds(t);
+    hud.timeScale    = m_sunTimeScale;
+    hud.colonOn      = (std::fmod(t, 1.0f) < 0.5f);
 }
 
 void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg) {

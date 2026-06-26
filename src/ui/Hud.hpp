@@ -56,6 +56,9 @@ struct HudData {
     bool        geoValid      = false;  /* coordonnées géographiques disponibles */
     float       lonDeg        = 0.0f;   /* longitude (degrés, + est) */
     float       latDeg        = 0.0f;   /* latitude (degrés, + nord) */
+    float       timeOfDaySec  = 0.0f;   /* heure du simulateur (s depuis minuit) */
+    float       timeScale     = 1.0f;   /* vitesse du temps (1 = temps réel) */
+    bool        colonOn       = true;   /* deux-points de l'horloge HH:MM (clignote 1 Hz) */
 
     /* Repérage : lieux remarquables et minimap. */
     std::vector<HudLabel> labels;          /* lieux à étiqueter (scène 3D + carte) */

@@ -43,7 +43,7 @@ float DemoPilot::rampeCollectif(float cible, float dt) noexcept {
 
 DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& velocity,
                                     float heading, float groundHeight,
-                                    float rotorFraction) noexcept {
+                                    float rotorFraction, float sunElevation) noexcept {
     Output out;
     if (!m_active) {
         return out;
@@ -176,16 +176,20 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     } else if (m_returning && dist < 200.0f) {
         out.viewMode = 0;  /* approche : vue de poursuite */
     } else {
-        /* En route : on fait défiler les trois vues. L'orbite, plus courte, laisse la
-           caméra faire un tour complet (durée à garder en phase avec DEMO_ORBIT_TURN
-           côté application). */
+        /* En route : on fait défiler les vues. L'orbite, plus courte, laisse la caméra
+           faire un tour complet (durée à garder en phase avec DEMO_ORBIT_TURN côté
+           application). L'orbite solaire, en dernier, n'est montrée que de jour (soleil
+           au-dessus de l'horizon), sinon on rejoue l'orbite classique : la nuit, elle
+           cadrerait un ciel sombre avec le soleil sous l'horizon. */
         const float bande = std::fmod(tVol - DUREE_MONTEE, CYCLE_VUES);
         if (bande < DUREE_POURSUITE) {
             out.viewMode = 0;  /* poursuite */
         } else if (bande < DUREE_POURSUITE + DUREE_COCKPIT) {
             out.viewMode = 1;  /* cockpit */
-        } else {
+        } else if (bande < DUREE_POURSUITE + DUREE_COCKPIT + DUREE_ORBITE) {
             out.viewMode = 2;  /* orbite (un tour complet) */
+        } else {
+            out.viewMode = (sunElevation > 0.0f) ? 3 : 2;  /* orbite solaire de jour, sinon orbite */
         }
     }
 

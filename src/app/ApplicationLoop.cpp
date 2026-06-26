@@ -43,7 +43,8 @@ constexpr float PARK_TAU        = 0.6f;
 
 }  /* namespace */
 
-physics::Controls Application::computeControls(const physics::Controls& rawInput, float frameDt) {
+physics::Controls Application::computeControls(const physics::Controls& rawInput, float frameDt,
+                                               float t) {
     /* Mode démo : une vraie action du pilote (manche, palonnier ou collectif)
      * lui rend la main et coupe la démo. */
     if (m_demo.active()) {
@@ -67,7 +68,7 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
         const float demoGround = m_terrain->heightAt(demoBody.position.x, demoBody.position.z);
         const DemoPilot::Output demoOut =
             m_demo.update(frameDt, demoBody.position, demoBody.velocity, demoHeading, demoGround,
-                          m_flight.turbine().rotorFraction());
+                          m_flight.turbine().rotorFraction(), sunDirection(t).y);
         controls = demoOut.controls;
         /* Fin de vol : la démo demande de couper la turbine une fois posée. */
         if (demoOut.cutTurbine) {
@@ -237,7 +238,7 @@ void Application::mainLoop() {
         /* Entrées -> commandes effectives (pilote automatique en démo, sinon
          * pilote humain adouci par le mode assisté), puis boutons d'action. */
         const physics::Controls rawInput = m_input->poll(frameDt);
-        const physics::Controls controls = computeControls(rawInput, frameDt);
+        const physics::Controls controls = computeControls(rawInput, frameDt, t);
 
         /* Musique de la démo : coupée dès que la démo s'arrête (entrée pilote,
            touche V, etc.). Le lancement, lui, se fait dans startDemo(). */

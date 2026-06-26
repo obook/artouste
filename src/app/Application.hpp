@@ -70,7 +70,7 @@ private:
     /* Commandes effectives de l'image : commandes du pilote automatique en mode
        démo, sinon commandes du pilote passées par le mode assisté. Met aussi à jour
        la vue et le HUD quand la démo les impose. */
-    physics::Controls computeControls(const physics::Controls& rawInput, float frameDt);
+    physics::Controls computeControls(const physics::Controls& rawInput, float frameDt, float t);
 
     /* Boutons et croix de la manette (hors commandes de vol) : vue, turbine, HUD,
        pause, reset, livrée, ainsi que les réponses Oui/Non des panneaux de

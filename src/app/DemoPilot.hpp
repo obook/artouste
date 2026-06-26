@@ -41,7 +41,7 @@ public:
     /* Ce que la démo demande à l'application à chaque image. */
     struct Output {
         physics::Controls controls;            /* commandes à appliquer à l'appareil */
-        int               viewMode   = 2;      /* vue souhaitée (0 poursuite, 1 cockpit, 2 orbite) */
+        int               viewMode   = 2;      /* vue souhaitée (0 poursuite, 1 cockpit, 2 orbite, 3 orbite solaire) */
         int               hudStyle   = 0;      /* HUD souhaité (0 aucun, 1 complet, 2 quatre coins) */
         bool              cutTurbine = false;  /* couper la turbine (une fois posé) */
         bool              finished   = false;  /* séquence d'arrêt terminée : relancer la démo */
@@ -58,9 +58,11 @@ public:
        position et velocity sont l'état courant de l'appareil (repère monde) ; heading
        est le cap (lacet, rad) au sens de l'application (atan2(-forward.z, forward.x)) ;
        groundHeight est l'altitude du sol sous l'appareil ; rotorFraction est le régime
-       du rotor [0, 1] : on attend qu'il soit plein avant de décoller. */
+       du rotor [0, 1] : on attend qu'il soit plein avant de décoller ; sunElevation est
+       la hauteur du soleil (composante y de sa direction, > 0 le jour) : la vue d'orbite
+       solaire n'est proposée que de jour. */
     Output update(float dt, const vec3& position, const vec3& velocity, float heading,
-                  float groundHeight, float rotorFraction) noexcept;
+                  float groundHeight, float rotorFraction, float sunElevation) noexcept;
 
     [[nodiscard]] bool active() const noexcept { return m_active; }
     void stop() noexcept { m_active = false; }

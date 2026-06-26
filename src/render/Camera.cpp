@@ -16,31 +16,27 @@ void Camera::orbitSolar(const vec3& target, const vec3& sunDir, float radius, fl
 {
     m_up = vec3{0.0f, 1.0f, 0.0f};
 
-    // securite / 0 sui soleil au zenit
-    vec3 safeSunDir = sunDir;
-    if (std::abs(safeSunDir.y) > 0.99f)
-    {
-        safeSunDir.x += 0.01f;
-        safeSunDir = glm::normalize(safeSunDir);
-    }
+    /* Azimut : la caméra se place à l'opposé du soleil (soleil dans le dos) pour
+       éclairer l'appareil de face, plan "golden hour". On prend la direction du
+       soleil projetée au sol ; si le soleil est trop haut (composantes x, z quasi
+       nulles), on retombe sur un azimut fixe pour rester stable. */
+    vec3        flat        = vec3{sunDir.x, 0.0f, sunDir.z};
+    const float flatLen     = glm::length(flat);
+    const vec3  flatSunDir  = (flatLen > 1e-3f) ? flat / flatLen : vec3{0.0f, 0.0f, 1.0f};
 
-    //cadrage soleil
-    float sunElev = std::max(0.0f, safeSunDir.y);
-    float sunPitch = std::max(0.0f, std::atan2(safeSunDir.y, glm::length(vec2{safeSunDir.x, safeSunDir.z})));
-    float currentRadius = radius + (sunPitch * 12.0f);//recule un peu
-    
-    m_target = target + vec3{0.0f, currentRadius * std::tan(sunPitch / 1.8f), 0.0f};// leve la tete
-    float currentHeight = glm::mix(height, 0.5f, sunElev);//s'abaisse
-    vec3 flatSunDir = glm::normalize(vec3{safeSunDir.x, 0.0f, safeSunDir.z});//pas de plonger sous le sol
+    /* Hauteur de caméra : soleil bas -> caméra basse (lumière rasante) ; quand le
+       soleil remonte, elle reprend sa hauteur normale. sunElev borné à [0, 1]. */
+    const float sunElev       = glm::clamp(sunDir.y, 0.0f, 1.0f);
+    const float currentHeight = glm::mix(height * 0.45f, height, sunElev);
 
-    //calcul position
-    //recule direction opposée au soleil ->en face.
-    //on se décale sur le côté (+right) pour decentre l helico
-    //les coeffs (0.8f et 0.6f) magnitude globale du rayon 
-    //pythagore : 0.8^2 + 0.6^2 = 1
+    /* Visée légèrement au-dessus du centre de l'appareil : il se pose dans le bas
+       du cadre, le ciel et le soleil occupent le haut. La montée est bornée pour
+       ne JAMAIS pousser l'appareil hors champ (c'était le défaut précédent : à
+       midi la cible montait de plusieurs dizaines de mètres). */
+    const float targetLift = glm::clamp(radius * 0.08f, 0.0f, 1.5f);
+    m_target               = target + vec3{0.0f, targetLift, 0.0f};
 
-    vec3 offset = -flatSunDir * currentRadius;
-    m_position = target + offset + vec3{0.0f, currentHeight, 0.0f};
+    m_position = target - flatSunDir * radius + vec3{0.0f, currentHeight, 0.0f};
 }
 
 void Camera::orbit(const vec3& target, float radius, float height, float angleRad) noexcept {

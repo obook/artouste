@@ -178,9 +178,12 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     } else {
         /* En route : on fait défiler les vues. L'orbite, plus courte, laisse la caméra
            faire un tour complet (durée à garder en phase avec DEMO_ORBIT_TURN côté
-           application). L'orbite solaire, en dernier, n'est montrée que de jour (soleil
-           au-dessus de l'horizon), sinon on rejoue l'orbite classique : la nuit, elle
-           cadrerait un ciel sombre avec le soleil sous l'horizon. */
+           application). L'orbite solaire, en dernier, n'est montrée que quand le soleil
+           est BAS (lumière rasante, plan "golden hour") ; sinon on rejoue l'orbite
+           classique. Soleil haut, elle n'apporte rien de plus que l'orbite ; soleil sous
+           l'horizon, elle cadrerait un ciel sombre. sunElevation est le sinus de la
+           hauteur du soleil (0 à l'horizon, ~0,94 au zénith) ; la bande [0,05 ; 0,40]
+           correspond grosso modo à un soleil rasant. */
         const float bande = std::fmod(tVol - DUREE_MONTEE, CYCLE_VUES);
         if (bande < DUREE_POURSUITE) {
             out.viewMode = 0;  /* poursuite */
@@ -189,7 +192,8 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
         } else if (bande < DUREE_POURSUITE + DUREE_COCKPIT + DUREE_ORBITE) {
             out.viewMode = 2;  /* orbite (un tour complet) */
         } else {
-            out.viewMode = (sunElevation > 0.0f) ? 3 : 2;  /* orbite solaire de jour, sinon orbite */
+            const bool soleilBas = sunElevation > 0.05f && sunElevation < 0.40f;
+            out.viewMode         = soleilBas ? 3 : 2;  /* orbite solaire si soleil rasant, sinon orbite */
         }
     }
 

@@ -97,6 +97,19 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
         m_camera.setLookAt(eye, eye + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
                            vec3{0.0f, 1.0f, 0.0f});
+    } else if (const char* solar = std::getenv("ARTOUSTE_SHOT_SOLAR")) {
+        /* Vue d'orbite solaire (plan "golden hour") : on synthétise un soleil bas
+           dont la hauteur vaut ARTOUSTE_SHOT_SOLAR (0,2 par défaut) et on cadre
+           comme en jeu, pour vérifier que l'appareil reste dans le cadre. */
+        m_viewMode = 3;
+        m_camera.setFovYDeg(60.0f);
+        m_camera.setNear(0.5f);
+        float elev = std::strtof(solar, nullptr);
+        if (elev <= 0.0f) {
+            elev = 0.2f;
+        }
+        const vec3 sunDir = glm::normalize(vec3{0.35f, elev, 1.0f});
+        m_camera.orbitSolar(shotPos + vec3{0.0f, targetY, 0.0f}, sunDir, radius, height);
     } else {
         m_camera.setNear(0.5f);
         /* Décalages horizontaux du point visé (le repère corps est aligné sur le monde

@@ -1,0 +1,16 @@
+# Lieux remarquables - Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+-0.5757 44.8378 Bordeaux
+-0.5697 44.8412 Place de la Bourse
+-0.5508 44.8625 Cité du Vin
+-0.5648 44.8385 Pont de pierre
+-0.647 44.843 Mérignac
+-0.6311 44.8067 Pessac
+-0.5912 44.808 Talence
+-0.5478 44.8083 Bègles
+-0.53 44.856 Cenon
+-0.518 44.874 Lormont
+-0.5972 44.865 Le Bouscat
+-0.6005 44.8775 Bruges
+-0.5614 44.8956 Stade Matmut Atlantique
+-0.7155 44.8286 Aéroport de Mérignac

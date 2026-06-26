@@ -130,6 +130,45 @@ ZONES = {
             ("Refuge des Sarradets", -0.0333, 42.6959),
         ],
     },
+    # Bordeaux et son agglomération : la Garonne et le port de la Lune au centre,
+    # de l'aéroport de Mérignac et Pessac à l'ouest jusqu'à Cenon et Lormont sur la
+    # rive droite, et de Villenave-d'Ornon au sud jusqu'au stade Matmut Atlantique et
+    # Bruges au nord. Terre intérieure : pas d'océan, la Garonne garde sa vraie
+    # imagerie (pas de recoloration de mer).
+    "bordeaux": {
+        "bbox": (-0.74, -0.42, 44.72, 44.96),
+        "recolor_sea": False,
+        "start": (-0.7155, 44.8286),  # aéroport de Bordeaux-Mérignac, vaste replat
+        # Ville très dense : on relève le seuil à 5 m pour écarter garages, abris et
+        # petites annexes, et garder un buildings.bin raisonnable (le détail à 2 m
+        # pesait près de 30 Mo).
+        "height_min": 5.0,
+        "title": "Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac)",
+        "landmarks": [
+            ("Bordeaux", -0.5757, 44.8378),
+            ("Place de la Bourse", -0.5697, 44.8412),
+            ("Cité du Vin", -0.5508, 44.8625),
+            ("Pont de pierre", -0.5648, 44.8385),
+            ("Mérignac", -0.6470, 44.8430),
+            ("Pessac", -0.6311, 44.8067),
+            ("Talence", -0.5912, 44.8080),
+            ("Bègles", -0.5478, 44.8083),
+            ("Cenon", -0.5300, 44.8560),
+            ("Lormont", -0.5180, 44.8740),
+            ("Le Bouscat", -0.5972, 44.8650),
+            ("Bruges", -0.6005, 44.8775),
+            ("Stade Matmut Atlantique", -0.5614, 44.8956),
+            ("Aéroport de Mérignac", -0.7155, 44.8286),
+        ],
+        # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
+        # la carte ; à affiner si besoin).
+        "helipads": [
+            ("Aéroport de Bordeaux-Mérignac", -0.7155, 44.8286),
+            ("CHU Pellegrin", -0.6045, 44.8378),
+            ("Hôpital Haut-Lévêque (Pessac)", -0.6330, 44.7908),
+            ("Hôpital Saint-André", -0.5790, 44.8333),
+        ],
+    },
 }
 
 DEFAULT_ZONE = "ossau"

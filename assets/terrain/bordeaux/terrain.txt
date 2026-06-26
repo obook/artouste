@@ -1,0 +1,18 @@
+# Terrain Artouste - Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 512
+rows 512
+width_m 25259.1
+height_m 26716.8
+elev_min 0.00
+elev_max 94.66
+lon_min -0.74
+lon_max -0.42
+lat_min 44.72
+lat_max 44.96
+ortho_width 1936
+ortho_height 2048
+sea 0
+start_x -10355.7
+start_z 1646.9

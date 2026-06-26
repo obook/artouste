@@ -39,20 +39,19 @@ namespace {
  * qui clignote (allumée une brève fraction de la période) tant que la turbine tourne.
  */
 const vec3      BEACON_POS{3.11f, 2.41f, 0.0f};  /* position du beacon du modèle (all-lights.xml), sur le toit */
-constexpr float BEACON_RADIUS = 0.10f;           /* rayon de la sphère (m) */
+constexpr float BEACON_RADIUS = 0.07f;           /* rayon de la sphère (m) */
 constexpr float BEACON_PERIOD = 1.2f;            /* période du clignotement (s) */
 constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
 
 /*
- * Feux de navigation et de queue, aux positions du modèle (all-lights.xml d'Émmanuel),
- * exprimées ici en repère corps. Allumés en continu quand la turbine tourne. On respecte
- * la convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite), blanc à
- * la queue.
+ * Feux de position avant, aux positions du modèle (all-lights.xml d'Émmanuel),
+ * exprimées ici en repère corps. Allumés la nuit (voir renderScene). On respecte la
+ * convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite). Le feu
+ * blanc de queue du modèle (corps {-3.96, 2.13, 0.20}) n'est pas allumé pour l'instant.
  */
 const vec3      NAV_LEFT_POS{4.24f, 0.92f, -0.77f};   /* feu de navigation bâbord (rouge) */
 const vec3      NAV_RIGHT_POS{4.24f, 0.92f, 0.77f};   /* feu de navigation tribord (vert) */
-const vec3      TAIL_LIGHT_POS{-3.96f, 2.13f, 0.20f}; /* feu blanc de queue */
-constexpr float NAV_RADIUS = 0.07f;                   /* rayon du coeur d'un feu (m) */
+constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu (m) */
 
 /*
  * Tuyère : sortie de la turbine, derrière le bloc moteur, au départ de la poutre.
@@ -65,28 +64,47 @@ constexpr float NAV_RADIUS = 0.07f;                   /* rayon du coeur d'un feu
 const vec3      NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
 constexpr float NOZZLE_RADIUS = 0.24f;
 
-
-//viteesee du cycle jour nuti
-constexpr float SUN_SPEED = 0.05f;
-
 }  /* namespace */
+
+float Application::timeOfDaySeconds(float t) const {
+    /* On part de l'heure locale du PC au lancement (m_sunBaseSeconds), puis on
+       avance à m_sunTimeScale fois le temps réel (1 = temps réel, 0 = figé). */
+    constexpr float DAY = 86400.0f;  /* secondes dans une journée */
+    float secondsOfDay = std::fmod(m_sunBaseSeconds + t * m_sunTimeScale, DAY);
+    if (secondsOfDay < 0.0f) {
+        secondsOfDay += DAY;  /* échelle négative : on reste dans [0, 86400[ */
+    }
+    return secondsOfDay;
+}
+
+vec3 Application::sunDirection(float t) const {
+    /* Course du soleil : midi -> zénith (y max), 6 h / 18 h -> horizon, minuit ->
+       sous l'horizon. Le -pi/2 cale midi (43200 s) sur le zénith. Le décalage fixe
+       en X (0.35) incline légèrement la trajectoire, plus réaliste qu'un plein
+       est-ouest. */
+    constexpr float DAY = 86400.0f;
+    const float angle = TWO_PI * (timeOfDaySeconds(t) / DAY) - HALF_PI;
+    return glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
+}
 
 void Application::renderScene(const mat4& base, float rotorAngle, float rotorFraction,
                              float rudder, float cyclicLong, float cyclicLat,
                              float collective, float turbineFraction, float timeSeconds) {
-    float           angle = timeSeconds * SUN_SPEED;
-    //soleil tourne sur lui donc : sin pour  Y cos pour Z
-    //decalage fixe sur X (0.35f) -> trajectoire soit légèrement inclinée
-    // realiste ...
-    const vec3 lightDir = glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
+    const vec3 lightDir = sunDirection(timeSeconds);
     const mat4 view     = m_camera.view();
     const mat4 proj     = m_camera.proj();
 
-    glClearColor(0.53f, 0.70f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    float   isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f);
+    /* Couleur de fond assombrie la nuit (le ciel plein écran la recouvre, mais le
+       tampon de profondeur, lui, est bien remis à zéro). */
+    const float isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f);
     glClearColor(0.53f * isDay, 0.70f * isDay, 0.92f * isDay, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /* Brume du lointain : on l'assombrit la nuit (sinon la mer et l'horizon se fondent
+       dans une brume claire sous un ciel sombre, ce qui les fait paraître blancs). On
+       garde un léger fond bleuté nocturne (facteur plancher) accordé au ciel de nuit. */
+    const vec3 fogColor = FOG_COLOR * glm::mix(0.06f, 1.0f, isDay);
+
     /* Ciel en dégradé (il remplit le fond de l'image). */
     m_sky->draw(*m_skyShader, glm::inverse(proj * view), m_camera.position(), lightDir);
 
@@ -105,7 +123,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_seaShader->setVec3("u_seaColor", SEA_COLOR);
         m_seaShader->setVec3("u_lightDir", lightDir);
         m_seaShader->setVec3("u_camPos", m_camera.position());
-        m_seaShader->setVec3("u_fogColor", FOG_COLOR);
+        m_seaShader->setVec3("u_fogColor", fogColor);
         m_seaShader->setFloat("u_fogStart", FOG_START);
         m_seaShader->setFloat("u_fogEnd", FOG_END);
         glDepthMask(GL_FALSE);
@@ -126,7 +144,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_terrainShader->setVec3("u_lightDir", lightDir);
         m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
         m_terrainShader->setVec3("u_camPos", m_camera.position());
-        m_terrainShader->setVec3("u_fogColor", FOG_COLOR);
+        m_terrainShader->setVec3("u_fogColor", fogColor);
         m_terrainShader->setFloat("u_fogStart", FOG_START);
         m_terrainShader->setFloat("u_fogEnd", FOG_END);
         m_terrainShader->setInt("u_texture", 0);
@@ -153,7 +171,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_buildingShader->setMat4("u_model", mat4(1.0f));
         m_buildingShader->setVec3("u_lightDir", lightDir);
         m_buildingShader->setVec3("u_camPos", m_camera.position());
-        m_buildingShader->setVec3("u_fogColor", FOG_COLOR);
+        m_buildingShader->setVec3("u_fogColor", fogColor);
         m_buildingShader->setFloat("u_fogStart", FOG_START);
         m_buildingShader->setFloat("u_fogEnd", FOG_END);
         m_buildings->draw();
@@ -249,12 +267,12 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         drawGlow(bodyToWorld(BEACON_POS), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
     }
 
-    /* --- Feux de navigation et de queue -------------------------------------- */
-    /* Les feux de position (rouge bâbord, vert tribord, blanc de queue) ne servent
-       qu'à la nuit. Le vol de nuit n'étant pas modélisé, ils restent éteints de jour ;
-       on garde le code (et les positions) prêt pour une future ambiance nocturne. */
-    constexpr bool NAV_LIGHTS_ON = false;
-    if (NAV_LIGHTS_ON) {
+    /* --- Feux de position avant (nuit) --------------------------------------- */
+    /* Les deux feux de nez (rouge bâbord, vert tribord) s'allument la nuit, entre 18h
+       et 6h dans l'heure du simulateur (du coucher au lever du soleil). De jour ils
+       restent éteints. */
+    const float hourOfDay = timeOfDaySeconds(timeSeconds) / 3600.0f;
+    if (hourOfDay >= 18.0f || hourOfDay < 6.0f) {
         const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
             const vec3 w = bodyToWorld(bodyPos);
             drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f});
@@ -262,7 +280,6 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         };
         drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
         drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
-        drawLight(TAIL_LIGHT_POS, vec3{1.0f, 1.0f, 0.95f});  /* queue : blanc */
     }
 
     /* --- Tuyère -------------------------------------------------------------- */

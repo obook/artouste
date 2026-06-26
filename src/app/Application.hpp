@@ -96,6 +96,16 @@ private:
                      float collective = 0.0f, float turbineFraction = 0.0f,
                      float timeSeconds = 0.0f);
 
+    /* Heure du simulateur à l'instant t (s depuis le lancement), exprimée en
+       secondes depuis minuit [0, 86400[. Part de l'heure locale du PC au lancement
+       puis avance en temps réel (mode local) ou accéléré (mode accéléré). */
+    float timeOfDaySeconds(float t) const;
+
+    /* Direction (unitaire) du soleil à l'instant t (s depuis le lancement), selon
+       le mode d'heure choisi (heure locale réelle ou temps accéléré). Source unique
+       pour l'éclairage, le ciel et la caméra d'orbite solaire. */
+    vec3 sunDirection(float t) const;
+
     /* Hélipads (départ + ceux du terrain) posés à plat au sol, dessinés avant
        l'appareil sans test de profondeur pour éviter le z-fighting au ras du sol. */
     void drawHelipads(const mat4& view, const mat4& proj, const vec3& lightDir);
@@ -173,6 +183,8 @@ private:
     DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
     std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string                               m_radioUrl;      /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
+    float                                     m_sunTimeScale   = 1.0f;  /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
+    float                                     m_sunBaseSeconds = 0.0f;  /* heure locale du PC au lancement (s depuis minuit) */
     bool                                      m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     bool                                      m_demoUserView = false;  /* en démo : l'utilisateur a repris la main sur la vue (touche C) */
     bool                                      m_demoUserHud  = false;  /* en démo : l'utilisateur a repris la main sur le HUD (touche H) */

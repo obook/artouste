@@ -64,6 +64,12 @@ Config loadConfig(const std::filesystem::path& path) {
             if (!value.empty()) {
                 cfg.radioUrl = value;
             }
+        } else if (key == "sun_time_scale") {
+            try {
+                cfg.sunTimeScale = std::stof(value);
+            } catch (const std::exception&) {
+                std::fprintf(stderr, "[Config] sun_time_scale invalide : %s\n", value.c_str());
+            }
         } else {
             std::fprintf(stderr, "[Config] clé inconnue ignorée : %s\n", key.c_str());
         }

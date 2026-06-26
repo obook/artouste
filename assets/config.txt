@@ -30,3 +30,12 @@ demo 0
 # La variable d'environnement ARTOUSTE_RADIO_URL, si definie, a la priorite.
 # Exemple (decommenter pour activer) :
 radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
+
+# sun_time_scale : vitesse d'ecoulement du temps pour le cycle jour/nuit (course du
+# soleil). Duree reelle d'une journee complete = 86400 / sun_time_scale secondes.
+#   1   = temps reel (defaut) : depart a l'heure locale du PC
+#   144 = journee complete en 10 min
+#   0   = temps fige a midi (le soleil ne bouge pas)
+# En temps reel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
+# part de midi, pour demarrer sur une belle lumiere. Avec 0, il reste fige a midi.
+sun_time_scale 1

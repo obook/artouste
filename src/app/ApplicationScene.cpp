@@ -38,6 +38,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <random>
 #include <string>
@@ -229,6 +230,38 @@ void Application::initScene() {
     m_radioUrl = config.radioUrl;
     if (const char* env = std::getenv("ARTOUSTE_RADIO_URL"); env != nullptr && env[0] != '\0') {
         m_radioUrl = env;
+    }
+
+    /* Cycle jour/nuit : vitesse du temps (clé `sun_time_scale` de la config, 1 =
+       temps réel). m_sunBaseSeconds est l'heure d'origine du soleil (s depuis
+       minuit), voir Application::sunDirection :
+         - en temps réel (échelle 1) on part de l'heure locale du PC ;
+         - sinon (temps accéléré ou figé) on part de midi, pour démarrer sur une belle
+           lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une échelle nulle,
+           le soleil reste donc figé à midi. */
+    m_sunTimeScale = config.sunTimeScale;
+    if (m_sunTimeScale == 1.0f) {
+        const std::time_t now = std::time(nullptr);
+        std::tm           local{};
+#if defined(_WIN32)
+        localtime_s(&local, &now);
+#else
+        localtime_r(&now, &local);
+#endif
+        m_sunBaseSeconds = static_cast<float>(local.tm_hour) * 3600.0f
+                         + static_cast<float>(local.tm_min) * 60.0f
+                         + static_cast<float>(local.tm_sec);
+        std::printf("[scène] cycle jour/nuit : temps réel, heure locale au lancement %02d:%02d.\n",
+                    local.tm_hour, local.tm_min);
+    } else {
+        constexpr float NOON = 12.0f * 3600.0f;  /* midi */
+        m_sunBaseSeconds = NOON;
+        if (m_sunTimeScale == 0.0f) {
+            std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
+        } else {
+            std::printf("[scène] cycle jour/nuit : temps accéléré (x%g), départ à midi.\n",
+                        static_cast<double>(m_sunTimeScale));
+        }
     }
 
     /*

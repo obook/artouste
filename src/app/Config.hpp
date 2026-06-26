@@ -40,6 +40,14 @@ struct Config {
        par la touche K en vol libre. Vide par défaut = pas de radio. La variable
        d'environnement ARTOUSTE_RADIO_URL, si définie, a la priorité. */
     std::string radioUrl = "";
+
+    /* Cycle jour/nuit : vitesse d'écoulement du temps pour la course du soleil. Le
+       soleil part toujours de l'heure locale du PC au lancement. Durée réelle d'une
+       journée complète = 86400 / sunTimeScale secondes.
+         1   -> temps réel (défaut), départ à l'heure locale du PC
+         144 -> journée complète en 10 min (départ à midi)
+         0   -> temps figé à midi (le soleil ne bouge pas) */
+    float sunTimeScale = 1.0f;
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

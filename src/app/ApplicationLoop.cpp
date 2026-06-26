@@ -138,10 +138,8 @@ void Application::updateCamera(const mat4& base, const vec3& renderPos, float ya
         m_camera.setFovYDeg(60.0f);
         m_camera.setNear(0.5f);
         
-        //calcul de la pos avec le temps
-        constexpr float SUN_SPEED = 0.05f;
-        const float angle = t * SUN_SPEED;
-        const vec3 sunDir = glm::normalize(vec3{0.35f, std::sin(angle), std::cos(angle)});
+        /* Même soleil que l'éclairage et le ciel (source unique). */
+        const vec3 sunDir = sunDirection(t);
         m_camera.orbitSolar(lookTarget, sunDir, 15.0f, 6.0f);
     }
     else {  /* poursuite */

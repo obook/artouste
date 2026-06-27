@@ -27,10 +27,10 @@ using namespace heli_detail;
 LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     /* Listes de nœuds à écarter au chargement :
        - skipBody : plans flous des rotors (blur/disc), doublons HDR des vitrages,
-         et version flotteurs du train (on garde les patins, par défaut chez
-         FlightGear).
+         version flotteurs du train (on garde les patins, par défaut chez FlightGear),
+         et les roues (roueD/roueG) que l'on ne veut pas afficher.
        - skipRotor : uniquement les plans flous des rotors. */
-    const std::vector<std::string> skipBody{"hdr", "blur", "disc", "flotteur", "barre"};
+    const std::vector<std::string> skipBody{"hdr", "blur", "disc", "flotteur", "barre", "roue"};
     const std::vector<std::string> skipRotor{"blur", "disc"};
     /* Nœuds à rendre translucides : la verrière de cabine et les vitres de porte.
        On ne vise pas "tourvitre" : c'est un maillage qui mêle le vitrage avant ET la

@@ -144,7 +144,7 @@ def main():
     # pour garder les cabanes et bergeries.
     height_min = ZONES[zone].get("height_min", HEIGHT_MIN)
 
-    print(f"[batiments] zone {zone} : WFS BD TOPO sur {bbox} (hauteur >= {height_min} m)")
+    print(f"[bâtiments] zone {zone} : WFS BD TOPO sur {bbox} (hauteur >= {height_min} m)")
     start = time.time()
 
     buildings = []   # liste de (hauteur, anneau [(lon, lat), ...])
@@ -173,14 +173,14 @@ def main():
                 if len(pts) >= 3:
                     buildings.append((h, pts))
         index += len(feats)
-        print(f"[batiments]   {index} examines, {len(buildings)} retenus...")
+        print(f"[bâtiments]   {index} examinés, {len(buildings)} retenus...")
 
     write_buildings(path, buildings)
     size_mo = os.path.getsize(path) / (1024 * 1024)
-    print(f"[batiments] {path} ecrit : {len(buildings)} batiments "
-          f"(sur {examined} examines, filtre hauteur >= {height_min} m), "
+    print(f"[bâtiments] {path} écrit : {len(buildings)} bâtiments "
+          f"(sur {examined} examinés, filtre hauteur >= {height_min} m), "
           f"{size_mo:.1f} Mo")
-    print(f"[ok] termine en {time.time() - start:.0f} s")
+    print(f"[ok] terminé en {time.time() - start:.0f} s")
 
 
 if __name__ == "__main__":

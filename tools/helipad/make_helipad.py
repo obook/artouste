@@ -2,16 +2,16 @@
 """
 make_helipad.py
 Construit l'helipad sous Blender (sans interface) et l'exporte au format AC3D
-(.ac), comme le reste des modeles du projet : un disque plat texture, dans le
-plan XY de Blender (donc a plat, normale vers le haut, une fois exporte).
+(.ac), comme le reste des modèles du projet : un disque plat texturé, dans le
+plan XY de Blender (donc à plat, normale vers le haut, une fois exporté).
 
-Prerequis : le greffon AC3D pour Blender (celui d'Emmanuel) doit etre installe,
+Prérequis : le greffon AC3D pour Blender (celui d'Emmanuel) doit être installé,
 voir https://github.com/NikolaiVChr/Blender-AC3D (module "io_scene_ac3d").
 
-A lancer ainsi (Blender utilise son propre Python, pas le venv du projet) :
+À lancer ainsi (Blender utilise son propre Python, pas le venv du projet) :
     blender --background --python tools/helipad/make_helipad.py
 
-La texture doit avoir ete generee au prealable (voir make_texture.py).
+La texture doit avoir été générée au préalable (voir make_texture.py).
 
 Auteur : O. Booklage
 Licence : GPL v2
@@ -23,12 +23,12 @@ import os
 import addon_utils
 import bpy
 
-RADIUS = 7.0   # rayon du disque, en metres (comme la version procedurale)
+RADIUS = 7.0   # rayon du disque, en mètres (comme la version procédurale)
 SEGMENTS = 96  # finesse du bord
 
 
 def project_root():
-    """Racine du depot, deduite de l'emplacement de ce script (tools/helipad/)."""
+    """Racine du dépôt, déduite de l'emplacement de ce script (tools/helipad/)."""
     here = os.path.dirname(os.path.abspath(__file__))
     return os.path.normpath(os.path.join(here, "..", ".."))
 
@@ -42,8 +42,8 @@ def clear_scene():
 
 
 def build_disc():
-    """Disque en eventail dans le plan XY, avec des UV qui inscrivent le disque
-    dans la texture carree (centre de la texture = centre du disque)."""
+    """Disque en éventail dans le plan XY, avec des UV qui inscrivent le disque
+    dans la texture carrée (centre de la texture = centre du disque)."""
     verts = [(0.0, 0.0, 0.0)]
     for i in range(SEGMENTS):
         a = (2.0 * math.pi * i) / SEGMENTS
@@ -96,10 +96,10 @@ def main():
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
 
-    # L'exportateur AC3D passe du repere Z-up de Blender au repere Y-up : le
-    # disque se retrouve a plat dans le plan XZ, normale vers le haut.
+    # L'exportateur AC3D passe du repère Z-up de Blender au repère Y-up : le
+    # disque se retrouve à plat dans le plan XZ, normale vers le haut.
     bpy.ops.export_scene.export_ac3d(filepath=out_ac)
-    print("[helipad] exporte", out_ac)
+    print("[helipad] exporté", out_ac)
 
 
 if __name__ == "__main__":

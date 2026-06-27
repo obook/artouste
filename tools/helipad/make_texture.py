@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 make_texture.py
-Genere la texture de l'helistation hospitaliere : beton use et sali, cercle de
-poser, croix blanche et grand H rouge (marquage OACI d'un heliport d'hopital).
-L'image est carree ; le disque de l'helipad y est inscrit (les coins, hors
+Génère la texture de l'hélistation hospitalière : béton usé et sali, cercle de
+poser, croix blanche et grand H rouge (marquage OACI d'un héliport d'hôpital).
+L'image est carrée ; le disque de l'helipad y est inscrit (les coins, hors
 disque, ne se voient pas).
 
-A lancer avec le Python du venv du projet (voir tools/.venv) :
+À lancer avec le Python du venv du projet (voir tools/.venv) :
     tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helipad.png
 
 Auteur : O. Booklage
@@ -18,7 +18,7 @@ import sys
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
-SIZE = 2048  # cote de l'image, en pixels
+SIZE = 2048  # côté de l'image, en pixels
 
 
 def noise(sigma, blur=0.0):
@@ -29,7 +29,7 @@ def noise(sigma, blur=0.0):
 
 
 def concrete():
-    """Dalle de beton : gris moyen, grain a deux echelles, taches sombres et
+    """Dalle de béton : gris moyen, grain à deux échelles, taches sombres et
     quelques fissures, plus un assombrissement vers le bord (salissure)."""
     base = Image.new("RGB", (SIZE, SIZE), (146, 147, 150))
     fine = noise(34, 1.0)
@@ -40,8 +40,8 @@ def concrete():
 
     draw = ImageDraw.Draw(img, "RGBA")
 
-    # Taches d'huile / d'usure : ellipses sombres floutees, disposees au pseudo
-    # hasard (positions fixes pour un resultat reproductible).
+    # Taches d'huile / d'usure : ellipses sombres floutées, disposées au pseudo
+    # hasard (positions fixes pour un résultat reproductible).
     stains = [(0.30, 0.32, 0.10), (0.66, 0.28, 0.07), (0.58, 0.70, 0.12),
               (0.38, 0.66, 0.06), (0.72, 0.55, 0.05), (0.24, 0.52, 0.05)]
     stain_layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
@@ -53,7 +53,7 @@ def concrete():
     img = Image.alpha_composite(img.convert("RGBA"), stain_layer).convert("RGB")
 
     draw = ImageDraw.Draw(img, "RGBA")
-    # Fissures : courtes lignes sombres irregulieres.
+    # Fissures : courtes lignes sombres irrégulières.
     cracks = [(0.20, 0.40, 0.46, 0.30), (0.55, 0.20, 0.62, 0.48),
               (0.50, 0.80, 0.40, 0.60), (0.78, 0.62, 0.66, 0.74)]
     for x0, y0, x1, y1 in cracks:
@@ -68,18 +68,18 @@ def concrete():
 
 
 def worn_alpha(base_alpha):
-    """Masque d'alpha pour une peinture usee : surtout opaque, avec des plages
-    plus pales (la peinture s'efface par endroits)."""
+    """Masque d'alpha pour une peinture usée : surtout opaque, avec des plages
+    plus pâles (la peinture s'efface par endroits)."""
     wear = noise(70, 2.0).point(lambda p: base_alpha if p > 64 else base_alpha - 70 + p)
     return wear
 
 
 def add_marking(img, shape_draw, color, base_alpha=235):
-    """Peint un marquage (defini par shape_draw) en simulant l'usure : on dessine
+    """Peint un marquage (défini par shape_draw) en simulant l'usure : on dessine
     sur un calque, on module son alpha par un masque d'usure, puis on compose."""
     layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     mask = Image.new("L", (SIZE, SIZE), 0)
-    shape_draw(ImageDraw.Draw(mask))  # blanc la ou il y a de la peinture
+    shape_draw(ImageDraw.Draw(mask))  # blanc là où il y a de la peinture
     paint = Image.new("RGBA", (SIZE, SIZE), color + (255,))
     alpha = ImageChops.multiply(mask, worn_alpha(base_alpha))
     layer.paste(paint, (0, 0), alpha)
@@ -87,14 +87,14 @@ def add_marking(img, shape_draw, color, base_alpha=235):
 
 
 def add_skid_marks(img):
-    """Deux trainees sombres paralleles laissees par les patins, le long de l'axe
-    avant-arriere (axe X de la texture). Posees par-dessus le marquage, comme un
-    frottement de caoutchouc accumule au fil des poses."""
+    """Deux traînées sombres parallèles laissées par les patins, le long de l'axe
+    avant-arrière (axe X de la texture). Posées par-dessus le marquage, comme un
+    frottement de caoutchouc accumulé au fil des poses."""
     full = SIZE / 2.0
     cx = cy = full
     length = full * 0.22   # demi-longueur de la trace
-    width = full * 0.045   # demi-epaisseur
-    offset = full * 0.14   # ecart lateral entre les deux patins
+    width = full * 0.045   # demi-épaisseur
+    offset = full * 0.14   # écart latéral entre les deux patins
 
     layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer, "RGBA")
@@ -127,9 +127,9 @@ def main(out_path):
 
     img = add_marking(img, ring, white, base_alpha=225)
 
-    # Croix blanche (croix grecque : deux barres egales qui se croisent).
+    # Croix blanche (croix grecque : deux barres égales qui se croisent).
     arm = full * 0.42   # demi-longueur d'une barre
-    half = full * 0.21  # demi-epaisseur d'une barre
+    half = full * 0.21  # demi-épaisseur d'une barre
 
     def cross(d):
         d.rectangle([cx - half, cy - arm, cx + half, cy + arm], fill=255)
@@ -149,7 +149,7 @@ def main(out_path):
 
     img = add_marking(img, letter_h, red, base_alpha=240)
 
-    # Salissure finale : leger assombrissement vers le bord du disque (vignette).
+    # Salissure finale : léger assombrissement vers le bord du disque (vignette).
     vignette = Image.new("L", (SIZE, SIZE), 0)
     vd = ImageDraw.Draw(vignette)
     vd.ellipse([cx - full, cy - full, cx + full, cy + full], fill=255)
@@ -162,7 +162,7 @@ def main(out_path):
     img = add_skid_marks(img)
 
     img.save(out_path)
-    print("[texture] ecrit", out_path, img.size)
+    print("[texture] écrit", out_path, img.size)
 
 
 if __name__ == "__main__":

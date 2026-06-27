@@ -193,7 +193,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
 
     /* Décalques au sol, dessinés avant l'appareil (voir ApplicationGround.cpp). */
     drawHelipads(view, proj, lightDir);
-    drawGroundShadow(base, rotorFraction, view, proj);
+    drawGroundShadow(base, rotorFraction, view, proj, lightDir);
 
     /* Hélicoptère : modèle texturé réel s'il est chargé, sinon version dessinée. */
     if (m_loadedHeli) {

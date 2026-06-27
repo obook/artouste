@@ -100,7 +100,7 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
 }
 
 void Application::drawGroundShadow(const mat4& base, float rotorFraction, const mat4& view,
-                                  const mat4& proj) {
+                                  const mat4& proj, const vec3& sunDir) {
     /*
      * Ombre portée, en deux disques de taille fixe (pas d'animation de taille) :
      *  - le fuselage : petit disque dense, toujours présent ;
@@ -127,68 +127,89 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
     const float scaleXZ = 1.0f + altitude * 0.02f;
-    const float radius  = 6.0f * scaleXZ;  /* rayon du disque rotor (m), cf. disc(6, ...) */
+    constexpr float DISC_MESH_R = 6.0f;  /* rayon du maillage de disque (cf. disc(6, ...)) */
 
     /*
      * Le disque est plat : sur un sol en pente, il couperait le relief et la
      * ligne d'intersection scintillerait au moindre mouvement de la caméra.
-     * Le rayon (6 m) étant plus petit qu'une maille du terrain, le sol sous
-     * le disque est une facette inclinée dont le point haut est un coin : on
-     * pose donc le disque au-dessus du plus haut des quatre coins, avec une
-     * marge, pour qu'il ne traverse jamais le sol.
+     * On pose donc chaque disque au-dessus du plus haut des quatre coins de son
+     * emprise, avec une marge, pour qu'il ne traverse jamais le sol.
      */
-    /* Pose le disque juste au-dessus du plus haut des quatre coins de son
-       emprise, pour qu'il ne traverse jamais un sol en pente. */
-    const auto topUnder = [&](const vec3& c, float r) {
-        float t = m_terrain->heightAt(c.x, c.z);
-        t       = std::fmax(t, m_terrain->heightAt(c.x + r, c.z + r));
-        t       = std::fmax(t, m_terrain->heightAt(c.x + r, c.z - r));
-        t       = std::fmax(t, m_terrain->heightAt(c.x - r, c.z + r));
-        t       = std::fmax(t, m_terrain->heightAt(c.x - r, c.z - r));
+    const auto topUnder = [&](float cx, float cz, float r) {
+        float t = m_terrain->heightAt(cx, cz);
+        t       = std::fmax(t, m_terrain->heightAt(cx + r, cz + r));
+        t       = std::fmax(t, m_terrain->heightAt(cx + r, cz - r));
+        t       = std::fmax(t, m_terrain->heightAt(cx - r, cz + r));
+        t       = std::fmax(t, m_terrain->heightAt(cx - r, cz - r));
         return t;
     };
+
+    /*
+     * Ombre projetée par le soleil. sunDir pointe VERS le soleil ; sa composante y
+     * est le sinus de sa hauteur. L'ombre tombe à l'opposé du soleil et s'étire
+     * quand il est bas :
+     *  - dayBlend : 0 au ras de l'horizon et la nuit (l'ombre redevient alors un
+     *    simple contact centré sous l'appareil), 1 quand le soleil est bien levé ;
+     *  - elong : étirement le long de la direction du soleil (rond à midi, allongé
+     *    au ras du sol) ;
+     *  - azimuth : oriente le grand axe de l'ellipse sur la direction du soleil ;
+     *  - sunShift : décalage horizontal du centre de l'ombre, à l'opposé du soleil,
+     *    proportionnel à la hauteur de la source et borné pour rester lisible.
+     */
+    const float sunY        = sunDir.y;
+    const float dayBlend    = clamp((sunY - 0.02f) / 0.20f, 0.0f, 1.0f);
+    const float sunYFloor   = std::fmax(sunY, 0.2f);
+    const float sunHorizLen = std::sqrt(sunDir.x * sunDir.x + sunDir.z * sunDir.z);
+    const float azimuth     = (sunHorizLen > 1e-4f) ? std::atan2(-sunDir.z, sunDir.x) : 0.0f;
+    constexpr float ELONG_MAX = 3.5f;
+    const float elong       = 1.0f + dayBlend * (clamp(1.0f / sunYFloor, 1.0f, ELONG_MAX) - 1.0f);
+
+    constexpr float SHADOW_SRC_H = 2.5f;   /* hauteur type de la source (rotor/cabine) au-dessus du sol */
+    constexpr float MAX_OFFSET   = 28.0f;  /* décalage horizontal max de l'ombre (m) */
+    vec3 sunShift{0.0f};
+    if (dayBlend > 0.0f && sunHorizLen > 1e-4f) {
+        const float dist = std::fmin((altitude + SHADOW_SRC_H) / sunYFloor, MAX_OFFSET) * dayBlend;
+        sunShift = dist * vec3{-sunDir.x, 0.0f, -sunDir.z} / sunHorizLen;
+    }
 
     m_shadowShader->use();
     m_shadowShader->setMat4("u_view", view);
     m_shadowShader->setMat4("u_proj", proj);
 
-    /* Disque rotor : centré sous l'axe du mât (et non sous le centre de
-       l'appareil), pour que l'ombre des pales tombe au bon endroit. Le mât est
-       en avant de l'origine, le long de l'axe X du fuselage. */
-    vec3 rotorCenter = heliPos;
+    /* Centre commun des deux disques : sous l'axe du mât (et non sous le centre de
+       l'appareil), pour que l'ombre des pales tombe au bon endroit. Le mât est en
+       avant de l'origine, le long de l'axe X du fuselage. */
+    vec3 center = heliPos;
     if (m_loadedHeli) {
-        rotorCenter =
+        center =
             vec3(base * vec4(render::LoadedHelicopter::ROTOR_FORWARD_OFFSET, 0.0f, 0.0f, 1.0f));
     }
+
+    /* Dessine un disque d'ombre (échelle baseScale sur le maillage de rayon 6 m),
+       décalé et étiré par le soleil, posé au-dessus du relief. */
+    const auto drawDisc = [&](float baseScale, float alpha) {
+        const float gx    = center.x + sunShift.x;
+        const float gz    = center.z + sunShift.z;
+        const float longR = baseScale * elong * DISC_MESH_R;  /* demi-grand axe pour l'échantillon sol */
+        const float y     = topUnder(gx, gz, longR) + 0.30f;
+        /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin. Le grand
+           axe (X local, aligné sur l'azimut solaire) est étiré par elong. */
+        const mat4 model = glm::translate(mat4(1.0f), vec3{gx, y, gz} - m_renderOrigin) *
+                           glm::rotate(mat4(1.0f), azimuth, vec3{0.0f, 1.0f, 0.0f}) *
+                           glm::scale(mat4(1.0f), vec3{baseScale * elong, 1.0f, baseScale});
+        m_shadowShader->setMat4("u_model", model);
+        m_shadowShader->setFloat("u_alpha", alpha);
+        m_shadowDisc->draw();
+    };
+
+    /* Disque rotor (l'ombre des pales) : grand, son opacité suit le régime. */
     const float rotorShadowAlpha = shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f);
     if (rotorShadowAlpha > 0.01f) {
-        const vec3 rotorShadowPos{rotorCenter.x, topUnder(rotorCenter, radius) + 0.30f,
-                                  rotorCenter.z};
-        /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin (origine
-           horizontale), on retranche donc la même origine de la position monde. */
-        m_shadowShader->setMat4("u_model",
-                                glm::translate(mat4(1.0f), rotorShadowPos - m_renderOrigin) *
-                                    glm::scale(mat4(1.0f), vec3{scaleXZ, 1.0f, scaleXZ}));
-        m_shadowShader->setFloat("u_alpha", rotorShadowAlpha);
-        m_shadowDisc->draw();
+        drawDisc(scaleXZ, rotorShadowAlpha);
     }
-
-    /* Fuselage : petit disque dense centré sur l'axe du rotor principal (le mât),
-       comme l'ombre du rotor -- les deux disques sont ainsi concentriques sous le
-       rotor. */
-    const vec3  bodyCenter = rotorCenter;
-    /* Disque toujours présent (même rotor arrêté), dimensionné à l'empreinte de
-       l'appareil posé (~5 m) pour rester bien visible au départ, et non un petit
-       disque caché sous la cabine. */
-    const float bodyScale  = scaleXZ * (5.0f / 6.0f);
-    const float bodyRadius = 5.0f * scaleXZ;
-    const vec3  bodyShadowPos{bodyCenter.x, topUnder(bodyCenter, bodyRadius) + 0.30f,
-                              bodyCenter.z};
-    m_shadowShader->setMat4("u_model",
-                            glm::translate(mat4(1.0f), bodyShadowPos - m_renderOrigin) *
-                                glm::scale(mat4(1.0f), vec3{bodyScale, 1.0f, bodyScale}));
-    m_shadowShader->setFloat("u_alpha", shadowAlpha);
-    m_shadowDisc->draw();
+    /* Fuselage : disque dense toujours présent, dimensionné à l'empreinte posée
+       (~5 m), concentrique avec celui du rotor. */
+    drawDisc(scaleXZ * (5.0f / 6.0f), shadowAlpha);
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);

@@ -111,9 +111,11 @@ private:
     void drawHelipads(const mat4& view, const mat4& proj, const vec3& lightDir);
 
     /* Ombre portée au sol (deux disques : fuselage et rotor), estompée avec
-       l'altitude et posée au-dessus du relief pour ne pas le traverser en pente. */
+       l'altitude et posée au-dessus du relief pour ne pas le traverser en pente.
+       sunDir est la direction du soleil (vers le soleil) : l'ombre est décalée à
+       l'opposé et étirée quand le soleil est bas. */
     void drawGroundShadow(const mat4& base, float rotorFraction, const mat4& view,
-                          const mat4& proj);
+                          const mat4& proj, const vec3& sunDir);
 
     /* Lueurs liées au moteur : strombo (flash rouge anti-collision au-dessus de la
        cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge

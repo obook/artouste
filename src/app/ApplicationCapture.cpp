@@ -53,6 +53,15 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         }
     }
 
+    /* Heure du soleil pour la capture : ARTOUSTE_SHOT_HOUR fixe l'heure du jour (0 a
+       24) afin d'obtenir un lever, un plein jour ou un coucher de soleil reproductible
+       (par exemple 17.7 pour un soleil bas sur la mer). On fige le temps (echelle 0)
+       pour que le rendu reste a cette heure. */
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_HOUR")) {
+        m_sunBaseSeconds = std::strtof(e, nullptr) * 3600.0f;
+        m_sunTimeScale   = 0.0f;
+    }
+
     /*
      * Cadrage par défaut (vue trois quarts arrière). On peut le modifier via
      * des variables d'environnement pour observer plusieurs angles sans

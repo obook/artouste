@@ -145,31 +145,39 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     };
 
     /*
-     * Ombre projetée par le soleil. sunDir pointe VERS le soleil ; sa composante y
-     * est le sinus de sa hauteur. L'ombre tombe à l'opposé du soleil et s'étire
-     * quand il est bas :
-     *  - dayBlend : 0 au ras de l'horizon et la nuit (l'ombre redevient alors un
-     *    simple contact centré sous l'appareil), 1 quand le soleil est bien levé ;
-     *  - elong : étirement le long de la direction du soleil (rond à midi, allongé
-     *    au ras du sol) ;
-     *  - azimuth : oriente le grand axe de l'ellipse sur la direction du soleil ;
-     *  - sunShift : décalage horizontal du centre de l'ombre, à l'opposé du soleil,
-     *    proportionnel à la hauteur de la source et borné pour rester lisible.
+     * Ombre projetée par l'astre au-dessus de l'horizon : le soleil le jour, et une
+     * lune simplifiée la nuit (modélisée à l'opposé du soleil, donc levée quand le
+     * soleil est couché). L'ombre tombe à l'opposé de cet astre et s'étire quand il
+     * est bas. L'ombre lunaire est bien plus faible que l'ombre solaire ; un plancher
+     * de contact subsiste toujours pour ne pas faire flotter l'appareil au crépuscule.
+     *  - lightVec : direction (normalisée) vers l'astre éclairant, au-dessus de l'horizon ;
+     *  - lightBlend : 0 au ras de l'horizon, 1 quand l'astre est bien levé ;
+     *  - elong : étirement le long de la direction de l'astre (rond au zénith, long au ras du sol) ;
+     *  - azimuth : oriente le grand axe de l'ellipse ;
+     *  - lightShift : décalage du centre de l'ombre, à l'opposé de l'astre, borné.
      */
-    const float sunY        = sunDir.y;
-    const float dayBlend    = clamp((sunY - 0.02f) / 0.20f, 0.0f, 1.0f);
-    const float sunYFloor   = std::fmax(sunY, 0.2f);
-    const float sunHorizLen = std::sqrt(sunDir.x * sunDir.x + sunDir.z * sunDir.z);
-    const float azimuth     = (sunHorizLen > 1e-4f) ? std::atan2(-sunDir.z, sunDir.x) : 0.0f;
+    const bool  sunUp         = sunDir.y > 0.0f;
+    const vec3  lightVec      = sunUp ? sunDir : -sunDir;   /* lune = direction opposée au soleil */
+    const float lightY        = lightVec.y;                 /* hauteur de l'astre éclairant */
+    const float lightBlend    = clamp((lightY - 0.02f) / 0.20f, 0.0f, 1.0f);
+    const float lightYFloor   = std::fmax(lightY, 0.2f);
+    const float lightHorizLen = std::sqrt(lightVec.x * lightVec.x + lightVec.z * lightVec.z);
+    const float azimuth = (lightHorizLen > 1e-4f) ? std::atan2(-lightVec.z, lightVec.x) : 0.0f;
     constexpr float ELONG_MAX = 3.5f;
-    const float elong       = 1.0f + dayBlend * (clamp(1.0f / sunYFloor, 1.0f, ELONG_MAX) - 1.0f);
+    const float elong = 1.0f + lightBlend * (clamp(1.0f / lightYFloor, 1.0f, ELONG_MAX) - 1.0f);
+
+    /* Intensité : pleine au soleil, atténuée à la lune ; plancher de contact pour que
+       l'appareil reste posé même au crépuscule (astre au ras de l'horizon). */
+    constexpr float MOON_SHADOW   = 0.30f;  /* part de l'ombre lunaire par rapport au plein soleil */
+    constexpr float CONTACT_FLOOR = 0.15f;  /* ombre de contact minimale (anti-flottement) */
+    const float alphaMult = std::fmax(CONTACT_FLOOR, lightBlend * (sunUp ? 1.0f : MOON_SHADOW));
 
     constexpr float SHADOW_SRC_H = 2.5f;   /* hauteur type de la source (rotor/cabine) au-dessus du sol */
     constexpr float MAX_OFFSET   = 28.0f;  /* décalage horizontal max de l'ombre (m) */
-    vec3 sunShift{0.0f};
-    if (dayBlend > 0.0f && sunHorizLen > 1e-4f) {
-        const float dist = std::fmin((altitude + SHADOW_SRC_H) / sunYFloor, MAX_OFFSET) * dayBlend;
-        sunShift = dist * vec3{-sunDir.x, 0.0f, -sunDir.z} / sunHorizLen;
+    vec3 lightShift{0.0f};
+    if (lightBlend > 0.0f && lightHorizLen > 1e-4f) {
+        const float dist = std::fmin((altitude + SHADOW_SRC_H) / lightYFloor, MAX_OFFSET) * lightBlend;
+        lightShift = dist * vec3{-lightVec.x, 0.0f, -lightVec.z} / lightHorizLen;
     }
 
     m_shadowShader->use();
@@ -188,8 +196,8 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     /* Dessine un disque d'ombre (échelle baseScale sur le maillage de rayon 6 m),
        décalé et étiré par le soleil, posé au-dessus du relief. */
     const auto drawDisc = [&](float baseScale, float alpha) {
-        const float gx    = center.x + sunShift.x;
-        const float gz    = center.z + sunShift.z;
+        const float gx    = center.x + lightShift.x;
+        const float gz    = center.z + lightShift.z;
         const float longR = baseScale * elong * DISC_MESH_R;  /* demi-grand axe pour l'échantillon sol */
         const float y     = topUnder(gx, gz, longR) + 0.30f;
         /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin. Le grand
@@ -203,13 +211,13 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     };
 
     /* Disque rotor (l'ombre des pales) : grand, son opacité suit le régime. */
-    const float rotorShadowAlpha = shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f);
+    const float rotorShadowAlpha = shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f) * alphaMult;
     if (rotorShadowAlpha > 0.01f) {
         drawDisc(scaleXZ, rotorShadowAlpha);
     }
     /* Fuselage : disque dense toujours présent, dimensionné à l'empreinte posée
        (~5 m), concentrique avec celui du rotor. */
-    drawDisc(scaleXZ * (5.0f / 6.0f), shadowAlpha);
+    drawDisc(scaleXZ * (5.0f / 6.0f), shadowAlpha * alphaMult);
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);

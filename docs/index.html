@@ -171,18 +171,56 @@
     .card h3 { margin: 0 0 8px; font-size: 1.12rem; color: var(--alu); }
     .card p { margin: 0; color: var(--muted); font-size: 0.96rem; }
 
-    /* Galerie */
+    /* Galerie : chaque capture est un bouton cliquable qui ouvre la modale */
     .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
-    figure {
-      margin: 0; background: var(--petrol-2); border: 1px solid var(--rule);
-      border-radius: 8px; overflow: hidden;
+    .shot {
+      position: relative; display: block; width: 100%; padding: 0; margin: 0;
+      text-align: left; cursor: pointer; color: inherit; font: inherit;
+      background: var(--petrol-2); border: 1px solid var(--rule); border-radius: 8px;
+      overflow: hidden; transition: transform 0.14s ease, border-color 0.14s ease;
     }
-    figure img { display: block; width: 100%; height: auto; }
-    figcaption {
-      padding: 12px 16px; color: var(--muted); font-size: 0.86rem;
+    .shot:hover { transform: translateY(-3px); border-color: #3c4f5b; }
+    .shot img { display: block; width: 100%; height: auto; }
+    .shot .cap {
+      display: block; padding: 12px 16px; color: var(--muted); font-size: 0.86rem;
       border-top: 1px solid var(--rule);
       font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
     }
+    /* Indice "agrandir" en coin, revele au survol ou au focus */
+    .shot::after {
+      content: "+"; position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px; display: grid; place-items: center;
+      background: rgba(12,21,26,0.72); color: var(--amber);
+      border: 1px solid var(--rule); border-radius: 50%;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      font-size: 1.2rem; line-height: 1; opacity: 0; transition: opacity 0.14s ease;
+    }
+    .shot:hover::after, .shot:focus-visible::after { opacity: 1; }
+
+    /* Modale d'image agrandie */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      gap: 14px; padding: 28px; background: rgba(8, 12, 15, 0.93);
+      animation: fade 0.18s ease;
+    }
+    .lightbox[hidden] { display: none; }
+    .lightbox img {
+      max-width: 92vw; max-height: 82vh; display: block;
+      border: 1px solid var(--rule); border-radius: 6px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    .lightbox .lb-cap {
+      color: var(--alu); font-size: 0.9rem; text-align: center;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
+    }
+    .lb-close {
+      position: absolute; top: 16px; right: 22px;
+      background: none; border: 0; color: var(--alu); cursor: pointer;
+      font-size: 2.2rem; line-height: 1; padding: 4px 12px;
+    }
+    .lb-close:hover { color: var(--amber); }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
     /* Telechargement */
     .dl {
@@ -224,7 +262,8 @@
     @media (prefers-reduced-motion: reduce) {
       * { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; animation: none; }
-      .btn:hover, .card:hover { transform: none; }
+      .btn:hover, .card:hover, .shot:hover { transform: none; }
+      .lightbox { animation: none; }
     }
   </style>
 </head>
@@ -335,22 +374,36 @@
       <h2>En images</h2>
     </div>
     <div class="gallery">
-      <figure>
+      <button class="shot" type="button"
+              data-full="screenshots/mer-coucher-soleil.png"
+              data-cap="Coucher de soleil sur la côte landaise, HUD complet.">
+        <img src="screenshots/mer-coucher-soleil.png" alt="Alouette II au-dessus de la mer au coucher du soleil, HUD complet" loading="lazy">
+        <span class="cap">Coucher de soleil sur la côte landaise, HUD complet.</span>
+      </button>
+      <button class="shot" type="button"
+              data-full="screenshots/vol-montagne.png"
+              data-cap="Vol au-dessus des Pyrénées, HUD quatre coins et minimap.">
         <img src="screenshots/vol-montagne.png" alt="Alouette II en vol au-dessus du relief des Pyrénées" loading="lazy">
-        <figcaption>Vol au-dessus des Pyrénées, HUD quatre coins et minimap.</figcaption>
-      </figure>
-      <figure>
+        <span class="cap">Vol au-dessus des Pyrénées, HUD quatre coins et minimap.</span>
+      </button>
+      <button class="shot" type="button"
+              data-full="screenshots/cockpit.png"
+              data-cap="Vue cockpit : tableau de bord animé et commandes en main.">
         <img src="screenshots/cockpit.png" alt="Vue cockpit avec le tableau de bord et les mains du pilote sur les commandes" loading="lazy">
-        <figcaption>Vue cockpit : tableau de bord animé et commandes en main.</figcaption>
-      </figure>
-      <figure>
+        <span class="cap">Vue cockpit : tableau de bord animé et commandes en main.</span>
+      </button>
+      <button class="shot" type="button"
+              data-full="screenshots/helipad.png"
+              data-cap="Poser sur hélipad, mât rotor centré sur le H.">
         <img src="screenshots/helipad.png" alt="Alouette II posée sur un hélipad, mât rotor centré sur le H" loading="lazy">
-        <figcaption>Poser sur hélipad, mât rotor centré sur le H.</figcaption>
-      </figure>
-      <figure>
+        <span class="cap">Poser sur hélipad, mât rotor centré sur le H.</span>
+      </button>
+      <button class="shot" type="button"
+              data-full="screenshots/heure-doree.png"
+              data-cap="Heure dorée, lieux remarquables étiquetés sur la scène.">
         <img src="screenshots/heure-doree.png" alt="Alouette II en vol à l'heure dorée, lieux remarquables étiquetés" loading="lazy">
-        <figcaption>Heure dorée, lieux remarquables étiquetés sur la scène.</figcaption>
-      </figure>
+        <span class="cap">Heure dorée, lieux remarquables étiquetés sur la scène.</span>
+      </button>
     </div>
   </section>
 
@@ -371,9 +424,54 @@
   <footer>
     <div class="inner">
       <span>Artouste &middot; simulateur de vol Alouette II SE.3130</span>
+      <span>Auteur : Olivier Booklage</span>
       <span><a href="https://github.com/obook/artouste">github.com/obook/artouste</a> &middot; GPL v2</span>
     </div>
   </footer>
+
+  <!-- Modale d'image agrandie (galerie) -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image agrandie" hidden>
+    <button class="lb-close" id="lbClose" type="button" aria-label="Fermer">&times;</button>
+    <img id="lbImg" src="" alt="">
+    <p class="lb-cap" id="lbCap"></p>
+  </div>
+
+  <script>
+    (function () {
+      var lb = document.getElementById('lightbox');
+      var lbImg = document.getElementById('lbImg');
+      var lbCap = document.getElementById('lbCap');
+      var lbClose = document.getElementById('lbClose');
+      var lastFocus = null;
+
+      function ouvrir(shot) {
+        lastFocus = shot;
+        var img = shot.querySelector('img');
+        lbImg.src = shot.getAttribute('data-full');
+        lbImg.alt = img ? img.alt : '';
+        lbCap.textContent = shot.getAttribute('data-cap') || '';
+        lb.hidden = false;
+        document.body.style.overflow = 'hidden';
+        lbClose.focus();
+      }
+      function fermer() {
+        lb.hidden = true;
+        lbImg.src = '';
+        document.body.style.overflow = '';
+        if (lastFocus) { lastFocus.focus(); }
+      }
+
+      var shots = document.querySelectorAll('.shot');
+      for (var i = 0; i < shots.length; i++) {
+        shots[i].addEventListener('click', function () { ouvrir(this); });
+      }
+      lbClose.addEventListener('click', fermer);
+      lb.addEventListener('click', function (e) { if (e.target === lb) { fermer(); } });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !lb.hidden) { fermer(); }
+      });
+    })();
+  </script>
 
 </body>
 </html>

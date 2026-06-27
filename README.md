@@ -1,5 +1,7 @@
 # Artouste
 
+**Site de présentation : [obook.github.io/artouste](https://obook.github.io/artouste/)**
+
 Artouste est un simulateur de vol personnel consacré au pilotage 3D de l'hélicoptère **Aérospatiale Alouette II** SE.3130.
 
 Son objectif est de restituer fidèlement la séquence de démarrage de la turbine Turboméca puis des rotors, le comportement en vol de cet appareil sans servo-commandes dans une  ambiance sonore caractéristique de sa turbine et de ses trois pales.

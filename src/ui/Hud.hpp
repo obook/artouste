@@ -60,6 +60,22 @@ struct HudData {
     float       timeScale     = 1.0f;   /* vitesse du temps (1 = temps réel) */
     bool        colonOn       = true;   /* deux-points de l'horloge HH:MM (clignote 1 Hz) */
 
+    /* Aide à l'atterrissage : hélipad le plus proche en finale (active seulement
+       en mode assisté, voir ApplicationHud.cpp). */
+    struct PadGuidance {
+        bool        active      = false;  /* true seulement si conditions remplies */
+        float       dx          = 0.0f;   /* écart latéral en mètres (+ = droite pilote) */
+        float       dz          = 0.0f;   /* écart longitudinal en mètres (+ = devant) */
+        float       distanceM   = 0.0f;   /* distance 2D au centre du pad */
+        float       altAbovePad = 0.0f;   /* altitude au-dessus du pad (pas du sol général) */
+        const char* name        = "";     /* nom du pad (pour l'étiquette HUD) */
+
+        /* Score du dernier posé. */
+        float       scoreM      = -1.0f;  /* distance au centre au moment du posé, en mètres */
+        bool        scored      = false;  /* true pendant SCORE_DISPLAY_S secondes après le posé */
+    };
+    PadGuidance padGuidance;
+
     /* Repérage : lieux remarquables et minimap. */
     std::vector<HudLabel> labels;          /* lieux à étiqueter (scène 3D + carte) */
     unsigned int          mapTexId   = 0;  /* orthophoto pour la minimap (0 = pas de carte) */
@@ -88,6 +104,9 @@ private:
        les dimensions de l'écran, 'm' la marge depuis les bords. */
     void renderCorners(const HudData& data, float w, float h, float m);
     void renderOverlay(const HudData& data, float w, float h, float m);
+    /* Aide à l'atterrissage (réticule + score), dessinée par-dessus tous les modes
+       de HUD, y compris quand il est éteint en démo. */
+    void renderPadGuidance(const HudData& data, float w, float h);
     void renderLabels(const HudData& data, float w, float h);
     void renderMinimap(const HudData& data, HudMode mode, float m);
     void renderBanners(bool paused, bool confirmReset, bool confirmDemo, float w, float h);

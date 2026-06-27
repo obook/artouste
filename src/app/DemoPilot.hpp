@@ -65,6 +65,11 @@ public:
                   float groundHeight, float rotorFraction, float sunElevation) noexcept;
 
     [[nodiscard]] bool active() const noexcept { return m_active; }
+
+    /* Vrai quand la démo a fini ses points de passage et revient se poser au pad
+       (phase d'approche / atterrissage). Faux pendant le décollage et la croisière. */
+    [[nodiscard]] bool returning() const noexcept { return m_returning; }
+
     void stop() noexcept { m_active = false; }
 
 private:

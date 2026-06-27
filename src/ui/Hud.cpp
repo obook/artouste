@@ -67,6 +67,11 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     }
     /* mode Off : aucun affichage de vol. */
 
+    /* Aide à l'atterrissage : réticule et score dessinés par-dessus tous les modes,
+       y compris en démo (HUD éteint). La méthode se contente de ne rien faire si le
+       guidage n'est pas actif. */
+    renderPadGuidance(data, w, h);
+
     /* Étiquettes des lieux : affichées avec le HUD, et aussi quand on les force (démo
        HUD éteint). La minimap, elle, ne s'affiche qu'avec le HUD. */
     const bool showLabels = (mode != HudMode::Off) || forceLabels;

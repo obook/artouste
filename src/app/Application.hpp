@@ -124,7 +124,13 @@ private:
        à partir de l'état physique courant. */
     void fillHud(ui::HudData& hud, const physics::RigidBody& body, const vec3& forward,
                  const physics::Controls& controls, float airspeed, float turbineFraction,
-                 float rotorFraction, float t);
+                 float rotorFraction, float t, float frameDt);
+
+    /* Cherche l'hélipad le plus proche de heliPos (parmi m_terrain->helipads() et le
+       pad de départ m_startPos), dans le rayon PAD_SEARCH_RADIUS_M. Remplit poseMonde
+       avec la position monde du pad retenu et renvoie son nom (ou nullptr si aucun pad
+       n'est dans le rayon). */
+    const char* padPlusProche(const vec3& heliPos, vec3& poseMonde) const noexcept;
 
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
        scène et données de la minimap (position de l'appareil, points). */
@@ -211,6 +217,12 @@ private:
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */
     float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */
     physics::Turbine::State                   m_prevTurbineState = physics::Turbine::State::Arret;  /* pour déclencher le son de démarrage au bon moment */
+
+    /* Aide à l'atterrissage (mode assisté) : état persistant entre les images. */
+    float                                     m_scoreTimer  = 0.0f;   /* temps restant d'affichage du score (s) */
+    float                                     m_lastScoreM  = -1.0f;  /* dernière distance au posé (m), -1 si aucun */
+    bool                                      m_wasOnGround = false;  /* état sol de l'image précédente (anti-rebond) */
+    bool                                      m_wasAirborne = false;  /* a volé depuis l'activation : évite un faux score au sol */
 };
 
 }  /* namespace artouste::app */

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artouste - Simulateur de vol Alouette II SE.3130</title>
+  <meta name="description" content="Artouste, simulateur de vol 3D consacré au pilotage de l'hélicoptère Aérospatiale Alouette II SE.3130. C++ moderne et OpenGL, jouable au clavier ou à la manette.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#15232b">
+  <style>
+    :root {
+      --petrol:    #15232b;   /* gunmetal petrole, fond principal */
+      --petrol-2:  #1b2d37;   /* surfaces relevees */
+      --plate:     #21333d;   /* metal de la plaque constructeur */
+      --rule:      #2d3f4a;   /* filets fins */
+      --alu:       #d4d9dc;   /* aluminium, titres */
+      --text:      #c2ccd2;   /* corps de texte */
+      --muted:     #8395a0;   /* texte secondaire */
+      --amber:     #f4a032;   /* ambre instrument, accent */
+      --amber-hi:  #ffc56b;   /* ambre clair */
+      --ink:       #0c151a;   /* texte sur fond ambre */
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--petrol);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--amber); text-decoration: none; }
+    a:hover { color: var(--amber-hi); }
+    img { max-width: 100%; }
+
+    /* Famille mono = identite "plaque / manuel de vol" */
+    .mono {
+      font-family: "SFMono-Regular", "JetBrains Mono", "Cascadia Code", Consolas,
+        "Liberation Mono", Menlo, monospace;
+    }
+    .eyebrow {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      text-transform: uppercase; letter-spacing: 0.32em; font-size: 0.72rem;
+      color: var(--amber); margin: 0 0 14px;
+    }
+
+    /* Accessibilite : focus clavier visible */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 3px;
+    }
+
+    /* Navigation */
+    .nav {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(21, 35, 43, 0.82);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--rule);
+    }
+    .brand {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--alu); font-size: 0.95rem;
+    }
+    .brand b { color: var(--amber); font-weight: 700; }
+    .navlinks { display: flex; flex-wrap: wrap; gap: 22px; }
+    .navlinks a {
+      color: var(--muted); font-size: 0.82rem; letter-spacing: 0.06em;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+    }
+    .navlinks a:hover { color: var(--alu); }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      border-bottom: 1px solid var(--rule);
+      background:
+        linear-gradient(105deg, rgba(13,21,26,0.95) 0%, rgba(13,21,26,0.78) 46%, rgba(13,21,26,0.42) 100%),
+        url("screenshots/hero.png") center right / cover no-repeat;
+    }
+    .hero-grid {
+      max-width: 1120px; margin: 0 auto; padding: 96px 28px 88px;
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center;
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 9vw, 6rem); line-height: 0.96; margin: 0 0 18px;
+      letter-spacing: -0.02em; font-weight: 800; color: #fff;
+    }
+    .hero h1 .reg {
+      display: block; margin-top: 12px;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      font-size: clamp(0.8rem, 1.6vw, 1rem); letter-spacing: 0.34em; font-weight: 500;
+      color: var(--amber);
+    }
+    .tagline { font-size: clamp(1.02rem, 1.6vw, 1.2rem); color: var(--text); max-width: 30em; }
+    .cta-row { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-block; padding: 13px 24px; border-radius: 4px;
+      font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+    .btn-primary { background: var(--amber); color: var(--ink); }
+    .btn-primary:hover { background: var(--amber-hi); color: var(--ink); transform: translateY(-2px); }
+    .btn-ghost { border: 1px solid var(--rule); color: var(--alu); }
+    .btn-ghost:hover { border-color: var(--amber); color: var(--alu); transform: translateY(-2px); }
+
+    /* Signature : plaque constructeur rivetee */
+    .plate {
+      position: relative;
+      background: linear-gradient(160deg, #273a45 0%, var(--plate) 55%, #1a2a33 100%);
+      border: 1px solid #3a4d59; border-radius: 7px;
+      padding: 26px 28px 24px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px rgba(0,0,0,0.45);
+    }
+    /* Rivets aux quatre coins */
+    .plate::before, .plate::after,
+    .plate .rivets::before, .plate .rivets::after {
+      content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #5b6e79, #16242c);
+      box-shadow: inset 0 0 1px rgba(0,0,0,0.6);
+    }
+    .plate::before { top: 10px; left: 10px; }
+    .plate::after { top: 10px; right: 10px; }
+    .plate .rivets::before { bottom: 10px; left: 10px; }
+    .plate .rivets::after { bottom: 10px; right: 10px; }
+    .plate .plate-title {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.72rem;
+      color: var(--amber); margin: 0 0 16px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--rule); text-align: center;
+    }
+    .plate dl { margin: 0; }
+    .plate-row {
+      display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; align-items: baseline;
+      padding: 7px 0; border-bottom: 1px dotted var(--rule);
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; font-size: 0.84rem;
+    }
+    .plate-row:last-child { border-bottom: 0; }
+    .plate-row dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; }
+    .plate-row dd { margin: 0; color: var(--alu); }
+    .plate-row dd b { color: var(--amber-hi); font-weight: 600; }
+
+    /* Sections */
+    section { max-width: 1120px; margin: 0 auto; padding: 84px 28px; }
+    .sec-head { margin-bottom: 36px; }
+    .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.3rem); margin: 0; color: var(--alu); letter-spacing: -0.01em; }
+    .lead { color: var(--muted); max-width: 46em; font-size: 1.04rem; }
+
+    /* Caracteristiques */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(266px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--petrol-2); border: 1px solid var(--rule);
+      border-radius: 8px; padding: 24px;
+      transition: transform 0.14s ease, border-color 0.14s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: #3c4f5b; }
+    .klabel {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--amber); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .key {
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+      font-size: 0.74rem; color: var(--ink); background: var(--amber);
+      border-radius: 3px; padding: 1px 8px; letter-spacing: 0;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1.12rem; color: var(--alu); }
+    .card p { margin: 0; color: var(--muted); font-size: 0.96rem; }
+
+    /* Galerie */
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+    figure {
+      margin: 0; background: var(--petrol-2); border: 1px solid var(--rule);
+      border-radius: 8px; overflow: hidden;
+    }
+    figure img { display: block; width: 100%; height: auto; }
+    figcaption {
+      padding: 12px 16px; color: var(--muted); font-size: 0.86rem;
+      border-top: 1px solid var(--rule);
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
+    }
+
+    /* Telechargement */
+    .dl {
+      background:
+        radial-gradient(120% 140% at 50% 0%, rgba(244,160,50,0.07), transparent 60%),
+        var(--petrol-2);
+      border: 1px solid var(--rule); border-radius: 12px; padding: 48px 32px; text-align: center;
+    }
+    .dl h2 { margin: 0 0 14px; font-size: clamp(1.6rem, 3.2vw, 2.1rem); color: var(--alu); }
+    .dl .lead { margin: 0 auto 28px; }
+    .dl .platforms {
+      margin-top: 18px; color: var(--muted); font-size: 0.82rem;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.04em;
+    }
+    .dl .cta-row { justify-content: center; }
+
+    /* Pied de page */
+    footer { border-top: 1px solid var(--rule); }
+    footer .inner {
+      max-width: 1120px; margin: 0 auto; padding: 28px;
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+      color: var(--muted); font-size: 0.82rem;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.03em;
+    }
+
+    /* Reveal discret a l'arrivee */
+    .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s ease forwards; }
+    .reveal.d1 { animation-delay: 0.08s; }
+    .reveal.d2 { animation-delay: 0.18s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 36px; padding: 64px 24px 56px; }
+      .hero { background-position: center; }
+    }
+
+    /* Respect du mouvement reduit */
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; animation: none; }
+      .btn:hover, .card:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="nav">
+    <span class="brand">ARTOUSTE<b>.</b></span>
+    <nav class="navlinks">
+      <a href="#apropos">À propos</a>
+      <a href="#caracteristiques">Caractéristiques</a>
+      <a href="#galerie">Galerie</a>
+      <a href="#telecharger">Télécharger</a>
+      <a href="https://github.com/obook/artouste">Code source</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-grid">
+      <div class="reveal">
+        <p class="eyebrow">Simulateur de vol &middot; Alouette II</p>
+        <h1>Artouste<span class="reg">AÉROSPATIALE SE.3130</span></h1>
+        <p class="tagline">Le pilotage 3D d'un hélicoptère sans servo-commandes :
+          sa turbine Turboméca Artouste, son rotor tripale et son caractère exigeant,
+          restitués image par image.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases">Télécharger la dernière version</a>
+          <a class="btn btn-ghost" href="https://github.com/obook/artouste">Voir le code source</a>
+        </div>
+      </div>
+
+      <aside class="plate reveal d2" aria-label="Caractéristiques de l'appareil">
+        <span class="rivets" aria-hidden="true"></span>
+        <p class="plate-title">Plaque constructeur</p>
+        <dl>
+          <div class="plate-row"><dt>Type</dt><dd>SE.3130 Alouette II</dd></div>
+          <div class="plate-row"><dt>Constructeur</dt><dd>Sud-Aviation (SNCASE)</dd></div>
+          <div class="plate-row"><dt>Premier vol</dt><dd>12 mars 1955, à Buc</dd></div>
+          <div class="plate-row"><dt>Motorisation</dt><dd>Turboméca Artouste IIC</dd></div>
+          <div class="plate-row"><dt>Rotor</dt><dd>Tripale, sans servo-commandes</dd></div>
+          <div class="plate-row"><dt>Record d'altitude</dt><dd><b>8 209 m</b> en 1955</dd></div>
+          <div class="plate-row"><dt>Production</dt><dd>Plus de 1 300 (1956-1975)</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </div>
+
+  <section id="apropos">
+    <div class="sec-head">
+      <p class="eyebrow">À propos</p>
+      <h2>Retrouver les sensations d'un appareil exigeant</h2>
+    </div>
+    <p class="lead">Artouste restitue la séquence de démarrage de la turbine puis des
+      rotors, et le comportement en vol de cet hélicoptère sans servo-commandes, dans
+      une ambiance sonore caractéristique de sa turbine et de ses trois pales. Ce n'est
+      ni un jeu ni une reconstitution exhaustive, mais une tentative de retrouver les
+      sensations remarquables de pilotage de l'Alouette II. Le modèle de vol est
+      simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.</p>
+  </section>
+
+  <section id="caracteristiques">
+    <div class="sec-head">
+      <p class="eyebrow">Caractéristiques</p>
+      <h2>Ce que simule Artouste</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <p class="klabel">Physique</p>
+        <h3>Modèle de vol</h3>
+        <p>Intégration Newton-Euler à pas fixe : poussée, gravité, traînée, moments
+          cycliques et anti-couple, effet de sol et effet de translation.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Turbine <span class="key">T</span></p>
+        <h3>Démarrage en deux temps</h3>
+        <p>La turbine monte en régime, puis le rotor s'accélère par la roue libre.
+          Il faut la lancer pour décoller, comme sur l'appareil réel.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Confort <span class="key">M</span></p>
+        <h3>Mode assisté</h3>
+        <p>Une couche qui compense le lacet, ramène le cyclique au neutre, lisse les
+          commandes et borne le collectif, sans toucher à la physique.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Posé</p>
+        <h3>Aide à l'atterrissage</h3>
+        <p>En mode assisté, un réticule de centrage guide vers l'hélipad le plus proche
+          en finale, et un score note la précision du poser.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Décor</p>
+        <h3>Terrain réel</h3>
+        <p>Relief et orthophoto des Pyrénées (lac d'Artouste, pic du Midi d'Ossau),
+          bassin d'Arcachon et agglomération bordelaise, avec minimap et lieux nommés.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Commandes</p>
+        <h3>Clavier ou manette</h3>
+        <p>Entrées clavier et manette Xbox avec détection automatique de la source.
+          Vues poursuite, cockpit et orbite, HUD complet ou quatre coins.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="galerie">
+    <div class="sec-head">
+      <p class="eyebrow">Galerie</p>
+      <h2>En images</h2>
+    </div>
+    <div class="gallery">
+      <figure>
+        <img src="screenshots/vol-montagne.png" alt="Alouette II en vol au-dessus du relief des Pyrénées" loading="lazy">
+        <figcaption>Vol au-dessus des Pyrénées, HUD quatre coins et minimap.</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/cockpit.png" alt="Vue cockpit avec le tableau de bord et les mains du pilote sur les commandes" loading="lazy">
+        <figcaption>Vue cockpit : tableau de bord animé et commandes en main.</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/helipad.png" alt="Alouette II posée sur un hélipad, mât rotor centré sur le H" loading="lazy">
+        <figcaption>Poser sur hélipad, mât rotor centré sur le H.</figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/heure-doree.png" alt="Alouette II en vol à l'heure dorée, lieux remarquables étiquetés" loading="lazy">
+        <figcaption>Heure dorée, lieux remarquables étiquetés sur la scène.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="telecharger">
+    <div class="dl">
+      <p class="eyebrow">Télécharger</p>
+      <h2>Binaires et code source</h2>
+      <p class="lead">Les versions publiées fournissent des binaires pour Linux et
+        Windows. Le code source complet est disponible sur le dépôt, sous licence GPL v2.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/obook/artouste/releases">Versions et binaires</a>
+        <a class="btn btn-ghost" href="https://github.com/obook/artouste">Dépôt GitHub</a>
+      </div>
+      <p class="platforms">Compilation : C++17 &middot; CMake &middot; OpenGL 3.3 &middot; voir le README pour les dépendances</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="inner">
+      <span>Artouste &middot; simulateur de vol Alouette II SE.3130</span>
+      <span><a href="https://github.com/obook/artouste">github.com/obook/artouste</a> &middot; GPL v2</span>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -120,7 +120,9 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
        (projection * rotation caméra seule) : en retirant la translation (position
        caméra, en milliers de mètres), le ciel reconstruit la direction du rayon sans
        soustraction de grands nombres, ce qui supprime le tremblement du soleil. */
-    m_sky->draw(*m_skyShader, glm::inverse(proj * mat4(mat3(view))), lightDir);
+    /* La lune est modélisée à l'opposé du soleil (voir drawGroundShadow) : elle est
+       donc levée quand le soleil est couché. */
+    m_sky->draw(*m_skyShader, glm::inverse(proj * mat4(mat3(view))), lightDir, -lightDir);
 
     /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin.
      * Il est toujours sous la mer du terrain (dessinée à y=0) et n'a jamais à

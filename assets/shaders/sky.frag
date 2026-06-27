@@ -14,6 +14,7 @@ out vec4 frag_color;
 
 uniform mat4 u_invViewProj;
 uniform vec3 u_sunDir;
+uniform vec3 u_moonDir;  // direction vers la lune (opposée au soleil)
 
 void main()
 {
@@ -64,6 +65,16 @@ void main()
 	float coreMask = smoothstep(-0.02, 0.05, dir.y);
 	color += sunColor * sunGlow * glowMask * isDay;
 	color += vec3(1.0) * sunCore * coreMask * isDay;
+
+	// lune : disque doux a l'oppose du soleil, visible la nuit seulement
+	float moonAlign = max(0.0, dot(dir, u_moonDir));
+	float moonGlow = pow(moonAlign, 128.0) * 0.12;     // halo discret
+	float moonCore = pow(moonAlign, 2048.0) * 1.5;     // disque (meme taille apparente que le soleil)
+	float night = 1.0 - isDay;                         // 1 la nuit, 0 le jour
+	float moonUp = smoothstep(-0.02, 0.08, u_moonDir.y); // lune au-dessus de l'horizon
+	float moonMask = smoothstep(-0.02, 0.05, dir.y);     // rayon de vue au-dessus de l'horizon
+	vec3 moonColor = vec3(0.85, 0.88, 0.98);           // blanc legerement bleute
+	color += moonColor * (moonGlow + moonCore) * moonMask * night * moonUp;
 
 	//Tone mapping
 	color = vec3(1.0) - exp(-color * 1.3);

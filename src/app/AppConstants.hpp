@@ -28,6 +28,14 @@ namespace artouste::app {
 inline const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
 
 /*
+ * Amplitude maximale des vibrations du rotor ressenties en vue cockpit (mètres).
+ * Le rotor tripale génère trois impulsions par tour (3/rev, ~18 Hz à 360 tr/min) :
+ * on décale légèrement l'oeil du pilote pour rendre ce tremblement caractéristique.
+ * Valeur volontairement faible (3 mm) : perceptible sans gêner la lecture des cadrans.
+ */
+inline constexpr float COCKPIT_VIBRATION_AMPLITUDE = 0.003f;  /* m */
+
+/*
  * Brume atmosphérique : le terrain et la mer se fondent dans cette teinte de
  * ciel entre FOG_START et FOG_END (distance à la caméra, en mètres). Elle donne
  * la profondeur et masque le bord du terrain comme le plan de coupe lointain.

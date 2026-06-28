@@ -210,6 +210,13 @@ private:
        détecter le changement. */
     int                                       m_prevCamView = -1;  /* vue précédente (caméra), -1 au départ */
     float                                     m_orbitStart  = 0.0f;  /* instant d'entrée en vue orbite (démo : un tour complet) */
+    /* Temps d'animation : avance comme le temps réel, mais se fige en pause (et
+       pendant les panneaux de confirmation). Pilote la démo, la caméra d'orbite et
+       la vibration du cockpit pour qu'ils s'arrêtent vraiment en pause. */
+    float                                     m_animTime = 0.0f;
+    /* Dernières commandes calculées : réutilisées en pause pour que les gouvernes
+       dessinées et le HUD gardent leur position au lieu de revenir au neutre. */
+    physics::Controls                         m_lastControls{};
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */

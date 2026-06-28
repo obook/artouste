@@ -95,14 +95,18 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
 
     /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap
-       sort de la démo (et seulement elle : on ne quitte pas l'application). K et +/-
-       pilotent la radio, H le HUD, C la vue ; pour H et C l'utilisateur reprend la main
-       (la démo cesse alors de les imposer). Tout le reste est ignoré pour ne pas
-       perturber la chorégraphie. */
+       sort de la démo (et seulement elle : on ne quitte pas l'application). P met en
+       pause (et reprend) : la démo se fige sur place puis repart. K et +/- pilotent la
+       radio, H le HUD, C la vue ; pour H et C l'utilisateur reprend la main (la démo
+       cesse alors de les imposer). Tout le reste est ignoré pour ne pas perturber la
+       chorégraphie. */
     if (app != nullptr && app->m_demo.active()) {
         switch (key) {
             case GLFW_KEY_ESCAPE:
                 app->m_demo.stop();
+                break;
+            case GLFW_KEY_P:  /* pause/reprise sans couper la démo (vol et démo figés) */
+                app->m_paused = !app->m_paused;
                 break;
             case GLFW_KEY_K:  /* radio internet on/off */
                 app->m_audio.toggleRadio(app->m_radioUrl);

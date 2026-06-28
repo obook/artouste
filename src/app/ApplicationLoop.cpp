@@ -252,15 +252,29 @@ void Application::mainLoop() {
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE) {
         glfwPollEvents();
         clock.tick();
-        const float t = static_cast<float>(clock.elapsed());
         /* On borne le pas de temps : cela évite un saut brutal à la première
          * image ou après un gel (débogage, fenêtre déplacée). */
         const float frameDt = clamp(static_cast<float>(clock.dt()), 0.0f, 0.1f);
 
+        /* Tout est figé en pause comme pendant un panneau de confirmation : la
+         * physique, mais aussi la démo, la caméra d'orbite et la vibration cockpit
+         * (qui suivent m_animTime, lequel n'avance pas tant qu'on est figé). */
+        const bool frozen = m_paused || m_confirmReset || m_confirmDemo;
+        if (!frozen) {
+            m_animTime += frameDt;
+        }
+        const float t = m_animTime;
+
         /* Entrées -> commandes effectives (pilote automatique en démo, sinon
-         * pilote humain adouci par le mode assisté), puis boutons d'action. */
+         * pilote humain adouci par le mode assisté), puis boutons d'action. En
+         * pause, on n'avance pas la démo : on garde les dernières commandes pour
+         * que les gouvernes et le HUD ne reviennent pas au neutre. */
         const physics::Controls rawInput = m_input->poll(frameDt);
-        const physics::Controls controls = computeControls(rawInput, frameDt, t);
+        physics::Controls controls = m_lastControls;
+        if (!frozen) {
+            controls       = computeControls(rawInput, frameDt, t);
+            m_lastControls = controls;
+        }
 
         /* Musique de la démo : coupée dès que la démo s'arrête (entrée pilote,
            touche V, etc.). Le lancement, lui, se fait dans startDemo(). */
@@ -283,7 +297,7 @@ void Application::mainLoop() {
 
         /* État physique avant le dernier pas, conservé pour interpoler le rendu. */
         physics::RigidBody prevBody = m_flight.body();
-        if (m_paused || m_confirmReset || m_confirmDemo) {  /* un panneau de confirmation fige le vol */
+        if (frozen) {  /* pause ou panneau de confirmation : le vol est figé */
             accumulator = 0.0f;  /* pas de rattrapage à la reprise */
         } else {
             accumulator += frameDt;

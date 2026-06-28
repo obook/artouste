@@ -40,7 +40,9 @@ inline constexpr float CYCLE_VUES          = DUREE_POURSUITE + DUREE_COCKPIT + D
                                            + DUREE_ORBITE_SOLAIRE;  /* durée d'un cycle complet */
 
 /* --- Réglages du vol --------------------------------------------------------- */
-inline constexpr float ALT_PLAFOND = 1000.0f; /* plafond pour borner la hauteur visée en descente de retour (m) */
+inline constexpr float ALT_PLAFOND = 200.0f;  /* altitude de transit du retour et plafond de l'approche (m) :
+                                                 évite de remonter haut depuis le dernier point bas (cap Ferret
+                                                 en rase-mottes), pour une approche basse */
 inline constexpr float V_CROISIERE = 50.0f;   /* vitesse de croisière visée (m/s) : ~180 km/h, croisière réaliste de l'Alouette II */
 inline constexpr float RAYON_POINT = 300.0f;  /* distance à un point de passage en deçà de laquelle on vise le suivant (m) */
 
@@ -51,12 +53,13 @@ inline constexpr float GAIN_ALT        = 0.020f;  /* collectif par mètre d'erre
 inline constexpr float GAIN_VZ         = 0.04f;   /* amortissement par la vitesse verticale (m/s) */
 inline constexpr float COLL_ALT_CLAMP  = 0.30f;   /* borne basse du terme d'altitude sur le collectif :
                                                      limite la vitesse de descente (évite la chute vertigineuse
-                                                     sur un grand écart, ex. 2000 m -> 30 m après la dune).
+                                                     sur un grand écart, ex. 1000 m -> 30 m après la dune).
                                                      La montée, elle, n'est pas bornée. */
 inline constexpr float GAIN_V_DIST     = 0.14f;   /* vitesse visée (m/s) par mètre de distance à la cible */
 inline constexpr float GAIN_CYCLIQUE   = 0.08f;   /* cyclique par (m/s) d'écart de vitesse */
 inline constexpr float CYCLIQUE_MAX    = 0.45f;   /* cyclique maximal : borne l'inclinaison à une assiette réaliste */
-inline constexpr float GAIN_ALT_RETOUR = 0.20f;   /* hauteur visée (m) par mètre de distance au pad (descente du retour) */
+inline constexpr float GAIN_ALT_RETOUR = 0.10f;   /* pente d'approche du retour : hauteur visée (m) par mètre de
+                                                     distance au pad (~6 deg, finale basse et douce) */
 inline constexpr float DIST_CAP_MIN    = 30.0f;   /* en deçà, on ne pivote plus le nez (la cible est trop proche) */
 inline constexpr float VZ_POSE         = -0.8f;   /* m/s : vitesse de descente visée à la pose (douce mais sans traîner) */
 inline constexpr float GAIN_VZ_POSE    = 0.15f;   /* collectif par (m/s) d'écart de vitesse verticale, à la pose */
@@ -94,7 +97,7 @@ inline float palonnierVers(const vec3& cible, const vec3& pos, float cap) noexce
    verticale pour ne pas osciller. Centré sur le collectif de sustentation. */
 inline float collectifPour(float hauteurCible, float hauteurSol, float vitesseVerticale) noexcept {
     /* Terme d'altitude borné par le bas seulement : sans borne, un grand écart en
-       descente (par ex. 2000 m -> 30 m après la dune) saturerait le collectif à zéro et
+       descente (par ex. 1000 m -> 30 m après la dune) saturerait le collectif à zéro et
        l'appareil tomberait en chute libre. En bornant ce terme négatif, l'amortissement
        par la vitesse verticale garde la main et la descente se stabilise à une vitesse
        raisonnable. La montée, elle, garde toute son autorité (de toute façon plafonnée

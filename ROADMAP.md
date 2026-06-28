@@ -30,7 +30,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 **Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :
 
 1. Décollage du pad (aérodrome de La Teste).
-2. Survol de la Dune du Pilat à 2000 m (passage haut, panorama).
+2. Survol de la Dune du Pilat à 1000 m (panorama).
 3. Survol du cap Ferret en rase-mottes à 30 m.
 4. Demi-tour et retour au pad, puis pose.
 

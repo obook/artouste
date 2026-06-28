@@ -158,12 +158,14 @@ void Application::startDemo() {
         loadTerrain("arcachon");
     }
 
-    /* Pad de départ et d'arrivée : là où l'appareil est garé (la démo y revient se
-       poser). */
-    const vec3 returnPad = m_startPos;
+    /* Pad de départ et d'arrivée : la position de parking (m_parkPos), où l'appareil est
+       garé mât rotor centré sur le H. On vise cette position au retour (et non le centre
+       du H, m_startPos) pour que la pose recentre le mât sur le H exactement comme au
+       décollage, sans décalage de ROTOR_FORWARD_OFFSET. */
+    const vec3 returnPad = m_parkPos;
 
-    /* Route de la démo (voir ROADMAP.md, section Mode demo) : Dune du Pilat à 2000 m
-       (passage haut, panorama), puis cap Ferret en rase-mottes à 30 m, avant de faire
+    /* Route de la démo (voir ROADMAP.md, section Mode demo) : Dune du Pilat à 1000 m
+       (panorama), puis cap Ferret en rase-mottes à 30 m, avant de faire
        demi-tour et de revenir se poser au pad. Route courte volontairement, centrée sur
        les deux temps forts. Sans terrain, la route reste vide : la démo se contente alors
        d'un décollage suivi d'une pose. */
@@ -180,7 +182,7 @@ void Application::startDemo() {
         };
         /* Dune du Pilat puis cap Ferret : coordonnées explicites des points de survol.
            La démo fait demi-tour au cap Ferret et revient se poser au pad. */
-        ajouter(-1.2020697f, 44.5912130f, 2000.0f);  /* Dune du Pilat (passage haut, panorama) */
+        ajouter(-1.2020697f, 44.5912130f, 1000.0f);  /* Dune du Pilat (panorama) */
         ajouter(-1.2450709f, 44.6184674f, 30.0f);    /* cap Ferret (rase-mottes le long de la cote) */
     }
 

@@ -213,6 +213,27 @@ ARRÊT
 La transition de 0 à 360 tr/min au démarrage prend 30 à 60 secondes.
 La transition inverse à l'arrêt (avec frein) prend 20 à 40 secondes.
 
+### Effets de vol modélisés
+
+Au-delà de l'effet de sol et de l'effet de translation, le simulateur reproduit
+quatre comportements liés au domaine de vol de l'Alouette II. Tous restent
+volontairement simplifiés, mais ils en respectent l'esprit.
+
+| Effet | Comportement dans le simulateur |
+|---|---|
+| Densité de l'air | La portance et la puissance de la turbine décroissent avec l'altitude. Au-delà d'environ 1 900 m à masse nominale, le stationnaire hors effet de sol devient impossible : l'appareil descend même collectif à fond. C'est le comportement documenté du SE 3130, premier hélicoptère de haute montagne. |
+| VNE variable | La vitesse à ne pas dépasser vaut 105 kt au niveau de la mer et diminue avec l'altitude. Au-delà, une traînée d'onde croissante freine l'appareil et matérialise la limite. |
+| Vol latéral ou arrière | Limité à 18 kt. Au-delà, le rotor anticouple sature et l'autorité au palonnier diminue, comme sur l'appareil réel. |
+| Vortex ring state | En descente verticale rapide (plus de 3 m/s) à faible vitesse sol et à puissance partielle, le rotor retombe dans son propre souffle et perd de la portance. On s'en dégage en accélérant vers l'avant (cyclique en avant). |
+
+Ces quatre difficultés sont désactivées en mode assisté et pendant la démo : le vol
+y reste facile et le parcours de démonstration prévisible. Les effets qui aident le
+pilote (effet de sol, effet de translation) restent actifs dans tous les cas.
+
+En vue cockpit, une vibration légère de la cabine reproduit les trois impulsions
+par tour du rotor tripale (3/rev, environ 18 Hz au régime nominal). Cet effet est
+purement visuel et n'intervient pas dans le calcul du vol.
+
 ---
 
 ## ANNEXE - Commandes minimales pour un premier vol simulateur

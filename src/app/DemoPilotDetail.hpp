@@ -29,7 +29,7 @@ inline constexpr float COLLECTIF_MAX   = 0.72f; /* plafond du collectif : garde 
                                                    (temp = 400 + 150*collectif^2 ; 0,72 -> ~478 deg, zone verte) */
 inline constexpr float DELAI_REDEMARRAGE = 5.0f;/* s : attente après l'arrêt des pales avant de relancer la démo */
 inline constexpr float T_MAX        = 1200.0f; /* garde-fou : on relance la démo au plus tard à cet instant
-                                                  (20 min) ; marge pour la route cap Ferret + Arcachon (~27 km) */
+                                                  (20 min) ; large marge pour la route courte Dune -> cap Ferret */
 
 /* --- Cycle des vues en croisière (s) ----------------------------------------- */
 inline constexpr float DUREE_POURSUITE     = 28.0f;  /* vue de poursuite (chase) */
@@ -41,7 +41,7 @@ inline constexpr float CYCLE_VUES          = DUREE_POURSUITE + DUREE_COCKPIT + D
 
 /* --- Réglages du vol --------------------------------------------------------- */
 inline constexpr float ALT_PLAFOND = 1000.0f; /* plafond pour borner la hauteur visée en descente de retour (m) */
-inline constexpr float V_CROISIERE = 35.0f;   /* vitesse de croisière visée (m/s) : assiette de croisière réaliste (~10 deg) */
+inline constexpr float V_CROISIERE = 50.0f;   /* vitesse de croisière visée (m/s) : ~180 km/h, croisière réaliste de l'Alouette II */
 inline constexpr float RAYON_POINT = 300.0f;  /* distance à un point de passage en deçà de laquelle on vise le suivant (m) */
 
 /* --- Gains du guidage proportionnel ------------------------------------------ */

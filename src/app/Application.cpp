@@ -149,9 +149,10 @@ void Application::resetToStart() {
 }
 
 void Application::startDemo() {
-    /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon).
-       Si une autre carte est affichée (choix du menu), on bascule d'abord sur Arcachon :
-       sinon la démo se jouerait sur la carte courante, sans ces lieux à survoler. */
+    /* La démo se déroule sur le bassin d'Arcachon (Dune du Pilat en altitude puis cap
+       Ferret en rase-mottes). Si une autre carte est affichée (choix du menu), on bascule
+       d'abord sur Arcachon : sinon la démo se jouerait sur la carte courante, sans ces
+       lieux à survoler. */
     if (m_terrainName != "arcachon") {
         std::printf("[démo] terrain forcé sur arcachon pour la démonstration.\n");
         loadTerrain("arcachon");
@@ -162,9 +163,10 @@ void Application::startDemo() {
     const vec3 returnPad = m_startPos;
 
     /* Route de la démo (voir ROADMAP.md, section Mode demo) : Dune du Pilat à 2000 m
-       (passage haut, panorama), puis cap Ferret par son nord en rase-mottes à 30 m, puis
-       Arcachon à 1000 m, avant de revenir se poser au pad. Sans terrain, la route reste
-       vide : la démo se contente alors d'un décollage suivi d'une pose. */
+       (passage haut, panorama), puis cap Ferret en rase-mottes à 30 m, avant de faire
+       demi-tour et de revenir se poser au pad. Route courte volontairement, centrée sur
+       les deux temps forts. Sans terrain, la route reste vide : la démo se contente alors
+       d'un décollage suivi d'une pose. */
     std::vector<DemoPilot::Waypoint> route;
     if (m_terrain != nullptr) {
         /* Ajoute un point de passage à partir de coordonnées géographiques (lon/lat),
@@ -176,21 +178,10 @@ void Application::startDemo() {
             route.push_back(
                 DemoPilot::Waypoint{vec3{x, m_terrain->heightAt(x, z), z}, altitude});
         };
-        /* Même chose, mais à partir d'un lieu remarquable du terrain repéré par son nom
-           (rien n'est ajouté si le lieu est absent). */
-        auto ajouterLieu = [&](const char* nom, float altitude) {
-            for (const render::Landmark& lm : m_terrain->landmarks()) {
-                if (lm.name.find(nom) != std::string::npos) {
-                    ajouter(lm.lon, lm.lat, altitude);
-                    return;
-                }
-            }
-        };
-        /* Dune du Pilat et cap Ferret nord : coordonnées explicites du point de survol.
-           Arcachon : repéré par son nom dans les lieux remarquables. */
-        ajouter(-1.2075204f, 44.5846722f, 2000.0f);  /* Dune du Pilat (passage haut) */
-        ajouter(-1.2582492f, 44.6634685f, 30.0f);    /* cap Ferret par son nord (rase-mottes) */
-        ajouterLieu("Arcachon", 1000.0f);            /* Arcachon */
+        /* Dune du Pilat puis cap Ferret : coordonnées explicites des points de survol.
+           La démo fait demi-tour au cap Ferret et revient se poser au pad. */
+        ajouter(-1.2020697f, 44.5912130f, 2000.0f);  /* Dune du Pilat (passage haut, panorama) */
+        ajouter(-1.2450709f, 44.6184674f, 30.0f);    /* cap Ferret (rase-mottes le long de la cote) */
     }
 
     /* On repart d'un état propre : appareil sur le pad, turbine à froid, puis on

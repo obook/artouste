@@ -31,11 +31,10 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 1. Décollage du pad (aérodrome de La Teste).
 2. Survol de la Dune du Pilat à 2000 m (passage haut, panorama).
-3. Survol du cap Ferret par son nord en rase-mottes à 30 m.
-4. Survol d'Arcachon à 1000 m.
-5. Retour au pad et pose.
+3. Survol du cap Ferret en rase-mottes à 30 m.
+4. Demi-tour et retour au pad, puis pose.
 
-> Note : altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). Arcachon vient des lieux remarquables du terrain (landmarks.txt) ; la Dune du Pilat (lat 44.5846722, lon -1.2075204) et le cap Ferret par son nord (lat 44.6634685, lon -1.2582492) sont des coordonnées explicites.
+> Note : route courte volontairement, centrée sur les deux temps forts (panorama en altitude puis rase-mottes), pour une démo plus rythmée. Altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). La Dune du Pilat (lat 44.5912130, lon -1.2020697) et le cap Ferret (lat 44.6184674, lon -1.2450709) sont des coordonnées explicites. Vitesse de croisière : 50 m/s (~180 km/h).
 
 - [ ] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
 

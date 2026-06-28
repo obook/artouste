@@ -113,22 +113,31 @@ void Application::updateCamera(const mat4& base, const vec3& renderPos, float ya
         m_prevCamView = m_viewMode;
     }
 
+    /* Par défaut, pas de tremblement : seules les vues externes le laissent à zéro,
+       la vue cockpit le réactive ci-dessous selon le régime rotor. */
+    m_camera.setShake(vec3{0.0f});
+
     const vec3 lookTarget = renderPos + vec3{0.0f, 1.2f, 0.0f};
     if (m_viewMode == 1) {  /* cockpit */
-        vec3       eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
+        const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
         const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
         const vec3 up  = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
 
         /* Vibrations rotor : trois impulsions par tour (3/rev, ~18 Hz à 360 tr/min)
          * font légèrement trembler la cabine. On décale l'oeil dans le plan caméra,
-         * d'autant plus que le rotor tourne vite. Effet visuel, pas une force. */
+         * d'autant plus que le rotor tourne vite. Effet visuel, pas une force.
+         * Ce décalage est transmis comme tremblement appliqué en espace vue (voir
+         * Camera::view) : toute l'image tremble alors d'un bloc, paysage compris, au
+         * lieu d'être noyé dans les grandes coordonnées monde (le terrain restait
+         * alors seul immobile). */
         const float rotorFraction = m_flight.turbine().rotorFraction();
         if (rotorFraction > 0.1f) {
             const vec3  side  = glm::normalize(glm::cross(fwd, up));
             const float freq  = 3.0f * rotorFraction * 360.0f / 60.0f;  /* Hz */
             const float phase = t * freq * TWO_PI;
             const float amp   = COCKPIT_VIBRATION_AMPLITUDE * rotorFraction;
-            eye += side * (amp * std::sin(phase)) + up * (amp * 0.5f * std::sin(phase * 2.0f));
+            m_camera.setShake(side * (amp * std::sin(phase))
+                              + up * (amp * 0.5f * std::sin(phase * 2.0f)));
         }
 
         m_camera.setFovYDeg(70.0f);

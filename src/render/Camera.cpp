@@ -89,7 +89,20 @@ void Camera::cut() noexcept {
 }
 
 mat4 Camera::view() const noexcept {
-    return glm::lookAt(m_position, m_target, m_up);
+    mat4 v = glm::lookAt(m_position, m_target, m_up);
+
+    /* Tremblement du cockpit. On déplace l'oeil d'un petit vecteur monde m_shake,
+       mais SANS l'ajouter à la position monde : à des milliers de mètres (terrain
+       réel), ce décalage de quelques millimètres serait noyé par l'arrondi flottant
+       et seul l'appareil, dessiné en coordonnées proches, tremblerait (le paysage,
+       en grandes coordonnées, restait immobile). On l'applique donc dans l'espace
+       vue, en petits nombres : un oeil déplacé de w décale toute la scène de -R*w
+       dans la vue, ce qui fait trembler le paysage exactement comme le reste. */
+    const vec3 shiftEye = mat3(v) * m_shake;
+    v[3].x -= shiftEye.x;
+    v[3].y -= shiftEye.y;
+    v[3].z -= shiftEye.z;
+    return v;
 }
 
 mat4 Camera::proj() const noexcept {

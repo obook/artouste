@@ -34,6 +34,11 @@ public:
     /* Vue imposée (cockpit) : fixée à l'appareil, sans lissage. */
     void setLookAt(const vec3& eye, const vec3& target, const vec3& up) noexcept;
 
+    /* Tremblement de la caméra : petit décalage de l'oeil (en mètres, repère monde)
+       appliqué dans l'espace vue par view(), pour faire trembler toute l'image d'un
+       bloc. À remettre à zéro hors vue cockpit. Voir view() pour le pourquoi. */
+    void setShake(const vec3& shake) noexcept { m_shake = shake; }
+
     /* Coupe franche entre deux vues : réinitialise le lissage de la poursuite pour
        qu'elle se cale instantanément (pas de glissement) au prochain appel. */
     void cut() noexcept;
@@ -54,6 +59,7 @@ private:
     vec3  m_position{0.0f, 0.0f, 0.0f};
     vec3  m_target{0.0f, 0.0f, 0.0f};
     vec3  m_up{0.0f, 1.0f, 0.0f};
+    vec3  m_shake{0.0f, 0.0f, 0.0f};  /* tremblement cockpit, appliqué en espace vue */
     float m_followYaw   = 0.0f;
     bool  m_followInit  = false;  /* premier appel de chase : on se cale net */
     float m_fovY        = HALF_PI / 1.5f;  /* angle de vue vertical : 60 degrés */

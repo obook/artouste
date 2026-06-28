@@ -31,9 +31,12 @@ inline const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
  * Amplitude maximale des vibrations du rotor ressenties en vue cockpit (mètres).
  * Le rotor tripale génère trois impulsions par tour (3/rev, ~18 Hz à 360 tr/min) :
  * on décale légèrement l'oeil du pilote pour rendre ce tremblement caractéristique.
- * Valeur volontairement faible (3 mm) : perceptible sans gêner la lecture des cadrans.
+ * Valeur volontairement très faible (0,3 mm) : à peine perceptible, juste de quoi
+ * animer la vue sans gêner la lecture des cadrans. Depuis que le tremblement
+ * s'applique uniformément à toute l'image (et non plus au seul appareil proche),
+ * une amplitude aussi petite suffit largement.
  */
-inline constexpr float COCKPIT_VIBRATION_AMPLITUDE = 0.003f;  /* m */
+inline constexpr float COCKPIT_VIBRATION_AMPLITUDE = 0.0003f;  /* m */
 
 /*
  * Brume atmosphérique : le terrain et la mer se fondent dans cette teinte de

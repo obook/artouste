@@ -54,7 +54,7 @@ void Turbine::update(float dt, float collective) noexcept {
              * serré : les pales restent immobiles le temps que le pilote le lâche.
              * Ce délai écoulé, on passe à l'embrayage du rotor. */
             m_brakeTimer += dt;
-            if (m_brakeTimer >= rotorBrakeDelay) {
+            if (m_brakeTimer >= rotorBrakeDelay && !m_rotorHold) {
                 m_state = State::Embrayage;  /* frein lâché : le rotor s'engage */
             }
             break;
@@ -123,6 +123,7 @@ void Turbine::stopNow() noexcept {
     m_rotor      = 0.0f;
     m_fastStart  = false;
     m_brakeTimer = 0.0f;
+    m_rotorHold  = false;
     m_exhaustC   = EXHAUST_TEMP_AMBIENT_C;
 }
 

@@ -73,6 +73,11 @@ if(CURL_FOUND)
     target_compile_definitions(artouste PRIVATE ARTOUSTE_HAS_CURL)
 endif()
 
+# Synthèse vocale (TTS) des messages radio : Flite, compilé par notre wrapper
+# CMake (voir cmake/Dependencies.cmake). Toujours disponible (multiplateforme).
+target_link_libraries(artouste PRIVATE flite)
+target_compile_definitions(artouste PRIVATE ARTOUSTE_HAS_FLITE)
+
 # clangd / IDE
 set_target_properties(artouste PROPERTIES
     CXX_STANDARD          20

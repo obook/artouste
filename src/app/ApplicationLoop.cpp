@@ -243,6 +243,53 @@ void Application::advanceRotor(float rotorFraction, float frameDt) {
     }
 }
 
+void Application::updateRadioMessage(float turbineFraction, float frameDt) {
+    /* Turbine nettement ralentie : on réarme pour le prochain démarrage. */
+    if (turbineFraction < 0.5f) {
+        m_radioMsgArmed = false;
+        m_radioMsgDone  = false;
+    }
+    /* Turbine au plein régime : on arme un compte à rebours de 2 s (une seule fois). */
+    if (turbineFraction >= 0.99f && !m_radioMsgArmed && !m_radioMsgDone) {
+        m_radioMsgArmed = true;
+        m_radioMsgDelay = 2.0f;
+    }
+    /* Délai écoulé : on émet le message (voix de synthèse) et son sous-titre. */
+    if (m_radioMsgArmed) {
+        m_radioMsgDelay -= frameDt;
+        if (m_radioMsgDelay <= 0.0f) {
+            /* La tour de contrôle de l'hélipad de départ autorise le décollage. Le nom
+               de la station vient du terrain (helipads.txt), donc correct sur toute
+               carte ; on retire un préfixe "Aérodrome de/d'" pour une tournure naturelle. */
+            std::string station = m_homeStation;
+            for (const char* prefix : {"Aérodrome de ", "Aérodrome d'"}) {
+                const std::string p = prefix;
+                if (station.rfind(p, 0) == 0) {
+                    station = station.substr(p.size());
+                    break;
+                }
+            }
+            m_radioMsg = station.empty()
+                             ? "Fox-Bravo, tower, wind calm, cleared for take-off."
+                             : "Fox-Bravo, " + station + " tower, wind calm, cleared for take-off.";
+            m_radioMsgShow = 7.0f;
+            m_audio.playRadioMessage(m_radioMsg);
+            m_radioMsgArmed = false;
+            m_radioMsgDone  = true;
+        }
+    }
+    if (m_radioMsgShow > 0.0f) {
+        m_radioMsgShow -= frameDt;
+    }
+
+    /* Le rotor attend l'autorisation de la tour : on bloque son engagement tant que la
+       turbine est au régime et que le message n'est pas terminé. Avant l'émission, le
+       verrou est posé dès le plein régime ; après, il tient jusqu'à la fin de la voix. */
+    const bool holdRotor = m_radioMsgDone ? m_audio.radioMessagePlaying()
+                                          : (turbineFraction >= 0.99f);
+    m_flight.turbine().setRotorHold(holdRotor);
+}
+
 void Application::mainLoop() {
     constexpr float SIM_DT = 1.0f / 240.0f;  /* pas fixe de simulation (240 Hz) */
 
@@ -332,6 +379,12 @@ void Application::mainLoop() {
         const float turbineFraction = m_flight.turbine().turbineFraction();
         const float rotorFraction   = m_flight.turbine().rotorFraction();
 
+        /* Message radio : armé à la turbine au plein régime, émis 2 s après.
+           Figé en pause, comme le reste. */
+        if (!frozen) {
+            updateRadioMessage(turbineFraction, frameDt);
+        }
+
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);
         advanceRotor(rotorFraction, frameDt);
 
@@ -342,6 +395,8 @@ void Application::mainLoop() {
         ui::HudData hud;
         fillHud(hud, body, forward, controls, airspeed, turbineFraction, rotorFraction, t, frameDt);
         buildNavHud(hud, body.position, hud.headingDeg);
+        /* Sous-titre du message radio simulé, tant que son temps d'affichage court. */
+        hud.radioMessage = (m_radioMsgShow > 0.0f) ? m_radioMsg.c_str() : "";
         /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */
         m_hud.render(hud, m_hudMode, m_paused, m_confirmReset, m_confirmDemo, m_demo.active());
 

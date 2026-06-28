@@ -57,6 +57,11 @@ public:
      * Sert à remettre la démo à froid avant de rejouer le démarrage rapide. */
     void stopNow() noexcept;
 
+    /* Verrou d'engagement du rotor : tant qu'il est posé, le frein rotor reste serré
+     * (état Attente) même le délai écoulé. Sert à attendre l'autorisation radio de la
+     * tour (fin du message) avant de lâcher le rotor. */
+    void setRotorHold(bool hold) noexcept { m_rotorHold = hold; }
+
     /* Régime du rotor [0, 1] : portance et rotation des pales. */
     [[nodiscard]] float rotorFraction() const noexcept { return m_rotor; }
 
@@ -81,6 +86,7 @@ private:
     float m_rotor   = 0.0f;  /* régime rotor   [0, 1] */
     bool  m_fastStart  = false;  /* démarrage rapide en cours (mode démo) */
     float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
+    bool  m_rotorHold  = false; /* maintien du frein rotor (attente autorisation radio) */
     float m_exhaustC = EXHAUST_TEMP_AMBIENT_C;  /* température tuyère, degrés Celsius */
 };
 

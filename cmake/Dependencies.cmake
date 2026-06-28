@@ -155,6 +155,84 @@ add_library(miniaudio INTERFACE)
 target_include_directories(miniaudio SYSTEM INTERFACE ${miniaudio_SOURCE_DIR})
 
 # ---------------------------------------------------------------------------
+# Flite - synthèse vocale (TTS) des messages radio. Pas de build CMake amont
+# (Flite se compile en autotools) : on récupère les sources et on construit
+# nous-mêmes une cible statique minimale et MULTIPLATEFORME (cœur + anglais US
+# + voix diphone cmu_us_kal). Backend audio "none" (on ne fait que synthétiser
+# le PCM en mémoire, pas de lecture) et CST_NO_SOCKETS (aucune dépendance
+# réseau), pour rester portable Linux comme Windows.
+# ---------------------------------------------------------------------------
+FetchContent_Declare(flite
+    GIT_REPOSITORY https://github.com/festvox/flite.git
+    GIT_TAG        v2.2
+    GIT_SHALLOW    TRUE
+)
+FetchContent_GetProperties(flite)
+if(NOT flite_POPULATED)
+    FetchContent_Populate(flite)
+endif()
+
+# Cœur : tous les .c de ces dossiers se compilent tels quels. La voix naturelle
+# cmu_us_slt est une voix "clustergen" (src/cg) : plus naturelle que les diphones.
+file(GLOB FLITE_SRC
+    ${flite_SOURCE_DIR}/src/cg/*.c
+    ${flite_SOURCE_DIR}/src/hrg/*.c
+    ${flite_SOURCE_DIR}/src/lexicon/*.c
+    ${flite_SOURCE_DIR}/src/regex/*.c
+    ${flite_SOURCE_DIR}/src/speech/*.c
+    ${flite_SOURCE_DIR}/src/stats/*.c
+    ${flite_SOURCE_DIR}/src/synth/*.c
+    ${flite_SOURCE_DIR}/src/wavesynth/*.c
+    ${flite_SOURCE_DIR}/lang/usenglish/*.c
+    ${flite_SOURCE_DIR}/lang/cmu_us_slt/*.c
+)
+# utils : seulement l'IO stdio et le mmap "none" (portables) ; on écarte les
+# variantes palmos/wince/posix/win32.
+list(APPEND FLITE_SRC
+    ${flite_SOURCE_DIR}/src/utils/cst_alloc.c
+    ${flite_SOURCE_DIR}/src/utils/cst_args.c
+    ${flite_SOURCE_DIR}/src/utils/cst_endian.c
+    ${flite_SOURCE_DIR}/src/utils/cst_error.c
+    ${flite_SOURCE_DIR}/src/utils/cst_features.c
+    ${flite_SOURCE_DIR}/src/utils/cst_file_stdio.c
+    ${flite_SOURCE_DIR}/src/utils/cst_mmap_none.c
+    ${flite_SOURCE_DIR}/src/utils/cst_socket.c
+    ${flite_SOURCE_DIR}/src/utils/cst_string.c
+    ${flite_SOURCE_DIR}/src/utils/cst_tokenstream.c
+    ${flite_SOURCE_DIR}/src/utils/cst_url.c
+    ${flite_SOURCE_DIR}/src/utils/cst_val.c
+    ${flite_SOURCE_DIR}/src/utils/cst_val_const.c
+    ${flite_SOURCE_DIR}/src/utils/cst_val_user.c
+    ${flite_SOURCE_DIR}/src/utils/cst_wchar.c
+)
+# audio : backend "none" seulement (PCM récupéré en mémoire, aucune lecture).
+list(APPEND FLITE_SRC
+    ${flite_SOURCE_DIR}/src/audio/audio.c
+    ${flite_SOURCE_DIR}/src/audio/au_none.c
+    ${flite_SOURCE_DIR}/src/audio/au_streaming.c
+)
+# cmulex : ces .c sont #inclus par d'autres (pas compilés seuls). On les retire
+# pour éviter des doublons de symboles.
+file(GLOB FLITE_CMULEX ${flite_SOURCE_DIR}/lang/cmulex/*.c)
+list(REMOVE_ITEM FLITE_CMULEX
+    ${flite_SOURCE_DIR}/lang/cmulex/cmu_lex_data_raw.c
+    ${flite_SOURCE_DIR}/lang/cmulex/cmu_lex_num_bytes.c
+    ${flite_SOURCE_DIR}/lang/cmulex/cmu_lex_entries_huff_table.c
+    ${flite_SOURCE_DIR}/lang/cmulex/cmu_lex_phones_huff_table.c
+)
+list(APPEND FLITE_SRC ${FLITE_CMULEX})
+
+add_library(flite STATIC ${FLITE_SRC})
+target_include_directories(flite SYSTEM PUBLIC ${flite_SOURCE_DIR}/include)
+target_include_directories(flite PRIVATE
+    ${flite_SOURCE_DIR}/lang/cmulex
+    ${flite_SOURCE_DIR}/lang/usenglish
+    ${flite_SOURCE_DIR}/lang/cmu_us_slt
+)
+target_compile_definitions(flite PRIVATE CST_NO_SOCKETS)
+set_target_properties(flite PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)
+
+# ---------------------------------------------------------------------------
 # OpenGL (système) et threads (requis par miniaudio sous Linux)
 # ---------------------------------------------------------------------------
 find_package(OpenGL REQUIRED)

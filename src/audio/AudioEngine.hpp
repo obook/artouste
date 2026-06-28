@@ -80,6 +80,15 @@ public:
     void adjustRadioMix(float delta);
     [[nodiscard]] float radioMix() const;
 
+    /* Joue un message radio : 'text' (anglais) est synthétisé par Flite puis passé
+     * dans un effet "radio". Aucun fichier audio. À accompagner d'un sous-titre côté
+     * HUD. No-op silencieux si le périphérique audio ou le TTS est absent. */
+    void playRadioMessage(const std::string& text);
+
+    /* Vrai tant qu'un message radio est en cours de lecture. Sert à attendre la fin
+     * de l'autorisation de la tour avant d'engager le rotor. */
+    [[nodiscard]] bool radioMessagePlaying() const;
+
     [[nodiscard]] bool ready() const noexcept;
 
 private:

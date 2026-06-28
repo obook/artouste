@@ -48,6 +48,12 @@ AudioEngine::~AudioEngine() {
     if (m_impl->musicLoaded) {
         ma_sound_uninit(&m_impl->musicSound);
     }
+    if (m_impl->msgSoundReady) {
+        ma_sound_uninit(&m_impl->msgSound);
+    }
+    if (m_impl->msgBufferReady) {
+        ma_audio_buffer_uninit(&m_impl->msgBuffer);
+    }
     if (m_impl->engineInit) {
         ma_engine_uninit(&m_impl->engine);
     }
@@ -116,7 +122,16 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
 
     /* Crossfade radio/hélico : quand la radio joue, l'hélico est atténué de la part
      * laissée à la radio (gain = 1 - radioMix) ; radio coupée, l'hélico est plein. */
-    const float   helicoGain = m_radio.playing() ? (1.0f - m_impl->radioMix) : 1.0f;
+    float helicoGain = m_radio.playing() ? (1.0f - m_impl->radioMix) : 1.0f;
+
+    /* Ducking : pendant un message radio (voix de synthèse), on baisse fortement les
+     * sons hélico pour que la transmission reste intelligible, puis on remonte. La
+     * cible est lissée d'une image à l'autre pour éviter tout à-coup. */
+    const bool  msgActive  = m_impl->msgSoundReady
+                          && ma_sound_is_playing(&m_impl->msgSound) == MA_TRUE;
+    const float duckTarget = msgActive ? 0.30f : 1.0f;
+    m_impl->msgDuck += (duckTarget - m_impl->msgDuck) * 0.08f;
+    helicoGain *= m_impl->msgDuck;
 
     /* Aiguille une source (turbine ou rotor) vers sa boucle extérieure ou sa boucle
      * cabine, selon la vue. En cabine, on préfère la vraie boucle "inside" (déjà

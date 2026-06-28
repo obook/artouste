@@ -311,10 +311,29 @@ void Application::loadTerrain(const std::string& name) {
      * Si le terrain réel est absent, on reste à l'origine sur le sol plat de repli.
      */
     if (m_terrain->textured()) {
-        /* Point de départ : celui fourni par le terrain (calage), sinon Fabrèges
-           par défaut. Négatif en X = ouest, positif en Z = sud. */
-        const float START_X = m_terrain->hasStart() ? m_terrain->startX() : 158.0f;
-        const float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
+        /* Point de départ : on privilégie les hélipads réels (helipads.txt) comme aire
+           de poser. Le repère du terrain (start_x/start_z, sinon Fabrèges par défaut)
+           ne sert qu'à choisir LEQUEL : on cale le départ sur l'hélipad le plus proche
+           de ce repère. helipads.txt reste ainsi la seule source de la position exacte,
+           sans la dupliquer dans terrain.txt. Sans hélipad, on garde le repère brut.
+           Négatif en X = ouest, positif en Z = sud. */
+        float START_X = m_terrain->hasStart() ? m_terrain->startX() : 158.0f;
+        float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
+        const float hintX = START_X;
+        const float hintZ = START_Z;
+        float bestD2 = -1.0f;  /* sentinelle : aucun hélipad encore retenu */
+        m_homeStation.clear();
+        for (const render::Landmark& pad : m_terrain->helipads()) {
+            float px = 0.0f, pz = 0.0f;
+            m_terrain->worldAt(pad.lon, pad.lat, px, pz);
+            const float d2 = (px - hintX) * (px - hintX) + (pz - hintZ) * (pz - hintZ);
+            if (bestD2 < 0.0f || d2 < bestD2) {
+                bestD2        = d2;
+                START_X       = px;
+                START_Z       = pz;
+                m_homeStation = pad.name;  /* station d'origine = hélipad de départ */
+            }
+        }
         const float ground  = m_terrain->heightAt(START_X, START_Z);
         m_startPos          = vec3{START_X, ground, START_Z};
         /* L'appareil se gare mât rotor centré sur le H : son origine (que la

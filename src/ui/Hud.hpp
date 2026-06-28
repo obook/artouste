@@ -82,6 +82,10 @@ struct HudData {
     float                 mapHeliU   = 0.0f;  /* position de l'appareil sur la carte (0-1) */
     float                 mapHeliV   = 0.0f;
     float                 mapHeadingDeg = 0.0f;  /* cap, pour orienter le marqueur */
+
+    /* Message radio reçu : sous-titre centré en bas, affiché tant que la chaine n'est
+       pas vide. Le pointeur appartient à l'appelant (durée de vie gérée côté app). */
+    const char*           radioMessage = "";
 };
 
 class Hud {
@@ -110,6 +114,8 @@ private:
     void renderLabels(const HudData& data, float w, float h);
     void renderMinimap(const HudData& data, HudMode mode, float m);
     void renderBanners(bool paused, bool confirmReset, bool confirmDemo, float w, float h);
+    /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
+    void renderRadioSubtitle(const HudData& data, float w);
 
     bool m_ready = false;
 };

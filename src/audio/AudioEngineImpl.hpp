@@ -17,6 +17,8 @@
 
 #include <miniaudio.h>
 
+#include <vector>
+
 namespace artouste::audio {
 
 namespace audio_detail {
@@ -76,6 +78,15 @@ struct AudioEngine::Impl {
     bool      musicLoaded        = false;
     bool      paused             = false;  /* boucles suspendues (pause du jeu) */
     float     radioMix           = 0.45f;  /* crossfade radio/hélico : 0 = tout hélico, 1 = tout radio */
+
+    /* Message radio : voix de synthèse (Flite) "radioïsée", générée à la volée sans
+       fichier. Le tampon PCM doit rester en vie tant que la source l'utilise : ici. */
+    std::vector<float> msgData;             /* PCM mono du message en cours */
+    ma_audio_buffer    msgBuffer{};         /* source de données sur msgData */
+    ma_sound           msgSound{};          /* lecture one-shot du message */
+    bool               msgBufferReady = false;
+    bool               msgSoundReady  = false;
+    float              msgDuck        = 1.0f;  /* gain hélico abaissé pendant un message (lissé) */
 };
 
 }  /* namespace artouste::audio */

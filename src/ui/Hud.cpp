@@ -82,6 +82,10 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
         renderMinimap(data, mode, m);
     }
 
+    /* Sous-titre d'un message radio : par-dessus tous les modes (y compris HUD éteint
+       en démo), pour accompagner la transmission entendue. */
+    renderRadioSubtitle(data, w);
+
     renderBanners(paused, confirmReset, confirmDemo, w, h);
 
     ImGui::Render();
@@ -185,6 +189,27 @@ void Hud::renderBanners(bool paused, bool confirmReset, bool confirmDemo, float 
         ImGui::Text("P : reprendre    Échap : quitter");
         ImGui::End();
     }
+}
+
+void Hud::renderRadioSubtitle(const HudData& data, float w) {
+    if (data.radioMessage == nullptr || data.radioMessage[0] == '\0') {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* En haut, centré, juste sous le ruban de cap : le bas de l'image est occupé par
+       le rang d'instruments du HUD complet (Super HUD), qu'on ne doit pas recouvrir. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, 58.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::Begin("radio_msg", nullptr, flags);
+    /* Ambre "radio", distinct du vert instrument. */
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.78f, 0.30f, 1.0f));
+    ImGui::Text(">> %s", data.radioMessage);
+    ImGui::PopStyleColor();
+    ImGui::End();
 }
 
 }  /* namespace artouste::ui */

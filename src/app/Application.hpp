@@ -91,6 +91,10 @@ private:
        à sa position de parking quand la turbine est coupée. */
     void advanceRotor(float rotorFraction, float frameDt);
 
+    /* Émet un message radio (voix de synthèse Flite + sous-titre) 2 s après que la
+       turbine atteint son plein régime. Se réarme quand la turbine redescend. */
+    void updateRadioMessage(float turbineFraction, float frameDt);
+
     void renderScene(const mat4& base, float rotorAngle, float rotorFraction,
                      float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
                      float collective = 0.0f, float turbineFraction = 0.0f,
@@ -217,6 +221,13 @@ private:
     /* Dernières commandes calculées : réutilisées en pause pour que les gouvernes
        dessinées et le HUD gardent leur position au lieu de revenir au neutre. */
     physics::Controls                         m_lastControls{};
+    /* Message radio (voix de synthèse + sous-titre). */
+    bool                                      m_radioMsgArmed = false;  /* compte à rebours en cours */
+    bool                                      m_radioMsgDone  = false;  /* déjà émis depuis le dernier démarrage turbine */
+    float                                     m_radioMsgDelay = 0.0f;   /* s avant émission, une fois armé */
+    float                                     m_radioMsgShow  = 0.0f;   /* s restantes d'affichage du sous-titre */
+    std::string                               m_radioMsg;               /* texte du message courant (anglais) */
+    std::string                               m_homeStation;            /* nom de l'hélipad de départ (-> tour de contrôle) */
     ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */

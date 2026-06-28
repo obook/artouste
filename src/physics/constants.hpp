@@ -124,6 +124,33 @@ inline constexpr float ASSIST_COLLECTIVE_RATE = 0.5f;   /* 1/s : variation max d
 inline constexpr float ASSIST_TRANSITION_RATE = 2.0f;   /* 1/s : vitesse de bascule entre les modes (~0,5 s) */
 inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deca, cyclique considéré relâché (rappel au neutre) */
 
+/* --- Effets avancés ----------------------------------------------------------- */
+/* Dégradation de la puissance avec l'altitude (densité de l'air). La densité
+ * relative suit une atmosphère standard simplifiée : rho/rho0 = exp(-altitude / H).
+ * Au sol : 1,0. Vers 1900 m : ~0,55, ce qui correspond au plafond stationnaire
+ * hors effet de sol (HOGE) à masse nominale du SE 3130. C'est ce qui rend
+ * l'Alouette II unique : un hélicoptère de haute montagne. */
+inline constexpr float AIR_DENSITY_SCALE  = 3220.0f;  /* m : hauteur caractéristique */
+
+/* VNE (vitesse à ne jamais dépasser) variable avec l'altitude : 105 kt au sol,
+ * décroissante en altitude (compressibilité sur les pales). Au-delà, une traînée
+ * d'onde croissante freine l'appareil et matérialise la limite. */
+inline constexpr float VNE_SEA_LEVEL_MS   = 54.0f;    /* m/s (105 kt) au niveau de la mer */
+inline constexpr float VNE_ALT_GRADIENT   = 4511.0f;  /* m : altitude pour perdre 25 % de VNE */
+inline constexpr float VNE_DRAG_K         = 15.0f;    /* N/(m/s)^2 : freinage au-delà de la VNE */
+
+/* Vol latéral ou arrière limité à 18 kt (Flight Manual SE 3130). Au-delà, le
+ * rotor anticouple sature et l'autorité au palonnier diminue. */
+inline constexpr float SIDEWARD_V_MAX     = 9.3f;     /* m/s (18 kt) */
+
+/* Vortex ring state : en descente verticale rapide et à faible vitesse, le rotor
+ * retombe dans son propre souffle et perd de la portance. Danger maximal à
+ * puissance partielle ; il disparaît dès qu'on reprend de la vitesse. */
+inline constexpr float VRS_DESCENT_MIN    = 3.0f;     /* m/s : début du VRS */
+inline constexpr float VRS_DESCENT_MAX    = 7.0f;     /* m/s : VRS développé */
+inline constexpr float VRS_AIRSPEED_EXIT  = 7.0f;     /* m/s (~14 kt) : sortie par translation */
+inline constexpr float VRS_THRUST_LOSS    = 0.35f;    /* fraction max de portance perdue */
+
 /* --- Garde-fous numériques --------------------------------------- */
 /* Limites de sécurité pour éviter que le calcul ne s'emballe. */
 inline constexpr float MAX_SPEED    = 120.0f;   /* vitesse maximale, en m/s */

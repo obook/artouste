@@ -65,7 +65,14 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         }
     }
 
-    const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction;
+    /* Densité relative de l'air : elle décroît avec l'altitude (atmosphère standard
+     * simplifiée). La turbine aspire moins d'air et le rotor produit moins de
+     * portance en altitude, ce qui finit par interdire le stationnaire en montagne.
+     * En mode assisté, on garde une densité pleine (pas de pénalité d'altitude). */
+    const float densiteRelative =
+        m_realFlyPhysicsEnabled ? std::exp(-m_body.position.y / AIR_DENSITY_SCALE) : 1.0f;
+
+    const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction * densiteRelative;
 
     /* Effet de sol : près du sol, la poussée est renforcée ; ce gain diminue avec
      * la hauteur au-dessus du relief. */
@@ -78,7 +85,20 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     const float airspeed         = glm::length(vec2{m_body.velocity.x, m_body.velocity.z});
     const float translationalGain = 1.0f + ETL_MAX * glm::smoothstep(ETL_V_LOW, ETL_V_HIGH, airspeed);
 
-    m_lastThrust      = baseThrust * groundEffect * translationalGain;
+    /* Vortex ring state : réduction de portance en descente rapide à faible vitesse.
+     * Trois conditions se cumulent : on descend assez vite, on n'avance presque pas,
+     * et le collectif est à puissance partielle (le pic est vers 40 %). Reprendre de
+     * la vitesse fait tomber vrsVitesseSol à zéro et dissipe le phénomène. */
+    float vrsReduction = 1.0f;
+    if (m_realFlyPhysicsEnabled) {
+        const float tauxDescente  = -m_body.velocity.y;  /* positif quand on descend */
+        const float vrsDescente   = glm::smoothstep(VRS_DESCENT_MIN, VRS_DESCENT_MAX, tauxDescente);
+        const float vrsVitesseSol = 1.0f - glm::smoothstep(0.0f, VRS_AIRSPEED_EXIT, airspeed);
+        const float vrsPuissance  = clamp(1.0f - std::fabs(collective - 0.4f) / 0.4f, 0.0f, 1.0f);
+        vrsReduction = 1.0f - VRS_THRUST_LOSS * vrsDescente * vrsVitesseSol * vrsPuissance;
+    }
+
+    m_lastThrust      = baseThrust * groundEffect * translationalGain * vrsReduction;
     const vec3 thrust = bodyUpWorld * m_lastThrust;
 
     const vec3 gravity{0.0f, -MASS * G, 0.0f};
@@ -91,13 +111,35 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
                         axisDrag(velocityBody.z, KDRAG_LAT)};
     const vec3 drag = m_body.orientation * dragBody;
 
-    const vec3 force = thrust + gravity + drag;
+    /* VNE : la vitesse à ne pas dépasser décroît avec l'altitude. Au-delà, une
+     * traînée d'onde (croissant comme le carré du dépassement) freine l'appareil
+     * dans le plan horizontal et matérialise la limite. */
+    const float altFactor = clamp(m_body.position.y / VNE_ALT_GRADIENT, 0.0f, 1.0f);
+    const float vne       = VNE_SEA_LEVEL_MS * (1.0f - 0.25f * altFactor);
+    vec3 vneBrake{0.0f, 0.0f, 0.0f};
+    if (m_realFlyPhysicsEnabled && airspeed > vne) {
+        const float depassement = airspeed - vne;
+        const vec3  horiz{m_body.velocity.x, 0.0f, m_body.velocity.z};
+        vneBrake = -glm::normalize(horiz) * (VNE_DRAG_K * depassement * depassement);
+    }
+
+    const vec3 force = thrust + gravity + drag + vneBrake;
 
     /* --- Couples (repère corps) --------------------------------------------- */
     /* Rappel vers l'horizontale : un couple qui ramène l'axe du rotor vers la
      * verticale du monde, exprimé dans le repère de l'appareil. Il est nul quand
      * l'appareil est à plat et ne touche pas au cap (lacet). */
     const vec3 levelBody = glm::conjugate(m_body.orientation) * glm::cross(bodyUpWorld, worldUp);
+
+    /* Vol latéral ou arrière : dans le repère corps, X est l'axe avant et Z l'axe
+     * latéral. Au-delà de SIDEWARD_V_MAX (18 kt), le rotor anticouple sature et
+     * l'autorité au palonnier diminue de moitié, comme sur l'appareil réel. */
+    const float vitesseLaterale = std::fabs(velocityBody.z);
+    const float vitesseArriere  = velocityBody.x < 0.0f ? -velocityBody.x : 0.0f;
+    const float vitesseCritique = vitesseLaterale > vitesseArriere ? vitesseLaterale : vitesseArriere;
+    const float facteurAnticouple = m_realFlyPhysicsEnabled
+        ? 1.0f - 0.5f * glm::smoothstep(SIDEWARD_V_MAX, SIDEWARD_V_MAX * 1.4f, vitesseCritique)
+        : 1.0f;
 
     const vec3&     w = m_body.angularVelocity;
     vec3 torque;
@@ -107,7 +149,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * vu de dessus : son couple de réaction fait partir le nez vers la gauche, et le
      * pilote compense au palonnier droit. D'où le signe + sur l'anti-couple, qui croît
      * avec le collectif, et le palonnier droit qui ramène le nez vers la droite. */
-    torque.y = -controls.pedals * YAW_CTRL
+    torque.y = -controls.pedals * YAW_CTRL * facteurAnticouple
                + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction - DAMP_YAW * w.y;
     torque.z = -controls.cyclicLongitudinal * PITCH_CTRL   /* tangage (autour de Z) */
                + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;

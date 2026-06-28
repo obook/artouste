@@ -43,10 +43,28 @@ TEST_CASE("Hors effet de sol, le collectif de sustentation tient l'altitude", "[
     model.reset(50.0f);  /* assez haut pour ignorer l'effet de sol */
     model.turbine().forceRunning();  /* rotor en régime, sinon pas de portance */
     Controls hover;
-    hover.collective = artouste::physics::COLL_HOVER;
+    /* La densité de l'air diminue avec l'altitude : à 50 m il faut un peu plus de
+     * collectif que COLL_HOVER (calé au niveau de la mer) pour équilibrer le poids. */
+    const float densite = std::exp(-50.0f / artouste::physics::AIR_DENSITY_SCALE);
+    hover.collective = artouste::physics::COLL_HOVER / densite;
     advance(model, hover, 5.0f);
 
     /* L'appareil ne doit ni s'enfoncer ni grimper de façon notable. */
+    REQUIRE(std::fabs(model.body().position.y - 50.0f) < 1.0f);
+    REQUIRE(std::fabs(model.body().velocity.y) < 1.0f);
+}
+
+TEST_CASE("En mode assisté, l'altitude ne pénalise plus la sustentation", "[flight]") {
+    FlightModel model;
+    model.reset(50.0f);
+    model.turbine().forceRunning();
+    model.setRealFlyPhysicsEnabled(false);  /* difficultés coupées, comme en mode assisté */
+    Controls hover;
+    /* Sans pénalité de densité, le collectif de sustentation suffit à n'importe
+     * quelle altitude, comme avant l'ajout des difficultés. */
+    hover.collective = artouste::physics::COLL_HOVER;
+    advance(model, hover, 5.0f);
+
     REQUIRE(std::fabs(model.body().position.y - 50.0f) < 1.0f);
     REQUIRE(std::fabs(model.body().velocity.y) < 1.0f);
 }

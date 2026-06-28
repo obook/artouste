@@ -55,6 +55,13 @@ public:
        plutôt qu'au niveau de la mer, pour suivre le relief du terrain. */
     void setGroundHeight(float h) noexcept { m_groundHeight = h; }
 
+    /* Active ou non les difficultés de pilotage (perte de puissance en altitude,
+       traînée d'onde au-delà de la VNE, perte d'autorité au palonnier en vol
+       latéral, vortex ring state). On les coupe en mode assisté et en démo, pour
+       garder un vol facile et prévisible. Les effets qui aident le pilote (effet de
+       sol, effet de translation) restent toujours actifs. */
+    void setRealFlyPhysicsEnabled(bool enabled) noexcept { m_realFlyPhysicsEnabled = enabled; }
+
     [[nodiscard]] const RigidBody& body() const noexcept { return m_body; }
 
     /* Dernière poussée calculée, en newtons : utile pour le débogage et l'affichage. */
@@ -69,6 +76,7 @@ private:
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
+    bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
 };
 
 }  /* namespace artouste::physics */

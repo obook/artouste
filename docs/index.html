@@ -74,6 +74,28 @@
     }
     .navlinks a:hover { color: var(--alu); }
 
+    /* Bouton menu (mobile) : masque sur grand ecran, revele sous 760px */
+    .nav-toggle {
+      display: none; width: 42px; height: 42px; padding: 0;
+      background: transparent; border: 1px solid var(--rule); border-radius: 5px;
+      color: var(--alu); cursor: pointer; place-items: center;
+      transition: border-color 0.14s ease, color 0.14s ease;
+    }
+    .nav-toggle:hover { border-color: var(--amber); color: var(--amber); }
+    .nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after {
+      content: ""; display: block; width: 18px; height: 2px;
+      background: currentColor; border-radius: 2px;
+    }
+    .nav-toggle-bars { position: relative; transition: background 0.18s ease; }
+    .nav-toggle-bars::before, .nav-toggle-bars::after {
+      position: absolute; left: 0; transition: transform 0.18s ease;
+    }
+    .nav-toggle-bars::before { top: -6px; }
+    .nav-toggle-bars::after  { top:  6px; }
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars { background: transparent; }
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before { transform: translateY(6px) rotate(45deg); }
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after  { transform: translateY(-6px) rotate(-45deg); }
+
     /* Hero */
     .hero {
       position: relative;
@@ -255,9 +277,55 @@
     @keyframes rise { to { opacity: 1; transform: none; } }
 
     /* Responsive */
+
+    /* Hero en colonne unique : la photo passe en fond vertical, le voile
+       devient plus dense pour garder le titre lisible par-dessus l'image. */
     @media (max-width: 860px) {
-      .hero-grid { grid-template-columns: 1fr; gap: 36px; padding: 64px 24px 56px; }
-      .hero { background-position: center; }
+      .hero {
+        background:
+          linear-gradient(180deg, rgba(13,21,26,0.74) 0%, rgba(13,21,26,0.84) 58%, rgba(13,21,26,0.93) 100%),
+          url("screenshots/hero.png") center 28% / cover no-repeat;
+      }
+      .hero-grid { grid-template-columns: 1fr; gap: 34px; padding: 64px 24px 56px; }
+    }
+
+    /* Sous 760px : le menu inline laisse place a un panneau deroulant. */
+    @media (max-width: 760px) {
+      .nav { flex-wrap: wrap; padding: 12px 20px; }
+      .nav-toggle { display: grid; }
+      .navlinks {
+        display: none; flex-basis: 100%; flex-direction: column;
+        gap: 0; margin-top: 12px;
+        border-top: 1px solid var(--rule);
+      }
+      .navlinks.open { display: flex; }
+      .navlinks a {
+        padding: 13px 4px; font-size: 0.92rem;
+        border-bottom: 1px solid var(--rule);
+      }
+      .navlinks a:last-child { border-bottom: 0; }
+    }
+
+    /* Tablette etroite et grand telephone : on resserre les rythmes verticaux. */
+    @media (max-width: 600px) {
+      section { padding: 58px 20px; }
+      .hero-grid { padding: 52px 20px 46px; }
+      .sec-head { margin-bottom: 26px; }
+      .grid, .gallery { gap: 12px; }
+      .card { padding: 20px; }
+      .plate { padding: 22px 20px 20px; }
+      .plate-row { grid-template-columns: 8.5em 1fr; }
+      .dl { padding: 36px 22px; border-radius: 10px; }
+      footer .inner { padding: 24px 20px; gap: 8px; }
+    }
+
+    /* Petit telephone : les boutons d'action prennent toute la largeur,
+       cibles tactiles confortables et alignement propre. */
+    @media (max-width: 460px) {
+      .cta-row { flex-direction: column; align-items: stretch; }
+      .dl .cta-row { align-items: stretch; }
+      .btn { text-align: center; padding: 14px 22px; }
+      .gallery { grid-template-columns: 1fr; }
     }
 
     /* Respect du mouvement reduit */
@@ -265,6 +333,7 @@
       * { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; animation: none; }
       .btn:hover, .card:hover, .shot:hover { transform: none; }
+      .nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after { transition: none; }
       .lightbox { animation: none; }
     }
   </style>
@@ -273,7 +342,11 @@
 
   <header class="nav">
     <span class="brand">ARTOUSTE<b>.</b></span>
-    <nav class="navlinks">
+    <button class="nav-toggle" id="navToggle" type="button"
+            aria-expanded="false" aria-controls="navmenu" aria-label="Ouvrir le menu">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav class="navlinks" id="navmenu">
       <a href="#apropos">À propos</a>
       <a href="#caracteristiques">Caractéristiques</a>
       <a href="#galerie">Galerie</a>
@@ -440,6 +513,35 @@
   </div>
 
   <script>
+    /* Menu mobile : panneau deroulant accessible (clavier et lecteur d'ecran). */
+    (function () {
+      var toggle = document.getElementById('navToggle');
+      var menu = document.getElementById('navmenu');
+      if (!toggle || !menu) { return; }
+
+      function setOuvert(ouvert) {
+        toggle.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+        toggle.setAttribute('aria-label', ouvert ? 'Fermer le menu' : 'Ouvrir le menu');
+        menu.classList.toggle('open', ouvert);
+      }
+      toggle.addEventListener('click', function () {
+        setOuvert(toggle.getAttribute('aria-expanded') !== 'true');
+      });
+      /* Une fois un lien choisi, on referme le panneau. */
+      menu.addEventListener('click', function (e) {
+        if (e.target.tagName === 'A') { setOuvert(false); }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+          setOuvert(false); toggle.focus();
+        }
+      });
+      /* Retour en grand ecran : on repart d'un etat propre. */
+      window.matchMedia('(min-width: 761px)').addEventListener('change', function (mq) {
+        if (mq.matches) { setOuvert(false); }
+      });
+    })();
+
     (function () {
       var lb = document.getElementById('lightbox');
       var lbImg = document.getElementById('lbImg');

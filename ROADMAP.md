@@ -8,7 +8,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ## Réalisme
 
-- [ ] Le tableau de bord est celui qui est standard FlightGear, le changer avec celui sui est préparé dans assets/models/Alouette-II-panel
+- [ ] Le tableau de bord est celui qui est standard FlightGear, le changer avec celui qui est préparé dans assets/models/Alouette-II-panel. Attention : il manque encore le panel.ac (fond du tableau) attendu par le chargeur (Interior/Panel/panel.ac), et les objets renommés dans les .ac (compas_fond, collectif_aiguille, triple_aiguilles, fuel_fond) imposent de mettre à jour les listes de sous-meshes de src/render/LoadedHelicopterInstruments.cpp ; voir le Read-Me.txt du dossier.
 
 - [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
 

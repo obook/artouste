@@ -1,0 +1,40 @@
+Tableau de bord SE 3130 (copie de travail)
+==========================================
+
+Origine
+-------
+
+Les fichiers de ce dossier proviennent du modèle FlightGear
+"Alouette 2 SE 3130" de BARANGER Emmanuel (helijah), déjà présent dans
+ce dépôt sous assets/models/Alouette-II/Models/Interior/Panel/.
+
+http://helijah.free.fr/flightgear/hangar.htm
+embaranger@gmail.com
+
+Licence : GNU GPL version 2 (voir le fichier COPYING de ce dossier).
+
+Modifications
+-------------
+
+Copie de travail préparée pour remplacer le tableau de bord standard
+FlightGear par un tableau propre au SE 3130 (voir ROADMAP.md, section
+Réalisme). Fichiers modifiés par rapport à l'original :
+
+- ai/ai.ac, ai/ai.png       : réaffecté au compas (objet "background"
+                              renommé "compas_fond")
+- hi/hi.ac, hi/hi.png       : réaffecté au pas collectif (objet
+                              "Hdg-Knob" renommé "collectif_aiguille")
+- rmi/rmi.ac, rmi/rmi.png   : réaffecté à l'unité triple (objet
+                              "boutons" renommé "triple_aiguilles")
+- vor/vor.ac, vor/vor.png   : réaffecté à la jauge carburant (objet
+                              "card" renommé "fuel_fond")
+- torque/torque.png         : texture retouchée
+
+Les autres fichiers sont des copies identiques aux originaux.
+
+ATTENTION : src/render/LoadedHelicopterInstruments.cpp filtre les
+sous-meshes par les noms d'objets d'origine ("background", "Hdg-Knob",
+"boutons", "card"...). Les listes de ce fichier devront être mises à
+jour au moment de brancher ces instruments renommés. Il manque aussi le
+panel.ac (fond du tableau) que le chargeur attend dans
+Interior/Panel/panel.ac.

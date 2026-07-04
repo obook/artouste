@@ -51,6 +51,10 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 >    * compensez le couple avec le palonnier (touche `D` à droite, `A` ou `Q` à gauche | stick droit)
 >    * réduisez le collectif (touche `S` | gâchette `LT`) pour redescendre.
 
+> [!NOTE]
+> **Envie d'une démo ?**
+> Laissez-vous piloter par la vol de démonstration en appyuant sur la touche `K`
+
 ## Fonctionnalités du simulateur
 
 - Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.

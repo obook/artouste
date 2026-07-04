@@ -31,7 +31,7 @@ void Turbine::toggle() noexcept {
     }
 }
 
-void Turbine::update(float dt, float collective) noexcept {
+void Turbine::update(float dt, float charge) noexcept {
     /* Durées de la montée en régime : raccourcies pendant un démarrage rapide
      * (mode démo), sinon celles de la séquence réelle. */
     const float turbineStartTime = m_fastStart ? DEMO_TURBINE_START_TIME : TURBINE_START_TIME;
@@ -90,11 +90,12 @@ void Turbine::update(float dt, float collective) noexcept {
     }
 
     /* Température de la tuyère : cible déduite du régime turbine (la tuyère chauffe
-     * en montant en régime) et de la charge collective, rejointe avec une inertie
-     * thermique. La charge intervient au carré : la tuyère reste fraîche en
-     * croisière et ne chauffe vraiment qu'à fort collectif, si bien que l'alerte
-     * (480 degrés) n'apparaît qu'au-delà des trois quarts du collectif. */
-    const float load   = collective < 0.0f ? 0.0f : (collective > 1.0f ? 1.0f : collective);
+     * en montant en régime) et de la charge (puissance demandée, fournie par
+     * l'appelant), rejointe avec une inertie thermique. La charge intervient au
+     * carré : la tuyère reste fraîche en croisière et ne chauffe vraiment qu'à
+     * forte puissance, si bien que l'alerte (480 degrés) n'apparaît qu'au-delà
+     * des trois quarts de la charge. */
+    const float load   = charge < 0.0f ? 0.0f : (charge > 1.0f ? 1.0f : charge);
     const float target = EXHAUST_TEMP_AMBIENT_C
                        + (EXHAUST_TEMP_IDLE_C - EXHAUST_TEMP_AMBIENT_C) * m_turbine
                        + (EXHAUST_TEMP_MAX_C - EXHAUST_TEMP_IDLE_C) * m_turbine * load * load;

@@ -54,6 +54,22 @@ TEST_CASE("Hors effet de sol, le collectif de sustentation tient l'altitude", "[
     REQUIRE(std::fabs(model.body().velocity.y) < 1.0f);
 }
 
+TEST_CASE("En altitude, la température tuyère suit la puissance, pas le levier", "[flight]") {
+    FlightModel model;
+    model.reset(2884.0f);  /* altitude du pic du Midi d'Ossau */
+    model.turbine().forceRunning();
+    Controls hover;
+    /* Collectif de stationnaire à cette altitude : le levier est très haut (~93 %)
+     * mais la puissance produite reste celle d'un stationnaire. La tuyère doit donc
+     * rester sous le seuil orange : le levier plus haut en altitude ne doit pas
+     * pénaliser deux fois la température. */
+    const float densite = std::exp(-2884.0f / artouste::physics::AIR_DENSITY_SCALE);
+    hover.collective = artouste::physics::COLL_HOVER / densite;
+    advance(model, hover, 60.0f);
+
+    REQUIRE(model.turbine().exhaustTempC() < artouste::physics::EXHAUST_TEMP_WARN_C);
+}
+
 TEST_CASE("En mode assisté, l'altitude ne pénalise plus la sustentation", "[flight]") {
     FlightModel model;
     model.reset(50.0f);

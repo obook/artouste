@@ -33,9 +33,22 @@ float clampAbs(float v, float limit) noexcept {
 }  /* namespace */
 
 void FlightModel::update(const Controls& controls, float dt) noexcept {
+    const float collective = saturate(controls.collective);
+
+    /* Densité relative de l'air : elle décroît avec l'altitude (atmosphère
+     * simplifiée, voir AIR_DENSITY_SCALE). La turbine aspire moins d'air et le
+     * rotor produit moins de portance en altitude, ce qui finit par interdire le
+     * stationnaire en montagne. En mode assisté, densité pleine (pas de pénalité). */
+    const float densiteRelative =
+        m_realFlyPhysicsEnabled ? std::exp(-m_body.position.y / AIR_DENSITY_SCALE) : 1.0f;
+
     /* Turbine : on fait avancer son régime avant tout le reste, car la poussée
-     * et l'anti-couple en dépendent. Rotor à l'arrêt -> rotorFraction = 0. */
-    m_turbine.update(dt, controls.collective);
+     * et l'anti-couple en dépendent. Rotor à l'arrêt -> rotorFraction = 0.
+     * La charge thermique transmise est la puissance réellement produite
+     * (collectif ramené par la densité), pas la position du levier : en altitude
+     * le levier est plus haut pour la même portance, et la tuyère ne doit pas en
+     * être doublement pénalisée. Au niveau de la mer, rien ne change. */
+    m_turbine.update(dt, collective * std::sqrt(densiteRelative));
     const float rotorFraction = m_turbine.rotorFraction();
 
     const vec3 worldUp{0.0f, 1.0f, 0.0f};
@@ -45,7 +58,6 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* Poussée du rotor, dirigée selon l'axe vertical du fuselage. Elle est calée
      * pour équilibrer le poids au collectif COLL_HOVER, et proportionnelle au
      * régime du rotor : tant que la turbine n'est pas lancée, pas de portance. */
-    const float collective  = saturate(controls.collective);
 
     /* Carburant : la turbine consomme dès qu'elle tourne, d'autant plus que le
      * collectif demande de la puissance. À sec, on coupe la turbine (panne). */
@@ -64,13 +76,6 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
             }
         }
     }
-
-    /* Densité relative de l'air : elle décroît avec l'altitude (atmosphère standard
-     * simplifiée). La turbine aspire moins d'air et le rotor produit moins de
-     * portance en altitude, ce qui finit par interdire le stationnaire en montagne.
-     * En mode assisté, on garde une densité pleine (pas de pénalité d'altitude). */
-    const float densiteRelative =
-        m_realFlyPhysicsEnabled ? std::exp(-m_body.position.y / AIR_DENSITY_SCALE) : 1.0f;
 
     const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction * densiteRelative;
 

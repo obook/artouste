@@ -10,7 +10,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Le tableau de bord est celui qui est standard FlightGear, le changer avec celui qui est préparé dans assets/models/Alouette-II-panel. Attention : il manque encore le panel.ac (fond du tableau) attendu par le chargeur (Interior/Panel/panel.ac), et les objets renommés dans les .ac (compas_fond, collectif_aiguille, triple_aiguilles, fuel_fond) imposent de mettre à jour les listes de sous-meshes de src/render/LoadedHelicopterInstruments.cpp ; voir le Read-Me.txt du dossier.
 
-- [ ] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale)
+- [x] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale) : fait, messages de la tour en synthèse vocale (Flite) avec sous-titre à l'écran
 
 - [ ] Ajouter les livées Armée de l'Air, Armée de Terre (ALAT), Marine nationale, Sécurité civile, Belgique (ALFT), Suisse : rotation par changement de livrée -> le rotor de queue  + anneau de sécurité  est le même pour tous.
 
@@ -22,7 +22,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Au débranchement qu'un casque USB, le son ne revient pas à la sortie principale
 
-- [ ] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux)
+- [x] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux) : fait, clé `radio_url` de config.txt, touche `K` et balance `-`/`+`
 
 
 ### Mode demo

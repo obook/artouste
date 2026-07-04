@@ -4,7 +4,7 @@
 
 Artouste est un simulateur de vol personnel consacré au pilotage 3D de l'hélicoptère **Aérospatiale Alouette II** SE.3130.
 
-Son objectif est de restituer fidèlement la séquence de démarrage de la turbine Turboméca puis des rotors, le comportement en vol de cet appareil sans servo-commandes dans une  ambiance sonore caractéristique de sa turbine et de ses trois pales.
+Son objectif est de restituer fidèlement la séquence de démarrage de la turbine Turboméca puis des rotors, le comportement en vol de cet appareil sans servo-commandes dans une ambiance sonore caractéristique de sa turbine et de ses trois pales.
 
 Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retrouver les sensations remarquables de pilotage de cet appareil.
 
@@ -30,19 +30,36 @@ Tout l'or du monde (1961), Le Fanfaron (1962), Fantômas (1964), Le Grand Restau
 
 ### Films internationaux
 
-You Only Live Twice (James Bond, 1967), The Day of the Jackal (1973), Octopussy (James Bond, 1983), OSS 117 - Atout cœur à Tokyo (1966), Tintin et le Temple du Soleil (1969), Le Cercle rouge (1970), Cassandra Crossing (1976).
+On ne vit que deux fois (James Bond, 1967), Chacal (1973), Octopussy (James Bond, 1983), OSS 117 - Atout cœur à Tokyo (1966), Tintin et le Temple du Soleil (1969), Le Cercle rouge (1970), Cassandra Crossing (1976).
 
 Source : [alouettelama.com](https://www.alouettelama.com)
+
+## Démarrage rapide
+
+> [!TIP]
+> **Première fois aux commandes ?**
+> Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
+>
+> 1. **Activez le HUD complet** avec tous les instruments : touche `H` | bouton `B`.
+> 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
+> 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
+>    * La turbine monte seule en régime jusqu'à 33 500 tr/min
+>    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `360`
+> 4. **Décollage et vol.** Une fois le rotor en régime :
+>    * augmentez doucement le collectif (touches `W` ou `Z` | gâchette `RT`) jusqu'à un peu plus de 50 % pour décoller de quelques mètres du sol
+>    * inclinez l'appareil au cyclique vers l'avant (flèches | stick gauche) et avancez
+>    * compensez le couple avec le palonnier (touche `D` à droite, `A` ou `Q` à gauche | stick droit)
+>    * réduisez le collectif (touche `S` | gâchette `LT`) pour redescendre.
 
 ## Fonctionnalités du simulateur
 
 - Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
-- Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne, conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté et pendant la démo, où le vol reste facile et prévisible.
+- Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté et pendant la démo, où le vol reste facile et prévisible.
 - En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
-- Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en   régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
+- Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
 - Entrées clavier et manette Xbox (détection automatique de la source).
-- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le   cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la   physique. La bascule est progressive.
-- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite   suit) et levier de collectif (la main gauche se pose dessus et le suit).
+- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
+- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
 - Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
   dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
@@ -67,23 +84,6 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
 - Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
-
-## Démarrage rapide
-
-> [!TIP]
-> **Première fois aux commandes ?**
-> Voici les quatre étapes pour effectuer sans stress votre premier vol aux commandes de l'**Alouette II SE.3130**.
->
-> 1. **Activez le HUD complet** avec tous les instruments : touche `H` | bouton `B`.
-> 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
-> 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
->    * La turbine monte seule en régime jusqu'à 33 500 tr/min
->    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `360`
-> 4. **Décollage et vol.** Une fois le rotor en régime :
->    * augmentez doucement le collectif (`W` ou `Z` | gâchette RT) jusqu'à un peu plus de 50% pour décoller de quelques mètres du sol
->    * inclinez l'appareil au cyclique (flèches du clavier | stick gauche) pour avancer
->    * compensez le couple avec le palonnier (`D` - droite / `A` ou `Q` - gauche | stick droit)
->    * réduisez le collectif (`S` | gâchette LT) pour redescendre.
 
 ## Commandes
 

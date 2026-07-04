@@ -229,9 +229,20 @@ float Terrain::heightAt(float x, float z) const noexcept {
         return m_heights[static_cast<std::size_t>(j) * static_cast<std::size_t>(m_cols)
                          + static_cast<std::size_t>(i)];
     };
-    const float top    = lerp(at(i0, j0), at(i1, j0), tx);
-    const float bottom = lerp(at(i0, j1), at(i1, j1), tx);
-    return lerp(top, bottom, tz);
+
+    /* Même découpe que le maillage rendu : chaque cellule est faite de deux
+     * triangles séparés par la diagonale b-c (voir la construction des indices).
+     * L'interpolation doit suivre ces triangles et non la surface bilinéaire,
+     * sinon l'appareil posé s'enfonce dans le relief partout où la surface
+     * bilinéaire passe sous les triangles (sensible sur les fortes pentes). */
+    const float ha = at(i0, j0);
+    const float hb = at(i1, j0);
+    const float hc = at(i0, j1);
+    const float hd = at(i1, j1);
+    if (tx + tz <= 1.0f) {
+        return ha + tx * (hb - ha) + tz * (hc - ha);  /* triangle a-c-b */
+    }
+    return hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd);  /* triangle b-c-d */
 }
 
 }  /* namespace artouste::render */

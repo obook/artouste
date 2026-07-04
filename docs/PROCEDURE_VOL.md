@@ -221,7 +221,7 @@ volontairement simplifiés, mais ils en respectent l'esprit.
 
 | Effet | Comportement dans le simulateur |
 |---|---|
-| Densité de l'air | La portance et la puissance de la turbine décroissent avec l'altitude. Au-delà d'environ 1 900 m à masse nominale, le stationnaire hors effet de sol devient impossible : l'appareil descend même collectif à fond. C'est le comportement documenté du SE 3130, premier hélicoptère de haute montagne. |
+| Densité de l'air | La portance et la puissance de la turbine décroissent avec l'altitude. Au-delà d'environ 3 300 m, le stationnaire hors effet de sol devient impossible : l'appareil descend même collectif à fond. Les hauts sommets des Pyrénées restent donc accessibles mais exigeants, dans l'esprit du SE 3130, premier hélicoptère de haute montagne. |
 | VNE variable | La vitesse à ne pas dépasser vaut 105 kt au niveau de la mer et diminue avec l'altitude. Au-delà, une traînée d'onde croissante freine l'appareil et matérialise la limite. |
 | Vol latéral ou arrière | Limité à 18 kt. Au-delà, le rotor anticouple sature et l'autorité au palonnier diminue, comme sur l'appareil réel. |
 | Vortex ring state | En descente verticale rapide (plus de 3 m/s) à faible vitesse sol et à puissance partielle, le rotor retombe dans son propre souffle et perd de la portance. On s'en dégage en accélérant vers l'avant (cyclique en avant). |

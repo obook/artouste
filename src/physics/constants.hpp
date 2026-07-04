@@ -126,11 +126,14 @@ inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deca, cyclique con
 
 /* --- Effets avancés ----------------------------------------------------------- */
 /* Dégradation de la puissance avec l'altitude (densité de l'air). La densité
- * relative suit une atmosphère standard simplifiée : rho/rho0 = exp(-altitude / H).
- * Au sol : 1,0. Vers 1900 m : ~0,55, ce qui correspond au plafond stationnaire
- * hors effet de sol (HOGE) à masse nominale du SE 3130. C'est ce qui rend
- * l'Alouette II unique : un hélicoptère de haute montagne. */
-inline constexpr float AIR_DENSITY_SCALE  = 3220.0f;  /* m : hauteur caractéristique */
+ * relative suit une exponentielle décroissante : rho/rho0 = exp(-altitude / H).
+ * H est un compromis de jeu, pas l'atmosphère standard (il faudrait ~10 400 m) :
+ * la pénalité est volontairement forcée pour que l'altitude compte sur la carte
+ * des Pyrénées. À 1332 m (terrain Ossau) : densité 0,78, décollage vers 63 % de
+ * collectif. Le stationnaire devient impossible vers 3300 m, ce qui laisse les
+ * hauts sommets accessibles mais exigeants, dans l'esprit de l'Alouette II,
+ * hélicoptère de haute montagne. */
+inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéristique */
 
 /* VNE (vitesse à ne jamais dépasser) variable avec l'altitude : 105 kt au sol,
  * décroissante en altitude (compressibilité sur les pales). Au-delà, une traînée

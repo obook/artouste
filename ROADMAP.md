@@ -24,8 +24,9 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux) : fait, clé `radio_url` de config.txt, touche `K` et balance `-`/`+`
 
-
 ### Mode demo
+
+- [ ] Ajouter la notice du mode DEMO dans README, après ## Démarrage rapide
 
 **Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :
 

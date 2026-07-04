@@ -200,9 +200,11 @@ void Hud::renderRadioSubtitle(const HudData& data, float w) {
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
 
-    /* En haut, centré, juste sous le ruban de cap : le bas de l'image est occupé par
-       le rang d'instruments du HUD complet (Super HUD), qu'on ne doit pas recouvrir. */
-    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, 58.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    /* En haut, centré, sous le ruban de cap du HUD complet : le ruban s'étend de
+       y = 30 à y = 72 (bord haut 30 + hauteur 40 + fond) et il est dessiné dans le
+       foreground draw list, donc PAR-DESSUS cette fenêtre ; il faut rester en dessous.
+       Le bas de l'image est occupé par le rang d'instruments, à ne pas recouvrir. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, 80.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.55f);
     ImGui::Begin("radio_msg", nullptr, flags);
     /* Ambre "radio", distinct du vert instrument. */

@@ -53,7 +53,9 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 > [!NOTE]
 > **Envie d'une démo ?**
-> Laissez-vous piloter par le vol de démonstration en appuyant sur la touche `V`.
+> Lancez le programme, appuyez sur la touche `V` et confirmez : l'appareil joue seul,
+> en boucle, un vol panoramique au-dessus du bassin d'Arcachon. La touche `Échap`,
+> ou une action franche sur le manche, en sort.
 
 ## Fonctionnalités du simulateur
 

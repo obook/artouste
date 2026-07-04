@@ -10,6 +10,14 @@
  * Licence : GPL v2
  */
 
+/* Sous Windows, les en-têtes Flite (cst_file.h, cst_alloc.h) tirent <windows.h>.
+ * WIN32_LEAN_AND_MEAN et NOMINMAX évitent que ses macros min/max n'entrent en
+ * conflit avec std::max utilisé plus bas (même garde que ApplicationScene.cpp). */
+#if defined(_WIN32)
+#  define WIN32_LEAN_AND_MEAN
+#  define NOMINMAX
+#endif
+
 #include "audio/AudioEngine.hpp"
 
 #include "audio/AudioEngineImpl.hpp"

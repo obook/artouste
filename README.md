@@ -53,7 +53,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 > [!NOTE]
 > **Envie d'une démo ?**
-> Laissez-vous piloter par la vol de démonstration en appyuant sur la touche `K`
+> Laissez-vous piloter par le vol de démonstration en appuyant sur la touche `V`.
 
 ## Fonctionnalités du simulateur
 

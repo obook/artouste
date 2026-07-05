@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "render/Livery.hpp"
 #include "render/Model.hpp"
 #include "util/Math.hpp"
 
@@ -56,9 +57,10 @@ public:
        pose de l'appareil. */
     [[nodiscard]] vec3 mainHubWorld(const mat4& base) const;
 
-    /* Active (ou non) la livrée Gendarmerie nationale sur le fuselage. Par défaut
-       l'appareil garde sa livrée d'origine. */
-    void setGendarmerieLivery(bool on);
+    /* Applique une livrée : origine (métal), Gendarmerie (bleu) ou armée de terre
+       (olive). Commute la texture du fuselage, des pales et de l'arceau de queue,
+       et choisit les marquages dessinés par drawLivery. */
+    void setLivery(Livery livery);
 
     /* Rayon du rotor principal, en mètres (longueur d'une pale). */
     static constexpr float MAIN_ROTOR_RADIUS = 5.0f;
@@ -98,15 +100,18 @@ private:
        de l'angle du rotor principal. */
     void drawRotors(Shader& shader, const mat4& root, float rotorAngle) const;
 
-    /* Passe transparente : marquages de la livrée Gendarmerie puis vitrages. */
+    /* Passe transparente : marquages de la livrée courante puis vitrages. */
     void drawLivery(Shader& shader, const mat4& root) const;
 
     Model              m_fuselage;
-    const Texture*     m_liveryGendarmerie = nullptr;  /* livrée bleue (fuselage) */
+    const Texture*     m_liveryBlanche          = nullptr;  /* livrée blanche (fuselage) */
+    const Texture*     m_liveryGendarmerie      = nullptr;  /* livrée bleue (fuselage) */
+    const Texture*     m_liveryArmeeDeTerre     = nullptr;  /* livrée olive (fuselage) */
+    const Texture*     m_liveryProtectionCivile = nullptr;  /* livrée rouge (fuselage) */
     const Texture*     m_tailBladeLivery   = nullptr;  /* pales de queue Gendarmerie (jaune zébré rouge) */
     const Texture*     m_tailGuardLivery   = nullptr;  /* arceau de queue Gendarmerie (jaune uni) */
     const Texture*     m_tailGuardOrigine  = nullptr;  /* arceau de queue livrée d'origine (gris métal) */
-    bool               m_gendarmerie = false;          /* livrée Gendarmerie active (marquages) */
+    Livery             m_livery = Livery::Blanche;      /* livrée active (choix des marquages) */
     Model              m_interior;
     Model              m_pilot;         /* pilote entier (vues externes) */
     Model              m_pilotCockpit;  /* pilote sans tête, casque ni jambes (vue cockpit) */
@@ -184,8 +189,11 @@ private:
     Model              m_tailBlade;
     Model              m_tailGuard;          /* arceau de protection du rotor de queue */
     Model              m_decalGendarmerie;  /* mot "GENDARMERIE" (flancs de cabine) */
-    Model              m_decalReg;          /* immatriculation "F-BRHP" */
+    Model              m_decalReg;          /* immatriculation "F-BRHP" (Gendarmerie) */
     Model              m_decalStripe;       /* liséré blanc (bas de cabine) */
+    Model              m_decalReg341;       /* code d'appareil "341-HN" (armée de terre) */
+    Model              m_decalProtCiv;      /* texte "PROTECTION CIVILE" (flancs de cabine) */
+    Model              m_decalRegAyem;      /* immatriculation "F-AYEM" (Protection civile) */
 };
 
 }  /* namespace artouste::render */

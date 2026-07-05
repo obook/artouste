@@ -62,8 +62,8 @@ public:
      * (quitter). Une combinaison évite les sorties accidentelles. */
     [[nodiscard]] bool quitPressed() noexcept;
 
-    /* Vrai une seule fois, au moment où le bouton A vient d'être pressé (bascule la
-     * livrée Gendarmerie, comme la touche L). */
+    /* Vrai une seule fois, au moment où le bouton A vient d'être pressé (fait
+     * défiler la livrée, comme la touche L). */
     [[nodiscard]] bool liveryTogglePressed() noexcept;
 
     /* Vrai une seule fois, au moment où la croix directionnelle haut vient d'être

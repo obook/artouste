@@ -99,7 +99,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |
-| Livrée (Gendarmerie/origine) | `L`       | bouton `A` (vert)    |
+| Livrée (blanche/Gendarmerie/armée de terre/Protection civile) | `L` | bouton `A` (vert) |
 | Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Pause                   | `P`            | bouton `Back`        |
@@ -242,6 +242,23 @@ Un contrôle rapide des textures produites :
 ```bash
 tools/.venv/bin/python tools/livree/check_tailrotor.py \
     assets/models/Alouette-II/Models/Externals/TailRotor/tailrotor-gendarmerie.png --zebra
+```
+
+## Livrées du fuselage (régénérer les textures)
+
+La touche `L` (ou le bouton `A`) fait défiler quatre livrées : blanche,
+Gendarmerie (bleu), armée de terre (olive) et Protection civile (rouge). Chaque
+livrée peinte est produite à partir de l'atlas d'origine `texture.png` en
+reteintant les pixels neutres vers la couleur cible, sans toucher aux marquages
+saturés (cocardes tricolores). Les textures sont versionnées ; régénérer ne sert
+qu'après modification :
+
+```bash
+python3 tools/livree/make_blanche.py           # -> texture-blanche.png (blanc)
+python3 tools/livree/make_gendarmerie.py       # -> texture-gendarmerie.png (bleu)
+python3 tools/livree/make_armeedeterre.py      # -> texture-armeedeterre.png (olive)
+python3 tools/livree/make_protectioncivile.py  # -> texture-protectioncivile.png (rouge)
+python3 tools/livree/make_decals.py            # -> décalques (textes et immatriculations)
 ```
 
 ## Terrain (choix de la map)

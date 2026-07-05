@@ -135,12 +135,17 @@ bool Application::initGL() {
     return true;
 }
 
-void Application::toggleGendarmerieLivery() {
+void Application::cycleLivery() {
     if (!m_loadedHeli) {
         return;
     }
-    m_gendarmerieLivery = !m_gendarmerieLivery;
-    m_loadedHeli->setGendarmerieLivery(m_gendarmerieLivery);
+    switch (m_livery) {
+        case render::Livery::Blanche:          m_livery = render::Livery::Gendarmerie;      break;
+        case render::Livery::Gendarmerie:      m_livery = render::Livery::ArmeeDeTerre;     break;
+        case render::Livery::ArmeeDeTerre:     m_livery = render::Livery::ProtectionCivile; break;
+        case render::Livery::ProtectionCivile: m_livery = render::Livery::Blanche;          break;
+    }
+    m_loadedHeli->setLivery(m_livery);
 }
 
 void Application::resetToStart() {

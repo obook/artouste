@@ -40,9 +40,13 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     const std::vector<std::string> glass{"verriere", "vitreporte"};
 
     m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
-    /* Livrée Gendarmerie nationale : texture bleue de rechange, préchargée dans le
-       cache du fuselage et activable à la demande (voir setGendarmerieLivery). */
-    m_liveryGendarmerie = m_fuselage.acquireTexture(dir / "texture-gendarmerie.png");
+    /* Livrées de rechange du fuselage : blanc, bleu Gendarmerie, olive armée de
+       terre et rouge Protection civile, préchargées dans le cache du fuselage et
+       activables à la demande (setLivery). */
+    m_liveryBlanche          = m_fuselage.acquireTexture(dir / "texture-blanche.png");
+    m_liveryGendarmerie      = m_fuselage.acquireTexture(dir / "texture-gendarmerie.png");
+    m_liveryArmeeDeTerre     = m_fuselage.acquireTexture(dir / "texture-armeedeterre.png");
+    m_liveryProtectionCivile = m_fuselage.acquireTexture(dir / "texture-protectioncivile.png");
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
 
     /* Pilote sur son siège (modèle FlightGear, texture general_pilot.png). Le
@@ -198,20 +202,37 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_tailGuardLivery  = m_tailGuard.acquireTexture(dir / "tailguard-gendarmerie.png");
     m_tailGuardOrigine = m_tailGuard.acquireTexture(dir / "tailguard-origine.png");
 
-    /* Marquages de la livrée Gendarmerie (posés sur les flancs en 3D, voir draw). */
+    /* Marquages de livrée (posés sur les flancs en 3D, voir draw) : ceux de la
+       Gendarmerie et le code d'appareil "341-HN" de la livrée armée de terre. */
     m_decalGendarmerie = makeDecal(dir / "decal-gendarmerie.png");
     m_decalReg         = makeDecal(dir / "decal-fbrhp.png");
     m_decalStripe      = makeDecal(dir / "decal-stripe.png");
+    m_decalReg341      = makeDecal(dir / "decal-341hn.png");
+    m_decalProtCiv     = makeDecal(dir / "decal-protectioncivile.png");
+    m_decalRegAyem     = makeDecal(dir / "decal-fayem.png");
 }
 
-void LoadedHelicopter::setGendarmerieLivery(bool on) {
-    m_gendarmerie = on;
-    m_fuselage.setLivery(on ? m_liveryGendarmerie : nullptr);
-    m_tailBlade.setLivery(on ? m_tailBladeLivery : nullptr);
+void LoadedHelicopter::setLivery(Livery livery) {
+    m_livery = livery;
+
+    /* Fuselage : texture de rechange selon la livrée (nullptr = texture d'origine). */
+    const Texture* fuselageTex = nullptr;
+    switch (livery) {
+        case Livery::Gendarmerie:      fuselageTex = m_liveryGendarmerie;      break;
+        case Livery::ArmeeDeTerre:     fuselageTex = m_liveryArmeeDeTerre;     break;
+        case Livery::ProtectionCivile: fuselageTex = m_liveryProtectionCivile; break;
+        case Livery::Blanche:          fuselageTex = m_liveryBlanche;          break;
+    }
+    m_fuselage.setLivery(fuselageTex);
+
+    /* Pales de queue : zébrées jaune/rouge en Gendarmerie, métal (texture d'origine)
+       en livrée d'origine comme en armée de terre. */
+    m_tailBlade.setLivery(livery == Livery::Gendarmerie ? m_tailBladeLivery : nullptr);
+
     /* L'arceau n'a pas de teinte d'origine satisfaisante dans sa texture (UV chaudes) :
-       on force donc une couleur unie dans les deux cas, jaune en Gendarmerie, gris
-       métal sinon (cohérent avec la pale de queue et le corps en livrée d'origine). */
-    m_tailGuard.setLivery(on ? m_tailGuardLivery : m_tailGuardOrigine);
+       on force donc une couleur unie, jaune en Gendarmerie, gris métal dans les deux
+       autres livrées (cohérent avec la pale de queue et le corps). */
+    m_tailGuard.setLivery(livery == Livery::Gendarmerie ? m_tailGuardLivery : m_tailGuardOrigine);
 }
 
 void LoadedHelicopter::drawModel(Shader& shader, const Model& model, const mat4& transform,

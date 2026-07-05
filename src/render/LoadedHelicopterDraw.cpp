@@ -231,7 +231,7 @@ void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
-    if (m_gendarmerie) {
+    if (m_livery == Livery::Gendarmerie) {
         /* "GENDARMERIE" sur le bas des flancs de cabine, "F-BRHP" sur le caisson
            arrière. Positions en coordonnées FlightGear, affinées visuellement.
            Liséré blanc juste au-dessus du mot, sur chaque flanc. */
@@ -241,6 +241,20 @@ void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
         drawDecal(shader, root, m_decalGendarmerie, vec3{-3.60f, -0.90f, -0.80f}, 0.90f, 0.13f);
         drawDecal(shader, root, m_decalReg, vec3{-1.92f, 0.62f, -0.05f}, 0.36f, 0.11f);
         drawDecal(shader, root, m_decalReg, vec3{-1.92f, -0.62f, -0.05f}, 0.36f, 0.11f);
+    } else if (m_livery == Livery::ArmeeDeTerre) {
+        /* Code d'appareil "341-HN" de l'ALAT sur le caisson arrière, sur chaque
+           flanc. La cocarde tricolore est déjà dans l'atlas olive (préservée du
+           marquage d'origine), inutile de la poser en décalque. */
+        drawDecal(shader, root, m_decalReg341, vec3{-1.92f, 0.62f, -0.05f}, 0.42f, 0.11f);
+        drawDecal(shader, root, m_decalReg341, vec3{-1.92f, -0.62f, -0.05f}, 0.42f, 0.11f);
+    } else if (m_livery == Livery::ProtectionCivile) {
+        /* "PROTECTION CIVILE" en blanc sur le bas des flancs de cabine et le code
+           "F-AYEM" sur le caisson arrière, sur chaque flanc. La cocarde tricolore
+           est déjà dans l'atlas rouge (préservée du marquage d'origine). */
+        drawDecal(shader, root, m_decalProtCiv, vec3{-3.55f, 0.90f, -0.78f}, 1.30f, 0.12f);
+        drawDecal(shader, root, m_decalProtCiv, vec3{-3.55f, -0.90f, -0.78f}, 1.30f, 0.12f);
+        drawDecal(shader, root, m_decalRegAyem, vec3{-1.92f, 0.62f, -0.05f}, 0.42f, 0.11f);
+        drawDecal(shader, root, m_decalRegAyem, vec3{-1.92f, -0.62f, -0.05f}, 0.42f, 0.11f);
     }
     drawModel(shader, m_fuselage, root, Pass::Transparent);
     glDepthMask(GL_TRUE);

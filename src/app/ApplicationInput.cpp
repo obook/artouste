@@ -81,8 +81,8 @@ void Application::handleActionButtons() {
         if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         }
-        if (m_input->liveryTogglePressed()) {  /* A : bascule la livrée (comme L) */
-            toggleGendarmerieLivery();
+        if (m_input->liveryTogglePressed()) {  /* A : fait défiler la livrée (comme L) */
+            cycleLivery();
         }
     }
 }
@@ -176,9 +176,9 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
                 app->toggleDemo();
             }
             break;
-        case GLFW_KEY_L:  /* bascule la livrée Gendarmerie nationale */
+        case GLFW_KEY_L:  /* fait défiler la livrée (origine, Gendarmerie, armée de terre) */
             if (app != nullptr) {
-                app->toggleGendarmerieLivery();
+                app->cycleLivery();
             }
             break;
         case GLFW_KEY_M:          /* bascule le mode assisté (confort de pilotage) */

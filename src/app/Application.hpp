@@ -17,6 +17,7 @@
 #include "physics/FlightAssist.hpp"
 #include "physics/FlightModel.hpp"
 #include "render/Camera.hpp"
+#include "render/Livery.hpp"
 #include "ui/Hud.hpp"
 
 #include <filesystem>
@@ -145,8 +146,9 @@ private:
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 
-    /* Bascule la livrée Gendarmerie (partagée par la touche L et le bouton A). */
-    void toggleGendarmerieLivery();
+    /* Fait défiler la livrée (partagée par la touche L et le bouton A) : origine ->
+       Gendarmerie -> armée de terre -> origine. */
+    void cycleLivery();
 
     /* Replace l'appareil au départ (appelé une fois la confirmation acceptée). */
     void resetToStart();
@@ -235,7 +237,7 @@ private:
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */
     bool                                      m_confirmDemo  = false;  /* panneau Oui/Non avant de lancer la démo (touche V) */
-    bool                                      m_gendarmerieLivery = true;  /* livrée Gendarmerie par défaut (touche L / bouton A) */
+    render::Livery                            m_livery = render::Livery::Gendarmerie;  /* livrée par défaut (touche L / bouton A) */
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */
     float                                     m_closingSpeed = 0.0f; /* vitesse de rapprochement caméra<->appareil lissée (effet Doppler, vue orbite) */

@@ -207,7 +207,7 @@ bool Gamepad::liveryTogglePressed() noexcept {
         m_prevA = false;
         return false;
     }
-    /* Bouton A (vert, en bas du losange ABXY) : bascule la livrée Gendarmerie. */
+    /* Bouton A (vert, en bas du losange ABXY) : fait défiler la livrée. */
     return risingEdge(state, GLFW_GAMEPAD_BUTTON_A, m_prevA);
 }
 

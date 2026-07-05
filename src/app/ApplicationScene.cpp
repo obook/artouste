@@ -291,8 +291,8 @@ void Application::initScene() {
         auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
         if (loaded->loaded()) {
             m_loadedHeli = std::move(loaded);
-            /* Livrée Gendarmerie appliquée d'emblée (état par défaut). */
-            m_loadedHeli->setGendarmerieLivery(m_gendarmerieLivery);
+            /* Livrée par défaut (Gendarmerie) appliquée d'emblée. */
+            m_loadedHeli->setLivery(m_livery);
             std::printf("[scène] modèle FlightGear chargé.\n");
         } else {
             std::printf("[scène] échec du chargement du modèle, repli procédural.\n");

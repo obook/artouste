@@ -44,12 +44,20 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
     m_camera.setAspect(static_cast<float>(fbw) / static_cast<float>(fbh));
 
-    /* Livrée de la capture : ARTOUSTE_SHOT_LIVERY=0 force la livrée d'origine,
-       toute autre valeur force la Gendarmerie. Variable absente : on garde l'état
-       par défaut (Gendarmerie). Pratique pour vérifier les deux livrées. */
+    /* Livrée de la capture : ARTOUSTE_SHOT_LIVERY=0 force la blanche, =2 l'armée de
+       terre, =3 la Protection civile, toute autre valeur la Gendarmerie. Variable
+       absente : on garde l'état par défaut (Gendarmerie). */
     if (m_loadedHeli) {
         if (const char* e = std::getenv("ARTOUSTE_SHOT_LIVERY")) {
-            m_loadedHeli->setGendarmerieLivery(e[0] != '0');
+            render::Livery liv = render::Livery::Gendarmerie;
+            if (e[0] == '0') {
+                liv = render::Livery::Blanche;
+            } else if (e[0] == '2') {
+                liv = render::Livery::ArmeeDeTerre;
+            } else if (e[0] == '3') {
+                liv = render::Livery::ProtectionCivile;
+            }
+            m_loadedHeli->setLivery(liv);
         }
     }
 

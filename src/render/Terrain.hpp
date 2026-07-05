@@ -34,6 +34,11 @@ struct Landmark {
     float       lat = 0.0f;
 };
 
+/* Rayon porteur d'une plate-forme d'hélisurface (m) : un peu plus grand que le
+   disque dessiné (7 m), pour que les patins restent portés posé un peu décalé.
+   Dans ce rayon, heightAt ne descend jamais sous le plateau du pad. */
+inline constexpr float PAD_PLATFORM_RADIUS_M = 8.0f;
+
 class Terrain {
 public:
     /* Charge le terrain depuis un dossier contenant terrain.txt, heightmap.png
@@ -104,9 +109,12 @@ private:
        absent : out reste vide. label sert à la trace affichée. */
     void loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
                     const char* label);
-    /* Aplanit le relief sous le point de départ et chaque hélipad (plateforme
-       plate, pour que sol, disque et appareil posé soient à la même hauteur). */
+    /* Aplanit le relief sous le point de départ (plateforme plate, pour que sol,
+       disque et appareil posé soient à la même hauteur au spawn). */
     void flattenPads();
+    /* Recense les plates-formes des hélipads du terrain : centre monde et hauteur
+       du plateau porteur (relief au centre du pad), utilisées par heightAt. */
+    void buildPadPlatforms();
     /* Met à plat les noeuds du relief dans un rayon (mètres) autour de la cellule
        (colf, rowf), à la hauteur interpolée en ce point. */
     void flattenAround(float colf, float rowf, float radiusM);
@@ -136,6 +144,14 @@ private:
 
     std::vector<Landmark> m_landmarks;  /* lieux remarquables propres au terrain */
     std::vector<Landmark> m_helipads;   /* hélipads propres au terrain (hors départ) */
+
+    /* Plate-forme porteuse d'un hélipad : centre monde et hauteur du plateau. */
+    struct PadPlatform {
+        float x   = 0.0f;
+        float z   = 0.0f;
+        float top = 0.0f;
+    };
+    std::vector<PadPlatform> m_padPlatforms;
 };
 
 }  /* namespace artouste::render */

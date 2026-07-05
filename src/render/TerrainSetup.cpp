@@ -58,21 +58,16 @@ void Terrain::flattenPads() {
         return;
     }
     /* Rayon aplani : le disque (7 m) plus la longueur de l'appareil, pour qu'il
-       repose à plat même posé un peu décalé sur le pad. */
+       repose à plat même posé un peu décalé sur le pad. Seul le point de départ
+       déforme encore le relief : les hélipads du terrain sont des plates-formes
+       portées par heightAt (voir buildPadPlatforms), car l'aplanissement couvrait
+       au moins une maille entière (35 m et plus), très visible sur un sommet
+       pointu (pic du Midi d'Ossau). */
     constexpr float PAD_RADIUS_M = 12.0f;
     if (m_hasStart) {
         const float colf = (m_startX / m_widthM + 0.5f) * static_cast<float>(m_cols - 1);
         const float rowf = (m_startZ / m_heightM + 0.5f) * static_cast<float>(m_rows - 1);
         flattenAround(colf, rowf, PAD_RADIUS_M);
-    }
-    if (m_hasGeo) {
-        for (const Landmark& pad : m_helipads) {
-            const float colf = (pad.lon - m_lonMin) / (m_lonMax - m_lonMin)
-                               * static_cast<float>(m_cols - 1);
-            const float rowf = (m_latMax - pad.lat) / (m_latMax - m_latMin)
-                               * static_cast<float>(m_rows - 1);
-            flattenAround(colf, rowf, PAD_RADIUS_M);
-        }
     }
 }
 

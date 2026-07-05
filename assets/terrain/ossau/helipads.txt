@@ -2,6 +2,8 @@
 # Fabrèges reproduit exactement l'ancien point de départ (start_x/start_z du
 # terrain) : c'est l'hélipad le plus proche du repère, donc le départ ne bouge pas.
 -0.408063 42.908024 Fabrèges
-# Sommet du pic du Midi d'Ossau : cellule culminante de la heightmap (2847 m),
-# centrée sur un noeud de la grille pour que le pad épouse le relief au mieux.
+# Sommet du pic du Midi d'Ossau : noeud culminant de la heightmap (2847 m).
+# Le relief n'est pas aplani : le pad est une petite plate-forme perchée
+# (plateau porteur dans heightAt + jupe sous le disque), le sommet garde
+# sa forme naturelle.
 -0.438200 42.843209 Pic du Midi d'Ossau

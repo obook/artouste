@@ -188,6 +188,24 @@ MeshData sphere(float radius, int rings, int sectors, const vec3& color) {
     return out;
 }
 
+MeshData tube(float radius, float depth, int segments, const vec3& topColor,
+              const vec3& bottomColor) {
+    MeshData out;
+    out.vertices.reserve(static_cast<std::size_t>(segments + 1) * 2);
+    out.indices.reserve(static_cast<std::size_t>(segments) * 6);
+    for (int i = 0; i <= segments; ++i) {
+        const float a = static_cast<float>(i) * (TWO_PI / static_cast<float>(segments));
+        const vec3  n{std::cos(a), 0.0f, std::sin(a)};
+        out.vertices.push_back({{radius * n.x, 0.0f, radius * n.z}, n, topColor});
+        out.vertices.push_back({{radius * n.x, -depth, radius * n.z}, n, bottomColor});
+    }
+    for (int i = 0; i < segments; ++i) {
+        const unsigned int b = static_cast<unsigned int>(2 * i);
+        out.indices.insert(out.indices.end(), {b, b + 1, b + 3, b, b + 3, b + 2});
+    }
+    return out;
+}
+
 MeshData helipad(float radius, int segments, const vec3& padColor, const vec3& ringColor,
                  const vec3& letterColor) {
     MeshData   out;

@@ -1,9 +1,10 @@
 /*
  * ApplicationGround.cpp
  * Décalques posés au sol et dessinés avant l'appareil : les hélipads (départ et
- * ceux du terrain) et l'ombre portée de l'appareil. Tous deux sont rendus sans
- * test de profondeur pour éviter le z-fighting au ras du relief ; l'appareil,
- * dessiné après, les recouvre proprement.
+ * ceux du terrain) et l'ombre portée de l'appareil. Tous deux gardent le test de
+ * profondeur (le relief peut donc les cacher) mais tirent leur profondeur vers la
+ * caméra (polygon offset) pour éviter le z-fighting au ras du relief ; ils
+ * n'écrivent pas la profondeur et l'appareil, dessiné après, les recouvre.
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -37,15 +38,18 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         return;
     }
 
-    /* Le disque du pad est quasiment dans le plan du sol : avec le test de
-       profondeur, les deux se disputaient la profondeur et le pad se brisait en
-       damier (z-fighting), surtout posé au ras de l'eau (Capbreton). Le pad est un
-       décalque au sol, dessiné AVANT l'appareil : on désactive son test de
-       profondeur, il se pose donc simplement sur ce qui est déjà rendu (terrain ou
-       mer) sans jamais se disputer la profondeur. Il n'écrit pas non plus la
-       profondeur ; l'appareil, dessiné après, le recouvre proprement. */
+    /* Le disque du pad est quasiment dans le plan du sol : au test de profondeur
+       brut, les deux se disputaient la profondeur et le pad se brisait en damier
+       (z-fighting), surtout posé au ras de l'eau (Capbreton). Couper le test
+       réglait le damier mais faisait du pad un tampon : ses pixels recouvraient
+       tout le paysage déjà rendu, montagnes comprises (flagrant au sommet du pic
+       du Midi d'Ossau). On garde donc le test et on tire la profondeur du pad
+       vers la caméra (polygon offset) : il gagne contre le sol qui le porte, mais
+       le relief devant lui le cache normalement. Il n'écrit pas la profondeur ;
+       l'appareil, dessiné après, le recouvre proprement. */
     glDepthMask(GL_FALSE);
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-2.0f, -2.0f);
 
     /* Pose un hélipad à plat au point (x, z) du monde, juste au-dessus du sol.
        On cale le disque sur la hauteur du sol AU CENTRE, c'est-à-dire le niveau
@@ -59,6 +63,22 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         const float padTop  = m_terrain->heightAt(x, z);
         const mat4 padModel = glm::translate(
             mat4(1.0f), vec3{x - m_renderOrigin.x, padTop + 0.08f, z - m_renderOrigin.z});
+        /* Jupe sous le disque : sur un pad perché, le plateau surplombe le relief ;
+           la paroi cylindrique habille la tranche (sa partie enterrée est cachée
+           par le test de profondeur). Vraie géométrie : elle écrit la profondeur,
+           pour que le disque, dessiné après sans l'écrire, ne transparaisse pas au
+           travers vu de dessous. */
+        if (m_padSkirt) {
+            glDepthMask(GL_TRUE);
+            m_shader->use();
+            m_shader->setMat4("u_view", view);
+            m_shader->setMat4("u_proj", proj);
+            m_shader->setMat4("u_model", glm::translate(
+                mat4(1.0f), vec3{x - m_renderOrigin.x, padTop + 0.06f, z - m_renderOrigin.z}));
+            m_shader->setVec3("u_lightDir", lightDir);
+            m_padSkirt->draw();
+            glDepthMask(GL_FALSE);
+        }
         if (m_helipadModel) {
             /* Version texturée (modèle Blender), dessinée avec le shader des modèles. */
             m_modelShader->use();
@@ -95,7 +115,8 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         }
     }
 
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0.0f, 0.0f);
     glDepthMask(GL_TRUE);
 }
 
@@ -119,13 +140,15 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     /* Posée sur un hélipad, l'ombre (juste au-dessus du sol) se retrouve très
-       proche en profondeur du disque du pad : avec le test de profondeur, elle se
-       dessinait en damier sur le pad (z-fighting). L'ombre est un décalque au sol
-       dessiné AVANT l'appareil ; on désactive donc son test de profondeur, si bien
-       qu'elle se fond simplement sur ce qui est déjà au sol (terrain ou pad) sans
-       jamais se disputer la profondeur. L'appareil, dessiné après, la recouvre. */
+       proche en profondeur du sol : au test de profondeur brut, elle se dessinait
+       en damier (z-fighting). Même parade que pour le pad : test conservé mais
+       profondeur tirée vers la caméra (polygon offset), pour que l'ombre gagne
+       contre le sol qui la porte sans recouvrir le relief qui la cache. (Le pad,
+       lui, n'écrit pas la profondeur : l'ombre ne se dispute donc qu'avec le
+       terrain.) L'appareil, dessiné après, la recouvre. */
     glDepthMask(GL_FALSE);
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-2.0f, -2.0f);
     const float scaleXZ = 1.0f + altitude * 0.02f;
     constexpr float DISC_MESH_R = 6.0f;  /* rayon du maillage de disque (cf. disc(6, ...)) */
 
@@ -219,7 +242,8 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
        (~5 m), concentrique avec celui du rotor. */
     drawDisc(scaleXZ * (5.0f / 6.0f), shadowAlpha * alphaMult);
 
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0.0f, 0.0f);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }

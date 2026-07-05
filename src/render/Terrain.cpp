@@ -128,11 +128,15 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     }
     stbi_image_free(pixels);
 
-    /* Plateformes d'hélipad : on aplanit le relief sous le point de départ et sous
-       chaque hélipad, pour que le sol et l'appareil posé s'accordent à une même
-       hauteur (sinon, sur une maille en pente, l'appareil s'enfonce ou se pose en
-       travers). À faire avant de construire le maillage, qui en hérite. */
+    /* Point de départ : on aplanit le relief sous le spawn, pour que le sol et
+       l'appareil posé s'accordent à une même hauteur (sinon, sur une maille en
+       pente, l'appareil s'enfonce ou se pose en travers). À faire avant de
+       construire le maillage, qui en hérite. Les hélipads du terrain, eux, ne
+       déforment plus le relief : chacun est une petite plate-forme portée par
+       heightAt (voir buildPadPlatforms), le disque et sa jupe habillant le
+       surplomb éventuel. */
     flattenPads();
+    buildPadPlatforms();
 
     /* --- Construction du maillage du relief ---------------------------------- */
     const float halfW = 0.5f * m_widthM;
@@ -239,10 +243,45 @@ float Terrain::heightAt(float x, float z) const noexcept {
     const float hb = at(i1, j0);
     const float hc = at(i0, j1);
     const float hd = at(i1, j1);
+    float       h  = 0.0f;
     if (tx + tz <= 1.0f) {
-        return ha + tx * (hb - ha) + tz * (hc - ha);  /* triangle a-c-b */
+        h = ha + tx * (hb - ha) + tz * (hc - ha);  /* triangle a-c-b */
+    } else {
+        h = hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd);  /* triangle b-c-d */
     }
-    return hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd);  /* triangle b-c-d */
+
+    /* Plates-formes d'hélisurface : dans leur emprise, le sol porteur ne descend
+       jamais sous le plateau du pad. Un pad perché (sommet du pic du Midi d'Ossau)
+       porte ainsi l'appareil sans déformer le relief alentour. */
+    for (const PadPlatform& pad : m_padPlatforms) {
+        const float dx = x - pad.x;
+        const float dz = z - pad.z;
+        if (dx * dx + dz * dz <= PAD_PLATFORM_RADIUS_M * PAD_PLATFORM_RADIUS_M
+            && pad.top > h) {
+            h = pad.top;
+        }
+    }
+    return h;
+}
+
+void Terrain::buildPadPlatforms() {
+    /* Hauteur du plateau = relief au centre du pad, lu AVANT d'enregistrer la
+       plate-forme (l'appel à heightAt n'est donc pas influencé par elle). Les
+       pads hors emprise sont ignorés, comme au dessin. */
+    if (!m_hasGeo) {
+        return;
+    }
+    const float halfW = 0.5f * m_widthM;
+    const float halfH = 0.5f * m_heightM;
+    m_padPlatforms.reserve(m_helipads.size());
+    for (const Landmark& pad : m_helipads) {
+        float x = 0.0f, z = 0.0f;
+        worldAt(pad.lon, pad.lat, x, z);
+        if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
+            continue;
+        }
+        m_padPlatforms.push_back({x, z, heightAt(x, z)});
+    }
 }
 
 }  /* namespace artouste::render */

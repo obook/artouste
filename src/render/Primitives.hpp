@@ -66,6 +66,12 @@ struct MeshData {
  * sombre, un anneau près du bord et un grand H au centre. Sert à marquer la zone
  * de départ où l'appareil est posé et où le reset le ramène.
  */
+/* Paroi cylindrique ouverte (sans fonds) : du plan y = 0 vers le bas jusqu'à
+   y = -depth, couleur dégradée du haut vers le bas. Sert de jupe sous le disque
+   d'un hélipad perché (plate-forme en surplomb du relief). */
+[[nodiscard]] MeshData tube(float radius, float depth, int segments, const vec3& topColor,
+                            const vec3& bottomColor);
+
 [[nodiscard]] MeshData helipad(float radius, int segments, const vec3& padColor,
                                const vec3& ringColor, const vec3& letterColor);
 

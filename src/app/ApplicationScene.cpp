@@ -155,6 +155,14 @@ void Application::initScene() {
                                                      vec3{0.80f, 0.10f, 0.10f});
     m_helipad          = std::make_unique<render::Mesh>(padData.vertices, padData.indices);
 
+    /* Jupe des hélisurfaces : paroi cylindrique sous le disque, pour les pads
+       perchés dont le plateau surplombe le relief (sommet du pic du Midi
+       d'Ossau). Gris béton dégradé vers l'ombre ; la partie enterrée est
+       simplement cachée par le test de profondeur. */
+    const auto skirtData = render::primitives::tube(6.9f, 10.0f, 48, vec3{0.52f, 0.52f, 0.54f},
+                                                    vec3{0.26f, 0.26f, 0.28f});
+    m_padSkirt           = std::make_unique<render::Mesh>(skirtData.vertices, skirtData.indices);
+
     /* Hélipad texturé fabriqué avec Blender (voir tools/helipad). S'il est présent,
        il remplace la version procédurale ci-dessus ; sinon on garde celle-ci. */
     const std::filesystem::path helipadModel = assets / "models" / "helipad" / "helipad.ac";

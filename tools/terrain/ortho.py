@@ -22,10 +22,14 @@ from terrain import config
 
 
 def fill_nodata(arr):
-    """Comble le no-data de la BD ORTHO (blanc pur en bordure de couverture) par une
-       teinte de rocaille. On ne remplit que les grandes plages blanches connectées
-       au bord de l'image : la neige des sommets (blanche mais à l'intérieur) est
-       épargnée."""
+    """Comble le no-data de la BD ORTHO (blanc pur en bordure de couverture, la
+       frontière espagnole sur les zones de montagne) en PROLONGEANT le paysage :
+       chaque pixel manquant prend la couleur du pixel valide le plus proche,
+       puis la zone comblée est adoucie au flou pour fondre les traînées de
+       prolongation. L'ancienne teinte unie dessinait de gros carrés plats,
+       criards à côté des névés. On ne remplit que les grandes plages blanches
+       connectées au bord de l'image : la neige des sommets (blanche mais à
+       l'intérieur) est épargnée."""
     white = (arr[:, :, 0] >= 248) & (arr[:, :, 1] >= 248) & (arr[:, :, 2] >= 248)
     labels, count = ndimage.label(white)
     if count == 0:
@@ -37,10 +41,12 @@ def fill_nodata(arr):
     nodata = np.isin(labels, keep)
     if not nodata.any():
         return arr
-    rock = np.median(arr[~white], axis=0) * 0.9  # teinte du terrain, assombrie
     out = arr.copy()
-    out[nodata] = rock.astype(np.uint8)
-    print(f"[ortho] no-data comblé ({int(nodata.sum())} px) couleur {rock.round().astype(int).tolist()}")
+    _, (iy, ix) = ndimage.distance_transform_edt(nodata, return_indices=True)
+    out[nodata] = arr[iy[nodata], ix[nodata]]
+    blurred = np.asarray(Image.fromarray(out).filter(ImageFilter.GaussianBlur(6)))
+    out[nodata] = blurred[nodata]
+    print(f"[ortho] no-data comblé ({int(nodata.sum())} px) par prolongation du paysage")
     return out
 
 

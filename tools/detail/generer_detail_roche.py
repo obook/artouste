@@ -22,7 +22,7 @@ import numpy as np
 from PIL import Image
 
 TAILLE = 512          # cote du PNG (pixels)
-ANISOTROPIE = 2.2     # etirement des frequences : strates allongees
+ANISOTROPIE = 1.5     # etirement des frequences : strates allongees
 PENTE_SPECTRE = 1.6   # 1/f^pente : equilibre grandes formes / grain fin
 LARGEUR_FAILLE = 0.08 # finesse des micro-failles (ecart-type du bruit)
 PROFONDEUR_FAILLE = 0.35  # assombrissement au fond des failles

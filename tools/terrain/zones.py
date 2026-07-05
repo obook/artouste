@@ -46,10 +46,10 @@ ZONES = {
         "helipads": [
             # Fabrèges : reproduit l'aire de départ actuelle (fond de vallée plat).
             ("Fabrèges", -0.408063, 42.908024),
-            # Sommet du pic du Midi d'Ossau : coordonnées du landmark ; la
-            # plate-forme du moteur (heightAt + jupe) n'exige plus un noeud
-            # de grille.
-            ("Pic du Midi d'Ossau", -0.4380, 42.8430),
+            # Sommet du pic du Midi d'Ossau : point culminant de la heightmap 1024
+            # (~2847 m). Centrer sur le maximum local évite d'enterrer le disque
+            # côté amont ; la plate-forme du moteur (heightAt + jupe) fait le reste.
+            ("Pic du Midi d'Ossau", -0.4382796, 42.8430108),
         ],
     },
     # Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud

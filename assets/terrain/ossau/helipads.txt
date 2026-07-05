@@ -1,9 +1,4 @@
-# Helipads - vallée d'Ossau (un par ligne : lon lat nom)
-# Fabrèges reproduit exactement l'ancien point de départ (start_x/start_z du
-# terrain) : c'est l'hélipad le plus proche du repère, donc le départ ne bouge pas.
+# Helipads - vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau) (un par ligne : lon lat nom)
+# Positions approximatives, à affiner sur place.
 -0.408063 42.908024 Fabrèges
-# Sommet du pic du Midi d'Ossau : noeud culminant de la heightmap (2847 m).
-# Le relief n'est pas aplani : le pad est une petite plate-forme perchée
-# (plateau porteur dans heightAt + jupe sous le disque), le sommet garde
-# sa forme naturelle.
--0.438200 42.843209 Pic du Midi d'Ossau
+-0.4382796 42.8430108 Pic du Midi d'Ossau

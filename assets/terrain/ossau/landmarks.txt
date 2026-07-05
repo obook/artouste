@@ -1,6 +1,6 @@
-# Lieux remarquables de la vallee d'Ossau (un par ligne : lon lat nom)
+# Lieux remarquables - vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau) (un par ligne : lon lat nom)
 # Le nom est le reste de la ligne et peut contenir des espaces et des accents.
 -0.3325 42.8589 Lac d'Artouste
--0.4380 42.8430 Pic du Midi d'Ossau
--0.3600 42.8400 Pic Palas
--0.4130 42.9050 Fabrèges
+-0.438 42.843 Pic du Midi d'Ossau
+-0.36 42.84 Pic Palas
+-0.413 42.905 Fabrèges

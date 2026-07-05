@@ -156,6 +156,14 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     };
 
     const vec3 white{1.0f, 1.0f, 1.0f};  /* la couleur vient de la texture */
+
+    /* Pas du gradient des normales : environ 35 m de part et d'autre, quelle
+       que soit la finesse de la grille. Au pas d'une seule maille fine
+       (17,5 m), chaque micro-facette accrochait la lumière et les versants
+       lointains scintillaient en quadrillage régulier ; on lisse l'ÉCLAIRAGE
+       sans rien enlever au relief lui-même. */
+    const int step = std::max(1, static_cast<int>(std::lround(35.0f / dx)));
+
     for (int j = 0; j < m_rows; ++j) {
         for (int i = 0; i < m_cols; ++i) {
             const float x = -halfW + static_cast<float>(i) * dx;
@@ -163,10 +171,10 @@ Terrain::Terrain(const std::filesystem::path& dir) {
             const float y = m_heights[idx(i, j)];
 
             /* Normale par différences finies sur le relief (voisins bornés au bord). */
-            const int   iL = i > 0 ? i - 1 : i;
-            const int   iR = i < m_cols - 1 ? i + 1 : i;
-            const int   jU = j > 0 ? j - 1 : j;
-            const int   jD = j < m_rows - 1 ? j + 1 : j;
+            const int   iL = std::max(0, i - step);
+            const int   iR = std::min(m_cols - 1, i + step);
+            const int   jU = std::max(0, j - step);
+            const int   jD = std::min(m_rows - 1, j + step);
             const float hL = m_heights[idx(iL, j)];
             const float hR = m_heights[idx(iR, j)];
             const float hU = m_heights[idx(i, jU)];

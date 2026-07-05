@@ -11,9 +11,9 @@
   <meta name="theme-color" content="#15232b">
   <style>
     :root {
-      --petrol:    #15232b;   /* gunmetal petrole, fond principal */
-      --petrol-2:  #1b2d37;   /* surfaces relevees */
-      --plate:     #21333d;   /* metal de la plaque constructeur */
+      --petrol:    #15232b;   /* gunmetal pétrole, fond principal */
+      --petrol-2:  #1b2d37;   /* surfaces relevées */
+      --plate:     #21333d;   /* métal de la plaque constructeur */
       --rule:      #2d3f4a;   /* filets fins */
       --alu:       #d4d9dc;   /* aluminium, titres */
       --text:      #c2ccd2;   /* corps de texte */
@@ -36,7 +36,7 @@
     a:hover { color: var(--amber-hi); }
     img { max-width: 100%; }
 
-    /* Famille mono = identite "plaque / manuel de vol" */
+    /* Famille mono = identité "plaque / manuel de vol" */
     .mono {
       font-family: "SFMono-Regular", "JetBrains Mono", "Cascadia Code", Consolas,
         "Liberation Mono", Menlo, monospace;
@@ -47,7 +47,7 @@
       color: var(--amber); margin: 0 0 14px;
     }
 
-    /* Accessibilite : focus clavier visible */
+    /* Accessibilité : focus clavier visible */
     a:focus-visible, button:focus-visible {
       outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 3px;
     }
@@ -74,7 +74,7 @@
     }
     .navlinks a:hover { color: var(--alu); }
 
-    /* Bouton menu (mobile) : masque sur grand ecran, revele sous 760px */
+    /* Bouton menu (mobile) : masqué sur grand écran, révélé sous 760px */
     .nav-toggle {
       display: none; width: 42px; height: 42px; padding: 0;
       background: transparent; border: 1px solid var(--rule); border-radius: 5px;
@@ -130,10 +130,10 @@
     .btn-ghost { border: 1px solid var(--rule); color: var(--alu); }
     .btn-ghost:hover { border-color: var(--amber); color: var(--alu); transform: translateY(-2px); }
 
-    /* Signature : plaque constructeur rivetee */
+    /* Signature : plaque constructeur rivetée */
     .plate {
       position: relative;
-      /* Transparente : on laisse bien transparaitre l'helico en vol du fond. */
+      /* Transparente : on laisse bien transparaître l'hélico en vol du fond. */
       background: linear-gradient(160deg, rgba(39,58,69,0.58) 0%, rgba(33,51,61,0.58) 55%, rgba(26,42,51,0.58) 100%);
       backdrop-filter: blur(3px);
       border: 1px solid #3a4d59; border-radius: 7px;
@@ -174,7 +174,7 @@
     .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.3rem); margin: 0; color: var(--alu); letter-spacing: -0.01em; }
     .lead { color: var(--muted); max-width: 46em; font-size: 1.04rem; }
 
-    /* Caracteristiques */
+    /* Caractéristiques */
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(266px, 1fr)); gap: 16px; }
     .card {
       background: var(--petrol-2); border: 1px solid var(--rule);
@@ -210,7 +210,7 @@
       border-top: 1px solid var(--rule);
       font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
     }
-    /* Indice "agrandir" en coin, revele au survol ou au focus */
+    /* Indice "agrandir" en coin, révélé au survol ou au focus */
     .shot::after {
       content: "+"; position: absolute; top: 10px; right: 10px;
       width: 28px; height: 28px; display: grid; place-items: center;
@@ -246,7 +246,7 @@
     .lb-close:hover { color: var(--amber); }
     @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Telechargement */
+    /* Téléchargement */
     .dl {
       background:
         radial-gradient(120% 140% at 50% 0%, rgba(244,160,50,0.07), transparent 60%),
@@ -270,7 +270,7 @@
       font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.03em;
     }
 
-    /* Reveal discret a l'arrivee */
+    /* Reveal discret à l'arrivée */
     .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s ease forwards; }
     .reveal.d1 { animation-delay: 0.08s; }
     .reveal.d2 { animation-delay: 0.18s; }
@@ -289,7 +289,7 @@
       .hero-grid { grid-template-columns: 1fr; gap: 34px; padding: 64px 24px 56px; }
     }
 
-    /* Sous 760px : le menu inline laisse place a un panneau deroulant. */
+    /* Sous 760px : le menu inline laisse place à un panneau déroulant. */
     @media (max-width: 760px) {
       .nav { flex-wrap: wrap; padding: 12px 20px; }
       .nav-toggle { display: grid; }
@@ -306,7 +306,7 @@
       .navlinks a:last-child { border-bottom: 0; }
     }
 
-    /* Tablette etroite et grand telephone : on resserre les rythmes verticaux. */
+    /* Tablette étroite et grand téléphone : on resserre les rythmes verticaux. */
     @media (max-width: 600px) {
       section { padding: 58px 20px; }
       .hero-grid { padding: 52px 20px 46px; }
@@ -319,7 +319,7 @@
       footer .inner { padding: 24px 20px; gap: 8px; }
     }
 
-    /* Petit telephone : les boutons d'action prennent toute la largeur,
+    /* Petit téléphone : les boutons d'action prennent toute la largeur,
        cibles tactiles confortables et alignement propre. */
     @media (max-width: 460px) {
       .cta-row { flex-direction: column; align-items: stretch; }
@@ -328,7 +328,7 @@
       .gallery { grid-template-columns: 1fr; }
     }
 
-    /* Respect du mouvement reduit */
+    /* Respect du mouvement réduit */
     @media (prefers-reduced-motion: reduce) {
       * { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; animation: none; }
@@ -541,7 +541,7 @@
   </div>
 
   <script>
-    /* Menu mobile : panneau deroulant accessible (clavier et lecteur d'ecran). */
+    /* Menu mobile : panneau déroulant accessible (clavier et lecteur d'écran). */
     (function () {
       var toggle = document.getElementById('navToggle');
       var menu = document.getElementById('navmenu');
@@ -564,7 +564,7 @@
           setOuvert(false); toggle.focus();
         }
       });
-      /* Retour en grand ecran : on repart d'un etat propre. */
+      /* Retour en grand écran : on repart d'un état propre. */
       window.matchMedia('(min-width: 761px)').addEventListener('change', function (mq) {
         if (mq.matches) { setOuvert(false); }
       });

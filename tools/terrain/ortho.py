@@ -41,12 +41,23 @@ def fill_nodata(arr):
     nodata = np.isin(labels, keep)
     if not nodata.any():
         return arr
+    # Prolongation : chaque pixel manquant prend la couleur du pixel valide le
+    # plus proche, puis un GRAND flou lisse l'intérieur comblé (sans lui, les
+    # couleurs prolongées gardaient la géométrie en escalier des tuiles WMS,
+    # flagrante sur la minimap).
     out = arr.copy()
     _, (iy, ix) = ndimage.distance_transform_edt(nodata, return_indices=True)
     out[nodata] = arr[iy[nodata], ix[nodata]]
-    blurred = np.asarray(Image.fromarray(out).filter(ImageFilter.GaussianBlur(6)))
-    out[nodata] = blurred[nodata]
-    print(f"[ortho] no-data comblé ({int(nodata.sum())} px) par prolongation du paysage")
+    flou = np.asarray(Image.fromarray(out).filter(ImageFilter.GaussianBlur(48)),
+                      dtype=np.float32)
+    # Fondu progressif de part et d'autre de la frontière de couverture (rampe
+    # d'environ 24 px) : la photo reste intacte au-delà, le comblement flou prend
+    # le dessus au coeur, et la marche d'escalier disparaît.
+    dedans = ndimage.distance_transform_edt(nodata)
+    dehors = ndimage.distance_transform_edt(~nodata)
+    alpha = np.clip(0.5 + (dedans - dehors) / 24.0, 0.0, 1.0)[:, :, np.newaxis]
+    out = (arr.astype(np.float32) * (1.0 - alpha) + flou * alpha).astype(np.uint8)
+    print(f"[ortho] no-data comblé ({int(nodata.sum())} px) par prolongation fondue du paysage")
     return out
 
 

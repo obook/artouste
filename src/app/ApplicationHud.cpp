@@ -226,16 +226,18 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     /* Étiquette 3D + point minimap d'un lieu (nom + position WGS84), s'il tombe dans
        l'emprise du terrain courant. Projetée légèrement au-dessus du sol. */
     const mat4 viewProj = m_camera.proj() * m_camera.view();
-    const auto addLabel = [&](const render::Landmark& place, const char* displayName) {
+    const auto addLabel = [&](const render::Landmark& place, const char* displayName,
+                              bool generic) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(place.lon, place.lat, x, z);
         if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
             return;  /* hors du terrain courant */
         }
         ui::HudLabel label;
-        label.name = displayName;
-        label.mapU = x / (2.0f * halfW) + 0.5f;
-        label.mapV = z / (2.0f * halfH) + 0.5f;
+        label.name    = displayName;
+        label.generic = generic;
+        label.mapU    = x / (2.0f * halfW) + 0.5f;
+        label.mapV    = z / (2.0f * halfH) + 0.5f;
 
         const float y    = m_terrain->heightAt(x, z) + 25.0f;
         const vec4  clip = viewProj * vec4{x, y, z, 1.0f};
@@ -253,12 +255,14 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
 
     /* Lieux remarquables (étiquetés par leur nom), puis hélipads (tous étiquetés
        "Hélisurface", le terme d'aire de poser ; leur ville est déjà donnée par le
-       lieu remarquable voisin). */
+       lieu remarquable voisin). L'étiquette générique est marquée comme telle :
+       quand un pad coïncide avec un lieu nommé (sommet du pic du Midi d'Ossau),
+       c'est le nom du lieu qui doit rester lisible. */
     for (const render::Landmark& lm : m_terrain->landmarks()) {
-        addLabel(lm, lm.name.c_str());
+        addLabel(lm, lm.name.c_str(), false);
     }
     for (const render::Landmark& pad : m_terrain->helipads()) {
-        addLabel(pad, "Hélisurface");
+        addLabel(pad, "Hélisurface", true);
     }
 }
 

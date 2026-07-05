@@ -214,9 +214,11 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
     ImDrawList* dl = ImGui::GetForegroundDrawList();
 
     /* Étiquettes projetées sur la scène : un point jaune et le nom (avec ombre).
-       Anti-chevauchement : on traite les lieux du plus proche au plus lointain
+       Anti-chevauchement : on traite d'abord les lieux nommés, puis les étiquettes
+       génériques ("Hélisurface"), chaque groupe du plus proche au plus lointain,
        et on masque le nom de ceux dont le texte recouvrirait une étiquette déjà
-       posée. Le point jaune, lui, reste affiché pour tous : seule la cohue de
+       posée. Ainsi un pad posé sur un lieu nommé ne vole pas son nom (pic du Midi
+       d'Ossau). Le point jaune, lui, reste affiché pour tous : seule la cohue de
        noms est évitée, pas le repérage des positions. */
     std::vector<int> order;
     order.reserve(data.labels.size());
@@ -226,8 +228,12 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
         }
     }
     std::sort(order.begin(), order.end(), [&](int a, int b) {
-        return data.labels[static_cast<std::size_t>(a)].depth
-             < data.labels[static_cast<std::size_t>(b)].depth;
+        const HudLabel& la = data.labels[static_cast<std::size_t>(a)];
+        const HudLabel& lb = data.labels[static_cast<std::size_t>(b)];
+        if (la.generic != lb.generic) {
+            return !la.generic;  /* les lieux nommés d'abord */
+        }
+        return la.depth < lb.depth;
     });
 
     std::vector<ImVec4> placed;  /* boites de noms déjà occupées : (minx, miny, maxx, maxy) */

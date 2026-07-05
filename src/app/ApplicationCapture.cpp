@@ -89,15 +89,33 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
 
     /* L'appareil est placé en vol au-dessus de la côte (sa position de départ),
-       de sorte que la capture montre le relief réel et la mer sous lui. Avec
+       de sorte que la capture montre le relief réel et la mer sous lui.
+       ARTOUSTE_SHOT_LON / ARTOUSTE_SHOT_LAT le placent ailleurs (terrain
+       géoréférencé), toujours à agl mètres au-dessus du sol (0 = posé) :
+       pratique pour cadrer un lieu précis (sommet, dune...). Avec
        ARTOUSTE_SHOT_PARK, on le pose plutôt à sa position de parking (mât centré
        sur le H), pour vérifier ce placement. */
-    vec3 shotPos{m_startPos.x, m_terrain->heightAt(m_startPos.x, m_startPos.z) + agl,
-                 m_startPos.z};
+    float shotX = m_startPos.x;
+    float shotZ = m_startPos.z;
+    const char* shotLon = std::getenv("ARTOUSTE_SHOT_LON");
+    const char* shotLat = std::getenv("ARTOUSTE_SHOT_LAT");
+    if (shotLon != nullptr && shotLat != nullptr && m_terrain->hasGeo()) {
+        m_terrain->worldAt(std::strtof(shotLon, nullptr), std::strtof(shotLat, nullptr),
+                           shotX, shotZ);
+    }
+    vec3 shotPos{shotX, m_terrain->heightAt(shotX, shotZ) + agl, shotZ};
     if (std::getenv("ARTOUSTE_SHOT_PARK") != nullptr) {
         shotPos = m_parkPos;
     }
-    const mat4 base = glm::translate(mat4(1.0f), shotPos);
+    /* Cap de l'appareil : ARTOUSTE_SHOT_HEADING (cap boussole en degrés, 0 = nord,
+       90 = est). Par défaut le nez pointe vers l'est (+X monde), comme au départ.
+       Permet une vue arrière orientée vers un paysage choisi. */
+    mat4 base = glm::translate(mat4(1.0f), shotPos);
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_HEADING")) {
+        const float headingDeg = std::strtof(e, nullptr);
+        base = base * glm::rotate(mat4(1.0f), glm::radians(90.0f - headingDeg),
+                                  vec3{0.0f, 1.0f, 0.0f});
+    }
 
     if (std::getenv("ARTOUSTE_SHOT_COCKPIT") != nullptr) {
         m_viewMode = 1;  /* vue cockpit : pilote allégé, jambes animées */

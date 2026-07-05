@@ -18,19 +18,34 @@ in vec3 v_worldPos;
 out vec4 frag_color;
 
 uniform sampler2D u_texture;
+uniform sampler2D u_detail;     /* grain rocheux tuilable, unité 1 */
 uniform vec3      u_lightDir;   /* direction VERS la lumière, déjà normalisée */
 uniform vec3      u_seaColor;   /* couleur du plan de mer, pour fondre le bord */
 uniform vec3      u_camPos;     /* position de la caméra (pour la distance de brume) */
 uniform vec3      u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float     u_fogStart;   /* distance où la brume commence (m) */
 uniform float     u_fogEnd;     /* distance où tout est noyé dans la brume (m) */
+uniform vec2      u_originXZ;   /* origine de rendu : reconstitue le monde absolu */
 
 void main() {
-    vec3 albedo = texture(u_texture, v_uv).rgb;
+    vec3 ortho = texture(u_texture, v_uv).rgb;
+
+    /* Grain rocheux de près : une texture de détail tuilée (1 tuile = 1,5 m),
+       échantillonnée en coordonnées MONDE ABSOLUES (v_worldPos est relatif à
+       l'origine de rendu flottante : sans u_originXZ le motif glisserait à
+       chaque rebasage). Force = pente x proximité : plein sur les faces
+       raides (> ~30 degrés), plancher discret partout pour casser l'aplat de
+       l'ortho ; fondu éteint au-delà de 2500 m, où l'ortho seule reprend la
+       main. La modulation se fait autour de 1 : les couleurs IGN restent. */
+    float dist   = length(u_camPos - v_worldPos);
+    vec3  n      = normalize(v_normal);
+    float detail = texture(u_detail, (v_worldPos.xz + u_originXZ) / 1.5).r;
+    float pente  = smoothstep(0.08, 0.30, 1.0 - n.y);
+    float force  = mix(0.15, 1.0, pente) * (1.0 - smoothstep(400.0, 2500.0, dist));
+    vec3  albedo = ortho * mix(1.0, 0.55 + 0.9 * detail, force);
 
     /* Demi-Lambert : la lumière sculpte le relief sans plonger les versants à
        l'ombre dans le noir total. */
-    vec3  n       = normalize(v_normal);
     float diffuse = dot(n, normalize(u_lightDir)) * 0.5 + 0.5;
     float light   = 0.55 + 0.55 * diffuse;
     vec3  color   = albedo * min(light, 1.3);
@@ -48,14 +63,14 @@ void main() {
        seul rouge prenait pour de l'eau. Mêmes conditions que le filtre des bâtiments
        sur l'eau (voir render/Buildings.cpp), pour que sol et bâtiments s'accordent. */
     float lowAlt  = 1.0 - smoothstep(0.0, 3.0, v_worldPos.y);   /* 1 près du niveau 0 */
-    float redLow  = 1.0 - smoothstep(0.22, 0.40, albedo.r);     /* 1 si rouge faible */
-    float blueDom = smoothstep(0.04, 0.12, albedo.b - albedo.r);/* 1 si bleu domine (eau, pas une ombre) */
+    float redLow  = 1.0 - smoothstep(0.22, 0.40, ortho.r);      /* 1 si rouge faible */
+    float blueDom = smoothstep(0.04, 0.12, ortho.b - ortho.r);  /* 1 si bleu domine (eau, pas une ombre) */
     float sea     = lowAlt * redLow * blueDom;                  /* eau = bas ET couleur d'eau */
     vec3  seaLit   = u_seaColor * min(light, 1.3);
     color          = mix(color, seaLit, sea);
 
-    /* Brume : proportion croissante de couleur d'horizon avec la distance. */
-    float dist = length(u_camPos - v_worldPos);
+    /* Brume : proportion croissante de couleur d'horizon avec la distance (dist
+       déjà calculé en tête de main() pour le fondu du grain rocheux). */
     float fog  = smoothstep(u_fogStart, u_fogEnd, dist);
     color      = mix(color, u_fogColor, fog);
 

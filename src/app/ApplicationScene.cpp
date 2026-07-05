@@ -34,6 +34,7 @@
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
+#include "render/Texture.hpp"
 #include "util/Math.hpp"
 
 #include <cstdio>
@@ -171,6 +172,14 @@ void Application::initScene() {
         if (!pad.empty()) {
             m_helipadModel = std::make_unique<render::Model>(std::move(pad));
         }
+    }
+
+    /* Grain rocheux du terrain : texture de détail tuilable mélangée à l'ortho
+       de près par terrain.frag (voir u_detail). Absente : le shader reçoit une
+       unité vide, mais le fichier fait partie du dépôt. */
+    const std::filesystem::path detailPath = assets / "textures" / "detail-roche.png";
+    if (std::filesystem::exists(detailPath)) {
+        m_terrainDetail = std::make_unique<render::Texture>(detailPath);
     }
 
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */

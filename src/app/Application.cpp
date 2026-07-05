@@ -26,6 +26,7 @@
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
+#include "render/Texture.hpp"
 
 #include <cstdio>
 #include <cstdlib>

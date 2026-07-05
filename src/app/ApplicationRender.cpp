@@ -22,6 +22,7 @@
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
+#include "render/Texture.hpp"
 #include "util/Math.hpp"
 
 #include <cmath>
@@ -164,6 +165,12 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_terrainShader->setFloat("u_fogStart", FOG_START);
         m_terrainShader->setFloat("u_fogEnd", FOG_END);
         m_terrainShader->setInt("u_texture", 0);
+        m_terrainShader->setInt("u_detail", 1);
+        m_terrainShader->setVec2("u_originXZ",
+                                 vec2{m_renderOrigin.x, m_renderOrigin.z});
+        if (m_terrainDetail) {
+            m_terrainDetail->bind(1);
+        }
         m_terrain->bindTexture(0);
         m_terrain->draw();
     } else {

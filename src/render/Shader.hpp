@@ -45,6 +45,7 @@ public:
      * simplement ignoré par OpenGL, sans erreur.
      */
     void setMat4(const std::string& name, const mat4& value);
+    void setVec2(const std::string& name, const vec2& value);
     void setVec3(const std::string& name, const vec3& value);
     void setVec4(const std::string& name, const vec4& value);
     void setFloat(const std::string& name, float value);

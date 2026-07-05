@@ -404,48 +404,64 @@
         <p class="klabel">Physique <span class="key">P</span></p>
         <h3>Modèle de vol</h3>
         <p>Intégration Newton-Euler à pas fixe : poussée, gravité, traînée, moments
-          cycliques et anti-couple, effet de sol et effet de translation.
-          Les vibrations et le bruit du moteur sont modélisés en fonction de la puissance et de la vitesse.</p>
+          cycliques et anti-couple, effet de sol et effet de translation. Vibrations
+          et bruit moteur suivent la puissance et la vitesse.</p>
       </div>
       <div class="card">
         <p class="klabel">Réalisme <span class="key">R</span></p>
         <h3>Domaine de vol</h3>
-        <p>La portance et la puissance chutent avec l'altitude comme sur l'appareil réel. Une traînée d'onde
-          freine l'appareil dès qu'il dépasse la VNE. Le vol latéral prononcé fait perdre
-          de l'autorité au palonnier, tandis qu'une descente verticale trop rapide fait
-          décrocher le rotor (vortex ring state).
-        </br><i>Ces difficultés sont désactivées en
-          mode assisté.</i></p>
+        <p>La portance et la puissance chutent avec l'altitude, une traînée d'onde
+          freine l'appareil au-delà de la VNE et une descente verticale trop rapide
+          fait décrocher le rotor. <i>Difficultés désactivées en mode assisté.</i></p>
       </div>
       <div class="card">
         <p class="klabel">Turbine <span class="key">T</span></p>
         <h3>Démarrage en deux temps</h3>
-        <p>La turbine monte en régime, puis le rotor s'accélère par la roue libre.
+        <p>La turbine Artouste monte seule en régime (touche T), puis le frein lâché,
+          le rotor s'engage par la roue libre et accélère jusqu'au régime de vol.
           Il faut la lancer pour décoller, comme sur l'appareil réel.</p>
       </div>
       <div class="card">
         <p class="klabel">Confort <span class="key">C</span></p>
         <h3>Mode assisté</h3>
-        <p>Une couche qui compense le lacet, ramène le cyclique au neutre, lisse les
-          commandes et borne le collectif, sans toucher à la physique.</p>
+        <p>Une couche de confort (touche M) qui compense le lacet, ramène le cyclique
+          au neutre, lisse les commandes et borne le collectif, sans toucher à la
+          physique. La bascule est progressive.</p>
       </div>
       <div class="card">
         <p class="klabel">Posé <span class="key">P</span></p>
         <h3>Aide à l'atterrissage</h3>
         <p>En mode assisté, un réticule de centrage guide vers l'hélipad le plus proche
-          en finale, et un score note la précision du poser.</p>
+          en finale basse vitesse, puis un score note la précision du poser, mât rotor
+          centré.</p>
       </div>
       <div class="card">
         <p class="klabel">Décor <span class="key">D</span></p>
         <h3>Terrain réel</h3>
-        <p>Relief et orthophoto des Pyrénées (lac d'Artouste, pic du Midi d'Ossau),
-          bassin d'Arcachon et agglomération bordelaise, avec minimap et noms des lieux (sources IGN).</p>
+        <p>Relief et orthophoto IGN : vallée d'Ossau, Cauterets-Gavarnie, bassin
+          d'Arcachon, côte basco-landaise et agglomération bordelaise, avec minimap,
+          hélisurfaces et noms des lieux.</p>
       </div>
       <div class="card">
         <p class="klabel">Commandes <span class="key">C</span></p>
         <h3>Clavier ou manette</h3>
-        <p>Entrées clavier et manette Xbox avec détection automatique de la source.
-          Vues poursuite, cockpit et orbite, HUD complet ou quatre coins.</p>
+        <p>Entrées clavier et manette Xbox, avec détection automatique de la source
+          active. Vues poursuite, cockpit et orbite ; HUD quatre coins, instruments
+          superposés ou affichage masqué.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Démo <span class="key">D</span></p>
+        <h3>Vol de démonstration</h3>
+        <p>La touche V lance un vol panoramique joué tout seul, en boucle, au-dessus
+          du bassin d'Arcachon : Dune du Pilat, cap Ferret en rase-mottes, retour et
+          pose. Reprendre le manche en sort.</p>
+      </div>
+      <div class="card">
+        <p class="klabel">Audio <span class="key">A</span></p>
+        <h3>Webradio</h3>
+        <p>Lecture intégrée d'un flux radio internet configurable (touche K), avec
+          balance réglable entre les sons de l'hélicoptère et la radio, et voyant
+          RADIO dans le HUD.</p>
       </div>
     </div>
   </section>
@@ -458,9 +474,9 @@
     <div class="gallery">
       <button class="shot" type="button"
               data-full="screenshots/mer-coucher-soleil.png"
-              data-cap="Coucher de soleil sur la côte landaise, HUD complet.">
-        <img src="screenshots/mer-coucher-soleil.png" alt="Alouette II au-dessus de la côte landaise et de la mer au coucher du soleil, HUD complet" loading="lazy">
-        <span class="cap">Coucher de soleil sur la côte landaise, HUD complet.</span>
+              data-cap="Coucher de soleil sur la côte landaise à Capbreton, HUD complet.">
+        <img src="screenshots/mer-coucher-soleil.png" alt="Alouette II au-dessus de la côte landaise à Capbreton et de la mer au coucher du soleil, HUD complet" loading="lazy">
+        <span class="cap">Coucher de soleil sur la côte landaise à Capbreton, HUD complet.</span>
       </button>
       <button class="shot" type="button"
               data-full="artouste-en-vol.png"
@@ -469,16 +485,28 @@
         <span class="cap">Vol au-dessus de la vallée d'Ossau (lac d'Artouste), HUD complet.</span>
       </button>
       <button class="shot" type="button"
+              data-full="screenshots/bordeaux.png"
+              data-cap="La Garonne et le port de la Lune, au-dessus de Bordeaux.">
+        <img src="screenshots/bordeaux.png" alt="Alouette II en vol au-dessus de Bordeaux, la Garonne et le port de la Lune en contrebas" loading="lazy">
+        <span class="cap">La Garonne et le port de la Lune, au-dessus de Bordeaux.</span>
+      </button>
+      <button class="shot" type="button"
               data-full="screenshots/cockpit.png"
               data-cap="Vue cockpit : tableau de bord animé et commandes en main.">
         <img src="screenshots/cockpit.png" alt="Vue cockpit avec le tableau de bord et les mains du pilote sur les commandes" loading="lazy">
-        <span class="cap">Vue cockpit : tableau de bord animé et commandes en main.</span>
+        <span class="cap">Vue cockpit : tableau de bord animé et commandes en main, HUD réduit.</span>
       </button>
       <button class="shot" type="button"
-              data-full="screenshots/helipad.png"
-              data-cap="Poser sur hélipad, mât rotor centré sur le H.">
-        <img src="screenshots/helipad.png" alt="Alouette II posée sur un hélipad, mât rotor centré sur le H" loading="lazy">
-        <span class="cap">Poser sur hélipad, mât rotor centré sur le H.</span>
+              data-full="screenshots/bassin-arcachon.png"
+              data-cap="Le bassin d'Arcachon et l'océan, cap sur les passes.">
+        <img src="screenshots/bassin-arcachon.png" alt="Alouette II vue de l'arrière au-dessus du bassin d'Arcachon, presqu'île du Cap Ferret et océan au fond" loading="lazy">
+        <span class="cap">Le bassin d'Arcachon et l'océan, cap sur les passes.</span>
+      </button>
+      <button class="shot" type="button"
+              data-full="screenshots/pic-du-midi.png"
+              data-cap="En finale sur l'hélisurface du pic du Midi d'Ossau (2 847 m), au lever du soleil.">
+        <img src="screenshots/pic-du-midi.png" alt="Alouette II en courte finale au-dessus de la plate-forme d'hélisurface perchée au sommet du pic du Midi d'Ossau, lac d'Artouste et Pyrénées au petit matin" loading="lazy">
+        <span class="cap">En finale sur l'hélisurface du pic du Midi d'Ossau (2 847 m), au lever du soleil.</span>
       </button>
     </div>
   </section>

@@ -30,14 +30,16 @@ dictionnaire `ZONES` en tête du script (bornes, mer ou montagne, point de dépa
 lieux remarquables). Ajouter une zone = copier une entrée et changer les bornes.
 
 Emprise : ~17,9 x 17,8 km (vallée d'Ossau : lac d'Artouste, pic du Midi d'Ossau,
-0 à 2937 m). Terrain de montagne, sans mer.
+0 à 2938 m). Terrain de montagne, sans mer.
 
 Conséquences chiffrées :
 
-- Maille ~35 m (17900 / 511). Le relief reste lissé par rapport à la source native
-  (RGE ALTI à 1-5 m), mais le pic du Midi d'Ossau et la vallée sont bien marqués.
-  La limite vient de la grille, pas de la source.
-- Texture ~9 m/pixel (correcte vue d'hélico).
+- Maille ~17,5 m (grille 1024, contre 512 pour les autres zones). Le relief reste
+  lissé par rapport à la source native (RGE ALTI à 1-5 m), mais le pic du Midi
+  d'Ossau et la vallée sont bien marqués. La limite vient de la grille, pas de la
+  source.
+- Texture ~4,4 m/pixel (4127x4096 ; les autres zones restent à ~9 m/pixel,
+  résolution correcte vue d'hélico).
 - Aucune dépendance lourde au runtime (seulement `stb_image`). Code court, lisible.
 - Zone figée et petite : au-delà de l'emprise, le sol est plat au niveau 0.
 
@@ -98,8 +100,9 @@ Par ordre d'effort croissant :
 
 1. Quick win : monter la grille (512 ou 1024) et au besoin agrandir l'emprise dans
    `fetch_terrain.py`. Relief bien plus net, zéro nouvelle dépendance, code
-   inchangé. Il suffit de changer `COLS` et `ROWS` (et éventuellement les bornes
-   `LON/LAT` pour viser les Pyrénées).
+   inchangé. Il suffit d'ajouter les clés `grid` et `ortho_px` à la zone
+   concernée dans `tools/terrain/zones.py` (défauts 512 et 2048), puis de
+   relancer l'outil.
 2. Moyen terme : passer en tuiles + LOD (geo-clipmaps), en gardant l'IGN comme
    source. Grande zone survolable. Plus de code, mais pas de GDAL.
 3. Seulement pour quitter la France : Copernicus DEM + GDAL + texture mondiale.

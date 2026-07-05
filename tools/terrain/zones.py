@@ -11,6 +11,9 @@ une entrée et changer les bornes. La sortie va dans assets/terrain/<nom>/.
                 Pilote aussi le plan de mer du moteur (clé "sea" du calage).
   start       : (lon, lat) du point de départ ; le script affine sur le replat
                 le plus proche (voir find_flat_start).
+  grid        : largeur et hauteur de la grille d'altitude en nombre de mailles
+                (défaut 512).
+  ortho_px    : hauteur en pixels de l'orthophoto téléchargée (défaut 2048).
   title       : libellé écrit en commentaire dans terrain.txt.
   landmarks   : liste de (nom, lon, lat) étiquetés sur la scène et la minimap.
   helipads    : liste de (nom, lon, lat) où poser un hélipad (hôpital, port...).
@@ -31,12 +34,22 @@ ZONES = {
         # Montagne : on garde les petites constructions (cabanes, bergeries, granges),
         # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
         "height_min": 0.0,
+        "grid": 1024,      # mailles ~17,5 m (défaut 512 pour les autres zones)
+        "ortho_px": 4096,  # hauteur d'ortho ~4,4 m/px (défaut 2048)
         "title": "vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)",
         "landmarks": [
             ("Lac d'Artouste", -0.3325, 42.8589),
             ("Pic du Midi d'Ossau", -0.4380, 42.8430),
             ("Pic Palas", -0.3600, 42.8400),
             ("Fabrèges", -0.4130, 42.9050),
+        ],
+        "helipads": [
+            # Fabrèges : reproduit l'aire de départ actuelle (fond de vallée plat).
+            ("Fabrèges", -0.408063, 42.908024),
+            # Sommet du pic du Midi d'Ossau : coordonnées du landmark ; la
+            # plate-forme du moteur (heightAt + jupe) n'exige plus un noeud
+            # de grille.
+            ("Pic du Midi d'Ossau", -0.4380, 42.8430),
         ],
     },
     # Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud

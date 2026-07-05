@@ -26,10 +26,12 @@ WMS_LAYER = "ORTHOIMAGERY.ORTHOPHOTOS"
 NODATA = -1000.0
 
 # Nombre de points de la grille d'altitude (et de sommets du maillage).
+# Défaut : 512 ; surcharge possible par la clé "grid" de la zone.
 COLS = 512  # axe ouest -> est (longitude)
 ROWS = 512  # axe nord -> sud (latitude)
 
 # Taille de l'orthophoto téléchargée (le moteur la drape sur le maillage).
+# Défaut : 2048 ; surcharge possible par la clé "ortho_px" de la zone.
 ORTHO_HEIGHT = 2048
 
 # Couleur de repli de la mer si l'on ne trouve pas assez de pixels d'eau
@@ -63,6 +65,7 @@ def select_zone(name):
     """Fixe les réglages globaux (emprise, mer, départ, sortie) pour la zone donnée."""
     global LON_MIN, LON_MAX, LAT_MIN, LAT_MAX, RECOLOR_SEA, START_LON, START_LAT
     global ZONE_TITLE, ZONE_LANDMARKS, ZONE_HELIPADS, OUT_DIR
+    global COLS, ROWS, ORTHO_HEIGHT
     if name not in ZONES:
         connues = ", ".join(sorted(ZONES))
         raise RuntimeError(f"zone inconnue : {name} (zones connues : {connues})")
@@ -74,3 +77,5 @@ def select_zone(name):
     ZONE_LANDMARKS = zone["landmarks"]
     ZONE_HELIPADS = zone.get("helipads", [])
     OUT_DIR = os.path.join(TERRAIN_ROOT, name)
+    COLS = ROWS = int(zone.get("grid", 512))
+    ORTHO_HEIGHT = int(zone.get("ortho_px", 2048))

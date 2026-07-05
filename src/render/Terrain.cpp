@@ -265,12 +265,18 @@ float Terrain::heightAt(float x, float z) const noexcept {
 }
 
 void Terrain::buildPadPlatforms() {
-    /* Hauteur du plateau = relief au centre du pad, lu AVANT d'enregistrer la
-       plate-forme (l'appel à heightAt n'est donc pas influencé par elle). Les
-       pads hors emprise sont ignorés, comme au dessin. */
+    /* Hauteur du plateau = point le plus HAUT du relief sous l'emprise du pad
+       (centre + deux anneaux d'échantillons), lu AVANT d'enregistrer la
+       plate-forme (les appels à heightAt ne sont donc pas influencés par elle).
+       Caler sur le seul centre laissait, sur un terrain en pente, le relief
+       amont crever le disque ; calé sur le maximum, le disque coiffe tout le
+       relief de son emprise et la jupe habille le côté aval. Les pads hors
+       emprise sont ignorés, comme au dessin. */
     if (!m_hasGeo) {
         return;
     }
+    constexpr float TWO_PI  = 6.2831853f;
+    constexpr int   SAMPLES = 16;  /* par anneau : assez serré pour des mailles de ~17 m */
     const float halfW = 0.5f * m_widthM;
     const float halfH = 0.5f * m_heightM;
     m_padPlatforms.reserve(m_helipads.size());
@@ -280,7 +286,15 @@ void Terrain::buildPadPlatforms() {
         if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
             continue;
         }
-        m_padPlatforms.push_back({x, z, heightAt(x, z)});
+        float top = heightAt(x, z);
+        for (int ring = 1; ring <= 2; ++ring) {
+            const float r = PAD_PLATFORM_RADIUS_M * static_cast<float>(ring) / 2.0f;
+            for (int i = 0; i < SAMPLES; ++i) {
+                const float a = TWO_PI * static_cast<float>(i) / static_cast<float>(SAMPLES);
+                top = std::fmax(top, heightAt(x + r * std::cos(a), z + r * std::sin(a)));
+            }
+        }
+        m_padPlatforms.push_back({x, z, top});
     }
 }
 

@@ -31,6 +31,11 @@ def make_text(text, w, h, font_px, dst, tracking=0):
 make_text("GENDARMERIE", 1024, 160, 130, "decal-gendarmerie.png", tracking=6)
 # Immatriculation de l'appareil de "Peau d'Âne".
 make_text("F-BRHP", 640, 200, 150, "decal-fbrhp.png", tracking=4)
+# Code d'appareil de la livrée armée de terre (ALAT), sur la poutre de queue.
+make_text("341-HN", 640, 200, 150, "decal-341hn.png", tracking=4)
+# Livrée Protection civile : le texte des flancs et l'immatriculation de l'appareil.
+make_text("PROTECTION CIVILE", 1400, 150, 110, "decal-protectioncivile.png", tracking=4)
+make_text("F-AYEM", 640, 200, 150, "decal-fayem.png", tracking=4)
 
 # Liseré blanc plein : un petit rectangle opaque, étiré ensuite en fine bande.
 Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT, "decal-stripe.png"))

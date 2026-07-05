@@ -35,11 +35,16 @@ namespace {
  *   - BLADE_SPACING : écart entre deux pales (rotor tripale -> 120 degrés). Les
  *     positions de parking sont les multiples de cet écart : une pale alignée sur
  *     l'axe de l'appareil, les deux autres encadrant la sortie d'échappement.
- *   - PARK_TAU : constante de temps du retour en position de parking, à l'arrêt.
+ *   - PARK_TAU : constante de temps du filet de sécurité qui résorbe, à l'arrêt,
+ *     le résidu d'angle laissé par le guidage de l'extinction (quasi nul).
+ *   - PARK_STEER_MIN/MAX : bornes du facteur de guidage pendant l'extinction
+ *     (correction de quelques % au plus, invisible à l'oeil).
  */
 constexpr float ROTOR_SPIN_RATE = 16.0f;
 constexpr float BLADE_SPACING   = 2.0944f;  /* 2*pi/3 rad ~ 120 degrés */
 constexpr float PARK_TAU        = 0.6f;
+constexpr float PARK_STEER_MIN  = 0.90f;
+constexpr float PARK_STEER_MAX  = 1.10f;
 
 }  /* namespace */
 
@@ -222,19 +227,40 @@ void Application::updateAudio(const physics::RigidBody& body, const physics::Con
 void Application::advanceRotor(float rotorFraction, float frameDt) {
     /* Le rotor n'avance qu'au prorata du régime (donc pales immobiles turbine
      * coupée, puis accélération), dans le sens horaire vu de dessus (angle
-     * décroissant). À l'arrêt, on le ramène en douceur à la position de parking la
-     * plus proche : une pale presque dans l'axe de l'appareil (à un léger décalage
-     * aléatoire près, voir m_parkOffset), les deux autres de part et d'autre de la
-     * sortie de la turbine, pour qu'aucune ne stationne dans le jet chaud. Figé en
-     * pause, comme le reste de la simulation. */
+     * décroissant). La position de parking visée est un multiple de 120° décalé
+     * du jitter m_parkOffset : une pale presque dans l'axe de l'appareil, les
+     * deux autres de part et d'autre de la sortie de la turbine, pour qu'aucune
+     * ne stationne dans le jet chaud. Figé en pause, comme le reste de la
+     * simulation. */
     if (m_paused) {
         return;
     }
     if (rotorFraction > 0.0f) {
-        m_rotorAngle -= rotorFraction * ROTOR_SPIN_RATE * frameDt;
+        float advance = rotorFraction * ROTOR_SPIN_RATE * frameDt;
+        /* Extinction : le régime rotor descend linéairement (ROTOR_STOP_TIME),
+           donc l'angle où il s'immobilisera se prédit : il reste à balayer
+           RATE x f^2 x T/2. On corrige alors imperceptiblement la rotation
+           (quelques pour mille en pratique, borné à +/-10 %) pour que le rotor
+           meure PILE sur une position de parking, comme freiné par son propre
+           frottement : aucun recalage après l'arrêt. Recalculée à chaque image,
+           la correction résorbe d'elle-même les erreurs d'intégration. */
+        if (m_flight.turbine().state() == physics::Turbine::State::Extinction) {
+            const float sweep = ROTOR_SPIN_RATE * rotorFraction * rotorFraction
+                                * physics::ROTOR_STOP_TIME * 0.5f;
+            if (sweep > 1e-4f) {
+                const float stopAt = m_rotorAngle - sweep;
+                const float notch =
+                    std::round((stopAt - m_parkOffset) / BLADE_SPACING) * BLADE_SPACING
+                    + m_parkOffset;
+                advance *= clamp(1.0f + (stopAt - notch) / sweep,
+                                 PARK_STEER_MIN, PARK_STEER_MAX);
+            }
+        }
+        m_rotorAngle -= advance;
     } else {
-        /* Multiple de 120° le plus proche, décalé du jitter de parking, pour
-         * que la pale ne soit pas figée pile dans l'axe. */
+        /* Filet de sécurité à l'arrêt complet : résorbe en douceur le résidu
+         * laissé par le guidage (quasi nul), ou recale le rotor si l'extinction
+         * a été trop brève pour le guider (coupure à très bas régime). */
         const float park =
             std::round((m_rotorAngle - m_parkOffset) / BLADE_SPACING) * BLADE_SPACING
             + m_parkOffset;

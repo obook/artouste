@@ -57,6 +57,12 @@ inline vec3 fgToAssimp(const vec3& fg) {
 /* Position de la planche de bord (issue des fichiers d'assemblage FlightGear). */
 inline const vec3 PANEL_OFFSET = fgToAssimp(vec3{-4.136f, 0.0f, -0.344f});
 
+/* Cache-console : centre, hauteur et largeur du panneau sombre qui couvre la
+   partie pleine du nez sous la planche (calés à l'oeil en vue cockpit). */
+inline const vec3      CONSOLE_MASK_POS{-4.36f, -0.63f, 0.0f};
+inline constexpr float CONSOLE_MASK_H = 0.50f;
+inline constexpr float CONSOLE_MASK_W = 0.52f;
+
 /* Position du pilote sur son siège (issue de Pilot/all-pilots.xml). Sur l'Alouette
    II le pilote est à droite : on prend donc le côté latéral négatif (la place
    "copilote" de FlightGear). Le pilote est purement décoratif : ses animations

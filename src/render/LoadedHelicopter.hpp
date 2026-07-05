@@ -128,6 +128,7 @@ private:
     Model              m_collectiveBase;  /* embase du levier de collectif (fixe) */
     Model              m_collectiveLever; /* levier de collectif (pivote avec la commande) */
     Model              m_panel;
+    Model              m_consoleMask;  /* panneau sombre couvrant la console sous la planche */
     std::vector<Gauge> m_gauges;
 
     /* Horizon artificiel (indicateur d'assiette) animé : on charge le cadran ai.ac

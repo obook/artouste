@@ -113,11 +113,39 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
         m_torqueNeedle = loadPart(torqueFile, {"face", "fond", "vitre"});  /* l'aiguille seule */
         m_hasTorque    = !m_torqueNeedle.empty();
     }
+
+    /* Cache-console : la partie pleine du nez (le bas de l'objet tourvitre
+       d'alouette.ac) n'a qu'un aplat de peinture dans la texture du fuselage,
+       criard côté cabine en livrée Gendarmerie (bleu brut sous la planche). On la
+       couvre d'un panneau sombre mat, comme le capitonnage réel : un simple quad
+       vertical face aux pilotes (+X), dessiné avec la planche. */
+    {
+        std::vector<Vertex> verts(4);
+        verts[0].position = vec3{0.0f, -0.5f, -0.5f}; verts[0].uv = vec2{0.0f, 0.0f};
+        verts[1].position = vec3{0.0f, -0.5f,  0.5f}; verts[1].uv = vec2{1.0f, 0.0f};
+        verts[2].position = vec3{0.0f,  0.5f,  0.5f}; verts[2].uv = vec2{1.0f, 1.0f};
+        verts[3].position = vec3{0.0f,  0.5f, -0.5f}; verts[3].uv = vec2{0.0f, 1.0f};
+        for (Vertex& v : verts) {
+            v.normal = vec3{1.0f, 0.0f, 0.0f};
+            v.color  = vec3{1.0f};
+        }
+        const std::vector<unsigned int> idx{0, 1, 2, 0, 2, 3};
+        Model mask;
+        const Texture* tex = mask.acquireTexture(dir / "Interior/console-sombre.png");
+        mask.addPart(Mesh(verts, idx), tex);
+        m_consoleMask = std::move(mask);
+    }
 }
 
 void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float rollRad,
                                        float pitchRad, float altitudeFt, float varioFpm,
                                        float headingRad, float airspeedKt, float torquePct) const {
+    /* Cache-console sombre sous la planche (voir loadInstruments), dessiné avant
+       elle pour qu'elle reste au premier plan. */
+    const mat4 console = root * glm::translate(mat4(1.0f), CONSOLE_MASK_POS) *
+                         glm::scale(mat4(1.0f), vec3{1.0f, CONSOLE_MASK_H, CONSOLE_MASK_W});
+    drawModel(shader, m_consoleMask, console, Pass::Opaque);
+
     drawModel(shader, m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
     for (const Gauge& gauge : m_gauges) {
         drawModel(shader, gauge.model, root * glm::translate(mat4(1.0f), gauge.offset),

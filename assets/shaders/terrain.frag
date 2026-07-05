@@ -37,15 +37,17 @@ void main() {
        casse la répétition, qui rayait les pentes en velours côtelé avec une
        seule tuile. Force = pente x proximité : plein sur les faces raides
        (> ~30 degrés), plancher discret partout pour casser l'aplat de
-       l'ortho ; fondu éteint au-delà de 2500 m, où l'ortho seule reprend la
-       main. La modulation se fait autour de 1 : les couleurs IGN restent. */
+       l'ortho ; fondu éteint dès 1200 m, car au-delà la tuile de 11 m ne
+       couvre plus que quelques pixels et sa répétition quadrillait les
+       versants d'en face, alors que l'ortho seule y suffit largement.
+       La modulation se fait autour de 1 : les couleurs IGN restent. */
     float dist   = length(u_camPos - v_worldPos);
     vec3  n      = normalize(v_normal);
     vec2  monde  = v_worldPos.xz + u_originXZ;
     float detail = 0.6 * texture(u_detail, monde / 1.5).r
                  + 0.4 * texture(u_detail, monde / 11.0).r;
     float pente  = smoothstep(0.08, 0.30, 1.0 - n.y);
-    float force  = mix(0.15, 1.0, pente) * (1.0 - smoothstep(400.0, 2500.0, dist));
+    float force  = mix(0.15, 1.0, pente) * (1.0 - smoothstep(300.0, 1200.0, dist));
     vec3  albedo = ortho * mix(1.0, 0.60 + 0.80 * detail, force);
 
     /* Demi-Lambert : la lumière sculpte le relief sans plonger les versants à

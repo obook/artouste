@@ -156,9 +156,10 @@ void Application::updateCamera(const mat4& base, const vec3& renderPos, float ya
            continue. (DEMO_ORBIT_TURN doit valoir la durée du segment orbite de la
            démo, voir DemoPilot.) */
         constexpr float DEMO_ORBIT_TURN = 14.0f;  /* s pour un tour complet en démo */
-        const float angle = m_demo.active()
-                                ? (t - m_orbitStart) * (TWO_PI / DEMO_ORBIT_TURN)
-                                : t * 0.25f;
+        constexpr float ORBIT_SPEED = 0.12f;  /* rad/s en pilotage manuel (rotation lente) */
+        const float     angle       = m_demo.active()
+                                          ? (t - m_orbitStart) * (TWO_PI / DEMO_ORBIT_TURN)
+                                          : t * ORBIT_SPEED;
         m_camera.orbit(lookTarget, 15.0f, 6.0f, angle);
     }
     else if (m_viewMode == 3)

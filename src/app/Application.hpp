@@ -239,7 +239,7 @@ private:
     float                                     m_radioMsgShow  = 0.0f;   /* s restantes d'affichage du sous-titre */
     std::string                               m_radioMsg;               /* texte du message courant (anglais) */
     std::string                               m_homeStation;            /* nom de l'hélipad de départ (-> tour de contrôle) */
-    ui::HudMode                               m_hudMode  = ui::HudMode::Corners;  /* coins -> superposé -> rien */
+    ui::HudMode                               m_hudMode  = ui::HudMode::Overlay;  /* HUD complet au lancement ; H fait défiler coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */
     bool                                      m_confirmDemo  = false;  /* panneau Oui/Non avant de lancer la démo (touche V) */

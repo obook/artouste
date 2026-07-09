@@ -46,7 +46,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min
 >    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `360`
 > 4. **Décollage et vol.** Une fois le rotor en régime :
->    * augmentez doucement le collectif (touches `W` ou `Z` | gâchette `RT`) jusqu'à un peu plus de 50 % pour décoller de quelques mètres du sol
+>    * augmentez doucement le collectif (touche `Z` | gâchette `RT`) jusqu'à un peu plus de 50 % pour décoller de quelques mètres du sol
 >    * inclinez l'appareil au cyclique vers l'avant (flèches | stick gauche) et avancez
 >    * compensez le couple avec le palonnier (touche `D` à droite, `A` ou `Q` à gauche | stick droit)
 >    * réduisez le collectif (touche `S` | gâchette `LT`) pour redescendre.
@@ -62,7 +62,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté et pendant la démo, où le vol reste facile et prévisible.
 - En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
 - Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
-- Entrées clavier et manette Xbox (détection automatique de la source).
+- Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth, reconnue via le mappage GLFW/SDL.
 - Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
 - Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
 - Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
@@ -94,9 +94,9 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 | Action                  | Clavier        | Manette              |
 |-------------------------|----------------|----------------------|
-| Collectif +/-           | `W`/`Z` / `S`  | RT / LT              |
+| Collectif +/-           | `Z` / `S`      | RT / LT              |
 | Cyclique                | flèches        | stick gauche         |
-| Palonniers              | `D` / `A`/`Q`  | stick droit (X)      |
+| Palonniers              | `D` / `Q`      | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |
 | Livrée (blanche/Gendarmerie/armée de terre/Protection civile) | `L` | bouton `A` (vert) |
@@ -108,6 +108,8 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
 | Quitter                 | `Échap`        | `LB` + `RB`          |
+
+Les boutons sont nommés à la Xbox, mais une manette PlayStation 4 (DualShock 4) ou PlayStation 5 (DualSense) branchée en USB ou en Bluetooth fonctionne aussi : le mappage GLFW/SDL fait correspondre `A`/`B`/`X`/`Y` à Croix/Rond/Carré/Triangle, `Start` à `Options` et `Back` à `Share`/`Create`.
 
 ## Téléchargement
 

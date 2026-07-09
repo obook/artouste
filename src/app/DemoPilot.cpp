@@ -171,11 +171,15 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
 
     /* Vues : variété en route (cockpit / orbite par bandes de temps), poursuite à
        l'approche du pad au retour, orbite pour la pose. */
-    if (m_returning && dist < 200.0f) {
-        /* Approche et pose : vue d'orbite. La poursuite cadrait l'appareil de trop
-           près des bâtiments proches du pad en finale ; l'orbite dégage le cadrage
-           tout en tournant autour de l'appareil pour montrer la pose. */
+    if (m_returning && dist < DIST_CABRAGE) {
+        /* Cabrage puis pose : vue d'orbite, pour voir l'appareil se poser sur le pad
+           (et le rotor ralentir ensuite). Dégage aussi le cadrage des bâtiments de
+           la rive que la poursuite collait de trop près. */
         out.viewMode = 2;
+    } else if (m_returning && dist < DIST_APPROCHE_FINALE) {
+        /* Approche finale : vue pilote (cockpit), le pad et son H arrivent dans la
+           verrière comme pour un vrai poser. */
+        out.viewMode = 1;
     } else {
         /* En route : on fait défiler les vues. L'orbite, plus courte, laisse la caméra
            faire un tour complet (durée à garder en phase avec DEMO_ORBIT_TURN côté

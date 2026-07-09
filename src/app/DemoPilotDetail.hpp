@@ -64,6 +64,10 @@ inline constexpr float DIST_CAP_MIN    = 30.0f;   /* en deçà, on ne pivote plu
 inline constexpr float VZ_POSE         = -0.8f;   /* m/s : vitesse de descente visée à la pose (douce mais sans traîner) */
 inline constexpr float GAIN_VZ_POSE    = 0.15f;   /* collectif par (m/s) d'écart de vitesse verticale, à la pose */
 
+/* --- Vues de la finale ------------------------------------------------------- */
+inline constexpr float DIST_APPROCHE_FINALE = 250.0f;  /* au retour, en deçà : vue pilote (cockpit) pour l'approche */
+inline constexpr float DIST_CABRAGE         = 40.0f;   /* au retour, en deçà : bascule en orbite pour le cabrage et la pose */
+
 /* --- Détection de la pose ---------------------------------------------------- */
 inline constexpr float DIST_POSE = 15.0f;  /* distance horizontale au pad sous laquelle on est "arrivé" (m) */
 inline constexpr float AGL_POSE  = 0.2f;   /* hauteur-sol sous laquelle on considère l'appareil vraiment posé (m) :

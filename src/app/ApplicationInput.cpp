@@ -19,11 +19,11 @@
 namespace artouste::app {
 
 void Application::handleActionButtons() {
-    /* Pendant la démo, les boutons B (HUD) et Y (vue) agissent comme les touches H et C
-     * du clavier, sans couper la démo : l'utilisateur reprend simplement la main sur le
-     * HUD ou la vue. Les autres boutons sont ignorés pour ne pas perturber la
-     * chorégraphie. Pour sortir de la démo à la manette, il suffit de reprendre les
-     * commandes (manche), voir updateControls (pilotInput). */
+    /* Pendant la démo : B (HUD), Y (vue) et A (livrée) agissent comme les touches H, C
+     * et L du clavier, sans couper la démo ; X coupe la démo et replace l'appareil au
+     * pad (comme R). Les autres boutons sont ignorés pour ne pas perturber la
+     * chorégraphie. On peut aussi sortir de la démo en reprenant simplement les
+     * commandes (manche), voir computeControls (pilotInput). */
     if (m_demo.active()) {
         if (m_input->hudTogglePressed()) {  /* B : change de HUD, la démo continue */
             m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
@@ -32,6 +32,13 @@ void Application::handleActionButtons() {
         if (m_input->viewTogglePressed()) {  /* Y : change de vue, la démo continue */
             m_viewMode     = (m_viewMode + 1) % 4;
             m_demoUserView = true;
+        }
+        if (m_input->liveryTogglePressed()) {  /* A : change de livrée, la démo continue */
+            cycleLivery();
+        }
+        if (m_input->resetPressed()) {  /* X : coupe la démo et replace au pad (comme R) */
+            m_demo.stop();
+            resetToStart();
         }
         return;
     }
@@ -127,6 +134,13 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
             case GLFW_KEY_C:  /* change de vue : l'utilisateur reprend la main */
                 app->m_viewMode     = (app->m_viewMode + 1) % 4;
                 app->m_demoUserView = true;
+                break;
+            case GLFW_KEY_L:  /* défile la livrée : on peut la changer sans couper la démo */
+                app->cycleLivery();
+                break;
+            case GLFW_KEY_R:  /* coupe la démo et replace l'appareil au pad (le pilote reprend) */
+                app->m_demo.stop();
+                app->resetToStart();
                 break;
             default:
                 break;  /* ignoré : la démo continue */

@@ -231,6 +231,12 @@ void Application::resizeCallback(GLFWwindow* window, int width, int height) {
 }
 
 int Application::run() {
+    /* Ressources présentes ? Vérifié avant d'ouvrir la moindre fenêtre : si "assets"
+       manque (exe lancé depuis le zip non extrait), on prévient l'utilisateur par un
+       message natif et on quitte, au lieu de planter en silence. */
+    if (!assetsDisponibles()) {
+        return EXIT_FAILURE;
+    }
     if (!initWindow()) {
         return EXIT_FAILURE;
     }

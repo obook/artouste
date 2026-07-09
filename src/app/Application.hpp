@@ -56,6 +56,12 @@ public:
     int run();
 
 private:
+    /* Vérifie que le dossier des ressources ("assets") est bien présent avant
+       d'ouvrir la fenêtre. En cas d'absence (typiquement un exe lancé depuis
+       l'intérieur du zip, sans les ressources à côté), affiche un message natif
+       expliquant qu'il faut d'abord extraire l'archive, puis renvoie false. */
+    bool assetsDisponibles();
+
     bool initWindow();
     bool initGL();
     void initScene();

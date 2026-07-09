@@ -109,7 +109,49 @@ std::filesystem::path resolveAssetDir() {
     return fs::path("assets");
 }
 
+/*
+ * Signale l'absence des ressources par le canal adapté à la plateforme. L'exe
+ * Windows est une application fenêtrée (pas de console) : un simple printf serait
+ * invisible pour l'utilisateur. On affiche donc une vraie boîte de dialogue native
+ * qui explique la manoeuvre. Ailleurs (lancement depuis un terminal), un message
+ * sur la sortie d'erreur suffit.
+ */
+void signalerAssetsManquants(const std::filesystem::path& cherche) {
+#if defined(_WIN32)
+    (void)cherche;
+    const wchar_t* titre = L"Artouste -- fichiers manquants";
+    const wchar_t* corps =
+        L"Le simulateur n'a pas trouvé ses fichiers (dossier \"assets\").\n\n"
+        L"Tu l'as probablement lancé depuis l'intérieur du zip.\n"
+        L"Il faut d'abord EXTRAIRE l'archive :\n\n"
+        L"    1. Clic droit sur le fichier .zip\n"
+        L"    2. \"Extraire tout...\"\n"
+        L"    3. Ouvrir le dossier extrait\n"
+        L"    4. Double-cliquer sur launch.bat (ou artouste.exe)";
+    MessageBoxW(nullptr, corps, titre, MB_OK | MB_ICONERROR);
+#else
+    std::fprintf(stderr,
+                 "Artouste : dossier \"assets\" introuvable (cherché : %s).\n"
+                 "Lance le simulateur depuis le dossier qui contient \"assets\",\n"
+                 "ou définis la variable d'environnement ARTOUSTE_ASSETS.\n",
+                 cherche.string().c_str());
+#endif
+}
+
 }  /* namespace */
+
+bool Application::assetsDisponibles() {
+    namespace fs = std::filesystem;
+    const fs::path assets = resolveAssetDir();
+    /* Sentinelle : le sous-dossier des shaders est indispensable et toujours présent
+       dans une installation correcte. Son absence signe des ressources non extraites
+       ou introuvables (exe lancé seul, depuis le zip, ou déplacé sans son "assets"). */
+    if (fs::exists(assets / "shaders")) {
+        return true;
+    }
+    signalerAssetsManquants(assets);
+    return false;
+}
 
 void Application::initScene() {
     /* Décalage de parking du rotor, tiré au hasard à chaque lancement : la pale ne

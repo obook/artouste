@@ -34,7 +34,7 @@ inline constexpr float T_MAX        = 1200.0f; /* garde-fou : on relance la dém
 /* --- Cycle des vues en croisière (s) ----------------------------------------- */
 inline constexpr float DUREE_POURSUITE     = 28.0f;  /* vue de poursuite (chase) */
 inline constexpr float DUREE_COCKPIT       = 28.0f;  /* vue cockpit (intérieur) */
-inline constexpr float DUREE_ORBITE        = 14.0f;  /* vue orbite (un tour complet, = DEMO_ORBIT_TURN côté application) */
+inline constexpr float DUREE_ORBITE        = 20.0f;  /* vue orbite (un tour complet, = DEMO_ORBIT_TURN côté application) */
 inline constexpr float DUREE_ORBITE_SOLAIRE = 14.0f; /* vue orbite solaire (cadrage face au soleil, de jour) */
 inline constexpr float CYCLE_VUES          = DUREE_POURSUITE + DUREE_COCKPIT + DUREE_ORBITE
                                            + DUREE_ORBITE_SOLAIRE;  /* durée d'un cycle complet */

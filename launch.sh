@@ -18,9 +18,15 @@ set -euo pipefail
 # Se placer à la racine du dépôt, quel que soit le répertoire d'appel.
 cd "$(dirname "$(readlink -f "$0")")"
 
-BIN="build/bin/artouste"
 TERRAIN_DIR="assets/terrain"
 DRY_RUN=0
+
+# Binaire : à côté du script dans une archive extraite (premier candidat), sinon
+# dans l'arbre de développement (build/). On prend le premier qui existe.
+BIN=""
+for cand in "artouste" "build/bin/artouste" "build/artouste"; do
+    if [ -x "$cand" ]; then BIN="$cand"; break; fi
+done
 
 case "${1:-}" in
     -n|--dry-run) DRY_RUN=1 ;;
@@ -29,10 +35,11 @@ case "${1:-}" in
     *) echo "Option inconnue : $1 (voir ./launch.sh -h)." >&2; exit 1 ;;
 esac
 
-# Le binaire doit avoir été compilé au préalable.
-if [ ! -x "$BIN" ]; then
-    echo "Le simulateur n'est pas compilé ($BIN introuvable)."
-    echo "Compile-le d'abord avec : ./build.sh"
+# Le binaire doit avoir été trouvé (archive extraite ou build local).
+if [ -z "$BIN" ]; then
+    echo "Le simulateur n'est pas compilé (artouste introuvable)."
+    echo "Si tu viens de télécharger l'archive, extrais-la d'abord, puis relance"
+    echo "./launch.sh depuis le dossier extrait. Pour compiler : ./build.sh"
     exit 1
 fi
 

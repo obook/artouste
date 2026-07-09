@@ -32,9 +32,12 @@ echo Option inconnue : %~1 ^(voir launch.bat -h^).
 exit /b 1
 :args_done
 
-rem Trouver le binaire compilé (l'emplacement varie selon le générateur CMake).
+rem Trouver le binaire compilé. Dans une archive extraite, il est à la racine, à
+rem côté de ce script (premier candidat) ; en développement, son emplacement varie
+rem selon le générateur CMake (candidats suivants).
 set "BIN="
 for %%P in (
+    "artouste.exe"
     "build\bin\Release\artouste.exe"
     "build\bin\RelWithDebInfo\artouste.exe"
     "build\bin\Debug\artouste.exe"
@@ -45,9 +48,16 @@ for %%P in (
 
 if not defined BIN (
     echo Le simulateur n'est pas compilé ^(artouste.exe introuvable^).
-    echo Compile-le d'abord, par exemple :
+    echo.
+    echo Si tu viens de télécharger l'archive : commence par l'EXTRAIRE
+    echo ^(clic droit sur le .zip puis "Extraire tout..."^), puis relance
+    echo launch.bat depuis le dossier extrait.
+    echo.
+    echo Pour compiler depuis les sources :
     echo     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
     echo     cmake --build build --config Release -j
+    echo.
+    pause
     exit /b 1
 )
 
@@ -68,6 +78,8 @@ for /d %%D in ("%TERRAIN_DIR%\*") do (
 
 if "%n%"=="0" (
     echo Aucune carte trouvée dans %TERRAIN_DIR%\.
+    echo.
+    pause
     exit /b 1
 )
 

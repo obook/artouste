@@ -30,7 +30,20 @@ namespace {
 /* Couleurs régionales (côte basque et Landes) : murs clairs, toitures en tuile.
    Une légère variation par bâtiment évite l'aspect uniforme d'une ville monochrome. */
 const vec3 WALL_COLOR{0.86f, 0.84f, 0.80f};  /* enduit clair */
-const vec3 ROOF_COLOR{0.62f, 0.32f, 0.24f};  /* tuile terre cuite */
+
+/* Palette de toitures : plutôt que la même tuile partout, on panache quelques
+   teintes pour donner une impression de variété (toits neufs, patinés, quelques
+   ardoises). La tuile terre cuite reste dominante : elle est répétée pour peser
+   plus lourd dans le tirage (3 entrées sur 6, soit ~50 %). Une teinte est choisie
+   par bâtiment, de façon stable (voir pickRoof). */
+const vec3 ROOF_PALETTE[] = {
+    {0.62f, 0.32f, 0.24f},  /* tuile terre cuite (dominante) */
+    {0.62f, 0.32f, 0.24f},  /*   -- pesée 3 fois sur 6      */
+    {0.62f, 0.32f, 0.24f},
+    {0.70f, 0.38f, 0.27f},  /* tuile plus chaude / neuve */
+    {0.48f, 0.26f, 0.21f},  /* tuile patinée, plus sombre */
+    {0.44f, 0.42f, 0.44f},  /* ardoise grise */
+};
 
 /* Bâtiments au ras de l'eau : la BD TOPO inclut les cabanes ostréicoles bâties sur
    le bassin (ports de Gujan-Mestras, La Teste, Cap Ferret). Posées sur un sol à
@@ -53,6 +66,17 @@ float jitter(std::uint32_t seed, float amp) {
     seed = seed * 1664525u + 1013904223u;            /* LCG classique */
     const float unit = static_cast<float>(seed >> 8) / 16777216.0f;  /* [0,1) */
     return 1.0f + (unit * 2.0f - 1.0f) * amp;
+}
+
+/* Choisit une teinte de toiture dans ROOF_PALETTE pour un bâtiment donné. Le choix
+   est stable (fonction de son seul indice : pas de scintillement d'une image à
+   l'autre) et décorrélé du jitter de luminosité (on brasse l'indice par un autre
+   hash), pour que teinte et nuance ne varient pas de concert. */
+const vec3& pickRoof(std::uint32_t seed) {
+    seed ^= 0x9e3779b9u;                        /* décorrèle du hash de jitter */
+    seed  = seed * 2654435761u + 2246822519u;   /* mélange */
+    const std::size_t n = sizeof(ROOF_PALETTE) / sizeof(ROOF_PALETTE[0]);
+    return ROOF_PALETTE[(seed >> 16) % n];
 }
 
 void pushTriangle(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
@@ -225,7 +249,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
 
         const float rj   = jitter(b, 0.12f);
         const vec3  wall = WALL_COLOR;
-        const vec3  roof = ROOF_COLOR * rj;
+        const vec3  roof = pickRoof(b) * rj;  /* teinte panachée, nuancée en luminosité */
 
         /* Murs : un quad vertical par côté de l'emprise. */
         for (std::size_t i = 0; i < n; ++i) {

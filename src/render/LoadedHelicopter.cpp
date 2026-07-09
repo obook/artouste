@@ -225,14 +225,15 @@ void LoadedHelicopter::setLivery(Livery livery) {
     }
     m_fuselage.setLivery(fuselageTex);
 
-    /* Pales de queue : zébrées jaune/rouge en Gendarmerie, métal (texture d'origine)
-       en livrée d'origine comme en armée de terre. */
-    m_tailBlade.setLivery(livery == Livery::Gendarmerie ? m_tailBladeLivery : nullptr);
+    /* Pales de queue : zébrées jaune/rouge sur TOUTES les livrées. C'est un repère
+       de sécurité du rotor de queue (très visible), qu'on conserve quelle que soit
+       la livrée plutôt que de le réserver à la Gendarmerie. */
+    m_tailBlade.setLivery(m_tailBladeLivery);
 
-    /* L'arceau n'a pas de teinte d'origine satisfaisante dans sa texture (UV chaudes) :
-       on force donc une couleur unie, jaune en Gendarmerie, gris métal dans les deux
-       autres livrées (cohérent avec la pale de queue et le corps). */
-    m_tailGuard.setLivery(livery == Livery::Gendarmerie ? m_tailGuardLivery : m_tailGuardOrigine);
+    /* Arceau de protection : jaune uni sur toutes les livrées, cohérent avec les
+       pales de queue zébrées. (Sa texture d'origine n'a pas de teinte satisfaisante,
+       UV chaudes ; on force donc la couleur unie.) */
+    m_tailGuard.setLivery(m_tailGuardLivery);
 }
 
 void LoadedHelicopter::drawModel(Shader& shader, const Model& model, const mat4& transform,

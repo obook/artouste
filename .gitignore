@@ -65,6 +65,16 @@ assets/models/*.tar.gz
 # Captures d écran et médias de travail, hors dépôt
 media/
 
+# Artefacts de compilation LaTeX : la notice PDF (docs/notice.pdf) est
+# versionnee, mais ses fichiers intermediaires ne le sont pas. Les .log sont
+# deja ignores plus haut.
+*.aux
+*.synctex.gz
+*.toc
+*.out
+# Chaine de version de la notice, regeneree par ./build.sh -d
+docs/version.tex
+
 # Fichier de reglages ImGui (genere au runtime)
 imgui.ini
 

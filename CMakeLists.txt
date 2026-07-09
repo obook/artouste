@@ -99,6 +99,19 @@ endif()
 install(TARGETS artouste RUNTIME DESTINATION .)
 install(DIRECTORY assets/ DESTINATION assets)
 install(FILES README.md LICENSE DESTINATION . OPTIONAL)
+# Notice PDF des commandes, a la racine de l'archive. Le fichier est versionne
+# (la CI ne compile pas le LaTeX) : penser a le recompiler et le recommiter
+# apres toute modification de docs/notice.tex.
+install(FILES docs/notice.pdf DESTINATION . OPTIONAL)
+
+# Script de lancement pratique, a la racine de l'archive : on n'embarque que
+# celui de la plateforme empaquetee (launch.bat sous Windows, launch.sh
+# ailleurs). PROGRAMS preserve le bit executable sous Linux.
+if(WIN32)
+    install(PROGRAMS launch.bat DESTINATION . OPTIONAL)
+else()
+    install(PROGRAMS launch.sh DESTINATION . OPTIONAL)
+endif()
 
 if(WIN32)
     set(CPACK_GENERATOR "ZIP")

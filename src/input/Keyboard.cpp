@@ -41,9 +41,9 @@ physics::Controls Keyboard::poll(float dt) noexcept {
         return m_controls;
     }
 
-    /* Collectif : position maintenue. W ou Z montent, S descend (le Z gère AZERTY). */
+    /* Collectif : position maintenue. Z monte, S descend. */
     float collectiveDelta = 0.0f;
-    if (down(m_window, GLFW_KEY_W) || down(m_window, GLFW_KEY_Z)) {
+    if (down(m_window, GLFW_KEY_Z)) {
         collectiveDelta += COLLECTIVE_RATE * dt;
     }
     if (down(m_window, GLFW_KEY_S)) {
@@ -71,12 +71,12 @@ physics::Controls Keyboard::poll(float dt) noexcept {
     }
     m_controls.cyclicLateral = spring(m_controls.cyclicLateral, rollTarget, dt);
 
-    /* Palonniers : D = droite (+1), A ou Q = gauche (-1). */
+    /* Palonniers : D = droite (+1), Q = gauche (-1). */
     float yawTarget = 0.0f;
     if (down(m_window, GLFW_KEY_D)) {
         yawTarget += 1.0f;
     }
-    if (down(m_window, GLFW_KEY_A) || down(m_window, GLFW_KEY_Q)) {
+    if (down(m_window, GLFW_KEY_Q)) {
         yawTarget -= 1.0f;
     }
     m_controls.pedals = spring(m_controls.pedals, yawTarget, dt);
@@ -89,9 +89,8 @@ bool Keyboard::isActive() const noexcept {
         return false;
     }
     /* Liste de toutes les touches de pilotage à surveiller. */
-    const int keys[] = {GLFW_KEY_W,    GLFW_KEY_Z,  GLFW_KEY_S,     GLFW_KEY_UP,
-                        GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_A,
-                        GLFW_KEY_Q,    GLFW_KEY_D};
+    const int keys[] = {GLFW_KEY_Z,    GLFW_KEY_S,  GLFW_KEY_UP,    GLFW_KEY_DOWN,
+                        GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_Q,  GLFW_KEY_D};
     for (const int key : keys) {
         if (down(m_window, key)) {
             return true;

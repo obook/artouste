@@ -67,10 +67,13 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     }
     /* mode Off : aucun affichage de vol. */
 
-    /* Aide à l'atterrissage : réticule et score dessinés par-dessus tous les modes,
-       y compris en démo (HUD éteint). La méthode se contente de ne rien faire si le
-       guidage n'est pas actif. */
-    renderPadGuidance(data, w, h);
+    /* Aide à l'atterrissage : réticule et score. Elle fait partie du HUD, donc pas de
+       HUD (mode Off) => pas d'aide -- sauf en démo, où on la garde comme les étiquettes
+       (forceLabels), le HUD y étant éteint par mise en scène et non par choix du pilote.
+       La méthode ne dessine rien de toute façon si le guidage n'est pas actif. */
+    if (mode != HudMode::Off || forceLabels) {
+        renderPadGuidance(data, w, h);
+    }
 
     /* Étiquettes des lieux : affichées avec le HUD, et aussi quand on les force (démo
        HUD éteint). La minimap, elle, ne s'affiche qu'avec le HUD. */
@@ -99,11 +102,11 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
 
     corner("hud_tl", ImVec2(m, m), ImVec2(0.0f, 0.0f));
     ImGui::Text("ALT  %5.0f m", static_cast<double>(data.altitudeM));
-    ImGui::Text("V/S  %+5.0f ft/min", static_cast<double>(data.varioFpm));
+    ImGui::Text("V/S  %+5.1f m/s", static_cast<double>(data.varioMs));
     ImGui::End();
 
     corner("hud_tr", ImVec2(w - m, m), ImVec2(1.0f, 0.0f));
-    ImGui::Text("IAS  %4.0f kt", static_cast<double>(data.airspeedKt));
+    ImGui::Text("IAS  %4.0f km/h", static_cast<double>(data.airspeedKmh));
     ImGui::Text("HDG  %03.0f", static_cast<double>(data.headingDeg));
     /* Heure du simulateur : HH:MM, le deux-points clignote à 1 Hz (police à chasse
        fixe, donc l'espace garde l'alignement). En temps réel (échelle 1) on

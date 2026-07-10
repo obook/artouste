@@ -89,7 +89,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     char nr[16], turb[16], ias[16], vs[16], coll[16], tmp[16], fuel[16];
     std::snprintf(nr,   sizeof(nr),   "%.0f",  static_cast<double>(data.rotorRpm));
     std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
-    std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKt));
+    std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKmh));
     std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));
     std::snprintf(coll, sizeof(coll), "%.0f",  static_cast<double>(data.collectivePct));
     std::snprintf(tmp,  sizeof(tmp),  "%.0f",  static_cast<double>(data.exhaustTempC));
@@ -103,7 +103,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     const G gauges[] = {
         {data.rotorRpm,      0.0f, 420.0f,   340.0f,   380.0f,   "NR tr/min", nr},
         {data.turbineRpm,    0.0f, 35000.0f, 33000.0f, 34000.0f, "TURBINE",   turb},
-        {data.airspeedKt,    0.0f, 140.0f,   95.0f,    105.0f,   "IAS kt",    ias},
+        {data.airspeedKmh,   0.0f, 260.0f,   176.0f,   195.0f,   "IAS km/h",  ias},
         {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs},
         {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll},
         {data.exhaustTempC,  0.0f, 550.0f,   400.0f,   480.0f,   "TMP C",     tmp},
@@ -244,7 +244,10 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
         const float     y   = lab.fy * h;
         dl->AddCircleFilled(ImVec2(x, y), 3.0f, IM_COL32(255, 230, 90, 230));
 
-        const ImVec2 ts = ImGui::CalcTextSize(lab.name);
+        /* Le libellé tient sur deux lignes ("nom\naltitude distance"). CalcTextSize
+           gère le multi-ligne : largeur = ligne la plus large, hauteur = les deux
+           lignes. La boite et le test de chevauchement s'appuient dessus. */
+        const ImVec2 ts = ImGui::CalcTextSize(lab.name.c_str());
         const ImVec2 tp(x - ts.x * 0.5f, y - ts.y - 7.0f);
         /* Boite du nom, élargie d'une petite marge pour aérer les étiquettes. */
         const ImVec4 box(tp.x - 2.0f, tp.y - 1.0f, tp.x + ts.x + 2.0f, tp.y + ts.y + 1.0f);
@@ -259,8 +262,26 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
             continue;  /* nom masqué (le point reste) pour garder l'affichage lisible */
         }
         placed.push_back(box);
-        dl->AddText(ImVec2(tp.x + 1.0f, tp.y + 1.0f), IM_COL32(0, 0, 0, 200), lab.name);
-        dl->AddText(tp, IM_COL32(255, 240, 140, 255), lab.name);
+        /* Rendu ligne à ligne : chaque ligne est recentrée sur x (AddText cale à
+           gauche, il faut donc centrer soi-même), avec une ombre portée. Boucle
+           générique : fonctionne aussi bien pour une que pour deux lignes. */
+        const float lineH = ImGui::GetTextLineHeight();
+        const char* lineStart = lab.name.c_str();
+        for (int li = 0;; ++li) {
+            const char* lineEnd = lineStart;
+            while (*lineEnd != '\0' && *lineEnd != '\n') {
+                ++lineEnd;
+            }
+            const ImVec2 lts = ImGui::CalcTextSize(lineStart, lineEnd);
+            const float  lx  = x - lts.x * 0.5f;
+            const float  ly  = tp.y + static_cast<float>(li) * lineH;
+            dl->AddText(ImVec2(lx + 1.0f, ly + 1.0f), IM_COL32(0, 0, 0, 200), lineStart, lineEnd);
+            dl->AddText(ImVec2(lx, ly), IM_COL32(255, 240, 140, 255), lineStart, lineEnd);
+            if (*lineEnd == '\0') {
+                break;
+            }
+            lineStart = lineEnd + 1;
+        }
     }
 }
 

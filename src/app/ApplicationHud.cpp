@@ -18,6 +18,7 @@
 #include "util/Math.hpp"
 
 #include <cmath>
+#include <cstdio>
 
 namespace artouste::app {
 
@@ -31,7 +32,7 @@ constexpr float PAD_SEARCH_RADIUS_M = 300.0f;
 /* Conditions d'activation du réticule : finale, basse vitesse. */
 constexpr float PAD_GUIDE_MAX_ALT_M = 50.0f;   /* altitude max au-dessus du pad */
 constexpr float PAD_GUIDE_MIN_ALT_M = -2.0f;   /* en dessous : on est sous le sol du pad */
-constexpr float PAD_GUIDE_MAX_KT    = 20.0f;   /* vitesse air max */
+constexpr float PAD_GUIDE_MAX_KMH   = 37.0f;   /* vitesse air max (37 km/h ~ 20 kt) */
 
 /* Conditions de détection du posé. */
 constexpr float PAD_LAND_MAX_ALT_M  = 0.8f;    /* hauteur patins (~0,5 m) + marge */
@@ -91,7 +92,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
                           const physics::Controls& controls, float airspeed, float turbineFraction,
                           float rotorFraction, float t, float frameDt) {
     hud.altitudeM  = body.position.y;
-    hud.airspeedKt = airspeed * 1.94384f;
+    hud.airspeedKmh = airspeed * 3.6f;  /* m/s -> km/h (unité d'époque de l'Alouette II FR) */
     /* Cap boussole pour le HUD (ruban de cap, texte HDG, flèche de la minimap) :
        0 = nord, 90 = est, sens horaire. Le repère monde a X vers l'est et Z vers
        le sud, donc le nord est -Z. (Le lacet 'yaw' calculé dans la boucle, mesuré
@@ -101,7 +102,6 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         headingDeg += 360.0f;
     }
     hud.headingDeg    = headingDeg;
-    hud.varioFpm      = body.velocity.y * 196.85f;
     hud.varioMs       = body.velocity.y;
     hud.collectivePct = controls.collective * 100.0f;
     hud.rotorPct      = rotorFraction * 100.0f;          /* régime rotor, en pourcentage */
@@ -130,11 +130,14 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     /* Aide à l'atterrissage : calcule l'écart au pad le plus proche (réticule de
        centrage) et le score au posé. En démo, c'est la phase qui commande, et elle
        seule : aide uniquement au retour/pose, jamais au décollage, même si le mode
-       assisté avait été laissé actif avant de lancer la démo. Hors démo, en pilotage
-       manuel, l'aide suit le mode assisté. */
+       assisté avait été laissé actif avant de lancer la démo. Hors démo, l'aide est
+       TOUJOURS disponible, que le mode assisté soit actif ou non : le réticule ne
+       s'affiche de toute façon qu'en finale basse vitesse près d'un pad (voir g.active
+       plus bas), donc il n'encombre jamais le vol de croisière. Le rendu (Hud::render)
+       la dessine par-dessus tous les modes d'affichage (coins et Super HUD). */
     const bool aideAtterrissage = m_demo.active()
                                 ? m_demo.returning()
-                                : m_assist.active();
+                                : true;
     hud.padGuidance = {};
     if (aideAtterrissage) {
         /* Point de référence : le mât rotor, pas l'origine du modèle. Au parking,
@@ -164,10 +167,13 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
             g.dx          = glm::dot(ecart, right);     /* + = pad à droite du pilote */
             g.dz          = glm::dot(ecart, forward);   /* + = pad devant */
 
-            /* Réticule visible en finale basse vitesse seulement. */
-            g.active = (altSurPad < PAD_GUIDE_MAX_ALT_M)
+            /* Réticule visible en finale basse vitesse seulement, et jamais tant que
+               l'appareil n'a pas décollé au moins une fois (m_hasFlown) : pas d'aide au
+               posé au lancement ni au reset, quand on est encore garé sur le pad. */
+            g.active = m_hasFlown
+                    && (altSurPad < PAD_GUIDE_MAX_ALT_M)
                     && (altSurPad > PAD_GUIDE_MIN_ALT_M)
-                    && (hud.airspeedKt < PAD_GUIDE_MAX_KT);
+                    && (hud.airspeedKmh < PAD_GUIDE_MAX_KMH);
 
             /* Détection du posé : appareil quasi immobile très près du sol du pad.
                On ne compte un score que si l'appareil a d'abord volé (m_wasAirborne),
@@ -175,6 +181,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
                est déjà posé, ou au tout début avant le décollage. */
             if (altSurPad > PAD_LAND_MAX_ALT_M) {
                 m_wasAirborne = true;
+                m_hasFlown    = true;  /* a quitté le pad : l'aide au posé est désormais autorisée */
             }
             const float vitesseSol = glm::length(vec3{body.velocity.x, 0.0f, body.velocity.z});
             const bool  surSol     = (altSurPad < PAD_LAND_MAX_ALT_M)
@@ -233,13 +240,36 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
             return;  /* hors du terrain courant */
         }
+        const float altSol = m_terrain->heightAt(x, z);  /* altitude sol du repère (m ASL) */
+
+        /* Tout label (lieu ou hélipad) porte l'altitude sol du repère puis la distance
+           3D qui le sépare de l'appareil. Altitude toujours en mètres. Distance en
+           kilomètres au loin, mais repassée en mètres sous 1000 m : en approche "820 m"
+           guide la pose là où "0.8 km" resterait trop grossier. Recalculé à chaque
+           frame, donc la distance suit le vol en direct. */
+        const float dx   = heliPos.x - x;
+        const float dy   = heliPos.y - altSol;
+        const float dz   = heliPos.z - z;
+        const float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+        /* Deux lignes : le nom, puis "altitude  distance" en dessous. Le rendu
+           (HudOverlay) centre chaque ligne séparément. */
+        char buf[96];
+        if (dist < 1000.0f) {
+            std::snprintf(buf, sizeof buf, "%s\n%.0f m  %.0f m",
+                          displayName, static_cast<double>(altSol), static_cast<double>(dist));
+        } else {
+            std::snprintf(buf, sizeof buf, "%s\n%.0f m  %.1f km",
+                          displayName, static_cast<double>(altSol),
+                          static_cast<double>(dist) / 1000.0);
+        }
+
         ui::HudLabel label;
-        label.name    = displayName;
+        label.name    = buf;
         label.generic = generic;
         label.mapU    = x / (2.0f * halfW) + 0.5f;
         label.mapV    = z / (2.0f * halfH) + 0.5f;
 
-        const float y    = m_terrain->heightAt(x, z) + 25.0f;
+        const float y    = altSol + 25.0f;
         const vec4  clip = viewProj * vec4{x, y, z, 1.0f};
         if (clip.w > 0.1f) {
             const vec3 ndc = vec3(clip) / clip.w;
@@ -253,11 +283,13 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         hud.labels.push_back(label);
     };
 
-    /* Lieux remarquables (étiquetés par leur nom), puis hélipads (tous étiquetés
+    /* Lieux remarquables (étiquetés par leur nom), puis hélipads (étiquetés
        "Hélisurface", le terme d'aire de poser ; leur ville est déjà donnée par le
-       lieu remarquable voisin). L'étiquette générique est marquée comme telle :
-       quand un pad coïncide avec un lieu nommé (sommet du pic du Midi d'Ossau),
-       c'est le nom du lieu qui doit rester lisible. */
+       lieu remarquable voisin). Chaque étiquette porte en plus l'altitude du repère
+       et sa distance à l'appareil (voir addLabel). L'étiquette d'hélipad est marquée
+       générique : quand un pad coïncide avec un lieu nommé (sommet du pic du Midi
+       d'Ossau, hélipads de bigorre...), c'est le nom du lieu qui reste lisible -- et
+       il porte désormais lui aussi l'altitude et la distance. */
     for (const render::Landmark& lm : m_terrain->landmarks()) {
         addLabel(lm, lm.name.c_str(), false);
     }

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 
 struct GLFWwindow;
@@ -20,7 +21,7 @@ namespace artouste::ui {
 /* Lieu remarquable à signaler : étiquette posée sur la scène 3D (si visible) et
    point sur la minimap. */
 struct HudLabel {
-    const char* name     = "";
+    std::string name;              /* texte de l'étiquette (peut inclure altitude + distance) */
     float       fx       = 0.0f;   /* position écran de l'étiquette (fraction 0-1) */
     float       fy       = 0.0f;
     float       depth    = 1e30f;  /* profondeur caméra (plus petit = plus proche), pour trier */
@@ -41,10 +42,9 @@ enum class HudMode {
 /* Valeurs à afficher, déjà converties dans les unités du HUD. */
 struct HudData {
     float       altitudeM     = 0.0f;
-    float       airspeedKt    = 0.0f;
+    float       airspeedKmh   = 0.0f;   /* vitesse air en km/h (unité d'époque, Alouette II FR) */
     float       headingDeg    = 0.0f;
-    float       varioFpm      = 0.0f;
-    float       varioMs       = 0.0f;   /* taux de montée en m/s (instrument superposé) */
+    float       varioMs       = 0.0f;   /* taux de montée en m/s (HUD coins et Super HUD) */
     float       collectivePct = 0.0f;
     float       rotorPct      = 0.0f;
     float       rotorRpm      = 0.0f;   /* régime rotor en tr/min */

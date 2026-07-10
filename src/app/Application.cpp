@@ -152,6 +152,13 @@ void Application::resetToStart() {
     m_flight.reset(m_parkPos);
     m_input->reset();
     m_confirmReset = false;
+    /* Retour au pad : on repart d'un état d'aide au posé vierge, sinon le réticule
+       (ou un score en cours d'affichage) resterait visible alors qu'on est de nouveau
+       garé sans avoir volé. m_hasFlown se rearmera au prochain décollage. */
+    m_hasFlown    = false;
+    m_wasAirborne = false;
+    m_wasOnGround = false;
+    m_scoreTimer  = 0.0f;
 }
 
 void Application::startDemo() {

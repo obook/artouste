@@ -254,6 +254,7 @@ private:
     float                                     m_lastScoreM  = -1.0f;  /* dernière distance au posé (m), -1 si aucun */
     bool                                      m_wasOnGround = false;  /* état sol de l'image précédente (anti-rebond) */
     bool                                      m_wasAirborne = false;  /* a volé depuis l'activation : évite un faux score au sol */
+    bool                                      m_hasFlown    = false;  /* a décollé depuis le lancement/reset : pas d'aide au posé tant qu'on n'a pas volé */
 };
 
 }  /* namespace artouste::app */

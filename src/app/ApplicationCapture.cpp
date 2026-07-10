@@ -161,10 +161,9 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
 
     ui::HudData hud;
-    hud.airspeedKt    = 92.0f;
+    hud.airspeedKmh   = 170.0f;   /* croisière ~170 km/h */
     hud.headingDeg    = 47.0f;
     hud.altitudeM     = shotPos.y;  /* vraie altitude du point de capture */
-    hud.varioFpm      = 240.0f;
     hud.varioMs       = 1.2f;
     hud.collectivePct = 55.0f;
     hud.rotorPct      = 100.0f;

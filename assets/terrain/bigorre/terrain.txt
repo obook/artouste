@@ -1,0 +1,18 @@
+# Terrain Artouste - Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 1024
+rows 1024
+width_m 17930.1
+height_m 18924.4
+elev_min 0.00
+elev_max 2875.69
+lon_min 0.05
+lon_max 0.27
+lat_min 42.85
+lat_max 43.02
+ortho_width 3881
+ortho_height 4096
+sea 0
+start_x 1498.6
+start_z 2728.6

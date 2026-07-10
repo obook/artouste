@@ -1,0 +1,6 @@
+# Helipads - Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie) (un par ligne : lon lat nom)
+# Positions approximatives, à affiner sur place.
+0.1783 42.9094 La Mongie
+0.1447 42.9075 Col du Tourmalet
+0.1411 42.9369 Observatoire du Pic du Midi
+0.2158 42.9469 Lac de Payolle

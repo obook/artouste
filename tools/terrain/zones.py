@@ -143,6 +143,37 @@ ZONES = {
             ("Refuge des Sarradets", -0.0333, 42.6959),
         ],
     },
+    # Pic du Midi de Bigorre (Hautes-Pyrénées) : l'observatoire (~2877 m) et son
+    # antenne, le col du Tourmalet et la station de La Mongie, avec le lac de Payolle
+    # et Sainte-Marie-de-Campan au nord. Haute montagne sans mer ; comme Ossau et
+    # Cauterets on garde les petites constructions (cabanes, granges) utiles au
+    # repérage. Emprise compacte (~18x19 km), calée sur le modèle ossau (grille 1024,
+    # ortho 4096). Le Pic est ~36 km à l'est du bord de la carte ossau, donc hors
+    # emprise : il fallait une carte propre plutôt qu'un simple landmark.
+    "bigorre": {
+        "bbox": (0.05, 0.27, 42.85, 43.02),
+        "recolor_sea": False,
+        "start": (0.178, 42.909),  # La Mongie, replat de station (~1785 m)
+        "height_min": 0.0,
+        "grid": 1024,      # mailles ~17,5 m (comme ossau)
+        "ortho_px": 4096,  # hauteur d'ortho ~4,4 m/px (comme ossau)
+        "title": "Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie)",
+        "landmarks": [
+            ("Pic du Midi de Bigorre", 0.1411, 42.9369),
+            ("Col du Tourmalet", 0.1447, 42.9075),
+            ("La Mongie", 0.1783, 42.9094),
+            ("Lac de Payolle", 0.2158, 42.9469),
+            ("Barèges", 0.0658, 42.8983),
+            ("Sainte-Marie-de-Campan", 0.1983, 42.9781),
+            ("Campan", 0.1747, 43.0000),
+        ],
+        "helipads": [
+            ("La Mongie", 0.1783, 42.9094),
+            ("Col du Tourmalet", 0.1447, 42.9075),
+            ("Observatoire du Pic du Midi", 0.1411, 42.9369),
+            ("Lac de Payolle", 0.2158, 42.9469),
+        ],
+    },
     # Bordeaux et son agglomération : la Garonne et le port de la Lune au centre,
     # de l'aéroport de Mérignac et Pessac à l'ouest jusqu'à Cenon et Lormont sur la
     # rive droite, et de Villenave-d'Ornon au sud jusqu'au stade Matmut Atlantique et

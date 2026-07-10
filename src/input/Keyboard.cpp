@@ -41,9 +41,13 @@ physics::Controls Keyboard::poll(float dt) noexcept {
         return m_controls;
     }
 
-    /* Collectif : position maintenue. Z monte, S descend. */
+    /* Collectif : position maintenue. Z monte, S descend.
+       AZERTY : la touche marquée "Z" occupe la position physique du "W" QWERTY,
+       que GLFW nomme GLFW_KEY_W ; on accepte les deux pour que le "Z" imprimé
+       réponde aussi bien sur AZERTY que sur QWERTY. La touche S est au même
+       endroit sur les deux dispositions. */
     float collectiveDelta = 0.0f;
-    if (down(m_window, GLFW_KEY_Z)) {
+    if (down(m_window, GLFW_KEY_Z) || down(m_window, GLFW_KEY_W)) {
         collectiveDelta += COLLECTIVE_RATE * dt;
     }
     if (down(m_window, GLFW_KEY_S)) {
@@ -71,12 +75,14 @@ physics::Controls Keyboard::poll(float dt) noexcept {
     }
     m_controls.cyclicLateral = spring(m_controls.cyclicLateral, rollTarget, dt);
 
-    /* Palonniers : D = droite (+1), Q = gauche (-1). */
+    /* Palonniers : D = droite (+1), Q = gauche (-1). AZERTY : la touche marquée
+       "Q" occupe la position physique du "A" QWERTY (GLFW_KEY_A) ; on accepte les
+       deux pour couvrir AZERTY et QWERTY. D est identique sur les deux dispositions. */
     float yawTarget = 0.0f;
     if (down(m_window, GLFW_KEY_D)) {
         yawTarget += 1.0f;
     }
-    if (down(m_window, GLFW_KEY_Q)) {
+    if (down(m_window, GLFW_KEY_Q) || down(m_window, GLFW_KEY_A)) {
         yawTarget -= 1.0f;
     }
     m_controls.pedals = spring(m_controls.pedals, yawTarget, dt);
@@ -89,8 +95,9 @@ bool Keyboard::isActive() const noexcept {
         return false;
     }
     /* Liste de toutes les touches de pilotage à surveiller. */
-    const int keys[] = {GLFW_KEY_Z,    GLFW_KEY_S,  GLFW_KEY_UP,    GLFW_KEY_DOWN,
-                        GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_Q,  GLFW_KEY_D};
+    const int keys[] = {GLFW_KEY_Z,     GLFW_KEY_W,     GLFW_KEY_S,
+                        GLFW_KEY_UP,    GLFW_KEY_DOWN,  GLFW_KEY_LEFT,  GLFW_KEY_RIGHT,
+                        GLFW_KEY_Q,     GLFW_KEY_A,     GLFW_KEY_D};
     for (const int key : keys) {
         if (down(m_window, key)) {
             return true;

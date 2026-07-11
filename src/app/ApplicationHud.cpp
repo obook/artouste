@@ -127,6 +127,18 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.timeScale    = m_sunTimeScale;
     hud.colonOn      = (std::fmod(t, 1.0f) < 0.5f);
 
+    /* Cadence affichée (images/s) : moyenne mobile exponentielle du frameDt instantané,
+       pour un chiffre stable. Le frameDt est borné à 0,1 s dans la boucle (plancher à
+       10 Hz), donc la valeur sature vers 10 en cas de forte chute -- justement le seuil
+       sous lequel le simulateur passe au ralenti. */
+    if (frameDt > 0.0f) {
+        const float instantFps = 1.0f / frameDt;
+        m_fpsSmoothed = (m_fpsSmoothed <= 0.0f)
+                            ? instantFps
+                            : m_fpsSmoothed + (instantFps - m_fpsSmoothed) * 0.1f;
+    }
+    hud.fps = m_fpsSmoothed;
+
     /* Aide à l'atterrissage : calcule l'écart au pad le plus proche (réticule de
        centrage) et le score au posé. En démo, c'est la phase qui commande, et elle
        seule : aide uniquement au retour/pose, jamais au décollage, même si le mode

@@ -61,6 +61,8 @@ struct HudData {
     float       timeOfDaySec  = 0.0f;   /* heure du simulateur (s depuis minuit) */
     float       timeScale     = 1.0f;   /* vitesse du temps (1 = temps réel) */
     bool        colonOn       = true;   /* deux-points de l'horloge HH:MM (clignote 1 Hz) */
+    float       fps           = 0.0f;   /* images par seconde (lissées) ; affiché dans le coin
+                                           bas-droit du HUD 4 coins. 0 = masqué (ex. en capture) */
 
     /* Aide à l'atterrissage : hélipad le plus proche en finale (active seulement
        en mode assisté, voir ApplicationHud.cpp). */

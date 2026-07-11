@@ -26,9 +26,17 @@ namespace artouste::ui {
 using namespace hud_widgets;
 
 void Hud::init(GLFWwindow* window) {
+    if (m_ready) {
+        return;  /* déjà initialisé (ex. menu de démarrage) : un seul contexte ImGui */
+    }
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::GetIO().IniFilename = nullptr;  /* pas de fichier de réglages sur disque */
+    ImGuiIO& io    = ImGui::GetIO();
+    io.IniFilename = nullptr;  /* pas de fichier de réglages sur disque */
+    /* ImGui ne doit pas piloter le curseur : sans ce drapeau, son backend GLFW remet
+       GLFW_CURSOR_NORMAL à chaque image (pour afficher les curseurs de survol), ce qui
+       annulerait le masquage du curseur qu'on impose en plein écran (setFullscreen). */
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
@@ -143,17 +151,20 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     }
     ImGui::End();
 
-    /* Coin bas-droit : uniquement le voyant du mode assisté, affiché quand il est
-       actif (l'ancienne barre de palonnier, peu utile, a été retirée). On ne crée
-       le panneau que s'il y a quelque chose à montrer, pour ne pas laisser une
-       boîte vide. */
-    if (data.assist || data.radio) {
+    /* Coin bas-droit : voyant du mode assisté et de la radio quand ils sont actifs,
+       et le compteur d'images par seconde (dernière ligne, donc pile dans le coin).
+       On ne crée le panneau que s'il y a quelque chose à montrer, pour ne pas laisser
+       une boîte vide (fps = 0 en capture => rien). */
+    if (data.assist || data.radio || data.fps > 0.0f) {
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
         if (data.radio) {
             ImGui::Text("RADIO %d%%", data.radioMixPct);  /* voyant radio (touche K) + balance (-/+) */
         }
         if (data.assist) {
             ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
+        }
+        if (data.fps > 0.0f) {
+            ImGui::Text("FPS  %3.0f", static_cast<double>(data.fps));  /* cadence lissée */
         }
         ImGui::End();
     }

@@ -237,6 +237,77 @@ void Application::resizeCallback(GLFWwindow* window, int width, int height) {
     }
 }
 
+GLFWmonitor* Application::monitorForWindow() const {
+    int           count    = 0;
+    GLFWmonitor** monitors = glfwGetMonitors(&count);
+
+    /* Forçage explicite : ARTOUSTE_MONITOR=<index> impose un écran précis (0 = premier).
+       Utile si la détection automatique ne convient pas (ex. Wayland). */
+    if (const char* e = std::getenv("ARTOUSTE_MONITOR")) {
+        const int idx = std::atoi(e);
+        if (idx >= 0 && idx < count) {
+            return monitors[idx];
+        }
+    }
+
+    int wx = 0;
+    int wy = 0;
+    int ww = 0;
+    int wh = 0;
+    glfwGetWindowPos(m_window, &wx, &wy);
+    glfwGetWindowSize(m_window, &ww, &wh);
+    const int cx = wx + ww / 2;  /* centre de la fenêtre, en coordonnées écran */
+    const int cy = wy + wh / 2;
+
+    for (int i = 0; i < count; ++i) {
+        int mx = 0;
+        int my = 0;
+        glfwGetMonitorPos(monitors[i], &mx, &my);
+        const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);
+        if (mode == nullptr) {
+            continue;
+        }
+        if (cx >= mx && cx < mx + mode->width && cy >= my && cy < my + mode->height) {
+            return monitors[i];  /* le centre de la fenêtre tombe sur ce moniteur */
+        }
+    }
+    return glfwGetPrimaryMonitor();  /* position non exploitable (ex. Wayland) : repli */
+}
+
+void Application::setFullscreen(bool on) {
+    if (on == m_fullscreen) {
+        return;
+    }
+    if (on) {
+        /* On mémorise la fenêtre courante pour pouvoir y revenir. */
+        glfwGetWindowPos(m_window, &m_winX, &m_winY);
+        glfwGetWindowSize(m_window, &m_winW, &m_winH);
+        GLFWmonitor*       mon  = monitorForWindow();
+        const GLFWvidmode* mode = (mon != nullptr) ? glfwGetVideoMode(mon) : nullptr;
+        if (mon != nullptr && mode != nullptr) {
+            /* Plein écran sur le moniteur principal à sa résolution native (on reprend
+               le mode courant du bureau : mêmes dimensions et rafraîchissement). À
+               résolution native, aucun changement de mode visible. Cette voie, via le
+               moniteur, fonctionne aussi bien sous Windows que sous Wayland (où GLFW ne
+               permet pas de positionner soi-même une fenêtre "sans bordure"). */
+            glfwSetWindowMonitor(m_window, mon, 0, 0, mode->width, mode->height,
+                                 mode->refreshRate);
+        }
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        m_fullscreen = true;
+    } else {
+        const int w = (m_winW > 0) ? m_winW : WINDOW_WIDTH;
+        const int h = (m_winH > 0) ? m_winH : WINDOW_HEIGHT;
+        glfwSetWindowMonitor(m_window, nullptr, m_winX, m_winY, w, h, 0);
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        m_fullscreen = false;
+    }
+}
+
+void Application::toggleFullscreen() {
+    setFullscreen(!m_fullscreen);
+}
+
 int Application::run() {
     /* Ressources présentes ? Vérifié avant d'ouvrir la moindre fenêtre : si "assets"
        manque (exe lancé depuis le zip non extrait), on prévient l'utilisateur par un
@@ -251,6 +322,28 @@ int Application::run() {
         return EXIT_FAILURE;
     }
 
+    /* Plein écran sans bordure au lancement, sauf en mode capture (qui garde son
+       1280x720 pour un cadrage reproductible) ou si ARTOUSTE_WINDOWED force le fenêtré
+       (pratique en développement). La touche F bascule ensuite à volonté. */
+    if (std::getenv("ARTOUSTE_SCREENSHOT") == nullptr &&
+        std::getenv("ARTOUSTE_WINDOWED") == nullptr) {
+        setFullscreen(true);
+    }
+
+    /* Menu de démarrage dans la fenêtre (remplace launch.bat, bloqué par le Contrôle
+       intelligent des applications de Windows). Sauté en mode capture, quand la carte
+       est déjà imposée par une variable d'environnement (scripts, tests), ou sur
+       demande explicite (ARTOUSTE_NO_MENU). */
+    const bool menuDemande = std::getenv("ARTOUSTE_SCREENSHOT") == nullptr &&
+                             std::getenv("ARTOUSTE_TERRAIN") == nullptr &&
+                             std::getenv("ARTOUSTE_NO_MENU") == nullptr;
+    if (menuDemande) {
+        m_hud.init(m_window);  /* initialise ImGui (idempotent) avant d'afficher le menu */
+        if (!runStartupMenu()) {
+            return EXIT_SUCCESS;  /* l'utilisateur a fermé la fenêtre sans lancer */
+        }
+    }
+
     try {
         initScene();
         /*
@@ -262,7 +355,19 @@ int Application::run() {
             captureScreenshot(shot);
             return EXIT_SUCCESS;
         }
-        mainLoop();
+        /* Boucle menu <-> vol : la touche Échap en vol rend la main pour réafficher le
+           menu (choix d'une autre carte, turbine à froid ou non). Échap ou "Quitter"
+           dans le menu -- comme la fermeture de la fenêtre -- termine l'application. */
+        for (;;) {
+            const bool retourMenu = mainLoop();
+            if (!retourMenu) {
+                break;  /* fenêtre fermée : on quitte */
+            }
+            if (!menuDemande || !runStartupMenu()) {
+                break;  /* pas de menu (carte imposée), ou Échap/Quitter dans le menu */
+            }
+            applyMenuSession();  /* applique le nouveau choix, puis on repart en vol */
+        }
     } catch (const std::exception& e) {
         std::fprintf(stderr, "Erreur fatale : %s\n", e.what());
         return EXIT_FAILURE;

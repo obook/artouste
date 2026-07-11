@@ -317,13 +317,15 @@ void Application::updateRadioMessage(float turbineFraction, float frameDt) {
     m_flight.turbine().setRotorHold(holdRotor);
 }
 
-void Application::mainLoop() {
+bool Application::mainLoop() {
     constexpr float SIM_DT = 1.0f / 240.0f;  /* pas fixe de simulation (240 Hz) */
 
     Clock clock;
     float accumulator = 0.0f;
 
-    while (glfwWindowShouldClose(m_window) == GLFW_FALSE) {
+    m_returnToMenu = false;  /* on entre en vol : la demande de retour au menu est vierge */
+
+    while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !m_returnToMenu) {
         glfwPollEvents();
         clock.tick();
         /* On borne le pas de temps : cela évite un saut brutal à la première
@@ -429,6 +431,8 @@ void Application::mainLoop() {
 
         glfwSwapBuffers(m_window);
     }
+
+    return m_returnToMenu;  /* true = retour au menu ; false = fenêtre fermée (on quitte) */
 }
 
 }  /* namespace artouste::app */

@@ -104,14 +104,9 @@ install(FILES README.md LICENSE DESTINATION . OPTIONAL)
 # apres toute modification de docs/notice.tex.
 install(FILES docs/notice.pdf DESTINATION . OPTIONAL)
 
-# Script de lancement pratique, a la racine de l'archive : on n'embarque que
-# celui de la plateforme empaquetee (launch.bat sous Windows, launch.sh
-# ailleurs). PROGRAMS preserve le bit executable sous Linux.
-if(WIN32)
-    install(PROGRAMS launch.bat DESTINATION . OPTIONAL)
-else()
-    install(PROGRAMS launch.sh DESTINATION . OPTIONAL)
-endif()
+# Plus de script de lancement : le choix de la carte et du demarrage turbine se fait
+# desormais dans un menu integre a l'executable (voir src/app/ApplicationMenu.cpp). On
+# lance donc directement artouste (Linux) ou artouste.exe (Windows).
 
 if(WIN32)
     set(CPACK_GENERATOR "ZIP")

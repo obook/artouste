@@ -85,8 +85,8 @@ void Application::handleActionButtons() {
         if (m_input->resetPressed()) {  /* X : demande la confirmation du reset (comme R) */
             m_confirmReset = true;
         }
-        if (m_input->quitPressed()) {  /* LB + RB : quitte (comme Échap) */
-            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+        if (m_input->menuPressed()) {  /* LB + RB : retour au menu (comme Échap) */
+            m_returnToMenu = true;
         }
         if (m_input->liveryTogglePressed()) {  /* A : fait défiler la livrée (comme L) */
             cycleLivery();
@@ -100,6 +100,12 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         return;
     }
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+
+    /* Menu de démarrage affiché : il gère lui-même ses entrées (clavier + manette) et la
+       scène peut ne pas être prête. On ignore donc ici toutes les touches de vol. */
+    if (app != nullptr && app->m_inMenu) {
+        return;
+    }
 
     /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap
        sort de la démo (et seulement elle : on ne quitte pas l'application). P met en
@@ -172,12 +178,19 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
     }
 
     switch (key) {
-        case GLFW_KEY_ESCAPE:
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        case GLFW_KEY_ESCAPE:  /* retour au menu de démarrage (et non plus quitter) */
+            if (app != nullptr) {
+                app->m_returnToMenu = true;
+            }
             break;
         case GLFW_KEY_C:  /* change de vue (poursuite -> cockpit -> orbite) */
             if (app != nullptr) {
                 app->m_viewMode = (app->m_viewMode + 1) % 4;
+            }
+            break;
+        case GLFW_KEY_F:  /* bascule plein écran sans bordure / fenêtré */
+            if (app != nullptr) {
+                app->toggleFullscreen();
             }
             break;
         case GLFW_KEY_T:  /* démarre ou coupe la turbine */

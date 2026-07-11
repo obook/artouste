@@ -83,11 +83,42 @@ std::filesystem::path executableDir() {
 }
 
 /*
+ * Signale l'absence des ressources par le canal adapté à la plateforme. L'exe
+ * Windows est une application fenêtrée (pas de console) : un simple printf serait
+ * invisible pour l'utilisateur. On affiche donc une vraie boîte de dialogue native
+ * qui explique la manoeuvre. Ailleurs (lancement depuis un terminal), un message
+ * sur la sortie d'erreur suffit.
+ */
+void signalerAssetsManquants(const std::filesystem::path& cherche) {
+#if defined(_WIN32)
+    (void)cherche;
+    const wchar_t* titre = L"Artouste -- fichiers manquants";
+    const wchar_t* corps =
+        L"Le simulateur n'a pas trouvé ses fichiers (dossier \"assets\").\n\n"
+        L"Tu l'as probablement lancé depuis l'intérieur du zip.\n"
+        L"Il faut d'abord EXTRAIRE l'archive :\n\n"
+        L"    1. Clic droit sur le fichier .zip\n"
+        L"    2. \"Extraire tout...\"\n"
+        L"    3. Ouvrir le dossier extrait\n"
+        L"    4. Double-cliquer sur artouste.exe";
+    MessageBoxW(nullptr, corps, titre, MB_OK | MB_ICONERROR);
+#else
+    std::fprintf(stderr,
+                 "Artouste : dossier \"assets\" introuvable (cherché : %s).\n"
+                 "Lance le simulateur depuis le dossier qui contient \"assets\",\n"
+                 "ou définis la variable d'environnement ARTOUSTE_ASSETS.\n",
+                 cherche.string().c_str());
+#endif
+}
+
+}  /* namespace */
+
+/*
  * Localise le dossier des ressources, dans l'ordre : variable d'environnement,
  * puis dossier "assets" placé à côté de l'exécutable (version packagée), puis
  * chemin connu à la compilation (développement).
  */
-std::filesystem::path resolveAssetDir() {
+std::filesystem::path Application::resolveAssetDir() {
     namespace fs = std::filesystem;
     if (const char* env = std::getenv("ARTOUSTE_ASSETS")) {
         if (fs::exists(env)) {
@@ -108,37 +139,6 @@ std::filesystem::path resolveAssetDir() {
     }
     return fs::path("assets");
 }
-
-/*
- * Signale l'absence des ressources par le canal adapté à la plateforme. L'exe
- * Windows est une application fenêtrée (pas de console) : un simple printf serait
- * invisible pour l'utilisateur. On affiche donc une vraie boîte de dialogue native
- * qui explique la manoeuvre. Ailleurs (lancement depuis un terminal), un message
- * sur la sortie d'erreur suffit.
- */
-void signalerAssetsManquants(const std::filesystem::path& cherche) {
-#if defined(_WIN32)
-    (void)cherche;
-    const wchar_t* titre = L"Artouste -- fichiers manquants";
-    const wchar_t* corps =
-        L"Le simulateur n'a pas trouvé ses fichiers (dossier \"assets\").\n\n"
-        L"Tu l'as probablement lancé depuis l'intérieur du zip.\n"
-        L"Il faut d'abord EXTRAIRE l'archive :\n\n"
-        L"    1. Clic droit sur le fichier .zip\n"
-        L"    2. \"Extraire tout...\"\n"
-        L"    3. Ouvrir le dossier extrait\n"
-        L"    4. Double-cliquer sur launch.bat (ou artouste.exe)";
-    MessageBoxW(nullptr, corps, titre, MB_OK | MB_ICONERROR);
-#else
-    std::fprintf(stderr,
-                 "Artouste : dossier \"assets\" introuvable (cherché : %s).\n"
-                 "Lance le simulateur depuis le dossier qui contient \"assets\",\n"
-                 "ou définis la variable d'environnement ARTOUSTE_ASSETS.\n",
-                 cherche.string().c_str());
-#endif
-}
-
-}  /* namespace */
 
 bool Application::assetsDisponibles() {
     namespace fs = std::filesystem;
@@ -252,8 +252,11 @@ void Application::initScene() {
     }
 
     std::string        terrainName = config.terrain;
+    if (!m_menuTerrain.empty()) {  /* choix du menu de démarrage, au-dessus de la config */
+        terrainName = m_menuTerrain;
+    }
     if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
-        terrainName = env;
+        terrainName = env;  /* variable d'environnement : priorité maximale */
     }
     /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon). */
     if (demoEnabled && terrainName != "arcachon") {
@@ -267,8 +270,11 @@ void Application::initScene() {
        `turbine_demarree` de la config, ou la variable d'environnement
        ARTOUSTE_TURBINE_DEMARREE (prioritaire). */
     bool turbineRunning = config.turbineRunning;
+    if (m_menuTurbine >= 0) {  /* choix du menu de démarrage, au-dessus de la config */
+        turbineRunning = (m_menuTurbine == 1);
+    }
     if (const char* env = std::getenv("ARTOUSTE_TURBINE_DEMARREE"); env != nullptr && env[0] != '\0') {
-        turbineRunning = (env[0] != '0');
+        turbineRunning = (env[0] != '0');  /* variable d'environnement : priorité maximale */
     }
     /* En mode démo, c'est la démo qui pilote la turbine (démarrage rapide) : on
        ignore donc le démarrage immédiat éventuel. */

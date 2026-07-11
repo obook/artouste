@@ -25,6 +25,7 @@
 #include <string>
 
 struct GLFWwindow;
+struct GLFWmonitor;
 
 namespace artouste::render {
 class Shader;
@@ -65,7 +66,41 @@ private:
     bool initWindow();
     bool initGL();
     void initScene();
-    void mainLoop();
+    /* Boucle de vol. Renvoie true si l'utilisateur a demandé le retour au menu (touche
+       Échap), false s'il a fermé la fenêtre (on quitte alors l'application). */
+    bool mainLoop();
+
+    /* Applique un nouveau choix du menu à une session déjà en cours (retour au menu par
+       Échap) : recharge le terrain s'il a changé (sinon repose l'appareil au parking),
+       règle l'état de la turbine, et repart d'un état neutre (ni démo, ni pause). */
+    void applyMenuSession();
+
+    /* Menu de démarrage affiché dans la fenêtre (ImGui) : choix de la carte et du
+       démarrage immédiat de la turbine, à la place de l'ancien launch.bat (bloqué par
+       le Contrôle intelligent des applications de Windows). Les choix sont déposés dans
+       m_menuTerrain / m_menuTurbine, lus ensuite par initScene(). Renvoie false si
+       l'utilisateur ferme la fenêtre sans lancer (on quitte alors sans charger la scène).
+       Non appelé en mode capture ni quand la carte est déjà imposée par une variable
+       d'environnement. */
+    bool runStartupMenu();
+
+    /* Localise le dossier des ressources "assets" (variable d'environnement, puis à
+       côté de l'exécutable, puis chemin de compilation). Statique : utilisable avant
+       toute initialisation, notamment par le menu de démarrage. Définie dans
+       ApplicationScene.cpp. */
+    static std::filesystem::path resolveAssetDir();
+
+    /* Plein écran sans bordure (résolution native du bureau, sans changement de mode
+       vidéo) ou fenêtré. Masque le curseur en plein écran, le rétablit en fenêtré.
+       toggleFullscreen est reliée à la touche F ; le lancement se fait en plein écran. */
+    void setFullscreen(bool on);
+    void toggleFullscreen();
+
+    /* Moniteur sur lequel se met le plein écran : celui qui contient la fenêtre au
+       moment de l'appel (le gestionnaire de fenêtres l'ouvre sur l'écran actif, celui
+       du curseur), plutôt que le "principal" GLFW qui peut être un autre écran. Repli
+       sur le moniteur principal si la position n'est pas exploitable. */
+    GLFWmonitor* monitorForWindow() const;
 
     /* Charge (ou recharge) le terrain nommé : relief, bâtiments et position de
        départ. Réutilisable au runtime, notamment pour basculer sur Arcachon quand
@@ -229,6 +264,32 @@ private:
        pendant les panneaux de confirmation). Pilote la démo, la caméra d'orbite et
        la vibration du cockpit pour qu'ils s'arrêtent vraiment en pause. */
     float                                     m_animTime = 0.0f;
+    /* Cadence lissée (images/s) pour l'affichage du HUD 4 coins : moyenne mobile
+       exponentielle du frameDt, pour un chiffre stable et lisible. */
+    float                                     m_fpsSmoothed = 0.0f;
+
+    /* Choix du menu de démarrage (voir runStartupMenu), prioritaires sur config.txt
+       mais pas sur les variables d'environnement. Terrain vide = pas de choix menu ;
+       turbine -1 = pas de choix, 0 = à froid, 1 = démarrée. */
+    std::string                               m_menuTerrain;
+    int                                       m_menuTurbine = -1;
+
+    /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend
+       la main pour réafficher le menu de démarrage (au lieu de quitter). */
+    bool                                      m_returnToMenu = false;
+
+    /* Vrai pendant l'affichage du menu de démarrage : le callback clavier de vol
+       (keyCallback) s'efface alors, car le menu lit ses propres entrées et la scène
+       peut ne pas être initialisée (le menu s'affiche avant initScene au lancement). */
+    bool                                      m_inMenu = false;
+
+    /* Plein écran sans bordure (voir setFullscreen). Géométrie de la fenêtre mémorisée
+       avant de passer en plein écran, pour la restituer au retour en fenêtré (touche F). */
+    bool                                      m_fullscreen = false;
+    int                                       m_winX = 0;
+    int                                       m_winY = 0;
+    int                                       m_winW = 0;
+    int                                       m_winH = 0;
     /* Dernières commandes calculées : réutilisées en pause pour que les gouvernes
        dessinées et le HUD gardent leur position au lieu de revenir au neutre. */
     physics::Controls                         m_lastControls{};

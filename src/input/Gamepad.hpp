@@ -10,7 +10,7 @@
  *   bouton B        -> affiche ou masque le HUD
  *   bouton X        -> replace l'appareil au point de départ
  *   bouton Back     -> met en pause ou reprend
- *   LB + RB         -> quitte (combinaison, pour éviter les sorties accidentelles)
+ *   LB + RB         -> retour au menu (combinaison, pour éviter les retours accidentels)
  * La manette conserve un état d'une image à l'autre : la position du levier de
  * collectif et l'état précédent des boutons (pour détecter le moment de l'appui).
  *
@@ -59,8 +59,8 @@ public:
     [[nodiscard]] bool resetPressed() noexcept;
 
     /* Vrai une seule fois, au moment où la combinaison LB + RB vient d'être pressée
-     * (quitter). Une combinaison évite les sorties accidentelles. */
-    [[nodiscard]] bool quitPressed() noexcept;
+     * (retour au menu de démarrage). Une combinaison évite les retours accidentels. */
+    [[nodiscard]] bool menuPressed() noexcept;
 
     /* Vrai une seule fois, au moment où le bouton A vient d'être pressé (fait
      * défiler la livrée, comme la touche L). */
@@ -80,7 +80,7 @@ private:
     bool  m_prevB      = false; /* état du bouton B à l'image précédente */
     bool  m_prevBack   = false; /* état du bouton Back à l'image précédente */
     bool  m_prevX      = false; /* état du bouton X à l'image précédente */
-    bool  m_prevQuit   = false; /* état de la combinaison LB + RB à l'image précédente */
+    bool  m_prevMenu   = false; /* état de la combinaison LB + RB à l'image précédente */
     bool  m_prevA      = false; /* état du bouton A à l'image précédente */
     bool  m_prevDpadUp = false; /* état de la croix haut à l'image précédente */
 };

@@ -185,19 +185,19 @@ bool Gamepad::resetPressed() noexcept {
     return risingEdge(state, GLFW_GAMEPAD_BUTTON_X, m_prevX);
 }
 
-bool Gamepad::quitPressed() noexcept {
+bool Gamepad::menuPressed() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
-        m_prevQuit = false;
+        m_prevMenu = false;
         return false;
     }
-    /* Quitter : les deux gâchettes d'épaule (LB + RB) pressées ensemble. La
-     * combinaison évite une sortie sur un simple appui involontaire. On déclenche
+    /* Retour au menu : les deux gâchettes d'épaule (LB + RB) pressées ensemble. La
+     * combinaison évite un retour sur un simple appui involontaire. On déclenche
      * une fois, au passage de "pas les deux" à "les deux" (front montant). */
     const bool both = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS &&
                       state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS;
-    const bool nouvelAppui = both && !m_prevQuit;
-    m_prevQuit             = both;
+    const bool nouvelAppui = both && !m_prevMenu;
+    m_prevMenu             = both;
     return nouvelAppui;
 }
 

@@ -10,6 +10,7 @@ add_executable(artouste
     app/ApplicationGround.cpp
     app/ApplicationHud.cpp
     app/ApplicationCapture.cpp
+    app/ApplicationMenu.cpp
     app/Config.cpp
     app/DemoPilot.cpp
     audio/AudioEngineControl.cpp

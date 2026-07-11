@@ -48,7 +48,7 @@ public:
     [[nodiscard]] bool resetPressed() noexcept { return m_gamepad.resetPressed(); }
 
     /* La combinaison LB + RB vient-elle d'être pressée ? (quitter) */
-    [[nodiscard]] bool quitPressed() noexcept { return m_gamepad.quitPressed(); }
+    [[nodiscard]] bool menuPressed() noexcept { return m_gamepad.menuPressed(); }
 
     /* Le bouton A vient-il d'être pressé ? (fait défiler la livrée) */
     [[nodiscard]] bool liveryTogglePressed() noexcept { return m_gamepad.liveryTogglePressed(); }

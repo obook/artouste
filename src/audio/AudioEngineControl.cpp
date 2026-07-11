@@ -172,6 +172,12 @@ void AudioEngine::setPaused(bool paused) {
     if (paused && m_impl->startLoaded) {
         ma_sound_stop(&m_impl->startSound);
     }
+    /* L'annonce vocale (message radio) est elle aussi ponctuelle : coupée en pause et
+     * non reprise, pour qu'une vieille annonce ne reprenne pas au retour au jeu (ni ne
+     * continue pendant le menu de démarrage). */
+    if (paused && m_impl->msgSoundReady) {
+        ma_sound_stop(&m_impl->msgSound);
+    }
     /* La radio suit la pause du jeu (suspend ou reprend le flux). */
     m_radio.setPaused(paused);
 }

@@ -36,6 +36,13 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 ## Démarrage rapide
 
+> [!NOTE]
+> **Au lancement**, le simulateur s'ouvre en plein écran sur un menu de choix : la
+> carte à charger et le démarrage éventuel de la turbine. On y navigue au clavier
+> (flèches, Entrée), à la souris ou à la manette. La touche `F` bascule à tout moment
+> entre plein écran et fenêtré. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à
+> ce menu ; dans le menu, `Échap` quitte le simulateur.
+
 > [!TIP]
 > **Première fois aux commandes ?**
 > Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
@@ -68,8 +75,9 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 - Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
   dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
 - HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
-  instruments ronds verts superposés (Super HUD), ou rien. Le panneau supérieur droit
-  affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant.
+  instruments ronds verts superposés (Super HUD) ou rien. Le panneau supérieur droit
+  affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant. En mode
+  coins, le coin bas-droit indique aussi le nombre d'images par seconde (FPS).
 - Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
   La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
@@ -102,12 +110,13 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | Livrée (blanche/Gendarmerie/armée de terre/Protection civile) | `L` | bouton `A` (vert) |
 | Mode assisté (confort)  | `M`            | croix directionnelle haut |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
+| Plein écran (fenêtré/plein écran) | `F`  | -                    |
 | Pause                   | `P`            | bouton `Back`        |
 | Démo : lancer / sortir  | `V` / `Échap`  | sortir : reprendre le manche |
 | Radio internet (allumer/couper) | `K`    | -                    |
 | Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
-| Quitter                 | `Échap`        | `LB` + `RB`          |
+| Retour au menu          | `Échap`        | `LB` + `RB`          |
 
 Les boutons sont nommés à la Xbox, mais une manette PlayStation 4 (DualShock 4) ou PlayStation 5 (DualSense) branchée en USB ou en Bluetooth fonctionne aussi : le mappage GLFW/SDL fait correspondre `A`/`B`/`X`/`Y` à Croix/Rond/Carré/Triangle, `Start` à `Options` et `Back` à `Share`/`Create`.
 

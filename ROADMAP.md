@@ -144,3 +144,34 @@ ou sortir de France.
 ### Manuel
 
 - [ ] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
+
+## Interface
+
+- [x] Menu de démarrage dans la fenêtre (ImGui), en remplacement de `launch.bat` :
+  choix de la carte et du démarrage immédiat de la turbine, utilisable souris / clavier
+  / manette. Voir `src/app/ApplicationMenu.cpp`. Sauté en capture, avec `ARTOUSTE_TERRAIN`
+  ou `ARTOUSTE_NO_MENU`. `launch.bat` et `launch.sh` ont été retirés du dépôt.
+
+- [x] Mode plein écran : lancement en plein écran (moniteur principal, résolution
+  native), bascule fenêtré / plein écran par la touche `F`, curseur masqué en plein
+  écran. Géométrie fenêtrée mémorisée et viewport/aspect réajustés (callback de resize).
+  `ARTOUSTE_WINDOWED` force le fenêtré (dev). Non vérifiable sur la session Wayland de
+  dev (le compositeur XWayland ne présente pas le plein écran GLFW) : à confirmer sous
+  Windows.
+
+- [x] Échap : en vol, retour au menu de démarrage (au lieu de quitter) ; dans le menu,
+  quitte l'application. Boucle menu <-> vol dans `Application::run` + `applyMenuSession`.
+
+- [ ] En plein écran, prévoir éventuellement une bascule true borderless-windowed sous
+  Windows (au lieu du plein écran moniteur) si l'Alt-Tab ou le multi-écran pose souci.
+
+## Distribution Windows
+
+- [ ] Le Contrôle intelligent des applications (Smart App Control) de Windows 11
+  bloque `launch.bat` : un script non signé qui lance un `.exe` non signé, sans
+  bouton "Exécuter quand même". Pistes, du plus simple au plus durable :
+  (1) documenter dans le README la manip "clic droit sur le `.zip` > Propriétés >
+  Débloquer" avant extraction ; (2) supprimer la dépendance au `.bat` en déplaçant
+  son menu (choix de carte, turbine démarrée) dans l'exe lui-même ; (3) à terme,
+  signer l'exécutable (Authenticode, idéalement EV) pour gagner la confiance de
+  SAC/SmartScreen.

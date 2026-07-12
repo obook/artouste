@@ -14,3 +14,10 @@
 -0.6005 44.8775 Bruges
 -0.5614 44.8956 Stade Matmut Atlantique
 -0.7155 44.8286 Aéroport de Mérignac
+-0.5779 44.8376 Cathédrale Saint-André
+-0.5564 44.8262 Gare Saint-Jean
+-0.5517 44.8581 Pont Chaban-Delmas
+-0.5449 44.8814 Pont d'Aquitaine
+-0.6125 44.7686 Gradignan
+-0.5211 44.8325 Floirac
+-0.5579 44.7724 Villenave-d'Ornon

@@ -4,3 +4,12 @@
 -0.438 42.843 Pic du Midi d'Ossau
 -0.36 42.84 Pic Palas
 -0.413 42.905 Fabrèges
+-0.3974 42.8767 Lac de Fabrèges
+-0.4273 42.8889 Gabas
+-0.4537 42.8664 Lac de Bious-Artigues
+-0.4037 42.8972 Pic de la Sagette
+-0.4282 42.8358 Lac de Pombie
+-0.4414 42.8309 Pic Peyreget
+-0.418 42.8049 Col du Pourtalet
+-0.3101 42.8549 Pic d'Artouste
+-0.4949 42.8395 Lac de Bersau

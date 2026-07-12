@@ -42,6 +42,16 @@ ZONES = {
             ("Pic du Midi d'Ossau", -0.4380, 42.8430),
             ("Pic Palas", -0.3600, 42.8400),
             ("Fabrèges", -0.4130, 42.9050),
+            # Lieux ajoutés (coordonnées géocodeur IGN, data.geopf.fr).
+            ("Lac de Fabrèges", -0.3974, 42.8767),
+            ("Gabas", -0.4273, 42.8889),
+            ("Lac de Bious-Artigues", -0.4537, 42.8664),
+            ("Pic de la Sagette", -0.4037, 42.8972),
+            ("Lac de Pombie", -0.4282, 42.8358),
+            ("Pic Peyreget", -0.4414, 42.8309),
+            ("Col du Pourtalet", -0.4180, 42.8049),
+            ("Pic d'Artouste", -0.3101, 42.8549),
+            ("Lac de Bersau", -0.4949, 42.8395),
         ],
         "helipads": [
             # Fabrèges : reproduit l'aire de départ actuelle (fond de vallée plat).
@@ -59,6 +69,8 @@ ZONES = {
         "bbox": (-1.62, -1.30, 43.46, 43.81),
         "recolor_sea": True,
         "start": (-1.43, 43.66),  # arrière-plage plate vers Hossegor / Capbreton
+        "grid": 1024,      # maille ~25-38 m au lieu de ~50-76 m (relief plus lisse)
+        "ortho_px": 5000,  # ortho ~7,8 m/px au lieu de ~19 (limite serveur IGN : 5010)
         "title": "côte basco-landaise (Bayonne -> Vieux-Boucau)",
         "landmarks": [
             ("Bayonne", -1.4750, 43.4933),
@@ -71,6 +83,13 @@ ZONES = {
             ("Hossegor", -1.3950, 43.6640),
             ("Seignosse", -1.3780, 43.6890),
             ("Vieux-Boucau", -1.4010, 43.7880),
+            # Lieux ajoutés (coordonnées IGN, iles et lacs recoupés OpenStreetMap).
+            ("Biarritz", -1.5639, 43.4795),
+            ("Rocher de la Vierge", -1.5703, 43.4841),
+            ("Aéroport de Biarritz", -1.5233, 43.4687),
+            ("Soustons", -1.3413, 43.7699),
+            ("Lac d'Hossegor", -1.4287, 43.6722),
+            ("Étang de Soustons", -1.3292, 43.7703),
         ],
         # Coordonnées relevées sur Google Maps.
         "helipads": [
@@ -88,6 +107,7 @@ ZONES = {
         "bbox": (-1.28, -0.83, 44.36, 44.80),
         "recolor_sea": True,
         "start": (-1.111, 44.596),  # aérodrome de La Teste, replat boisé loin de l'eau
+        "ortho_px": 5000,  # ortho ~9,8 m/px au lieu de ~24 (limite serveur IGN : 5010)
         "title": "bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime)",
         "landmarks": [
             ("Arcachon", -1.1683, 44.6586),
@@ -102,6 +122,14 @@ ZONES = {
             ("Marcheprime", -0.8506, 44.6953),
             ("Biscarrosse", -1.1664, 44.3936),
             ("Biscarrosse-Plage", -1.2461, 44.4564),
+            # Lieux ajoutés (coordonnées IGN, ile et lac recoupés OpenStreetMap).
+            ("Île aux Oiseaux", -1.1780, 44.6985),
+            ("Banc d'Arguin", -1.2430, 44.5855),
+            ("Phare du Cap Ferret", -1.2488, 44.6460),
+            ("Le Teich", -1.0085, 44.6272),
+            ("Lège-Cap-Ferret", -1.2068, 44.7167),
+            ("Sanguinet", -1.0449, 44.4755),
+            ("Lac de Cazaux", -1.1453, 44.4779),
         ],
         # Coordonnées relevées sur Google Maps.
         "helipads": [
@@ -118,6 +146,8 @@ ZONES = {
         "recolor_sea": False,
         "start": (-0.110, 42.886),  # fond de vallée de Cauterets (~930 m), plat
         "height_min": 0.0,
+        "grid": 1024,      # montagne : relief ~24 m au lieu de ~48 (comme ossau)
+        "ortho_px": 5000,  # ortho ~4,9 m/px au lieu de ~12 (limite serveur IGN : 5010)
         "title": "Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie)",
         "landmarks": [
             ("Cauterets", -0.1124, 42.8903),
@@ -130,6 +160,10 @@ ZONES = {
             ("Gavarnie", -0.0086, 42.7335),
             ("Brèche de Roland", -0.0386, 42.6975),
             ("Cirque de Gavarnie", -0.0090, 42.6963),
+            # Lieux ajoutés (coordonnées recoupées IGN + OpenStreetMap).
+            ("Lac d'Estom", -0.1001, 42.8063),
+            ("Piméné", 0.0216, 42.7356),
+            ("Pic du Marboré", -0.0171, 42.6858),
         ],
         # Hélistations : bases de secours en vallée (PGHM Cauterets, CRS de Gavarnie,
         # Luz, parking du Pont d'Espagne) et deux DZ de refuge d'altitude, fidèles au
@@ -166,6 +200,11 @@ ZONES = {
             ("Barèges", 0.0658, 42.8983),
             ("Sainte-Marie-de-Campan", 0.1983, 42.9781),
             ("Campan", 0.1747, 43.0000),
+            # Lieux ajoutés (coordonnées recoupées IGN + OpenStreetMap).
+            ("Pic de Montaigu", 0.0688, 42.9837),
+            ("Pène Nère", 0.1730, 42.9556),
+            ("Pic de Sencours", 0.1508, 42.9269),
+            ("Le Chiroulet", 0.0890, 42.9619),
         ],
         "helipads": [
             ("La Mongie", 0.1783, 42.9094),
@@ -187,6 +226,7 @@ ZONES = {
         # petites annexes, et garder un buildings.bin raisonnable (le détail à 2 m
         # pesait près de 30 Mo).
         "height_min": 5.0,
+        "ortho_px": 5000,  # ville : ortho ~5,3 m/px au lieu de ~24 (limite serveur IGN : 5010)
         "title": "Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac)",
         "landmarks": [
             ("Bordeaux", -0.5757, 44.8378),
@@ -203,6 +243,14 @@ ZONES = {
             ("Bruges", -0.6005, 44.8775),
             ("Stade Matmut Atlantique", -0.5614, 44.8956),
             ("Aéroport de Mérignac", -0.7155, 44.8286),
+            # Lieux ajoutés (coordonnées géocodeur IGN).
+            ("Cathédrale Saint-André", -0.5779, 44.8376),
+            ("Gare Saint-Jean", -0.5564, 44.8262),
+            ("Pont Chaban-Delmas", -0.5517, 44.8581),
+            ("Pont d'Aquitaine", -0.5449, 44.8814),
+            ("Gradignan", -0.6125, 44.7686),
+            ("Floirac", -0.5211, 44.8325),
+            ("Villenave-d'Ornon", -0.5579, 44.7724),
         ],
         # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
         # la carte ; à affiner si besoin).

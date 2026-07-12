@@ -10,3 +10,6 @@
 -0.0086 42.7335 Gavarnie
 -0.0386 42.6975 Brèche de Roland
 -0.009 42.6963 Cirque de Gavarnie
+-0.1001 42.8063 Lac d'Estom
+0.0216 42.7356 Piméné
+-0.0171 42.6858 Pic du Marboré

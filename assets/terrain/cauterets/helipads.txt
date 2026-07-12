@@ -1,5 +1,5 @@
 # Helipads - Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie) (un par ligne : lon lat nom)
-# Positions approximatives, a affiner sur place.
+# Positions approximatives, à affiner sur place.
 -0.112 42.888 Cauterets
 -0.144 42.856 Pont d'Espagne
 -0.009 42.733 Gavarnie

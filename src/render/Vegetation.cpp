@@ -81,6 +81,13 @@ static_assert(NUM_SPECIES == 3, "trees_atlas.png et ATLAS_COUNT (vegetation.vert
    on avertit alors et on invite à agrandir l'espacement. */
 constexpr std::size_t MAX_TREES = 6'000'000;
 
+/* Budget d'arbres : au-delà, on éclaircit uniformément le semis (chaque arbre gardé
+   avec la même probabilité, de façon déterministe) pour tenir la charge sur les
+   grandes cartes très boisées, où les billboards croisés génèrent beaucoup de
+   surdessin (Bordeaux : ~5 M d'arbres). Ossau (~1,1 M) reste sous le budget, inchangé.
+   Réglable par ARTOUSTE_TREE_MAX. */
+constexpr std::size_t TARGET_TREES = 1'600'000;
+
 /* Générateur pseudo-aléatoire déterministe (LCG) à partir d'une graine entière :
    même semis d'une exécution à l'autre (pas de scintillement, résultats stables). */
 std::uint32_t hashU32(std::uint32_t x) {
@@ -502,6 +509,32 @@ Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& t
     if (m_count == 0) {
         std::printf("[Vegetation] aucun arbre semé (pas de forêt détectée).\n");
         return;
+    }
+
+    /* Budget : au-delà, éclaircissement uniforme (échantillonnage déterministe par
+       indice), sans troncature spatiale, pour limiter le surdessin des grandes cartes. */
+    std::size_t budget = TARGET_TREES;
+    if (const char* env = std::getenv("ARTOUSTE_TREE_MAX"); env != nullptr && env[0] != '\0') {
+        const long v = std::strtol(env, nullptr, 10);
+        if (v > 0) {
+            budget = static_cast<std::size_t>(v);
+        }
+    }
+    if (m_count > budget) {
+        const float        keep = static_cast<float>(budget) / static_cast<float>(m_count);
+        std::vector<float> thinned;
+        thinned.reserve(budget * 6 + 6);
+        for (std::size_t i = 0; i < m_count; ++i) {
+            if (unitOf(static_cast<std::uint32_t>(i) ^ 0x2b1f5c3du) < keep) {
+                for (int k = 0; k < 6; ++k) {
+                    thinned.push_back(instances[i * 6 + static_cast<std::size_t>(k)]);
+                }
+            }
+        }
+        std::printf("[Vegetation] semis éclairci : %zu -> %zu arbres (budget).\n", m_count,
+                    thinned.size() / 6);
+        instances.swap(thinned);
+        m_count = instances.size() / 6;
     }
 
     /* Géométrie de base : deux quads verticaux (billboard en croix). Par sommet :

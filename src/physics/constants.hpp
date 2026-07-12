@@ -71,6 +71,7 @@ inline constexpr float FUEL_CAPACITY_L   = 575.0f;  /* contenance du réservoir 
 inline constexpr float FUEL_BURN_MIN_LPH = 112.0f;  /* turbine lancée, collectif au mini (L/h) */
 inline constexpr float FUEL_BURN_MAX_LPH = 194.0f;  /* pleine puissance (L/h) */
 inline constexpr float FUEL_LOW_L        = 15.0f;   /* seuil du voyant bas carburant (~4 gallons) */
+inline constexpr float FUEL_CAUTION_L    = 60.0f;   /* seuil de la LED jaune (~10 % du réservoir) */
 
 /* --- Traînée quadratique selon l'axe (repère corps) -------------------------- */
 /* La traînée freine le mouvement : Force = -k * v * |v| sur chaque axe.
@@ -142,6 +143,15 @@ inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéris
 inline constexpr float VNE_SEA_LEVEL_MS   = 54.0f;    /* m/s (105 kt) au niveau de la mer */
 inline constexpr float VNE_ALT_GRADIENT   = 4511.0f;  /* m : altitude pour perdre 25 % de VNE */
 inline constexpr float VNE_DRAG_K         = 15.0f;    /* N/(m/s)^2 : freinage au-delà de la VNE */
+
+/* VNE à une altitude donnée (m/s) : pleine valeur au niveau de la mer, décroissance
+ * linéaire jusqu'à -25 % à VNE_ALT_GRADIENT, constante au-delà. Partagée entre le
+ * modèle de vol (traînée d'onde) et le HUD (LED de survitesse du cadran IAS). */
+inline constexpr float vneAtAltitudeMs(float altitudeM) {
+    const float f         = altitudeM / VNE_ALT_GRADIENT;
+    const float altFactor = (f < 0.0f) ? 0.0f : (f > 1.0f) ? 1.0f : f;
+    return VNE_SEA_LEVEL_MS * (1.0f - 0.25f * altFactor);
+}
 
 /* Vol latéral ou arrière limité à 18 kt (Flight Manual SE 3130). Au-delà, le
  * rotor anticouple sature et l'autorité au palonnier diminue. */

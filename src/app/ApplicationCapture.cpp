@@ -168,6 +168,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.collectivePct = 55.0f;
     hud.rotorPct      = 100.0f;
     hud.rotorRpm      = 360.0f;
+    hud.rotorLedArmed = true;     /* rotor au régime : LED NR verte sur la capture */
     hud.turbineRpm    = 33500.0f;
     hud.exhaustTempC  = 445.0f;   /* tuyère en croisière normale */
     hud.fuelLiters    = 480.0f;
@@ -217,6 +218,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
            0,1 s tombe dans la phase allumée du flash). */
         renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat, shotCollective,
                     1.0f, 0.1f);
+        m_hud.updateScale(fbw, fbh);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, shotHud, false);
     }
     glFinish();

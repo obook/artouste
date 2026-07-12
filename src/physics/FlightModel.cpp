@@ -119,8 +119,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* VNE : la vitesse à ne pas dépasser décroît avec l'altitude. Au-delà, une
      * traînée d'onde (croissant comme le carré du dépassement) freine l'appareil
      * dans le plan horizontal et matérialise la limite. */
-    const float altFactor = clamp(m_body.position.y / VNE_ALT_GRADIENT, 0.0f, 1.0f);
-    const float vne       = VNE_SEA_LEVEL_MS * (1.0f - 0.25f * altFactor);
+    const float vne = vneAtAltitudeMs(m_body.position.y);
     vec3 vneBrake{0.0f, 0.0f, 0.0f};
     if (m_realFlyPhysicsEnabled && airspeed > vne) {
         const float depassement = airspeed - vne;

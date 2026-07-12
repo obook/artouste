@@ -2,14 +2,17 @@
  * Hud.hpp
  * HUD transparent : affiche les informations de vol en surimpression,
  * par-dessus la scène 3D, grâce à Dear ImGui. La touche H fait défiler les modes
- * d'affichage (quatre coins, instruments superposés, rien).
+ * d'affichage (quatre coins, instruments superposés, rien). L'ensemble est mis à
+ * l'échelle de la fenêtre (référence 1280x720) via updateScale, menu compris.
  *
  * Auteur : O. Booklage
- * Date : juin 2026
+ * Date : juillet 2026
  * Licence : GPL v2
  */
 
 #pragma once
+
+#include <imgui.h>
 
 #include <string>
 #include <vector>
@@ -48,6 +51,9 @@ struct HudData {
     float       collectivePct = 0.0f;
     float       rotorPct      = 0.0f;
     float       rotorRpm      = 0.0f;   /* régime rotor en tr/min */
+    bool        rotorLedArmed = false;  /* LED du cadran NR active : le rotor a atteint son
+                                           régime depuis le dernier lancement de la turbine
+                                           (évite le rouge pendant démarrage et extinction) */
     float       turbineRpm    = 0.0f;   /* régime turbine en tr/min */
     float       exhaustTempC   = 0.0f;  /* température tuyère (T4) en degrés Celsius */
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
@@ -107,6 +113,13 @@ public:
 
     [[nodiscard]] bool ready() const noexcept { return m_ready; }
 
+    /* Met à jour le facteur d'échelle du HUD à partir de la taille du framebuffer et
+       reconstruit la police à la bonne taille si besoin. À appeler chaque image, AVANT
+       le NewFrame ImGui (la reconstruction d'atlas en dépend) : la boucle de vol, la
+       capture et le menu de démarrage le font avec la taille qu'ils ont déjà sous la
+       main, render() n'interroge donc pas GLFW. */
+    void updateScale(int framebufferWidth, int framebufferHeight);
+
 private:
     /* Sous-affichages d'une image, appelés par render() selon le mode. 'w'/'h' sont
        les dimensions de l'écran, 'm' la marge depuis les bords. */
@@ -121,7 +134,9 @@ private:
     /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
     void renderRadioSubtitle(const HudData& data, float w);
 
-    bool m_ready = false;
+    bool       m_ready          = false;
+    float      m_builtFontScale = 0.0f;  /* échelle de la police déjà construite (0 = jamais) */
+    ImGuiStyle m_baseStyle;              /* style non mis à l'échelle, base de ScaleAllSizes */
 };
 
 }  /* namespace artouste::ui */

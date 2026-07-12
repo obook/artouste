@@ -427,6 +427,7 @@ bool Application::mainLoop() {
         /* Sous-titre du message radio simulé, tant que son temps d'affichage court. */
         hud.radioMessage = (m_radioMsgShow > 0.0f) ? m_radioMsg.c_str() : "";
         /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */
+        m_hud.updateScale(m_width, m_height);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, m_hudMode, m_paused, m_confirmReset, m_confirmDemo, m_demo.active());
 
         glfwSwapBuffers(m_window);

@@ -6,20 +6,23 @@
  * la minimap sont dans HudOverlay.cpp ; les utilitaires de dessin dans HudWidgets.hpp.
  *
  * Auteur : O. Booklage
- * Date : juin 2026
+ * Date : juillet 2026
  * Licence : GPL v2
  */
 
 #include "ui/Hud.hpp"
 
 #include "physics/constants.hpp"
+#include "ui/HudAlarms.hpp"
 #include "ui/HudWidgets.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include <algorithm>
 #include <cmath>
+#include <cstdarg>
 
 namespace artouste::ui {
 
@@ -38,9 +41,47 @@ void Hud::init(GLFWwindow* window) {
        annulerait le masquage du curseur qu'on impose en plein écran (setFullscreen). */
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::StyleColorsDark();
+    m_baseStyle = ImGui::GetStyle();  /* style de référence, remis à l'échelle dans updateScale */
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 410");
     m_ready = true;
+}
+
+void Hud::updateScale(int framebufferWidth, int framebufferHeight) {
+    if (!m_ready || framebufferWidth <= 0 || framebufferHeight <= 0) {
+        return;
+    }
+    /* Échelle calée sur la taille du framebuffer (référence 1280x720), convertie en
+       unités ImGui via DisplayFramebufferScale (sur nos cibles X11/Windows le facteur
+       vaut 1 ; sur un écran HiDPI où fenêtre et framebuffer diffèrent, il évite un
+       double agrandissement). Le minimum des deux axes garantit que le rang de cadrans
+       tient aussi en fenêtre étroite. L'arrondi au quart crée des paliers francs : la
+       police n'est pas reconstruite à chaque pixel d'un redimensionnement continu.
+       À 1280x720 et à tout plein écran 16:9, rien ne change par rapport à la référence. */
+    const ImVec2 fbEchelle = ImGui::GetIO().DisplayFramebufferScale;
+    const float  wUnites   = static_cast<float>(framebufferWidth) / fbEchelle.x;
+    const float  hUnites   = static_cast<float>(framebufferHeight) / fbEchelle.y;
+    const float  brut      = std::min(wUnites / 1280.0f, hUnites / 720.0f);
+    const float  scaleFactor = std::clamp(std::round(brut * 4.0f) / 4.0f, 0.75f, 3.5f);
+    hud_widgets::g_scale     = scaleFactor;
+
+    /* Reconstruction de la police et remise à l'échelle des espacements uniquement au
+       changement de palier, hors NewFrame (l'atlas ne doit pas bouger en pleine frame). */
+    if (scaleFactor != m_builtFontScale) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.Fonts->Clear();
+        ImFontConfig cfg;
+        cfg.SizePixels = std::round(13.0f * scaleFactor);  /* police rastérisée à la bonne taille */
+        io.Fonts->AddFontDefault(&cfg);
+        io.Fonts->Build();
+        /* On détruit seulement la texture : le prochain NewFrame du backend la recrée
+           depuis l'atlas reconstruit. La créer ici, avant le tout premier NewFrame,
+           ferait fuir une texture (CreateDeviceObjects la recréerait par-dessus). */
+        ImGui_ImplOpenGL3_DestroyFontsTexture();
+        ImGui::GetStyle() = m_baseStyle;
+        ImGui::GetStyle().ScaleAllSizes(scaleFactor);
+        m_builtFontScale = scaleFactor;
+    }
 }
 
 void Hud::shutdown() {
@@ -66,7 +107,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     const ImVec2 display = ImGui::GetIO().DisplaySize;
     const float  w       = display.x;
     const float  h       = display.y;
-    const float  m       = 14.0f;  /* marge depuis les bords */
+    const float  m       = sc(14.0f);  /* marge depuis les bords (à l'échelle) */
 
     if (mode == HudMode::Corners) {
         renderCorners(data, w, h, m);
@@ -103,9 +144,26 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+/* Ligne de texte du HUD 4 coins colorée selon un état d'alarme : vert instrument
+   hérité quand tout est normal (ou alarme inhibée), jaune ou rouge sinon. Mêmes
+   états que les LED des cadrans du Super HUD (voir HudAlarms.hpp) : les deux
+   affichages signalent la même chose, chacun avec ses moyens. */
+static void ligneAlarme(GaugeLed etat, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    if (etat == GaugeLed::Yellow || etat == GaugeLed::Red) {
+        ImGui::PushStyleColor(ImGuiCol_Text, (etat == GaugeLed::Red) ? HUD_RED : HUD_AMBER);
+        ImGui::TextV(fmt, args);
+        ImGui::PopStyleColor();
+    } else {
+        ImGui::TextV(fmt, args);
+    }
+    va_end(args);
+}
+
 void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     /* Même vert instrument que le Super HUD, pour unifier les deux affichages.
-     * Les textes d'alerte (TextColored) gardent leur couleur propre. */
+     * Les lignes surveillées (ligneAlarme) passent au jaune ou au rouge. */
     ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
 
     corner("hud_tl", ImVec2(m, m), ImVec2(0.0f, 0.0f));
@@ -114,7 +172,7 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     ImGui::End();
 
     corner("hud_tr", ImVec2(w - m, m), ImVec2(1.0f, 0.0f));
-    ImGui::Text("IAS  %4.0f km/h", static_cast<double>(data.airspeedKmh));
+    ligneAlarme(alarmeIas(data), "IAS  %4.0f km/h", static_cast<double>(data.airspeedKmh));
     ImGui::Text("HDG  %03.0f", static_cast<double>(data.headingDeg));
     /* Heure du simulateur : HH:MM, le deux-points clignote à 1 Hz (police à chasse
        fixe, donc l'espace garde l'alignement). En temps réel (échelle 1) on
@@ -140,14 +198,15 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     ImGui::End();
 
     corner("hud_bl", ImVec2(m, h - m), ImVec2(0.0f, 1.0f));
-    ImGui::Text("TURB %s", data.turbine);
-    ImGui::Text("NR   %3.0f %%", static_cast<double>(data.rotorPct));
+    ligneAlarme(alarmeTurbine(data), "TURB %s", data.turbine);
+    ligneAlarme(alarmeNr(data), "NR   %3.0f %%", static_cast<double>(data.rotorPct));
     ImGui::Text("COLL %3.0f %%", static_cast<double>(data.collectivePct));
-    if (data.fuelLiters < physics::FUEL_LOW_L) {
-        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "CARB %4.0f L  BAS",
-                           static_cast<double>(data.fuelLiters));
+    ligneAlarme(alarmeTmp(data), "TMP  %3.0f C", static_cast<double>(data.exhaustTempC));
+    const GaugeLed alCarb = alarmeCarb(data);
+    if (alCarb == GaugeLed::Red) {
+        ligneAlarme(alCarb, "CARB %4.0f L  BAS", static_cast<double>(data.fuelLiters));
     } else {
-        ImGui::Text("CARB %4.0f L", static_cast<double>(data.fuelLiters));
+        ligneAlarme(alCarb, "CARB %4.0f L", static_cast<double>(data.fuelLiters));
     }
     ImGui::End();
 
@@ -218,7 +277,7 @@ void Hud::renderRadioSubtitle(const HudData& data, float w) {
        y = 30 à y = 72 (bord haut 30 + hauteur 40 + fond) et il est dessiné dans le
        foreground draw list, donc PAR-DESSUS cette fenêtre ; il faut rester en dessous.
        Le bas de l'image est occupé par le rang d'instruments, à ne pas recouvrir. */
-    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, 80.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, sc(80.0f)), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
     ImGui::SetNextWindowBgAlpha(0.55f);
     ImGui::Begin("radio_msg", nullptr, flags);
     /* Ambre "radio", distinct du vert instrument. */

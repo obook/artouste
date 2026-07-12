@@ -61,6 +61,18 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 > Gaube sous le Vignemale, cirque de Gavarnie ; montagne, `height_min` à 0 pour
 > garder cabanes et refuges).
 
+### Point de départ et nouvelles cartes
+
+- [ ] `find_flat_start` (calage du point de départ) peut retenir la surface d'un lac,
+  parfaitement plate, au lieu de la terre ferme. Contourné à la main pour la vallée
+  d'Ossau (Fabrèges, au bord du lac) en recalculant `start_x`/`start_z` hors de l'eau.
+  À corriger dans le pipeline : écarter les cellules d'eau (masque depuis l'orthophoto,
+  ou seuil de couleur) avant de chercher le replat le plus plat.
+
+- [ ] Variante étendue de la carte du Pic du Midi de Bigorre vers le nord pour inclure
+  Bagnères-de-Bigorre (~14 km au nord) : agrandir `lat_max` (~43,08), soit une carte
+  d'environ 26 km nord-sud, pour un poids en hausse d'environ 40 %.
+
 Pour le terrain en C++/OpenGL, les pistes les plus directes :
 - [x] Données d'élévation
 

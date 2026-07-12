@@ -13,6 +13,7 @@
 
 #include "app/Application.hpp"
 
+#include "render/LoadedHelicopter.hpp"
 #include "ui/HudWidgets.hpp"
 
 #include <glad/glad.h>
@@ -230,11 +231,14 @@ bool Application::runStartupMenu() {
     m_menuTerrain = cartes[selection].dir;
     m_menuTurbine = turbine ? 1 : 0;
     /* Présentation de départ, identique à chaque lancement depuis le menu : vue
-       intérieure et HUD complet. Les moteurs, eux, sont remis dans l'état choisi
-       ci-dessus (turbine démarrée ou à froid) par initScene/applyMenuSession. */
-    m_viewMode    = 1;   /* vue cockpit */
+       arrière (poursuite), HUD complet et livrée armée de terre. Les moteurs, eux,
+       sont remis dans l'état choisi ci-dessus (turbine démarrée ou à froid) par
+       initScene/applyMenuSession. La livrée n'est qu'enregistrée ici ; son
+       application (setLivery) se fait au chargement de la scène. */
+    m_viewMode    = 0;   /* vue poursuite (arrière) */
     m_prevCamView = -1;  /* la caméra repart d'un état neuf */
     m_hudMode     = ui::HudMode::Overlay;  /* HUD complet */
+    m_livery      = render::Livery::ArmeeDeTerre;  /* livrée armée de terre (verte) */
     return true;
 }
 
@@ -248,6 +252,12 @@ void Application::applyMenuSession() {
         loadTerrain(m_menuTerrain);
     }
     resetToStart();
+
+    /* Livrée de départ (armée de terre) : appliquée à chaque relance depuis le menu,
+       le modèle 3D persistant gardant sinon la livrée du vol précédent. */
+    if (m_loadedHeli) {
+        m_loadedHeli->setLivery(m_livery);
+    }
 
     /* Turbine et rotor selon le choix du menu : démarrés d'emblée, ou à froid. */
     if (m_menuTurbine == 1) {

@@ -47,8 +47,9 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 > **Première fois aux commandes ?**
 > Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
 >
-> 1. **Tout est prêt au départ** : le vol commence en vue cockpit avec le HUD complet
->    et tous les instruments (touche `H` pour changer d'affichage, `C` pour changer de vue).
+> 1. **Tout est prêt au départ** : le vol commence en vue arrière (poursuite) avec le HUD
+>    complet et tous les instruments, en livrée armée de terre (touche `H` pour changer
+>    d'affichage, `C` pour changer de vue, `L` pour changer de livrée).
 > 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
 > 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min

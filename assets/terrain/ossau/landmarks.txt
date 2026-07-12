@@ -3,7 +3,7 @@
 -0.3325 42.8589 Lac d'Artouste
 -0.438 42.843 Pic du Midi d'Ossau
 -0.36 42.84 Pic Palas
--0.413 42.905 Fabrèges
+-0.3972 42.8799 Fabrèges
 -0.3974 42.8767 Lac de Fabrèges
 -0.4273 42.8889 Gabas
 -0.4537 42.8664 Lac de Bious-Artigues

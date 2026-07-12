@@ -13,6 +13,8 @@
 
 #include "app/Application.hpp"
 
+#include "ui/HudWidgets.hpp"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -176,6 +178,8 @@ bool Application::runStartupMenu() {
         glClearColor(0.09f, 0.11f, 0.13f, 1.0f);  /* fond sombre neutre */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        m_hud.updateScale(fbw, fbh);  /* police et espacements à l'échelle (avant NewFrame) */
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -200,11 +204,11 @@ bool Application::runStartupMenu() {
         ImGui::Separator();
         ImGui::Checkbox("Turbine et rotor déjà démarrés (décollage immédiat)", &turbine);
         ImGui::Separator();
-        if (ImGui::Button("Démarrer", ImVec2(160.0f, 0.0f))) {
+        if (ImGui::Button("Démarrer", ImVec2(ui::hud_widgets::sc(160.0f), 0.0f))) {
             lancer = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("Quitter", ImVec2(120.0f, 0.0f))) {
+        if (ImGui::Button("Quitter", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         }
         ImGui::Separator();
@@ -225,17 +229,25 @@ bool Application::runStartupMenu() {
 
     m_menuTerrain = cartes[selection].dir;
     m_menuTurbine = turbine ? 1 : 0;
+    /* Présentation de départ, identique à chaque lancement depuis le menu : vue
+       intérieure et HUD complet. Les moteurs, eux, sont remis dans l'état choisi
+       ci-dessus (turbine démarrée ou à froid) par initScene/applyMenuSession. */
+    m_viewMode    = 1;   /* vue cockpit */
+    m_prevCamView = -1;  /* la caméra repart d'un état neuf */
+    m_hudMode     = ui::HudMode::Overlay;  /* HUD complet */
     return true;
 }
 
 void Application::applyMenuSession() {
-    /* Terrain : rechargé seulement s'il a changé (l'opération est coûteuse et
-       repositionne déjà l'appareil au parking). Même carte : on repose l'appareil. */
+    /* Terrain : rechargé seulement s'il a changé (l'opération est coûteuse). Dans
+       tous les cas on repasse ensuite par resetToStart : il repose l'appareil ET
+       remet à zéro les commandes mémorisées (collectif), l'assistance et l'aide au
+       posé -- loadTerrain seul ne purge pas ces états, et un collectif resté haut
+       ferait redécoller l'appareil tout seul sur la nouvelle carte. */
     if (!m_menuTerrain.empty() && m_menuTerrain != m_terrainName) {
         loadTerrain(m_menuTerrain);
-    } else {
-        resetToStart();
     }
+    resetToStart();
 
     /* Turbine et rotor selon le choix du menu : démarrés d'emblée, ou à froid. */
     if (m_menuTurbine == 1) {

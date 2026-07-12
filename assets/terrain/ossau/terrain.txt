@@ -15,5 +15,5 @@ ortho_width 4127
 ortho_height 4096
 sea 0
 start_heading 270
-start_x -359.6
-start_z -3055.6
+start_x 991.2
+start_z 130.6

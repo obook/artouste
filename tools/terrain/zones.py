@@ -30,8 +30,10 @@ ZONES = {
     "ossau": {
         "bbox": (-0.52, -0.30, 42.80, 42.96),
         "recolor_sea": False,
-        "start": (-0.413, 42.905),  # Fabrèges, fond de vallée plat (~1230 m)
+        "start": (-0.3972, 42.8799),  # hameau de Fabrèges, au bord du lac (~1250 m)
         "start_heading": 270,       # face à l'ouest
+        # find_flat_start peut dériver sur le lac voisin (parfaitement plat) :
+        # start_x/start_z de terrain.txt ont été calés à la main sur la terre ferme.
         # Montagne : on garde les petites constructions (cabanes, bergeries, granges),
         # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
         "height_min": 0.0,
@@ -42,7 +44,7 @@ ZONES = {
             ("Lac d'Artouste", -0.3325, 42.8589),
             ("Pic du Midi d'Ossau", -0.4380, 42.8430),
             ("Pic Palas", -0.3600, 42.8400),
-            ("Fabrèges", -0.4130, 42.9050),
+            ("Fabrèges", -0.3972, 42.8799),
             # Lieux ajoutés (coordonnées géocodeur IGN, data.geopf.fr).
             ("Lac de Fabrèges", -0.3974, 42.8767),
             ("Gabas", -0.4273, 42.8889),
@@ -55,8 +57,8 @@ ZONES = {
             ("Lac de Bersau", -0.4949, 42.8395),
         ],
         "helipads": [
-            # Fabrèges : reproduit l'aire de départ actuelle (fond de vallée plat).
-            ("Fabrèges", -0.408063, 42.908024),
+            # Fabrèges : hameau au bord du lac, aire de départ du vol.
+            ("Fabrèges", -0.3972, 42.8799),
             # Sommet du pic du Midi d'Ossau : point culminant de la heightmap 1024
             # (~2847 m). Centrer sur le maximum local évite d'enterrer le disque
             # côté amont ; la plate-forme du moteur (heightAt + jupe) fait le reste.

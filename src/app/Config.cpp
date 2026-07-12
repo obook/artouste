@@ -91,6 +91,10 @@ Config loadConfig(const std::filesystem::path& path) {
             cfg.turbineRunning = (value == "1" || value == "oui" || value == "true");
         } else if (key == "demo") {
             cfg.demo = (value == "1" || value == "oui" || value == "true");
+        } else if (key == "arbres") {
+            /* Défaut à vrai : seule une valeur explicitement négative désactive les
+               arbres (toute autre valeur, dont "1"/"oui"/"true", les garde). */
+            cfg.trees = !(value == "0" || value == "non" || value == "false");
         } else if (key == "radio_url") {
             if (!value.empty()) {
                 cfg.radioUrl = value;

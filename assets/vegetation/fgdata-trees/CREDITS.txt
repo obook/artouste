@@ -1,0 +1,21 @@
+Sprites d'arbres photographiques -- crédits et licence
+=======================================================
+
+Ces trois images sont des cellules extraites des atlas d'arbres de FlightGear
+(dépôt FGData), utilisées comme sprites pour la végétation en billboards d'Artouste.
+
+  conifer_fir.png     <- Textures/Trees/coniferous.png     (une variété, saison été)
+  conifer_spruce.png  <- Textures/Trees/coniferous-alt.png (une variété, saison été)
+  broadleaf.png       <- Textures/Trees/deciduous.png      (une variété en feuilles)
+
+Source  : FlightGear Flight Simulator -- FGData
+          https://gitlab.com/flightgear/fgdata  (Textures/Trees/)
+Licence : GPL v2 (comme l'ensemble de FGData et d'Artouste).
+          "Data on this site is licensed under GPL-2.0+. Copyright of each model is
+           owned by the author." (scenery.flightgear.org)
+
+Composition : l'outil tools/vegetation/compose_trees_atlas.py assemble ces cellules
+en assets/vegetation/trees_atlas.png (3 cellules 256x512, arbre calé sur la base),
+consommé par render::Vegetation.
+
+Un grand merci aux contributeurs de FlightGear pour ces textures libres.

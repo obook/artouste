@@ -25,6 +25,7 @@
 #include "app/Config.hpp"
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
+#include "render/Vegetation.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
@@ -181,6 +182,8 @@ void Application::initScene() {
                                                       assets / "shaders" / "shadow.frag");
     m_buildingShader = std::make_unique<render::Shader>(assets / "shaders" / "building.vert",
                                                         assets / "shaders" / "building.frag");
+    m_vegetationShader = std::make_unique<render::Shader>(assets / "shaders" / "vegetation.vert",
+                                                          assets / "shaders" / "vegetation.frag");
     m_sky         = std::make_unique<render::Skybox>();
 
     const auto discData = render::primitives::softDisc(6.0f, 48);
@@ -251,6 +254,14 @@ void Application::initScene() {
         demoEnabled = (env[0] != '0');
     }
 
+    /* Végétation : clé "arbres" de la configuration, forcée à faux par la variable
+       d'environnement ARTOUSTE_NO_TREES (prioritaire). Retenue dans un membre car
+       c'est loadTerrain (appelé ici puis à chaque changement de carte) qui sème. */
+    m_treesEnabled = config.trees;
+    if (std::getenv("ARTOUSTE_NO_TREES") != nullptr) {
+        m_treesEnabled = false;
+    }
+
     std::string        terrainName = config.terrain;
     if (!m_menuTerrain.empty()) {  /* choix du menu de démarrage, au-dessus de la config */
         terrainName = m_menuTerrain;
@@ -259,7 +270,7 @@ void Application::initScene() {
         terrainName = env;  /* variable d'environnement : priorité maximale */
     }
     /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon). */
-    if (demoEnabled && terrainName != "arcachon") {
+    if ((demoEnabled || m_menuDemo) && terrainName != "arcachon") {
         std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
         terrainName = "arcachon";
     }
@@ -278,7 +289,7 @@ void Application::initScene() {
     }
     /* En mode démo, c'est la démo qui pilote la turbine (démarrage rapide) : on
        ignore donc le démarrage immédiat éventuel. */
-    if (turbineRunning && !demoEnabled) {
+    if (turbineRunning && !demoEnabled && !m_menuDemo) {
         m_flight.turbine().forceRunning();
         std::printf("[scène] démarrage immédiat : turbine et rotor au régime.\n");
     }
@@ -353,9 +364,11 @@ void Application::initScene() {
         m_camera.setAspect(static_cast<float>(m_width) / static_cast<float>(m_height));
     }
 
-    /* Mode démo demandé au lancement : on démarre la démonstration tout de suite. */
-    if (demoEnabled) {
+    /* Mode démo demandé au lancement : on démarre la démonstration tout de suite. Lancée
+       depuis le menu (bouton "Démo"), en sortir ramènera au menu (m_demoFromMenu). */
+    if (demoEnabled || m_menuDemo) {
         std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
+        m_demoFromMenu = m_menuDemo;
         startDemo();
     }
 }
@@ -369,6 +382,17 @@ void Application::loadTerrain(const std::string& name) {
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) : rien n'est dessiné. */
     m_buildings = std::make_unique<render::Buildings>(terrainDir, *m_terrain);
+
+    /* Végétation en billboards : arbres semés d'après l'orthophoto, posés sur le
+       relief. Activée par défaut ; désactivable par la clé "arbres 0" de config.txt
+       (et toujours désactivée si ARTOUSTE_NO_TREES est défini) -- voir m_treesEnabled,
+       calculé dans initScene. Atlas de sprites partagé entre terrains. */
+    if (m_treesEnabled) {
+        m_vegetation = std::make_unique<render::Vegetation>(
+            terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png");
+    } else {
+        m_vegetation.reset();
+    }
 
     /*
      * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du

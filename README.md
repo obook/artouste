@@ -99,13 +99,13 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
   temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
-- Mode démo automatique (touche `V`) : l'appareil joue seul, en boucle, un vol
-  panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de la turbine puis
-  embrayage du rotor à vitesse réelle, décollage, survol de la Dune du Pilat à
-  2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à 1000 m,
-  retour et pose). Un panneau de confirmation s'affiche avant le lancement. Pendant la
-  démo, la touche `Échap`, ou une action franche sur le manche, en sort ; la vue
-  (`C` ou bouton `Y`), le HUD (`H` ou bouton `B`) et la radio (`K`, `-`/`+`) restent
+- Mode démo automatique (bouton `Démo` du menu de démarrage) : l'appareil joue seul,
+  en boucle, un vol panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de
+  la turbine puis embrayage du rotor à vitesse réelle, décollage, survol de la Dune du
+  Pilat à 2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à
+  1000 m, retour et pose). Pendant la démo, la touche `Échap`, ou une action franche
+  sur le manche, en sort et ramène au menu de démarrage ; la vue (`C` ou bouton `Y`),
+  le HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
   actifs sans l'interrompre.
 - Son du moteur et du rotor, ciel en dégradé, ombre portée.
 - Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
@@ -128,7 +128,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Plein écran (fenêtré/plein écran) | `F`  | -                    |
 | Pause                   | `P`            | bouton `Back`        |
-| Démo : lancer / sortir  | `V` / `Échap`  | sortir : reprendre le manche |
+| Démo : lancer / sortir  | menu `Démo` (ou `D`) / `Échap` | lancer : bouton `Y` (menu) ; sortir : `Échap`/`B`, ou reprendre le manche |
 | Radio internet (allumer/couper) | `K`    | -                    |
 | Balance radio/hélico    | `-` / `+`      | -                    |
 | Reset position          | `R`            | bouton `X`           |
@@ -324,10 +324,11 @@ par défaut. Les clés disponibles :
   (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
 - `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
   seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
-  La touche `V` lance la démo ; `Échap`, ou une action sur le manche, en sort.
-  Pendant la démo, la vue (`C` ou bouton `Y`), le HUD (`H` ou bouton `B`) et la radio
-  (`K`, `-`/`+`) restent actifs sans l'interrompre. La variable d'environnement
-  `ARTOUSTE_DEMO` a la priorité.
+  Le bouton `Démo` du menu de démarrage (ou la touche `D`, ou le bouton `Y` de la
+  manette) lance aussi la démo ; `Échap`, ou une action sur le manche, en sort. Depuis
+  le menu, en sortir ramène au menu. Pendant la démo, la vue (`C` ou bouton `Y`), le
+  HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
+  actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
 - `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La

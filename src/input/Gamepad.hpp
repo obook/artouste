@@ -73,6 +73,13 @@ public:
     /* Remet le levier de collectif à zéro. */
     void reset() noexcept { m_collective = 0.0f; }
 
+    /* Amorce les états de front des boutons avec l'état courant de la manette : un
+     * bouton déjà tenu ne comptera pas comme un nouvel appui à la prochaine lecture.
+     * À appeler en entrant en vol depuis le menu (le menu valide avec A, qui sert
+     * aussi à défiler la livrée en vol : sans amorçage, le A de validation encore
+     * tenu ferait défiler la livrée dès la première image). */
+    void primeButtons() noexcept;
+
 private:
     float m_collective = 0.0f;  /* position mémorisée du levier de collectif */
     bool  m_prevY      = false; /* état du bouton Y à l'image précédente */

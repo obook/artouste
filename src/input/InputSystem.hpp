@@ -27,6 +27,8 @@ public:
 
     physics::Controls poll(float dt) noexcept;
 
+    void primeButtons() noexcept { m_gamepad.primeButtons(); }
+
     void reset() noexcept {
         m_keyboard.reset();
         m_gamepad.reset();

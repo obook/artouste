@@ -137,6 +137,54 @@ ou sortir de France.
   
 - [ ] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
+### Végétation (arbres, forêts)
+
+- [~] Prototype d'arbres en billboards instanciés (`render::Vegetation`). Chaque
+  arbre est un billboard EN CROIX (deux quads verticaux perpendiculaires, fixes dans
+  le monde, orientés par un azimut d'instance) : il garde du volume vu du dessus, là
+  où un simple panneau face caméra s'amincissait en trait (inspiré de FlightGear). La
+  géométrie de base (deux quads) est dessinée des milliers de fois par instanciation
+  GPU, en puisant dans un atlas de 3 espèces (`assets/vegetation/trees_atlas.png` :
+  sapin, feuillu, mélèze), l'espèce étant choisie par altitude (sapin et mélèze en
+  montant, feuillu plus bas) et un tirage aléatoire. Transparence par ALPHA-TO-COVERAGE
+  (sur le MSAA déjà actif) : bords de feuillage doux et tramés, pas un seuil net. Les positions sont semées à la volée au
+  chargement du terrain d'après l'orthophoto : un arbre là où le sol est vert
+  (signature de couleur de la forêt) et sous la limite forestière -- progressive :
+  couvert plein jusque ~1900 m, raréfaction jusqu'à ~2200 m, rien au-dessus (évite la
+  ligne de coupure nette et pose des pins épars sur les hautes pentes). Posé sur le
+  relief. On écarte aussi les ZONES CLAIRES (grève, gravier, roche/neige, chemin) par
+  un plafond de luminance. Deux masques à la résolution de l'ortho écartent des arbres :
+  l'EAU (remplissage de proche en proche depuis chaque repère "Lac" de landmarks.txt --
+  épouse la forme réelle du plan d'eau, un disque ratait le réservoir allongé de
+  Fabrèges, et gère les lacs verts comme Pombie -- puis DILATÉ de ~22 m pour dégager le
+  contour/la grève, de couleur trop proche de la forêt) et les BÂTIMENTS (emprises de
+  buildings.bin rastérisées, sinon des arbres poussent sur les toits des villages).
+  Même brume que le terrain / les bâtiments ;
+  test alpha (pas de mélange), donc l'ordre de dessin n'importe pas. Chaque maille
+  de la grille de semis donne au plus un arbre, donc l'espacement fixe la densité
+  (1 arbre / espacement^2). Activée par défaut : clé `arbres` de config.txt
+  (`arbres 0` pour désactiver) ; `ARTOUSTE_NO_TREES` force la désactivation en priorité ;
+  `ARTOUSTE_TREE_SPACING` règle la densité (défaut 8 m). Sur Ossau : ~650 000 arbres à
+  8 m (défaut), ~1,4 M à 6 m, en un seul appel de rendu instancié (plafond de sécurité
+  à 6 M).
+  Sprites PHOTOGRAPHIQUES : cellules extraites des atlas d'arbres de FlightGear
+  (`assets/vegetation/fgdata-trees/`, GPL v2 -- voir CREDITS.txt), assemblées en
+  `trees_atlas.png` par `tools/vegetation/compose_trees_atlas.py` (arbre calé sur la
+  base). Un générateur procédural de repli reste dans `make_trees_atlas.py`.
+  FONDU DE DENSITÉ à distance : loin de la caméra, seule une fraction des arbres est
+  gardée (les autres rétrécissent vers leur base puis s'effacent), sur un rang stable
+  par instance -- allège le remplissage au loin sans coupure nette ni scintillement.
+
+    Pistes pour consolider : normal map (feuillage ombré PBR) et gestion des saisons
+  (les atlas FlightGear ont 4 saisons) ; plus de variétés par espèce (FlightGear en a
+  8/4) ; pipeline hors-ligne `tools/fetch_vegetation.py` (positions précalculées ->
+  `vegetation.bin`, sur le modèle de `fetch_buildings.py`) au lieu du semis au
+  chargement ; source de forêt plus fiable (BD Forêt IGN via WFS, ou OSM `landuse=forest`)
+  que la seule couleur
+  de l'ortho ; tri des prairies claires (qui attrapent encore quelques arbres) ;
+  niveaux de détail et culling autour de l'appareil ; clé de densité par carte dans
+  `terrain.txt` / `zones.py`.
+
 ## Quelques observations à traiter
 
 - [ ] FUEL_BURN_MAX_LPH = 194.0f : nos fiches indiquent 155 kg/h à puissance maxi. Avec kérosène à 0,8 kg/L, cela donne environ 194 L/h. La conversion est juste.

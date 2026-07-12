@@ -30,10 +30,17 @@ turbine_demarree 0
 # demo : 1 = mode démonstration automatique au lancement. L'appareil joue tout seul
 # un vol (démarrage rapide, décollage, montée et vol jusqu'à la Dune du Pilat survolée
 # vers 1500 m, demi-tour et retour se poser sur le pad de départ), rejoué en boucle ;
-# le terrain est alors forcé sur arcachon. Une entrée du pilote ou la touche V coupe
+# le terrain est alors forcé sur arcachon. Une entrée du pilote sur le manche coupe
 # la démo. La variable d'environnement ARTOUSTE_DEMO, si définie, a la priorité.
-# 0 = pas de démo.
+# 0 = pas de démo. (La démo se lance aussi par le bouton Démo du menu de démarrage.)
 demo 0
+
+# arbres : 1 = végétation activée (défaut) -- des arbres en billboards sont semés sur
+# les terrains de montagne d'après l'orthophoto (là où le sol est vert et sous la
+# limite forestière). 0 = pas d'arbres (rendu plus léger sur une machine modeste).
+# La variable d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation
+# quelle que soit cette clé.
+arbres 1
 
 # radio_url : URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit.
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.

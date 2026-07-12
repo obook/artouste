@@ -92,6 +92,7 @@ bool Application::runStartupMenu() {
     std::size_t selection = 0;      /* carte en surbrillance (défaut : la première) */
     bool        turbine   = false;  /* turbine et rotor déjà démarrés au lancement ? */
     bool        lancer    = false;  /* passe à true quand l'utilisateur valide */
+    bool        demoChoisi = false; /* passe à true si l'utilisateur choisit la démo */
 
     /* Le menu lit les entrées directement dans GLFW (clavier + manette) plutôt que la
        navigation interne d'ImGui : comportement déterministe, indépendant du focus et du
@@ -106,14 +107,17 @@ bool Application::runStartupMenu() {
        setPaused(false) et tout reprend. */
     m_audio.setPaused(true);
 
-    /* Lecture des entrées, clavier et manette 1 fusionnés en cinq intentions :
-       up/down (choisir), turb (bascule turbine), valid (démarrer), quit (quitter). */
-    auto lireEntrees = [this](bool& up, bool& down, bool& valid, bool& turb, bool& quit) {
+    /* Lecture des entrées, clavier et manette 1 fusionnés en six intentions :
+       up/down (choisir), turb (bascule turbine), valid (démarrer), demo (lancer la
+       démo), quit (quitter). */
+    auto lireEntrees = [this](bool& up, bool& down, bool& valid, bool& turb, bool& demo,
+                              bool& quit) {
         up    = glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS;
         down  = glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS;
         valid = glfwGetKey(m_window, GLFW_KEY_ENTER) == GLFW_PRESS ||
                 glfwGetKey(m_window, GLFW_KEY_KP_ENTER) == GLFW_PRESS;
         turb  = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        demo  = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
         quit  = glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
         /* Première manette reconnue, quel que soit son slot (un périphérique virtuel
            peut occuper le slot 0 et reléguer la vraie manette plus loin) -- même logique
@@ -133,6 +137,7 @@ bool Application::runStartupMenu() {
                     gp.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f;
             valid = valid || gp.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS;
             turb  = turb || gp.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS;
+            demo  = demo || gp.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS;
             quit  = quit || gp.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS;
         }
     };
@@ -146,15 +151,16 @@ bool Application::runStartupMenu() {
     /* États précédents amorcés avec l'état courant : une touche déjà tenue à l'ouverture
        du menu -- typiquement l'Échap qui vient de faire sortir du vol -- ne doit pas
        compter comme un nouvel appui, sinon le menu se refermerait aussitôt (quitter). */
-    bool pvUp = false, pvDown = false, pvValid = false, pvQuit = false, pvTurb = false;
+    bool pvUp = false, pvDown = false, pvValid = false, pvQuit = false, pvTurb = false,
+         pvDemo = false;
     glfwPollEvents();
-    lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvQuit);
+    lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvQuit);
 
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !lancer) {
         glfwPollEvents();
 
-        bool up = false, down = false, valid = false, turb = false, quit = false;
-        lireEntrees(up, down, valid, turb, quit);
+        bool up = false, down = false, valid = false, turb = false, demo = false, quit = false;
+        lireEntrees(up, down, valid, turb, demo, quit);
 
         if (edge(up, pvUp) && selection > 0) {
             --selection;
@@ -167,6 +173,10 @@ bool Application::runStartupMenu() {
         }
         if (edge(valid, pvValid)) {
             lancer = true;
+        }
+        if (edge(demo, pvDemo)) {  /* touche D / bouton Y : lancer la démonstration */
+            demoChoisi = true;
+            lancer     = true;
         }
         if (edge(quit, pvQuit)) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);  /* Échap dans le menu = quitter */
@@ -209,12 +219,17 @@ bool Application::runStartupMenu() {
             lancer = true;
         }
         ImGui::SameLine();
+        if (ImGui::Button("Démo", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
+            demoChoisi = true;
+            lancer     = true;
+        }
+        ImGui::SameLine();
         if (ImGui::Button("Quitter", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         }
         ImGui::Separator();
         ImGui::TextDisabled(
-            "Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   Échap/B : quitter");
+            "Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   D/Y : démo   Échap/B : quitter");
         ImGui::End();
 
         ImGui::Render();
@@ -230,6 +245,7 @@ bool Application::runStartupMenu() {
 
     m_menuTerrain = cartes[selection].dir;
     m_menuTurbine = turbine ? 1 : 0;
+    m_menuDemo    = demoChoisi;  /* démo demandée : lancée par initScene/applyMenuSession */
     /* Présentation de départ, identique à chaque lancement depuis le menu : vue
        arrière (poursuite), HUD complet et livrée armée de terre. Les moteurs, eux,
        sont remis dans l'état choisi ci-dessus (turbine démarrée ou à froid) par
@@ -243,6 +259,13 @@ bool Application::runStartupMenu() {
 }
 
 void Application::applyMenuSession() {
+    m_demoFromMenu = false;  /* remis à jour ci-dessous selon le choix du menu */
+    /* Démo choisie au menu : elle se joue sur Arcachon. On charge donc ce terrain ici
+       (startDemo le confirmera sans le recharger), puis on lance la chorégraphie plus
+       bas ; la turbine et la vue de départ retenues par la démo priment. */
+    if (m_menuDemo) {
+        m_menuTerrain = "arcachon";
+    }
     /* Terrain : rechargé seulement s'il a changé (l'opération est coûteuse). Dans
        tous les cas on repasse ensuite par resetToStart : il repose l'appareil ET
        remet à zéro les commandes mémorisées (collectif), l'assistance et l'aide au
@@ -266,11 +289,20 @@ void Application::applyMenuSession() {
         m_flight.turbine().stopNow();
     }
 
-    /* On repart d'un état neutre : ni démo, ni pause, ni panneau de confirmation. */
-    m_demo.stop();
+    /* On repart d'un état neutre : ni pause, ni panneau de confirmation. */
     m_paused       = false;
     m_confirmReset = false;
     m_confirmDemo  = false;
+
+    /* Démo demandée au menu : on lance la démonstration (elle repose l'appareil, force
+       le démarrage rapide de la turbine et joue la chorégraphie). En sortir ramènera au
+       menu (m_demoFromMenu). Sinon, on part en vol libre, démo arrêtée. */
+    if (m_menuDemo) {
+        m_demoFromMenu = true;
+        startDemo();
+    } else {
+        m_demo.stop();
+    }
 }
 
 }  /* namespace artouste::app */

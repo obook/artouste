@@ -19,6 +19,7 @@
 
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
+#include "render/Vegetation.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
@@ -66,6 +67,7 @@ Application::~Application() {
     m_loadedHeli.reset();
     m_helicopter.reset();
     m_buildings.reset();
+    m_vegetation.reset();
     m_terrain.reset();
     m_sea.reset();
     m_shadowDisc.reset();
@@ -76,6 +78,7 @@ Application::~Application() {
     m_flatShader.reset();
     m_shadowShader.reset();
     m_buildingShader.reset();
+    m_vegetationShader.reset();
     m_skyShader.reset();
     m_seaShader.reset();
     m_terrainShader.reset();
@@ -220,13 +223,6 @@ void Application::startDemo() {
     /* m_audio.playMusic(m_musicPath); */
 }
 
-void Application::toggleDemo() {
-    if (m_demo.active()) {
-        m_demo.stop();  /* le pilote reprend la main */
-    } else {
-        m_confirmDemo = true;  /* on demande confirmation avant de lancer la démo */
-    }
-}
 
 void Application::onResize(int width, int height) {
     m_width  = width;

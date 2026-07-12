@@ -59,6 +59,9 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
                                + std::fabs(rawInput.collective);
         if (pilotInput > 0.15f) {
             m_demo.stop();
+            if (m_demoFromMenu) {
+                m_returnToMenu = true;  /* démo lancée depuis le menu : on y retourne */
+            }
         }
     }
 
@@ -324,6 +327,15 @@ bool Application::mainLoop() {
     float accumulator = 0.0f;
 
     m_returnToMenu = false;  /* on entre en vol : la demande de retour au menu est vierge */
+
+    /* Amorçage des fronts de la manette : le menu se valide avec le bouton A, qui sert
+       aussi à défiler la livrée en vol. Sans cela, le A de validation encore tenu à
+       l'entrée en vol (retour au menu -> vol, sans rechargement) déclencherait un
+       défilement de livrée dès la première image (olive -> rouge). Idem pour les autres
+       boutons partagés avec le menu (X, Y). */
+    if (m_input) {
+        m_input->primeButtons();
+    }
 
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !m_returnToMenu) {
         glfwPollEvents();

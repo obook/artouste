@@ -36,9 +36,17 @@ void Application::handleActionButtons() {
         if (m_input->liveryTogglePressed()) {  /* A : change de livrée, la démo continue */
             cycleLivery();
         }
-        if (m_input->resetPressed()) {  /* X : coupe la démo et replace au pad (comme R) */
+        if (m_input->resetPressed()) {  /* X : quitte la démo (comme R) */
             m_demo.stop();
-            resetToStart();
+            if (m_demoFromMenu) {
+                m_returnToMenu = true;  /* la démo venait du menu : on y retourne */
+            } else {
+                resetToStart();  /* replace l'appareil au pad (le pilote reprend) */
+            }
+        }
+        if (m_input->menuPressed()) {  /* LB + RB : quitte la démo et revient au menu */
+            m_demo.stop();
+            m_returnToMenu = true;
         }
         return;
     }
@@ -107,16 +115,22 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         return;
     }
 
-    /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap
-       sort de la démo (et seulement elle : on ne quitte pas l'application). P met en
-       pause (et reprend) : la démo se fige sur place puis repart. K et +/- pilotent la
-       radio, H le HUD, C la vue ; pour H et C l'utilisateur reprend la main (la démo
-       cesse alors de les imposer). Tout le reste est ignoré pour ne pas perturber la
-       chorégraphie. */
+    /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap en
+       sort ; si la démo a été lancée depuis le menu, on y retourne (sinon on rend la main
+       en vol libre). F bascule le plein écran. P met en pause (et reprend) : la démo se
+       fige sur place puis repart. K et +/- pilotent la radio, H le HUD, C la vue ; pour
+       H et C l'utilisateur reprend la main (la démo cesse alors de les imposer). Tout le
+       reste est ignoré pour ne pas perturber la chorégraphie. */
     if (app != nullptr && app->m_demo.active()) {
         switch (key) {
-            case GLFW_KEY_ESCAPE:
+            case GLFW_KEY_ESCAPE:  /* quitte la démo : retour au menu si elle en venait */
                 app->m_demo.stop();
+                if (app->m_demoFromMenu) {
+                    app->m_returnToMenu = true;
+                }
+                break;
+            case GLFW_KEY_F:  /* bascule plein écran / fenêtré (actif aussi pendant la démo) */
+                app->toggleFullscreen();
                 break;
             case GLFW_KEY_P:  /* pause/reprise sans couper la démo (vol et démo figés) */
                 app->m_paused = !app->m_paused;
@@ -144,9 +158,13 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
             case GLFW_KEY_L:  /* défile la livrée : on peut la changer sans couper la démo */
                 app->cycleLivery();
                 break;
-            case GLFW_KEY_R:  /* coupe la démo et replace l'appareil au pad (le pilote reprend) */
+            case GLFW_KEY_R:  /* quitte la démo : retour au menu si elle en venait, sinon reprise en vol */
                 app->m_demo.stop();
-                app->resetToStart();
+                if (app->m_demoFromMenu) {
+                    app->m_returnToMenu = true;
+                } else {
+                    app->resetToStart();  /* replace l'appareil au pad (le pilote reprend) */
+                }
                 break;
             default:
                 break;  /* ignoré : la démo continue */
@@ -196,11 +214,6 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_T:  /* démarre ou coupe la turbine */
             if (app != nullptr) {
                 app->m_flight.turbine().toggle();
-            }
-            break;
-        case GLFW_KEY_V:  /* lance ou arrête la démonstration automatique */
-            if (app != nullptr) {
-                app->toggleDemo();
             }
             break;
         case GLFW_KEY_L:  /* fait défiler la livrée (origine, Gendarmerie, armée de terre) */

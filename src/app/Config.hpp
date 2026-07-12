@@ -36,6 +36,12 @@ struct Config {
        coupe la démo. */
     bool demo = false;
 
+    /* Végétation : si vrai (défaut), des arbres en billboards sont semés sur les
+       terrains de montagne d'après l'orthophoto. Mettre "arbres 0" dans config.txt
+       pour un rendu léger (machine modeste) ou l'ancien rendu sans arbres. La variable
+       d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
+    bool trees = true;
+
     /* URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit, allumé
        par la touche K en vol libre. Vide par défaut = pas de radio. La variable
        d'environnement ARTOUSTE_RADIO_URL, si définie, a la priorité. */

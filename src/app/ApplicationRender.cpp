@@ -15,6 +15,7 @@
 
 #include "app/AppConstants.hpp"
 #include "render/Buildings.hpp"
+#include "render/Vegetation.hpp"
 #include "render/Camera.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
@@ -198,6 +199,30 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_buildingShader->setFloat("u_fogStart", FOG_START);
         m_buildingShader->setFloat("u_fogEnd", FOG_END);
         m_buildings->draw();
+    }
+
+    /*
+     * Végétation en billboards (arbres) : test alpha et écriture de profondeur
+     * (pas de mélange), donc l'ordre de dessin importe peu. Même brume que le
+     * terrain et les bâtiments pour un raccord cohérent au loin.
+     */
+    if (m_vegetation && m_vegetation->built()) {
+        m_vegetationShader->use();
+        m_vegetationShader->setMat4("u_view", view);
+        m_vegetationShader->setMat4("u_proj", proj);
+        m_vegetationShader->setMat4("u_model", toRel);
+        m_vegetationShader->setVec3("u_lightDir", lightDir);
+        m_vegetationShader->setVec3("u_camPos", camPosRel);
+        m_vegetationShader->setVec3("u_fogColor", fogColor);
+        m_vegetationShader->setFloat("u_fogStart", FOG_START);
+        m_vegetationShader->setFloat("u_fogEnd", FOG_END);
+        m_vegetationShader->setInt("u_texture", 0);
+        /* Alpha-to-coverage : le bord du feuillage est tramé sur les sous-échantillons
+           (MSAA déjà actif), pour des contours doux plutôt qu'un seuil net. Sans
+           mélange (le shader écrit une profondeur), donc l'ordre de dessin importe peu. */
+        glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        m_vegetation->draw();
+        glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
     }
 
     /* Décalques au sol, dessinés avant l'appareil (voir ApplicationGround.cpp). */

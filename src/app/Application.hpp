@@ -31,6 +31,7 @@ namespace artouste::render {
 class Shader;
 class Terrain;
 class Buildings;
+class Vegetation;
 class HelicopterModel;
 class LoadedHelicopter;
 class Skybox;
@@ -199,10 +200,6 @@ private:
        par le pilote automatique m_demo. */
     void startDemo();
 
-    /* Touche V : si la démo tourne, l'arrête ; sinon, affiche le panneau de
-       confirmation avant de la lancer (réponse Oui/Non). */
-    void toggleDemo();
-
     static void resizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -223,6 +220,7 @@ private:
     std::unique_ptr<render::Shader>           m_flatShader;    /* couleur unie (lueurs) */
     std::unique_ptr<render::Shader>           m_shadowShader;  /* ombre portée douce (dégradé) */
     std::unique_ptr<render::Shader>           m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
+    std::unique_ptr<render::Shader>           m_vegetationShader; /* arbres en billboards instanciés */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
     std::unique_ptr<render::Mesh>             m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -233,6 +231,7 @@ private:
     std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain>          m_terrain;
     std::unique_ptr<render::Buildings>        m_buildings;     /* bâtiments 3D (BD TOPO extrudée) */
+    std::unique_ptr<render::Vegetation>       m_vegetation;    /* arbres en billboards (prototype) */
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;
@@ -274,6 +273,17 @@ private:
        turbine -1 = pas de choix, 0 = à froid, 1 = démarrée. */
     std::string                               m_menuTerrain;
     int                                       m_menuTurbine = -1;
+    bool                                      m_menuDemo    = false;  /* le menu a lancé la démo (bouton "Démo") */
+
+    /* Vrai quand la démo en cours a été lancée depuis le menu de démarrage : en sortir
+       (Échap, reprise des commandes...) ramène alors au menu, au lieu de rendre la main
+       en vol libre. La démo lancée par config/env (ARTOUSTE_DEMO) garde l'ancien
+       comportement (arrêt de la démo, vol libre). */
+    bool                                      m_demoFromMenu = false;
+
+    /* Végétation active (clé "arbres" de config.txt, vrai par défaut, forcée à faux
+       par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
+    bool                                      m_treesEnabled = true;
 
     /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend
        la main pour réafficher le menu de démarrage (au lieu de quitter). */
@@ -304,7 +314,7 @@ private:
     ui::HudMode                               m_hudMode  = ui::HudMode::Overlay;  /* HUD complet au lancement ; H fait défiler coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */
-    bool                                      m_confirmDemo  = false;  /* panneau Oui/Non avant de lancer la démo (touche V) */
+    bool                                      m_confirmDemo  = false;  /* panneau Oui/Non avant de lancer la démo (réservé) */
     render::Livery                            m_livery = render::Livery::Gendarmerie;  /* livrée par défaut (touche L / bouton A) */
     float                                     m_rotorAngle = 0.0f;  /* angle du rotor principal (rad) : rotation au régime rotor, parking à l'arrêt */
     float                                     m_parkOffset = 0.0f;  /* décalage aléatoire de la position de parking (pale pas pile dans l'axe) */

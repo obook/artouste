@@ -43,12 +43,11 @@ inline constexpr float ROTOR_ENGAGE_TIME  = 35.0f;  /* s : rotor de 0 à 100 % (
 inline constexpr float TURBINE_STOP_TIME  = 30.0f;  /* s : extinction, turbine de 100 % à 0 */
 inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (forte inertie, plus lent que la turbine) */
 
-/* Démarrage rapide réservé au mode démo : la turbine et le rotor montent en régime
- * bien plus vite que la séquence réelle, pour que la démonstration tienne dans une
- * minute. Mêmes états que le démarrage normal, mais avec des durées raccourcies. */
+/* Démarrage rapide réservé au mode démo : seule la turbine monte en régime plus
+ * vite que le réel, pour épargner au spectateur les 48 s de sifflement. La phase
+ * rotor (frein puis embrayage centrifuge), spectaculaire, garde ses durées
+ * réelles : ROTOR_BRAKE_DELAY et ROTOR_ENGAGE_TIME ci-dessus. */
 inline constexpr float DEMO_TURBINE_START_TIME = 10.0f;  /* s : turbine 0 -> 100 % (accéléré) */
-inline constexpr float DEMO_ROTOR_BRAKE_DELAY  = 1.0f;   /* s : frein rotor serré avant le lâcher */
-inline constexpr float DEMO_ROTOR_ENGAGE_TIME  = 4.0f;   /* s : rotor 0 -> 100 % (accéléré) */
 
 /* --- Température de la tuyère (gaz d'échappement, T4) -------------------------- */
 /* Modèle thermique simple : la température vise une cible déduite du régime

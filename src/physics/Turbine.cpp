@@ -32,11 +32,12 @@ void Turbine::toggle() noexcept {
 }
 
 void Turbine::update(float dt, float charge) noexcept {
-    /* Durées de la montée en régime : raccourcies pendant un démarrage rapide
-     * (mode démo), sinon celles de la séquence réelle. */
+    /* Durée de la montée en régime turbine : raccourcie pendant un démarrage rapide
+     * (mode démo), sinon celle de la séquence réelle. La phase rotor (frein puis
+     * embrayage centrifuge) garde ses durées réelles dans tous les cas. */
     const float turbineStartTime = m_fastStart ? DEMO_TURBINE_START_TIME : TURBINE_START_TIME;
-    const float rotorBrakeDelay  = m_fastStart ? DEMO_ROTOR_BRAKE_DELAY  : ROTOR_BRAKE_DELAY;
-    const float rotorEngageTime  = m_fastStart ? DEMO_ROTOR_ENGAGE_TIME  : ROTOR_ENGAGE_TIME;
+    const float rotorBrakeDelay  = ROTOR_BRAKE_DELAY;
+    const float rotorEngageTime  = ROTOR_ENGAGE_TIME;
 
     switch (m_state) {
         case State::Demarrage:

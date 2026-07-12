@@ -53,13 +53,17 @@ inline GaugeLed alarmeTurbine(const HudData& d) noexcept {
 }
 
 /* Vitesse : sur la VNE réelle du moment, qui décroît avec l'altitude (le cadran
- * IAS, lui, garde une bande fixe). Jaune à partir de 90 % de la VNE. */
+ * IAS, lui, garde une bande fixe). Jaune à partir de 95 % de la VNE : en altitude la
+ * VNE est déjà basse (par ex. ~176 km/h à 1700 m), et la vitesse de croisière normale
+ * s'en approche ; à 90 %, le jaune se déclenchait dès ~160 km/h, une vitesse pourtant
+ * ordinaire (aiguille encore sous la bande verte du cadran). On réserve donc le jaune
+ * aux 5 derniers pour cent avant VNE, pour un vrai "surveiller, proche de la limite". */
 inline GaugeLed alarmeIas(const HudData& d) noexcept {
     const float vneKmh = physics::vneAtAltitudeMs(d.altitudeM) * 3.6f;
     if (d.airspeedKmh > vneKmh) {
         return GaugeLed::Red;
     }
-    if (d.airspeedKmh > 0.9f * vneKmh) {
+    if (d.airspeedKmh > 0.95f * vneKmh) {
         return GaugeLed::Yellow;
     }
     return GaugeLed::Green;

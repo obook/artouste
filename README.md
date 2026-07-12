@@ -47,7 +47,8 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 > **Première fois aux commandes ?**
 > Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
 >
-> 1. **Activez le HUD complet** avec tous les instruments : touche `H` | bouton `B`.
+> 1. **Tout est prêt au départ** : le vol commence en vue cockpit avec le HUD complet
+>    et tous les instruments (touche `H` pour changer d'affichage, `C` pour changer de vue).
 > 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
 > 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min
@@ -78,6 +79,19 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   instruments ronds verts superposés (Super HUD) ou rien. Le panneau supérieur droit
   affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant. En mode
   coins, le coin bas-droit indique aussi le nombre d'images par seconde (FPS).
+  Cinq paramètres sont surveillés par une alarme à trois états (vert = normal,
+  jaune = surveiller, rouge = limite franchie) : régime rotor (autour de la bande
+  nominale, inhibée tant que le rotor n'est pas en régime), régime turbine (verte
+  au régime, elle sert d'indicateur "turbine prête" au démarrage), vitesse (sur la
+  VNE réelle du moment, qui décroît avec l'altitude), température tuyère et
+  carburant (jaune sous 60 L, rouge sous 15 L). En Super HUD, l'alarme est une LED
+  en haut à droite du cadran ; en HUD coins, la ligne concernée passe au jaune ou
+  au rouge.
+- Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
+  étiquettes) et le menu de démarrage suivent la taille réelle de l'affichage
+  (référence 1280x720, facteur borné de 0,75 à 3,5), et la police est reconstruite
+  nette à chaque changement de taille. L'affichage reste lisible et proportionné
+  du petit fenêtré au plein écran 4K, y compris en fenêtre étroite.
 - Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
   La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
@@ -85,7 +99,8 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
 - Mode démo automatique (touche `V`) : l'appareil joue seul, en boucle, un vol
-  panoramique au-dessus du bassin d'Arcachon (décollage, survol de la Dune du Pilat à
+  panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de la turbine puis
+  embrayage du rotor à vitesse réelle, décollage, survol de la Dune du Pilat à
   2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à 1000 m,
   retour et pose). Un panneau de confirmation s'affiche avant le lancement. Pendant la
   démo, la touche `Échap`, ou une action franche sur le manche, en sort ; la vue

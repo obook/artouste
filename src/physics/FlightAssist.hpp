@@ -30,6 +30,10 @@ public:
     [[nodiscard]] bool  active() const noexcept { return m_active; }
     [[nodiscard]] float intensity() const noexcept { return m_intensity; }
 
+    /* Remet l'état lissé au neutre (toutes commandes à zéro), par exemple lors d'un
+     * retour au pad, pour que le collectif mémorisé ne subsiste pas. */
+    void reset() noexcept { syncTo(Controls{}); }
+
 private:
     /* Recale l'état interne sur les commandes brutes, pour qu'une (ré)activation
      * de l'assistance reparte sans à-coup depuis la position réelle des commandes. */

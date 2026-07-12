@@ -151,6 +151,12 @@ void Application::cycleLivery() {
 void Application::resetToStart() {
     m_flight.reset(m_parkPos);
     m_input->reset();
+    /* On remet aussi à zéro les états qui gardent une mémoire du collectif : les
+       dernières commandes (réutilisées pendant un panneau figé, assistance OFF) et
+       l'état lissé de l'assistance (assistance ON). Sans cela, le collectif mémorisé
+       subsiste après un retour au pad et l'appareil redécolle tout seul. */
+    m_lastControls = physics::Controls{};
+    m_assist.reset();
     m_confirmReset = false;
     /* Retour au pad : on repart d'un état d'aide au posé vierge, sinon le réticule
        (ou un score en cours d'affichage) resterait visible alors qu'on est de nouveau

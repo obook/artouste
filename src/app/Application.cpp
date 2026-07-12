@@ -149,7 +149,7 @@ void Application::cycleLivery() {
 }
 
 void Application::resetToStart() {
-    m_flight.reset(m_parkPos);
+    m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     m_input->reset();
     /* On remet aussi à zéro les états qui gardent une mémoire du collectif : les
        dernières commandes (réutilisées pendant un panneau figé, assistance OFF) et
@@ -161,10 +161,11 @@ void Application::resetToStart() {
     /* Retour au pad : on repart d'un état d'aide au posé vierge, sinon le réticule
        (ou un score en cours d'affichage) resterait visible alors qu'on est de nouveau
        garé sans avoir volé. m_hasFlown se rearmera au prochain décollage. */
-    m_hasFlown    = false;
-    m_wasAirborne = false;
-    m_wasOnGround = false;
-    m_scoreTimer  = 0.0f;
+    m_hasFlown      = false;
+    m_wasAirborne   = false;
+    m_wasOnGround   = false;
+    m_scoreTimer    = 0.0f;
+    m_padGuideGrace = 0.0f;  /* le prochain (premier) décollage réarmera le délai */
 }
 
 void Application::startDemo() {

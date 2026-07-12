@@ -267,6 +267,7 @@ private:
     /* Cadence lissée (images/s) pour l'affichage du HUD 4 coins : moyenne mobile
        exponentielle du frameDt, pour un chiffre stable et lisible. */
     float                                     m_fpsSmoothed = 0.0f;
+    bool                                      m_nrLedArmed  = false;  /* LED NR : rotor arrivé en régime (voir fillHud) */
 
     /* Choix du menu de démarrage (voir runStartupMenu), prioritaires sur config.txt
        mais pas sur les variables d'environnement. Terrain vide = pas de choix menu ;
@@ -316,6 +317,7 @@ private:
     bool                                      m_wasOnGround = false;  /* état sol de l'image précédente (anti-rebond) */
     bool                                      m_wasAirborne = false;  /* a volé depuis l'activation : évite un faux score au sol */
     bool                                      m_hasFlown    = false;  /* a décollé depuis le lancement/reset : pas d'aide au posé tant qu'on n'a pas volé */
+    float                                     m_padGuideGrace = 0.0f; /* s restantes sans réticule après un décollage du pad */
 };
 
 }  /* namespace artouste::app */

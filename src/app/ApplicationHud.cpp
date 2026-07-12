@@ -33,6 +33,7 @@ constexpr float PAD_SEARCH_RADIUS_M = 300.0f;
 constexpr float PAD_GUIDE_MAX_ALT_M = 50.0f;   /* altitude max au-dessus du pad */
 constexpr float PAD_GUIDE_MIN_ALT_M = -2.0f;   /* en dessous : on est sous le sol du pad */
 constexpr float PAD_GUIDE_MAX_KMH   = 37.0f;   /* vitesse air max (37 km/h ~ 20 kt) */
+constexpr float PAD_GUIDE_GRACE_S   = 15.0f;   /* s sans réticule après un décollage du pad */
 
 /* Conditions de détection du posé. */
 constexpr float PAD_LAND_MAX_ALT_M  = 0.8f;    /* hauteur patins (~0,5 m) + marge */
@@ -106,6 +107,16 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.collectivePct = controls.collective * 100.0f;
     hud.rotorPct      = rotorFraction * 100.0f;          /* régime rotor, en pourcentage */
     hud.rotorRpm      = rotorFraction * 360.0f;          /* régime rotor nominal : 360 tr/min */
+    /* LED du cadran NR : armée quand le rotor atteint la bande nominale (340 tr/min,
+       bas de la bande verte du cadran), désarmée dès que la turbine quitte son régime.
+       Pendant le démarrage et l'extinction, le NR est légitimement bas : LED éteinte
+       plutôt que rouge en permanence sur le pad. */
+    if (m_flight.turbine().state() != physics::Turbine::State::Regime) {
+        m_nrLedArmed = false;
+    } else if (hud.rotorRpm >= 340.0f) {
+        m_nrLedArmed = true;
+    }
+    hud.rotorLedArmed = m_nrLedArmed;
     hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
     hud.exhaustTempC  = m_flight.turbine().exhaustTempC();  /* température tuyère (T4) */
     hud.fuelLiters    = m_flight.fuelLiters();
@@ -151,6 +162,9 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
                                 ? m_demo.returning()
                                 : true;
     hud.padGuidance = {};
+    if (m_padGuideGrace > 0.0f) {
+        m_padGuideGrace -= frameDt;  /* décompte du délai de grâce après un décollage */
+    }
     if (aideAtterrissage) {
         /* Point de référence : le mât rotor, pas l'origine du modèle. Au parking,
            l'origine est reculée de ROTOR_FORWARD_OFFSET pour centrer le mât sur le H
@@ -179,25 +193,37 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
             g.dx          = glm::dot(ecart, right);     /* + = pad à droite du pilote */
             g.dz          = glm::dot(ecart, forward);   /* + = pad devant */
 
-            /* Réticule visible en finale basse vitesse seulement, et jamais tant que
-               l'appareil n'a pas décollé au moins une fois (m_hasFlown) : pas d'aide au
-               posé au lancement ni au reset, quand on est encore garé sur le pad. */
-            g.active = m_hasFlown
-                    && (altSurPad < PAD_GUIDE_MAX_ALT_M)
-                    && (altSurPad > PAD_GUIDE_MIN_ALT_M)
-                    && (hud.airspeedKmh < PAD_GUIDE_MAX_KMH);
-
             /* Détection du posé : appareil quasi immobile très près du sol du pad.
                On ne compte un score que si l'appareil a d'abord volé (m_wasAirborne),
                pour ne pas déclencher un faux "PARFAIT" en activant l'aide alors qu'on
                est déjà posé, ou au tout début avant le décollage. */
             if (altSurPad > PAD_LAND_MAX_ALT_M) {
                 m_wasAirborne = true;
-                m_hasFlown    = true;  /* a quitté le pad : l'aide au posé est désormais autorisée */
+                if (!m_hasFlown) {
+                    /* Premier décollage depuis le lancement (ou un reset) : délai de
+                       grâce sans réticule. Sans lui, la montée initiale, basse et
+                       lente, remplit les conditions de finale et l'aide s'affiche
+                       dès les premiers mètres. Une seule fois : aux décollages
+                       suivants (posé-décollé, rebond, stationnaire au ras du pad),
+                       l'aide doit rester disponible immédiatement. */
+                    m_hasFlown      = true;
+                    m_padGuideGrace = PAD_GUIDE_GRACE_S;
+                }
             }
             const float vitesseSol = glm::length(vec3{body.velocity.x, 0.0f, body.velocity.z});
             const bool  surSol     = (altSurPad < PAD_LAND_MAX_ALT_M)
                                   && (vitesseSol < PAD_LAND_MAX_SPEED);
+
+            /* Réticule visible en finale basse vitesse seulement ; jamais tant que
+               l'appareil n'a pas décollé au moins une fois (m_hasFlown : pas d'aide
+               au lancement ni au reset, quand on est encore garé sur le pad), ni
+               pendant le délai de grâce qui suit le premier décollage. */
+            g.active = m_hasFlown
+                    && (m_padGuideGrace <= 0.0f)
+                    && (altSurPad < PAD_GUIDE_MAX_ALT_M)
+                    && (altSurPad > PAD_GUIDE_MIN_ALT_M)
+                    && (hud.airspeedKmh < PAD_GUIDE_MAX_KMH);
+
             if (surSol && !m_wasOnGround && m_wasAirborne) {
                 /* Front montant après un vol : enregistrer le score du posé. */
                 m_lastScoreM  = dist2D;

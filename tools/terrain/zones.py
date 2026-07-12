@@ -31,7 +31,7 @@ ZONES = {
         "bbox": (-0.52, -0.30, 42.80, 42.96),
         "recolor_sea": False,
         "start": (-0.3972, 42.8799),  # hameau de Fabrèges, au bord du lac (~1250 m)
-        "start_heading": 270,       # face à l'ouest
+        "start_heading": 180,       # face au sud, vers le lac et le pic du Midi d'Ossau
         # find_flat_start peut dériver sur le lac voisin (parfaitement plat) :
         # start_x/start_z de terrain.txt ont été calés à la main sur la terre ferme.
         # Montagne : on garde les petites constructions (cabanes, bergeries, granges),

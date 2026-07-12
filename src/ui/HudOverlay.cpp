@@ -132,7 +132,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     for (int i = 0; i < n; ++i) {
         gauge(dl, x0 + dx * static_cast<float>(i), y, r, gauges[i].value, gauges[i].vmin,
               gauges[i].vmax, gauges[i].bandMin, gauges[i].bandMax, gauges[i].label,
-              gauges[i].text, gauges[i].led);
+              gauges[i].text, gauges[i].led, data.alarmBlinkOn);
     }
 
     /* Voyants d'alerte, empilés au-dessus du rang d'instruments (du plus bas au

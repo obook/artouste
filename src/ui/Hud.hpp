@@ -67,6 +67,10 @@ struct HudData {
     float       timeOfDaySec  = 0.0f;   /* heure du simulateur (s depuis minuit) */
     float       timeScale     = 1.0f;   /* vitesse du temps (1 = temps réel) */
     bool        colonOn       = true;   /* deux-points de l'horloge HH:MM (clignote 1 Hz) */
+    bool        alarmBlinkOn  = true;   /* phase de clignotement des LED d'alarme jaune/rouge
+                                           (~2 Hz) : à false, la LED s'éteint le temps du
+                                           battement, pour attirer l'oeil. true = LED allumée
+                                           (et en capture, LED figée allumée) */
     float       fps           = 0.0f;   /* images par seconde (lissées) ; affiché dans le coin
                                            bas-droit du HUD 4 coins. 0 = masqué (ex. en capture) */
 

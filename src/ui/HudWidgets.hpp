@@ -82,7 +82,7 @@ inline void centeredText(ImDrawList* dl, float x, float y, ImU32 col, const char
  * Le cadran balaie 270 degrés, ouverture en bas (comme un vrai instrument). */
 inline void gauge(ImDrawList* dl, float cx, float cy, float r, float value, float vmin,
                   float vmax, float bandMin, float bandMax, const char* label,
-                  const char* valueText, GaugeLed led = GaugeLed::None) {
+                  const char* valueText, GaugeLed led = GaugeLed::None, bool ledBlinkOn = true) {
     const float a0    = 2.3562f;  /* 135 deg : départ en bas à gauche */
     const float sweep = 4.7124f;  /* 270 deg de balayage, ouverture en bas */
 
@@ -91,10 +91,16 @@ inline void gauge(ImDrawList* dl, float cx, float cy, float r, float value, floa
     hudCircle(dl, ImVec2(cx, cy), r, HUD_GREEN, 48, sc(1.5f));
 
     if (led != GaugeLed::None) {  /* LED d'alarme, coin haut-droit de l'instrument */
-        const ImU32 coul = (led == GaugeLed::Green)    ? HUD_GREEN
-                           : (led == GaugeLed::Yellow) ? HUD_AMBER
-                           : (led == GaugeLed::Red)    ? HUD_RED
-                                                       : IM_COL32(70, 80, 75, 200);
+        /* Teinte éteinte, réutilisée pour l'état Off ET pour la demi-période sombre du
+           clignotement d'une alarme jaune/rouge (ledBlinkOn == false). */
+        const ImU32 dim  = IM_COL32(70, 80, 75, 200);
+        const bool  warn = (led == GaugeLed::Yellow || led == GaugeLed::Red);
+        ImU32       coul = dim;  /* Off, ou alarme dans sa phase éteinte */
+        if (led == GaugeLed::Green) {
+            coul = HUD_GREEN;  /* le vert (normal) reste allumé en continu */
+        } else if (warn && ledBlinkOn) {
+            coul = (led == GaugeLed::Yellow) ? HUD_AMBER : HUD_RED;  /* phase allumée */
+        }
         const ImVec2 pos(cx + r + sc(2.0f), cy - r - sc(10.0f));
         dl->AddCircleFilled(pos, sc(4.0f), coul);
         dl->AddCircle(pos, sc(4.0f), IM_COL32(0, 0, 0, 160));

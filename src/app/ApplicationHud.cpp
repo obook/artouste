@@ -137,6 +137,9 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.timeOfDaySec = timeOfDaySeconds(t);
     hud.timeScale    = m_sunTimeScale;
     hud.colonOn      = (std::fmod(t, 1.0f) < 0.5f);
+    /* Clignotement des LED d'alarme jaune/rouge : cadence rapide (~2 Hz, allumée un peu
+       plus de la moitié du temps) pour accrocher l'oeil, distincte du deux-points à 1 Hz. */
+    hud.alarmBlinkOn = (std::fmod(t, 0.5f) < 0.3f);
 
     /* Cadence affichée (images/s) : moyenne mobile exponentielle du frameDt instantané,
        pour un chiffre stable. Le frameDt est borné à 0,1 s dans la boucle (plancher à

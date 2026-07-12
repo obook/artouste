@@ -32,8 +32,8 @@ namespace {
  */
 bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float& widthM,
                   float& heightM, float& elevMin, float& elevMax, bool& drawSea,
-                  bool& hasStart, float& startX, float& startZ, bool& hasGeo, float& lonMin,
-                  float& lonMax, float& latMin, float& latMax) {
+                  bool& hasStart, float& startX, float& startZ, float& startHeadingDeg,
+                  bool& hasGeo, float& lonMin, float& lonMax, float& latMin, float& latMax) {
     std::ifstream file(path);
     if (!file) {
         return false;
@@ -68,6 +68,8 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> startX, hasStartX = true;
         } else if (key == "start_z") {
             file >> startZ, hasStartZ = true;
+        } else if (key == "start_heading") {  /* cap initial (deg boussole), facultatif */
+            file >> startHeadingDeg;
         } else if (key == "lon_min") {
             file >> lonMin, hasLonMin = true;
         } else if (key == "lon_max") {
@@ -97,8 +99,8 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     loadPlaces(dir / "helipads.txt", m_helipads, "hélipad(s)");
 
     if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
-                      m_drawSea, m_hasStart, m_startX, m_startZ, m_hasGeo, m_lonMin, m_lonMax,
-                      m_latMin, m_latMax)) {
+                      m_drawSea, m_hasStart, m_startX, m_startZ, m_startHeadingDeg, m_hasGeo,
+                      m_lonMin, m_lonMax, m_latMin, m_latMax)) {
         std::fprintf(stderr, "[Terrain] calage absent (%s), repli sur un sol plat.\n",
                      meta.string().c_str());
         buildFlatFallback();

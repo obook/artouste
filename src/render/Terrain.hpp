@@ -71,6 +71,7 @@ public:
     [[nodiscard]] bool  hasStart() const noexcept { return m_hasStart; }
     [[nodiscard]] float startX() const noexcept { return m_startX; }
     [[nodiscard]] float startZ() const noexcept { return m_startZ; }
+    [[nodiscard]] float startHeadingDeg() const noexcept { return m_startHeadingDeg; }
 
     /* Le calage fournit-il les bornes géographiques (longitude / latitude) ? */
     [[nodiscard]] bool hasGeo() const noexcept { return m_hasGeo; }
@@ -136,6 +137,7 @@ private:
     bool               m_hasStart = false; /* le calage fournit un point de départ */
     float              m_startX = 0.0f;    /* point de départ : est (m) */
     float              m_startZ = 0.0f;    /* point de départ : sud (m) */
+    float              m_startHeadingDeg = 90.0f;  /* cap initial (boussole) ; 90 = est (identité) */
     bool               m_hasGeo = false;   /* le calage fournit les bornes lon/lat */
     float              m_lonMin = 0.0f;
     float              m_lonMax = 0.0f;

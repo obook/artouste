@@ -265,3 +265,24 @@ TEST_CASE("Le rotor attend le plein régime de la turbine", "[flight][turbine]")
     REQUIRE(model.turbine().state() == State::Arret);
     REQUIRE(model.turbine().rotorFraction() == 0.0f);
 }
+
+TEST_CASE("le reset avec cap oriente l'appareil à la boussole", "[flight]") {
+    /* Convention : l'axe avant du corps est +X, le nord est -Z. Un cap de 90
+       (est) doit donc laisser l'orientation à l'identité, 180 pointer vers +Z
+       (sud) et 0 vers -Z (nord). Voir Terrain::startHeadingDeg. */
+    FlightModel model;
+    const artouste::vec3 pos{0.0f, 100.0f, 0.0f};
+
+    model.reset(pos, 90.0f);
+    artouste::vec3 avant = model.body().orientation * artouste::vec3{1.0f, 0.0f, 0.0f};
+    REQUIRE(avant.x > 0.999f);
+
+    model.reset(pos, 180.0f);
+    avant = model.body().orientation * artouste::vec3{1.0f, 0.0f, 0.0f};
+    REQUIRE(avant.z > 0.999f);
+    REQUIRE(std::fabs(avant.x) < 1e-4f);
+
+    model.reset(pos, 0.0f);
+    avant = model.body().orientation * artouste::vec3{1.0f, 0.0f, 0.0f};
+    REQUIRE(avant.z < -0.999f);
+}

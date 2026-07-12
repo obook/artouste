@@ -31,6 +31,7 @@ ZONES = {
         "bbox": (-0.52, -0.30, 42.80, 42.96),
         "recolor_sea": False,
         "start": (-0.413, 42.905),  # Fabrèges, fond de vallée plat (~1230 m)
+        "start_heading": 270,       # face à l'ouest
         # Montagne : on garde les petites constructions (cabanes, bergeries, granges),
         # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
         "height_min": 0.0,
@@ -69,6 +70,7 @@ ZONES = {
         "bbox": (-1.62, -1.30, 43.46, 43.81),
         "recolor_sea": True,
         "start": (-1.43, 43.66),  # arrière-plage plate vers Hossegor / Capbreton
+        "start_heading": 0,       # face au nord : la côte file vers Vieux-Boucau
         "grid": 1024,      # maille ~25-38 m au lieu de ~50-76 m (relief plus lisse)
         "ortho_px": 5000,  # ortho ~7,8 m/px au lieu de ~19 (limite serveur IGN : 5010)
         "title": "côte basco-landaise (Bayonne -> Vieux-Boucau)",
@@ -112,6 +114,7 @@ ZONES = {
         "bbox": (-1.28, -0.83, 44.36, 44.80),
         "recolor_sea": True,
         "start": (-1.111, 44.596),  # aérodrome de La Teste, replat boisé loin de l'eau
+        "start_heading": 330,       # N30°O : face à Arcachon et au bassin
         "ortho_px": 5000,  # ortho ~9,8 m/px au lieu de ~24 (limite serveur IGN : 5010)
         "title": "bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime)",
         "landmarks": [
@@ -150,6 +153,7 @@ ZONES = {
         "bbox": (-0.16, 0.03, 42.68, 42.90),
         "recolor_sea": False,
         "start": (-0.110, 42.886),  # fond de vallée de Cauterets (~930 m), plat
+        "start_heading": 180,       # face au sud : vers le fond de la vallée
         "height_min": 0.0,
         "grid": 1024,      # montagne : relief ~24 m au lieu de ~48 (comme ossau)
         "ortho_px": 5000,  # ortho ~4,9 m/px au lieu de ~12 (limite serveur IGN : 5010)
@@ -193,6 +197,7 @@ ZONES = {
         "bbox": (0.05, 0.27, 42.85, 43.02),
         "recolor_sea": False,
         "start": (0.178, 42.909),  # La Mongie, replat de station (~1785 m)
+        "start_heading": 270,      # face à l'ouest : le Tourmalet et le pic du Midi
         "height_min": 0.0,
         "grid": 1024,      # mailles ~17,5 m (comme ossau)
         "ortho_px": 4096,  # hauteur d'ortho ~4,4 m/px (comme ossau)

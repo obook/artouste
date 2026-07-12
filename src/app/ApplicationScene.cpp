@@ -403,10 +403,14 @@ void Application::loadTerrain(const std::string& name) {
         m_startPos          = vec3{START_X, ground, START_Z};
         /* L'appareil se gare mât rotor centré sur le H : son origine (que la
            physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
-           de départ (cap initial = +X, orientation identité au reset). */
-        const float parkX = START_X - render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
-        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, START_Z), START_Z};
-        m_flight.reset(m_parkPos);
+           de départ, donné par le cap initial de la carte (clé start_heading de
+           terrain.txt ; 90 = est par défaut, l'orientation identité). */
+        const float capRad = glm::radians(m_terrain->startHeadingDeg());
+        const vec3  avant{std::sin(capRad), 0.0f, -std::cos(capRad)};
+        const float parkX = START_X - avant.x * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
+        const float parkZ = START_Z - avant.z * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
+        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
+        m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     }
 }
 

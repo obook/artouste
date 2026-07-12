@@ -38,6 +38,8 @@ def write_metadata(elev_min, elev_max, width_m, height_m, ortho_w, start_x, star
         # Point de départ (replat) en coordonnées monde (X est, Z sud).
         out.write(f"start_x {start_x:.1f}\n")
         out.write(f"start_z {start_z:.1f}\n")
+        # Cap initial de l'appareil (degrés boussole : 0 = nord, 90 = est).
+        out.write(f"start_heading {config.START_HEADING:g}\n")
     print(f"[meta] {path} écrit")
 
 

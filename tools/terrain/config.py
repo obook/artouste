@@ -55,6 +55,7 @@ LON_MIN, LON_MAX = 0.0, 0.0
 LAT_MIN, LAT_MAX = 0.0, 0.0
 RECOLOR_SEA = False
 START_LON, START_LAT = 0.0, 0.0
+START_HEADING = 90.0  # cap initial (deg boussole) ; 90 = est, l'orientation identité
 ZONE_TITLE = ""
 ZONE_LANDMARKS = []
 ZONE_HELIPADS = []
@@ -64,6 +65,7 @@ OUT_DIR = ""
 def select_zone(name):
     """Fixe les réglages globaux (emprise, mer, départ, sortie) pour la zone donnée."""
     global LON_MIN, LON_MAX, LAT_MIN, LAT_MAX, RECOLOR_SEA, START_LON, START_LAT
+    global START_HEADING
     global ZONE_TITLE, ZONE_LANDMARKS, ZONE_HELIPADS, OUT_DIR
     global COLS, ROWS, ORTHO_HEIGHT
     if name not in ZONES:
@@ -73,6 +75,7 @@ def select_zone(name):
     LON_MIN, LON_MAX, LAT_MIN, LAT_MAX = zone["bbox"]
     RECOLOR_SEA = zone["recolor_sea"]
     START_LON, START_LAT = zone["start"]
+    START_HEADING = float(zone.get("start_heading", 90.0))
     ZONE_TITLE = zone["title"]
     ZONE_LANDMARKS = zone["landmarks"]
     ZONE_HELIPADS = zone.get("helipads", [])

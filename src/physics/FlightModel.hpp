@@ -51,6 +51,15 @@ public:
         m_fuelLiters    = FUEL_CAPACITY_L;
     }
 
+    /* Réinitialise à une position et un cap donnés (degrés boussole : 0 = nord,
+       90 = est, 180 = sud). L'axe avant du corps est +X, soit l'est à l'identité ;
+       on tourne donc autour de la verticale de (90 - cap) degrés. */
+    void reset(const vec3& position, float headingDeg) noexcept {
+        reset(position);
+        m_body.orientation = glm::angleAxis(glm::radians(90.0f - headingDeg),
+                                            vec3{0.0f, 1.0f, 0.0f});
+    }
+
     /* Altitude du sol (m) sous l'appareil : le contact se fait à cette hauteur
        plutôt qu'au niveau de la mer, pour suivre le relief du terrain. */
     void setGroundHeight(float h) noexcept { m_groundHeight = h; }

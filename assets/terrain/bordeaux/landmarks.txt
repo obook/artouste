@@ -13,7 +13,7 @@
 -0.5972 44.865 Le Bouscat
 -0.6005 44.8775 Bruges
 -0.5614 44.8956 Stade Matmut Atlantique
--0.7155 44.8286 Aéroport de Mérignac
+-0.6964 44.8362 Aéroport de Mérignac
 -0.5779 44.8376 Cathédrale Saint-André
 -0.5564 44.8262 Gare Saint-Jean
 -0.5517 44.8581 Pont Chaban-Delmas

@@ -16,3 +16,8 @@
 -1.3413 43.7699 Soustons
 -1.4287 43.6722 Lac d'Hossegor
 -1.3292 43.7703 Étang de Soustons
+-1.3653 43.7094 Étang Blanc
+-1.3055 43.6667 St-Vincent-de-Tyrosse
+-1.3695 43.6338 Bénesse-Maremne
+-1.3972 43.6007 Marais d'Orx
+-1.3952 43.5354 Saint-Martin-de-Seignanx

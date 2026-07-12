@@ -90,6 +90,11 @@ ZONES = {
             ("Soustons", -1.3413, 43.7699),
             ("Lac d'Hossegor", -1.4287, 43.6722),
             ("Étang de Soustons", -1.3292, 43.7703),
+            ("Étang Blanc", -1.3653, 43.7094),
+            ("St-Vincent-de-Tyrosse", -1.3055, 43.6667),
+            ("Bénesse-Maremne", -1.3695, 43.6338),
+            ("Marais d'Orx", -1.3972, 43.6007),
+            ("Saint-Martin-de-Seignanx", -1.3952, 43.5354),
         ],
         # Coordonnées relevées sur Google Maps.
         "helipads": [
@@ -221,7 +226,7 @@ ZONES = {
     "bordeaux": {
         "bbox": (-0.74, -0.42, 44.72, 44.96),
         "recolor_sea": False,
-        "start": (-0.7155, 44.8286),  # aéroport de Bordeaux-Mérignac, vaste replat
+        "start": (-0.6964, 44.8362),  # aéroport de Bordeaux-Mérignac, vaste replat
         # Ville très dense : on relève le seuil à 5 m pour écarter garages, abris et
         # petites annexes, et garder un buildings.bin raisonnable (le détail à 2 m
         # pesait près de 30 Mo).
@@ -242,7 +247,7 @@ ZONES = {
             ("Le Bouscat", -0.5972, 44.8650),
             ("Bruges", -0.6005, 44.8775),
             ("Stade Matmut Atlantique", -0.5614, 44.8956),
-            ("Aéroport de Mérignac", -0.7155, 44.8286),
+            ("Aéroport de Mérignac", -0.6964, 44.8362),
             # Lieux ajoutés (coordonnées géocodeur IGN).
             ("Cathédrale Saint-André", -0.5779, 44.8376),
             ("Gare Saint-Jean", -0.5564, 44.8262),
@@ -255,7 +260,7 @@ ZONES = {
         # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
         # la carte ; à affiner si besoin).
         "helipads": [
-            ("Aéroport de Bordeaux-Mérignac", -0.7155, 44.8286),
+            ("Aéroport de Bordeaux-Mérignac", -0.6964, 44.8362),
             ("CHU Pellegrin", -0.6045, 44.8378),
             ("Hôpital Haut-Lévêque (Pessac)", -0.6330, 44.7908),
             ("Hôpital Saint-André", -0.5790, 44.8333),

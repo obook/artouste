@@ -20,6 +20,7 @@
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
+#include "render/Clouds.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
@@ -68,6 +69,7 @@ Application::~Application() {
     m_helicopter.reset();
     m_buildings.reset();
     m_vegetation.reset();
+    m_clouds.reset();
     m_terrain.reset();
     m_sea.reset();
     m_shadowDisc.reset();
@@ -79,6 +81,7 @@ Application::~Application() {
     m_shadowShader.reset();
     m_buildingShader.reset();
     m_vegetationShader.reset();
+    m_cloudShader.reset();
     m_skyShader.reset();
     m_seaShader.reset();
     m_terrainShader.reset();

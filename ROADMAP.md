@@ -162,11 +162,12 @@ ou sortir de France.
   Même brume que le terrain / les bâtiments ;
   test alpha (pas de mélange), donc l'ordre de dessin n'importe pas. Chaque maille
   de la grille de semis donne au plus un arbre, donc l'espacement fixe la densité
-  (1 arbre / espacement^2). Activée par défaut : clé `arbres` de config.txt
-  (`arbres 0` pour désactiver) ; `ARTOUSTE_NO_TREES` force la désactivation en priorité ;
-  `ARTOUSTE_TREE_SPACING` règle la densité (défaut 8 m). Sur Ossau : ~650 000 arbres à
-  8 m (défaut), ~1,4 M à 6 m, en un seul appel de rendu instancié (plafond de sécurité
-  à 6 M).
+  (1 arbre / espacement^2). Un budget global (~1,6 M, `ARTOUSTE_TREE_MAX`) éclaircit
+  ensuite le semis de façon uniforme sur les grandes cartes très boisées (Bordeaux
+  passe de ~4,9 M à ~1,6 M) pour limiter le surdessin des billboards croisés. Activée
+  par défaut : clé `arbres` de config.txt (`arbres 0` pour désactiver) ;
+  `ARTOUSTE_NO_TREES` force la désactivation en priorité ; `ARTOUSTE_TREE_SPACING` règle
+  la densité (défaut 8 m). En un seul appel de rendu instancié (plafond de sécurité à 6 M).
   Sprites PHOTOGRAPHIQUES : cellules extraites des atlas d'arbres de FlightGear
   (`assets/vegetation/fgdata-trees/`, GPL v2 -- voir CREDITS.txt), assemblées en
   `trees_atlas.png` par `tools/vegetation/compose_trees_atlas.py` (arbre calé sur la
@@ -184,6 +185,24 @@ ou sortir de France.
   de l'ortho ; tri des prairies claires (qui attrapent encore quelques arbres) ;
   niveaux de détail et culling autour de l'appareil ; clé de densité par carte dans
   `terrain.txt` / `zones.py`.
+
+### Ciel et nuages
+
+- [~] Prototype de nuages en billboards (`render::Clouds`), sur le modèle de la
+  végétation. Une couche de cumulus épars est semée au-dessus du relief (base déduite
+  de l'altitude maximale du terrain) : chaque nuage est un amas de bouffées (sprites
+  blancs face caméra) réparties dans un ellipsoïde à base plate qui se resserre vers le
+  haut. Le volume vient de l'ombrage fait par le shader : base sombre et bleutée, sommet
+  clair, atténué la nuit selon la hauteur du soleil ; fondu dans la brume au loin.
+  Contrairement aux arbres (test alpha), les nuages demandent de la transparence par
+  mélange avec tri de profondeur : les bouffées sont retriées de l'arrière vers l'avant
+  à chaque image (`Clouds::draw`), dessinées sans écriture de profondeur. Sprite
+  procédural (`tools/clouds/make_puff.py`). Sur Ossau : ~1500 bouffées.
+
+    Pistes pour consolider : clé de config pour activer / désactiver (comme `arbres`) ;
+  types de nuages (stratus, cirrus en couche 2D) ; déplacement lent avec le vent ;
+  ombres portées au sol ; approche volumétrique (ray marching) pour un plus grand
+  réalisme, bien plus lourde.
 
 ## Quelques observations à traiter
 

@@ -26,6 +26,7 @@
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
+#include "render/Clouds.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
@@ -184,6 +185,8 @@ void Application::initScene() {
                                                         assets / "shaders" / "building.frag");
     m_vegetationShader = std::make_unique<render::Shader>(assets / "shaders" / "vegetation.vert",
                                                           assets / "shaders" / "vegetation.frag");
+    m_cloudShader = std::make_unique<render::Shader>(assets / "shaders" / "clouds.vert",
+                                                     assets / "shaders" / "clouds.frag");
     m_sky         = std::make_unique<render::Skybox>();
 
     const auto discData = render::primitives::softDisc(6.0f, 48);
@@ -393,6 +396,10 @@ void Application::loadTerrain(const std::string& name) {
     } else {
         m_vegetation.reset();
     }
+
+    /* Nuages en billboards (prototype) : couche de cumulus épars au-dessus du relief.
+       Partagent la texture de bouffée entre terrains. */
+    m_clouds = std::make_unique<render::Clouds>(*m_terrain, m_assetsDir / "clouds" / "puff.png");
 
     /*
      * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du

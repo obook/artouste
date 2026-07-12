@@ -16,6 +16,7 @@
 #include "app/AppConstants.hpp"
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
+#include "render/Clouds.hpp"
 #include "render/Camera.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
@@ -223,6 +224,30 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         m_vegetation->draw();
         glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    }
+
+    /*
+     * Nuages en billboards : couche de cumulus au-dessus du relief. Transparence par
+     * mélange alpha, avec tri arrière -> avant fait dans Clouds::draw ; sans écriture
+     * de profondeur (le relief devant les masque, ils ne s'occultent pas entre eux).
+     */
+    if (m_clouds && m_clouds->built()) {
+        m_cloudShader->use();
+        m_cloudShader->setMat4("u_view", view);
+        m_cloudShader->setMat4("u_proj", proj);
+        m_cloudShader->setMat4("u_model", toRel);
+        m_cloudShader->setVec3("u_lightDir", lightDir);
+        m_cloudShader->setVec3("u_camPos", camPosRel);
+        m_cloudShader->setVec3("u_fogColor", fogColor);
+        m_cloudShader->setFloat("u_fogStart", FOG_START);
+        m_cloudShader->setFloat("u_fogEnd", FOG_END);
+        m_cloudShader->setInt("u_texture", 0);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+        m_clouds->draw(m_camera.position());
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
 
     /* Décalques au sol, dessinés avant l'appareil (voir ApplicationGround.cpp). */

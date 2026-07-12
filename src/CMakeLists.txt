@@ -29,6 +29,7 @@ add_executable(artouste
     render/TerrainSetup.cpp
     render/Buildings.cpp
     render/Vegetation.cpp
+    render/Clouds.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp
     render/Texture.cpp

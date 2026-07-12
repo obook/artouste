@@ -32,6 +32,7 @@ class Shader;
 class Terrain;
 class Buildings;
 class Vegetation;
+class Clouds;
 class HelicopterModel;
 class LoadedHelicopter;
 class Skybox;
@@ -221,6 +222,7 @@ private:
     std::unique_ptr<render::Shader>           m_shadowShader;  /* ombre portée douce (dégradé) */
     std::unique_ptr<render::Shader>           m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
     std::unique_ptr<render::Shader>           m_vegetationShader; /* arbres en billboards instanciés */
+    std::unique_ptr<render::Shader>           m_cloudShader;    /* nuages en billboards (mélange alpha) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
     std::unique_ptr<render::Mesh>             m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -232,6 +234,7 @@ private:
     std::unique_ptr<render::Terrain>          m_terrain;
     std::unique_ptr<render::Buildings>        m_buildings;     /* bâtiments 3D (BD TOPO extrudée) */
     std::unique_ptr<render::Vegetation>       m_vegetation;    /* arbres en billboards (prototype) */
+    std::unique_ptr<render::Clouds>           m_clouds;        /* nuages en billboards (prototype) */
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;

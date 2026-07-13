@@ -124,7 +124,7 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
                                   const mat4& proj, const vec3& sunDir) {
     /*
      * Ombre portée, en deux disques de taille fixe (pas d'animation de taille) :
-     *  - le fuselage : petit disque dense, toujours présent ;
+     *  - le fuselage : ellipse dense, toujours présente ;
      *  - le rotor : grand disque plus clair dont seule l'opacité suit le régime,
      *    invisible rotor arrêté. Ainsi l'ombre reste cohérente avec l'état des
      *    pales sans grandir ni rétrécir. Les deux s'estompent avec l'altitude.
@@ -216,31 +216,41 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
             vec3(base * vec4(render::LoadedHelicopter::ROTOR_FORWARD_OFFSET, 0.0f, 0.0f, 1.0f));
     }
 
-    /* Dessine un disque d'ombre (échelle baseScale sur le maillage de rayon 6 m),
-       décalé et étiré par le soleil, posé au-dessus du relief. */
-    const auto drawDisc = [&](float baseScale, float alpha) {
+    /* Dessine une ellipse d'ombre (échelle baseScale sur le maillage de rayon 6 m,
+       étirée d'un facteur xElong le long de l'axe tourné de rotAngle), posée
+       au-dessus du relief. */
+    const auto drawEllipse = [&](float baseScale, float alpha, float rotAngle, float xElong) {
         const float gx    = center.x + lightShift.x;
         const float gz    = center.z + lightShift.z;
-        const float longR = baseScale * elong * DISC_MESH_R;  /* demi-grand axe pour l'échantillon sol */
+        const float longR = baseScale * xElong * DISC_MESH_R;  /* demi-grand axe pour l'échantillon sol */
         const float y     = topUnder(gx, gz, longR) + 0.30f;
-        /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin. Le grand
-           axe (X local, aligné sur l'azimut solaire) est étiré par elong. */
+        /* Rendu relatif à la caméra : la vue est relative à m_renderOrigin. */
         const mat4 model = glm::translate(mat4(1.0f), vec3{gx, y, gz} - m_renderOrigin) *
-                           glm::rotate(mat4(1.0f), azimuth, vec3{0.0f, 1.0f, 0.0f}) *
-                           glm::scale(mat4(1.0f), vec3{baseScale * elong, 1.0f, baseScale});
+                           glm::rotate(mat4(1.0f), rotAngle, vec3{0.0f, 1.0f, 0.0f}) *
+                           glm::scale(mat4(1.0f), vec3{baseScale * xElong, 1.0f, baseScale});
         m_shadowShader->setMat4("u_model", model);
         m_shadowShader->setFloat("u_alpha", alpha);
         m_shadowDisc->draw();
     };
 
-    /* Disque rotor (l'ombre des pales) : grand, son opacité suit le régime. */
-    const float rotorShadowAlpha = shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f) * alphaMult;
-    if (rotorShadowAlpha > 0.01f) {
-        drawDisc(scaleXZ, rotorShadowAlpha);
+    /* Disque rotor (l'ombre des pales) : grand, son opacité suit le régime, étiré
+       vers le soleil (azimuth/elong). Neutralisé pour l'instant (ROTOR_SHADOW_ENABLED
+       à false), cela n'apportait rien à l'écran ; le calcul reste en place pour une
+       réactivation rapide. */
+    constexpr bool ROTOR_SHADOW_ENABLED = false;
+    const float    rotorShadowAlpha =
+        shadowAlpha * 0.7f * clamp(rotorFraction, 0.0f, 1.0f) * alphaMult;
+    if (ROTOR_SHADOW_ENABLED && rotorShadowAlpha > 0.01f) {
+        drawEllipse(scaleXZ, rotorShadowAlpha, azimuth, elong);
     }
-    /* Fuselage : disque dense toujours présent, dimensionné à l'empreinte posée
-       (~5 m), concentrique avec celui du rotor. */
-    drawDisc(scaleXZ * (5.0f / 6.0f), shadowAlpha * alphaMult);
+
+    /* Fuselage : ellipse dense toujours présente, orientée selon le cap de
+       l'appareil (et non le soleil) pour épouser grossièrement la silhouette
+       allongée de la cabine, plutôt qu'un disque rond. */
+    constexpr float CABIN_ELONG = 1.6f;  /* rapport longueur/largeur de l'ellipse cabine */
+    const vec3      fwd         = glm::normalize(vec3(base[0]));
+    const float     heading     = std::atan2(-fwd.z, fwd.x);
+    drawEllipse(scaleXZ * (2.0f / 6.0f), shadowAlpha * alphaMult, heading, CABIN_ELONG);
 
     glDisable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(0.0f, 0.0f);

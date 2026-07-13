@@ -31,13 +31,13 @@ void main() {
     }
 
     /* Ombrage vertical : base sombre et bleutée, sommet blanc éclairé. */
-    vec3  bottom = vec3(0.55, 0.60, 0.70);
+    vec3  bottom = vec3(0.80, 0.83, 0.88);
     vec3  top    = vec3(1.0, 1.0, 1.0);
     float grad   = smoothstep(0.0, 1.0, v_vfrac);
     vec3  color  = mix(bottom, top, grad);
 
     /* Jour / nuit selon la hauteur du soleil. */
-    float day = clamp(u_lightDir.y * 0.6 + 0.4, 0.2, 1.0);
+    float day = clamp(u_lightDir.y * 0.4 + 0.65, 0.55, 1.0);
     color *= day;
 
     /* Brume : les nuages lointains prennent la teinte d'horizon puis s'effacent. */

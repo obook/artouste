@@ -69,7 +69,7 @@ void main()
 	// lune : disque doux a l'oppose du soleil, visible la nuit seulement
 	float moonAlign = max(0.0, dot(dir, u_moonDir));
 	float moonGlow = pow(moonAlign, 128.0) * 0.12;     // halo discret
-	float moonCore = pow(moonAlign, 2048.0) * 1.5;     // disque (meme taille apparente que le soleil)
+	float moonCore = pow(moonAlign, 4096.0) * 1.5;     // disque a ~70% de la taille apparente du soleil
 	float night = 1.0 - isDay;                         // 1 la nuit, 0 le jour
 	float moonUp = smoothstep(-0.02, 0.08, u_moonDir.y); // lune au-dessus de l'horizon
 	float moonMask = smoothstep(-0.02, 0.05, dir.y);     // rayon de vue au-dessus de l'horizon

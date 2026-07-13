@@ -120,6 +120,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 |-------------------------|----------------|----------------------|
 | Collectif +/-           | `Z` / `S`      | RT / LT              |
 | Cyclique                | flèches        | stick gauche         |
+| Recentrer le cyclique   | `Espace`       | -                    |
 | Palonniers              | `D` / `Q`      | stick droit (X)      |
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |

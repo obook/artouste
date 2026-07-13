@@ -12,7 +12,6 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import math
 import sys
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
@@ -28,27 +27,14 @@ def noise(sigma, blur=0.0):
 
 
 def concrete():
-    """Dalle de béton : gris moyen, grain à deux échelles et quelques fissures
-    fines, plus un assombrissement vers le bord (salissure)."""
+    """Dalle de béton : gris moyen, grain à deux échelles, plus un assombrissement
+    vers le bord (salissure)."""
     base = Image.new("RGB", (SIZE, SIZE), (146, 147, 150))
     fine = noise(34, 1.0)
     coarse = noise(60, 9.0)
     grain = ImageChops.multiply(fine, coarse).point(lambda p: 110 + p // 3)
     grain_rgb = Image.merge("RGB", (grain, grain, grain))
     img = Image.blend(base, grain_rgb, 0.45)
-
-    draw = ImageDraw.Draw(img, "RGBA")
-    # Fissures : courtes lignes sombres irrégulières.
-    cracks = [(0.20, 0.40, 0.46, 0.30), (0.55, 0.20, 0.62, 0.48),
-              (0.50, 0.80, 0.40, 0.60), (0.78, 0.62, 0.66, 0.74)]
-    for x0, y0, x1, y1 in cracks:
-        pts = []
-        for t in range(7):
-            f = t / 6.0
-            x = (x0 + (x1 - x0) * f + 0.012 * math.sin(t * 2.1)) * SIZE
-            y = (y0 + (y1 - y0) * f + 0.012 * math.cos(t * 1.7)) * SIZE
-            pts.append((x, y))
-        draw.line(pts, fill=(60, 60, 62, 150), width=3)
     return img
 
 

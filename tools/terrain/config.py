@@ -59,6 +59,7 @@ START_HEADING = 90.0  # cap initial (deg boussole) ; 90 = est, l'orientation ide
 ZONE_TITLE = ""
 ZONE_LANDMARKS = []
 ZONE_HELIPADS = []
+ZONE_EXCLUSIONS = []
 OUT_DIR = ""
 
 
@@ -66,7 +67,7 @@ def select_zone(name):
     """Fixe les réglages globaux (emprise, mer, départ, sortie) pour la zone donnée."""
     global LON_MIN, LON_MAX, LAT_MIN, LAT_MAX, RECOLOR_SEA, START_LON, START_LAT
     global START_HEADING
-    global ZONE_TITLE, ZONE_LANDMARKS, ZONE_HELIPADS, OUT_DIR
+    global ZONE_TITLE, ZONE_LANDMARKS, ZONE_HELIPADS, ZONE_EXCLUSIONS, OUT_DIR
     global COLS, ROWS, ORTHO_HEIGHT
     if name not in ZONES:
         connues = ", ".join(sorted(ZONES))
@@ -79,6 +80,7 @@ def select_zone(name):
     ZONE_TITLE = zone["title"]
     ZONE_LANDMARKS = zone["landmarks"]
     ZONE_HELIPADS = zone.get("helipads", [])
+    ZONE_EXCLUSIONS = zone.get("exclusions", [])
     OUT_DIR = os.path.join(TERRAIN_ROOT, name)
     COLS = ROWS = int(zone.get("grid", 512))
     ORTHO_HEIGHT = int(zone.get("ortho_px", 2048))

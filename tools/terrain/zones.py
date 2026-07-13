@@ -145,6 +145,12 @@ ZONES = {
         "helipads": [
             ("Aérodrome de La Teste", -1.116442178115823, 44.596643236436016),
         ],
+        # Zones sans végétation (nom, lon, lat, rayon_m) : les pistes et bandes
+        # enherbées des aérodromes sont vertes dans l'ortho et seraient sinon
+        # boisées. Rayon à ajuster visuellement.
+        "exclusions": [
+            ("Aérodrome de La Teste-de-Buch (LFCH)", -1.1117, 44.5942, 550),
+        ],
     },
     # Cauterets - Gavarnie (Hautes-Pyrénées) : de la vallée de Cauterets et son
     # chemin des cascades (jusqu'au Pont d'Espagne et au lac de Gaube, sous le

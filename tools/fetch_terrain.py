@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from terrain import config
 from terrain.ortho import fetch_ortho
-from terrain.outputs import write_helipads, write_landmarks, write_metadata
+from terrain.outputs import write_exclusions, write_helipads, write_landmarks, write_metadata
 from terrain.relief import fetch_heightmap, find_flat_start, write_heightmap
 from terrain.zones import DEFAULT_ZONE
 
@@ -65,6 +65,7 @@ def main():
     write_metadata(elev_min, elev_max, width_m, height_m, ortho_w, start_x, start_z)
     write_landmarks()
     write_helipads()
+    write_exclusions()
     print(f"[ok] terminé en {time.time() - start:.0f} s")
 
 

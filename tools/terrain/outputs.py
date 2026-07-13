@@ -66,3 +66,20 @@ def write_helipads():
         for name, lon, lat in config.ZONE_HELIPADS:
             out.write(f"{lon} {lat} {name}\n")
     print(f"[helipads] {path} écrit ({len(config.ZONE_HELIPADS)} helipad(s))")
+
+
+def write_exclusions():
+    """Écrit les zones d'exclusion de végétation (un cercle par ligne : lon lat
+       rayon_m). Aucun arbre n'est planté dedans (aérodromes, dont les pistes et
+       bandes enherbées sont vertes dans l'ortho). Aucun fichier si la zone n'en
+       déclare pas."""
+    if not config.ZONE_EXCLUSIONS:
+        return
+    path = os.path.join(config.OUT_DIR, "exclusions.txt")
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(f"# Zones d'exclusion de végétation - {config.ZONE_TITLE} "
+                  "(un cercle par ligne : lon lat rayon_m)\n")
+        out.write("# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).\n")
+        for name, lon, lat, radius in config.ZONE_EXCLUSIONS:
+            out.write(f"{lon} {lat} {radius}   # {name}\n")
+    print(f"[exclusions] {path} écrit ({len(config.ZONE_EXCLUSIONS)} cercle(s))")

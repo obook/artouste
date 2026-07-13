@@ -388,6 +388,35 @@ Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& t
         }
     }
 
+    /* Zones d'exclusion (aérodromes, etc.) : cercles "lon lat rayon_m" lus depuis
+       exclusions.txt, où l'on ne plante aucun arbre. L'orthophoto y est verte
+       (pistes et bandes enherbées) et passerait le test de forêt : on les écarte
+       explicitement. Chaque cercle est converti une fois en coordonnées monde
+       (centre + rayon au carré), comme le dégagement de départ et les lacs de
+       secours. Fichier optionnel : absent, aucune exclusion. */
+    struct Exclusion {
+        float x, z, r2;
+    };
+    std::vector<Exclusion> exclusions;
+    {
+        std::ifstream f(terrainDir / "exclusions.txt");
+        std::string   line;
+        while (std::getline(f, line)) {
+            const std::size_t first = line.find_first_not_of(" \t\r\n");
+            if (first == std::string::npos || line[first] == '#') {
+                continue;  /* ligne vide ou commentaire */
+            }
+            float              lon = 0.0f, lat = 0.0f, radius = 0.0f;
+            std::istringstream iss(line);
+            if (!(iss >> lon >> lat >> radius) || radius <= 0.0f) {
+                continue;
+            }
+            float ex = 0.0f, ez = 0.0f;
+            terrain.worldAt(lon, lat, ex, ez);
+            exclusions.push_back({ex, ez, radius * radius});
+        }
+    }
+
     /* Un arbre = centre (x, y, z) + largeur + espèce + azimut, empaqueté en six
        flottants pour coller au format d'instance attendu par le shader. */
     std::vector<float> instances;
@@ -413,6 +442,21 @@ Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& t
             if (clear) {
                 const float dx = x - sx, dz = z - sz;
                 if (dx * dx + dz * dz < CLEAR_R2) {
+                    continue;
+                }
+            }
+
+            /* Zones d'exclusion (aérodromes) : aucun arbre dessus. */
+            if (!exclusions.empty()) {
+                bool excluded = false;
+                for (const auto& e : exclusions) {
+                    const float dx = x - e.x, dz = z - e.z;
+                    if (dx * dx + dz * dz < e.r2) {
+                        excluded = true;
+                        break;
+                    }
+                }
+                if (excluded) {
                     continue;
                 }
             }

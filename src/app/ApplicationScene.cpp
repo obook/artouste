@@ -197,11 +197,13 @@ void Application::initScene() {
     const auto sphereData = render::primitives::sphere(1.0f, 12, 16, vec3{1.0f, 1.0f, 1.0f});
     m_glowSphere          = std::make_unique<render::Mesh>(sphereData.vertices, sphereData.indices);
 
-    /* Hélipad de la zone de départ : disque gris très clair (presque blanc), anneau
-       gris foncé et grand H rouge. Centré sur l'origine ; placé au départ à l'affichage. */
-    const auto padData = render::primitives::helipad(7.0f, 48, vec3{0.90f, 0.90f, 0.92f},
-                                                     vec3{0.20f, 0.20f, 0.22f},
-                                                     vec3{0.80f, 0.10f, 0.10f});
+    /* Hélipad de la zone de départ : disque béton foncé, anneau et grand H blancs
+       (marquage d'hélistation civile, sans croix). Centré sur l'origine ; placé au
+       départ à l'affichage. Repli seulement : la version texturée le remplace si elle
+       est présente. */
+    const auto padData = render::primitives::helipad(7.0f, 48, vec3{0.45f, 0.45f, 0.47f},
+                                                     vec3{0.92f, 0.92f, 0.90f},
+                                                     vec3{0.95f, 0.95f, 0.93f});
     m_helipad          = std::make_unique<render::Mesh>(padData.vertices, padData.indices);
 
     /* Jupe des hélisurfaces : paroi cylindrique sous le disque, pour les pads

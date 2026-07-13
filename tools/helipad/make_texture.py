@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
 make_texture.py
-Génère la texture de l'hélistation hospitalière : béton usé et sali, cercle de
-poser, croix blanche et grand H rouge (marquage OACI d'un héliport d'hôpital).
-L'image est carrée ; le disque de l'helipad y est inscrit (les coins, hors
-disque, ne se voient pas).
+Génère la texture de l'hélistation : béton usé et sali, cercle de poser et grand
+H blanc (marquage d'hélistation civile, sans croix). L'image est carrée ; le
+disque de l'helipad y est inscrit (les coins, hors disque, ne se voient pas).
 
 À lancer avec le Python du venv du projet (voir tools/.venv) :
     tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helipad.png
@@ -29,28 +28,14 @@ def noise(sigma, blur=0.0):
 
 
 def concrete():
-    """Dalle de béton : gris moyen, grain à deux échelles, taches sombres et
-    quelques fissures, plus un assombrissement vers le bord (salissure)."""
+    """Dalle de béton : gris moyen, grain à deux échelles et quelques fissures
+    fines, plus un assombrissement vers le bord (salissure)."""
     base = Image.new("RGB", (SIZE, SIZE), (146, 147, 150))
     fine = noise(34, 1.0)
     coarse = noise(60, 9.0)
     grain = ImageChops.multiply(fine, coarse).point(lambda p: 110 + p // 3)
     grain_rgb = Image.merge("RGB", (grain, grain, grain))
     img = Image.blend(base, grain_rgb, 0.45)
-
-    draw = ImageDraw.Draw(img, "RGBA")
-
-    # Taches d'huile / d'usure : ellipses sombres floutées, disposées au pseudo
-    # hasard (positions fixes pour un résultat reproductible).
-    stains = [(0.30, 0.32, 0.10), (0.66, 0.28, 0.07), (0.58, 0.70, 0.12),
-              (0.38, 0.66, 0.06), (0.72, 0.55, 0.05), (0.24, 0.52, 0.05)]
-    stain_layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    sd = ImageDraw.Draw(stain_layer, "RGBA")
-    for fx, fy, fr in stains:
-        cx, cy, r = fx * SIZE, fy * SIZE, fr * SIZE
-        sd.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(40, 38, 36, 110))
-    stain_layer = stain_layer.filter(ImageFilter.GaussianBlur(SIZE * 0.02))
-    img = Image.alpha_composite(img.convert("RGBA"), stain_layer).convert("RGB")
 
     draw = ImageDraw.Draw(img, "RGBA")
     # Fissures : courtes lignes sombres irrégulières.
@@ -68,10 +53,16 @@ def concrete():
 
 
 def worn_alpha(base_alpha):
-    """Masque d'alpha pour une peinture usée : surtout opaque, avec des plages
-    plus pâles (la peinture s'efface par endroits)."""
-    wear = noise(70, 2.0).point(lambda p: base_alpha if p > 64 else base_alpha - 70 + p)
-    return wear
+    """Masque d'alpha d'une peinture usée : surtout opaque, avec un grain fin
+    d'éraflures et de grandes plages où la peinture s'est effacée (le béton
+    réapparaît par endroits), pour un marquage vieilli plutôt que neuf."""
+    # Grain fin : petites éraflures, peinture presque intacte en général.
+    fine = noise(70, 2.0).point(lambda p: base_alpha if p > 64 else base_alpha - 70 + p)
+    # Grandes plages d'usure : flou modéré (pour garder du contraste) et seuil haut,
+    # la peinture reste pleine par grandes zones et s'efface franchement dans les
+    # creux (jusqu'au béton nu), pour une usure bien visible mais pas totale.
+    coarse = noise(80, 6.0).point(lambda p: 255 if p > 135 else int(p * 255 / 135))
+    return ImageChops.multiply(fine, coarse)
 
 
 def add_marking(img, shape_draw, color, base_alpha=235):
@@ -86,38 +77,12 @@ def add_marking(img, shape_draw, color, base_alpha=235):
     return Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB")
 
 
-def add_skid_marks(img):
-    """Deux traînées sombres parallèles laissées par les patins, le long de l'axe
-    avant-arrière (axe X de la texture). Posées par-dessus le marquage, comme un
-    frottement de caoutchouc accumulé au fil des poses."""
-    full = SIZE / 2.0
-    cx = cy = full
-    length = full * 0.22   # demi-longueur de la trace
-    width = full * 0.045   # demi-épaisseur
-    offset = full * 0.14   # écart latéral entre les deux patins
-
-    layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer, "RGBA")
-    for sign in (-1, 1):
-        oy = cy + sign * offset
-        d.rounded_rectangle([cx - length, oy - width, cx + length, oy + width],
-                            radius=width, fill=(34, 32, 30, 130))
-        # Quelques stries plus sombres pour le grain du frottement.
-        for k in range(-2, 3):
-            yy = oy + k * (width * 0.4)
-            d.line([(cx - length * 0.95, yy), (cx + length * 0.95, yy)],
-                   fill=(20, 19, 18, 90), width=2)
-    layer = layer.filter(ImageFilter.GaussianBlur(SIZE * 0.006))
-    return Image.alpha_composite(img.convert("RGBA"), layer).convert("RGB")
-
-
 def main(out_path):
     full = SIZE / 2.0
     cx = cy = full
     img = concrete()
 
     white = (228, 228, 224)
-    red = (172, 32, 30)
 
     # Cercle de poser (anneau blanc).
     def ring(d):
@@ -127,27 +92,17 @@ def main(out_path):
 
     img = add_marking(img, ring, white, base_alpha=225)
 
-    # Croix blanche (croix grecque : deux barres égales qui se croisent).
-    arm = full * 0.42   # demi-longueur d'une barre
-    half = full * 0.21  # demi-épaisseur d'une barre
-
-    def cross(d):
-        d.rectangle([cx - half, cy - arm, cx + half, cy + arm], fill=255)
-        d.rectangle([cx - arm, cy - half, cx + arm, cy + half], fill=255)
-
-    img = add_marking(img, cross, white, base_alpha=235)
-
-    # Grand H rouge au centre de la croix.
-    half_w = full * 0.17
-    half_l = full * 0.23
-    stroke = full * 0.075
+    # Grand H blanc au centre (marquage d'hélistation civile, sans croix).
+    half_w = full * 0.22
+    half_l = full * 0.28
+    stroke = full * 0.09
 
     def letter_h(d):
         d.rectangle([cx - half_w, cy - half_l, cx - half_w + stroke, cy + half_l], fill=255)
         d.rectangle([cx + half_w - stroke, cy - half_l, cx + half_w, cy + half_l], fill=255)
         d.rectangle([cx - half_w, cy - stroke / 2, cx + half_w, cy + stroke / 2], fill=255)
 
-    img = add_marking(img, letter_h, red, base_alpha=240)
+    img = add_marking(img, letter_h, white, base_alpha=240)
 
     # Salissure finale : léger assombrissement vers le bord du disque (vignette).
     vignette = Image.new("L", (SIZE, SIZE), 0)
@@ -157,9 +112,6 @@ def main(out_path):
         lambda p: 255 - int((255 - p) * 0.5))
     dark = Image.new("RGB", (SIZE, SIZE), (90, 90, 92))
     img = Image.composite(img, dark, vignette)
-
-    # Traces de patins, par-dessus tout le reste.
-    img = add_skid_marks(img)
 
     img.save(out_path)
     print("[texture] écrit", out_path, img.size)

@@ -18,6 +18,7 @@
 #include "app/AppConstants.hpp"
 #include "render/Camera.hpp"
 #include "render/LoadedHelicopter.hpp"
+#include "physics/constants.hpp"
 #include "render/Terrain.hpp"
 #include "ui/Hud.hpp"
 #include "util/Math.hpp"
@@ -161,7 +162,17 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     }
 
     ui::HudData hud;
-    hud.airspeedKmh   = 170.0f;   /* croisière ~170 km/h */
+    /* Vitesse de croisière affichée : ~170 km/h, mais plafonnée à 90 % de la VNE
+       du moment (elle décroît avec l'altitude), pour que la LED IAS reste verte
+       même sur une capture en altitude : sinon 170 km/h dépasse la VNE au-delà de
+       ~2000 m (par ex. ~164 km/h à 2800 m) et le voyant passe au rouge. Réglable
+       par ARTOUSTE_SHOT_IAS. */
+    const float vneKmh = physics::vneAtAltitudeMs(shotPos.y) * 3.6f;
+    const float cruise = 0.90f * vneKmh;
+    hud.airspeedKmh   = (cruise < 170.0f) ? cruise : 170.0f;
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_IAS")) {
+        hud.airspeedKmh = std::strtof(e, nullptr);
+    }
     hud.headingDeg    = 47.0f;
     hud.altitudeM     = shotPos.y;  /* vraie altitude du point de capture */
     hud.varioMs       = 1.2f;

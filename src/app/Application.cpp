@@ -348,6 +348,10 @@ int Application::run() {
         if (!runStartupMenu()) {
             return EXIT_SUCCESS;  /* l'utilisateur a fermé la fenêtre sans lancer */
         }
+        /* Chargement de la scène (terrain, hélicoptère...) : bloquant et sans retour
+           visuel propre (voir initScene/loadTerrain). Ce message reste affiché tant
+           qu'une étape ne le remplace pas par un message plus précis. */
+        renderLoadingScreen("Chargement...");
     }
 
     try {
@@ -372,6 +376,7 @@ int Application::run() {
             if (!menuDemande || !runStartupMenu()) {
                 break;  /* pas de menu (carte imposée), ou Échap/Quitter dans le menu */
             }
+            renderLoadingScreen("Chargement...");
             applyMenuSession();  /* applique le nouveau choix, puis on repart en vol */
         }
     } catch (const std::exception& e) {

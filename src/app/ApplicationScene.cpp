@@ -279,6 +279,7 @@ void Application::initScene() {
         std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
         terrainName = "arcachon";
     }
+    renderLoadingScreen("Chargement du terrain...");
     loadTerrain(terrainName);
 
     /* Démarrage immédiat (gain de temps en test) : turbine et rotor d'emblée au
@@ -352,6 +353,7 @@ void Application::initScene() {
      */
     const std::filesystem::path modelsDir = assets / "models" / "Alouette-II" / "Models";
     if (std::filesystem::exists(modelsDir / "alouette.ac")) {
+        renderLoadingScreen("Chargement de l'hélicoptère...");
         auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
         if (loaded->loaded()) {
             m_loadedHeli = std::move(loaded);

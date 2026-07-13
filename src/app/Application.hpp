@@ -86,6 +86,14 @@ private:
        d'environnement. */
     bool runStartupMenu();
 
+    /* Affiche un message centré ("Chargement...") puis force son rendu à l'écran
+       (swap buffer immédiat) avant de lancer une étape bloquante (chargement de
+       terrain, du modèle 3D...) : sans cela, la fenêtre reste figée sur la dernière
+       image du menu pendant 3-4 s, sans retour visuel. Appelle glfwPollEvents()
+       pour éviter que l'OS ne marque la fenêtre "ne répond pas". Nécessite que
+       m_hud soit déjà initialisé (contexte ImGui). Définie dans ApplicationMenu.cpp. */
+    void renderLoadingScreen(const char* message);
+
     /* Localise le dossier des ressources "assets" (variable d'environnement, puis à
        côté de l'exécutable, puis chemin de compilation). Statique : utilisable avant
        toute initialisation, notamment par le menu de démarrage. Définie dans

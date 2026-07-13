@@ -220,6 +220,7 @@ void Application::startDemo() {
     m_flight.turbine().startFast();
     m_demoUserView = false;  /* la démo reprend la main sur la vue et le HUD */
     m_demoUserHud  = false;
+    m_demoInputGraceS = 0.6f;  /* ignore un résidu d'entrée pilote juste après le lancement */
     m_demo.start(returnPad, route);
     /* Musique de la démo mise de côté pour l'instant : on ne la lance pas.
        (Tout le mécanisme reste en place ; décommenter pour la réactiver.) */

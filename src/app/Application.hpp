@@ -292,6 +292,14 @@ private:
        comportement (arrêt de la démo, vol libre). */
     bool                                      m_demoFromMenu = false;
 
+    /* Délai de grâce (s) après le (re)lancement d'une démo, pendant lequel une entrée
+       pilote ne l'annule pas. Sans lui, la touche D qui lance la démo depuis le menu
+       est aussi le palonnier droit en vol (Keyboard.cpp) : si le relâchement physique
+       de la touche accuse ne serait-ce que quelques dizaines de ms de retard sur le
+       premier appel de computeControls, ce résidu dépasse aussitôt le seuil de 0.15 et
+       coupe la démo -- retour au menu immédiat, alors que le pilote n'a rien demandé. */
+    float                                      m_demoInputGraceS = 0.0f;
+
     /* Végétation active (clé "arbres" de config.txt, vrai par défaut, forcée à faux
        par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
     bool                                      m_treesEnabled = true;

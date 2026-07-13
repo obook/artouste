@@ -51,16 +51,24 @@ constexpr float PARK_STEER_MAX  = 1.10f;
 physics::Controls Application::computeControls(const physics::Controls& rawInput, float frameDt,
                                                float t) {
     /* Mode démo : une vraie action du pilote (manche, palonnier ou collectif)
-     * lui rend la main et coupe la démo. */
+     * lui rend la main et coupe la démo. Un court délai de grâce après le lancement
+     * (m_demoInputGraceS) ignore cette détection : sans lui, un résidu d'entrée -- par
+     * exemple la touche D encore relâchée juste après avoir servi à lancer la démo
+     * depuis le menu, D étant aussi le palonnier droit en vol -- coupe la démo dans les
+     * toutes premières images, avant que le pilote n'ait rien demandé. */
     if (m_demo.active()) {
-        const float pilotInput = std::fabs(rawInput.cyclicLateral)
-                               + std::fabs(rawInput.cyclicLongitudinal)
-                               + std::fabs(rawInput.pedals)
-                               + std::fabs(rawInput.collective);
-        if (pilotInput > 0.15f) {
-            m_demo.stop();
-            if (m_demoFromMenu) {
-                m_returnToMenu = true;  /* démo lancée depuis le menu : on y retourne */
+        if (m_demoInputGraceS > 0.0f) {
+            m_demoInputGraceS -= frameDt;
+        } else {
+            const float pilotInput = std::fabs(rawInput.cyclicLateral)
+                                   + std::fabs(rawInput.cyclicLongitudinal)
+                                   + std::fabs(rawInput.pedals)
+                                   + std::fabs(rawInput.collective);
+            if (pilotInput > 0.15f) {
+                m_demo.stop();
+                if (m_demoFromMenu) {
+                    m_returnToMenu = true;  /* démo lancée depuis le menu : on y retourne */
+                }
             }
         }
     }

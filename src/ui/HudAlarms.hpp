@@ -59,6 +59,9 @@ inline GaugeLed alarmeTurbine(const HudData& d) noexcept {
  * ordinaire (aiguille encore sous la bande verte du cadran). On réserve donc le jaune
  * aux 5 derniers pour cent avant VNE, pour un vrai "surveiller, proche de la limite". */
 inline GaugeLed alarmeIas(const HudData& d) noexcept {
+    if (d.turbineRpm <= 0.0f) {  /* turbine à l'arrêt : voyant éteint, pas de survol à surveiller */
+        return GaugeLed::Off;
+    }
     const float vneKmh = physics::vneAtAltitudeMs(d.altitudeM) * 3.6f;
     if (d.airspeedKmh > vneKmh) {
         return GaugeLed::Red;
@@ -71,6 +74,10 @@ inline GaugeLed alarmeIas(const HudData& d) noexcept {
 
 /* Température tuyère (T4) : seuils du manuel (surveiller / limite continue). */
 inline GaugeLed alarmeTmp(const HudData& d) noexcept {
+    if (d.turbineRpm <= 0.0f) {  /* turbine à l'arrêt : voyant éteint, même si la
+                                    tuyère garde un peu de chaleur résiduelle */
+        return GaugeLed::Off;
+    }
     if (d.exhaustTempC > physics::EXHAUST_TEMP_MAXI_C) {
         return GaugeLed::Red;
     }
@@ -83,6 +90,10 @@ inline GaugeLed alarmeTmp(const HudData& d) noexcept {
 /* Carburant : jaune sous la réserve (~10 % du réservoir), rouge sous le seuil du
  * voyant bas carburant. */
 inline GaugeLed alarmeCarb(const HudData& d) noexcept {
+    if (d.turbineRpm <= 0.0f) {  /* turbine à l'arrêt : voyant éteint, comme le reste
+                                    de la planche hors tension */
+        return GaugeLed::Off;
+    }
     if (d.fuelLiters < physics::FUEL_LOW_L) {
         return GaugeLed::Red;
     }

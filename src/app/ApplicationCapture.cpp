@@ -184,6 +184,13 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.exhaustTempC  = 445.0f;   /* tuyère en croisière normale */
     hud.fuelLiters    = 480.0f;
     hud.turbine       = "EN RÉGIME";
+    if (std::getenv("ARTOUSTE_SHOT_TURBINE_OFF") != nullptr) {
+        /* Turbine à l'arrêt : tous les voyants doivent s'éteindre. */
+        hud.rotorRpm      = 0.0f;
+        hud.rotorLedArmed = false;
+        hud.turbineRpm    = 0.0f;
+        hud.turbine       = "ARRÊT";
+    }
     hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */
     if (const char* e = std::getenv("ARTOUSTE_SHOT_VORTEX")) {
         hud.vrsIntensity = std::strtof(e, nullptr);  /* force le bandeau d'alerte vortex */

@@ -118,6 +118,9 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     }
     hud.rotorLedArmed = m_nrLedArmed;
     hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
+    /* LED du cadran TURBINE clignotante pendant la montée en régime (état Demarrage : la
+       turbine seule accélère, rotor encore immobile), plutôt qu'éteinte comme à l'arrêt. */
+    hud.turbineSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Demarrage);
     hud.exhaustTempC  = m_flight.turbine().exhaustTempC();  /* température tuyère (T4) */
     hud.fuelLiters    = m_flight.fuelLiters();
     hud.turbine       = m_flight.turbine().label();

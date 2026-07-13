@@ -36,8 +36,9 @@ inline GaugeLed alarmeNr(const HudData& d) noexcept {
 }
 
 /* Régime turbine : verte dans la bande nominale du cadran (33 000-34 000 tr/min),
- * éteinte en dessous (démarrage, extinction, arrêt : un régime bas y est normal),
- * jaune puis rouge au-dessus (surrégime, théorique avec la régulation actuelle).
+ * clignotante pendant la montée en régime (démarrage), éteinte à l'arrêt complet et
+ * pendant l'extinction (un régime bas y est normal mais ne monte pas), jaune puis
+ * rouge au-dessus (surrégime, théorique avec la régulation actuelle).
  * Sert surtout d'indicateur "turbine prête" pendant la séquence de démarrage. */
 inline GaugeLed alarmeTurbine(const HudData& d) noexcept {
     if (d.turbineRpm > 34500.0f) {
@@ -48,6 +49,9 @@ inline GaugeLed alarmeTurbine(const HudData& d) noexcept {
     }
     if (d.turbineRpm >= 33000.0f) {
         return GaugeLed::Green;
+    }
+    if (d.turbineSpoolingUp) {  /* montée en régime : clignote plutôt que de rester éteinte */
+        return d.alarmBlinkOn ? GaugeLed::Green : GaugeLed::Off;
     }
     return GaugeLed::Off;
 }

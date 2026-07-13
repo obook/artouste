@@ -55,6 +55,10 @@ struct HudData {
                                            régime depuis le dernier lancement de la turbine
                                            (évite le rouge pendant démarrage et extinction) */
     float       turbineRpm    = 0.0f;   /* régime turbine en tr/min */
+    bool        turbineSpoolingUp = false;  /* turbine en cours de montée en régime
+                                           (démarrage) : fait clignoter la LED TURBINE
+                                           tant que le régime nominal n'est pas atteint,
+                                           plutôt que de la laisser éteinte */
     float       exhaustTempC   = 0.0f;  /* température tuyère (T4) en degrés Celsius */
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */

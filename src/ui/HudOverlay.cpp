@@ -104,6 +104,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     const GaugeLed ledIas  = alarmeIas(data);
     const GaugeLed ledTmp  = alarmeTmp(data);
     const GaugeLed ledCarb = alarmeCarb(data);
+    const GaugeLed ledVs   = alarmeVario(data);
 
     struct G {
         float       value, vmin, vmax, bandMin, bandMax;
@@ -118,7 +119,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
         {data.turbineRpm,    0.0f, 35000.0f, 33000.0f, 34000.0f, "TURBINE",   turb, ledTurb},
         {data.rotorRpm,      0.0f, 420.0f,   340.0f,   380.0f,   "NR tr/min", nr,   ledNr},
         {data.airspeedKmh,   0.0f, 260.0f,   176.0f,   195.0f,   "IAS km/h",  ias,  ledIas},
-        {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs,   GaugeLed::None},
+        {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs,   ledVs},
         {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll, GaugeLed::None},
         {data.exhaustTempC,  0.0f, 550.0f,   400.0f,   480.0f,   "TMP C",     tmp,  ledTmp},
         {data.fuelLiters,    0.0f, physics::FUEL_CAPACITY_L, physics::FUEL_LOW_L,

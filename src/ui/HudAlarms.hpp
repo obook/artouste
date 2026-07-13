@@ -95,6 +95,19 @@ inline GaugeLed alarmeTmp(const HudData& d) noexcept {
     return GaugeLed::Green;
 }
 
+/* Taux de descente : reprend l'alerte "façon GPWS" déjà calculée dans fillHud
+ * (descente rapide à faible hauteur sol, voir ApplicationHud.cpp) plutôt que de
+ * refixer un second seuil ici. Même comportement que les autres cadrans : verte
+ * tant que la turbine tourne (état normal), éteinte à l'arrêt comme le reste de
+ * la planche hors tension, rouge en cas d'alerte. */
+inline GaugeLed alarmeVario(const HudData& d) noexcept {
+    if (d.turbineRpm <= 0.0f) {  /* turbine à l'arrêt : voyant éteint, comme le reste
+                                    de la planche hors tension */
+        return GaugeLed::Off;
+    }
+    return d.sinkRateAlert ? GaugeLed::Red : GaugeLed::Green;
+}
+
 /* Carburant : jaune sous la réserve (~10 % du réservoir), rouge sous le seuil du
  * voyant bas carburant. */
 inline GaugeLed alarmeCarb(const HudData& d) noexcept {

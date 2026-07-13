@@ -138,7 +138,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
        en démo), pour accompagner la transmission entendue. */
     renderRadioSubtitle(data, w);
 
-    /* Alertes de vol (vortex, taux de chute) : par-dessus tous les modes de vol (mais
+    /* Alertes de vol (vortex, taux de descente) : par-dessus tous les modes de vol (mais
        pas prioritaires sur les panneaux de confirmation/pause, dessinés ensuite). */
     renderVortexAlert(data, w, h);
     renderSinkRateAlert(data, w, h);
@@ -341,7 +341,7 @@ void Hud::renderSinkRateAlert(const HudData& data, float w, float h) {
     ImGui::SetNextWindowBgAlpha(0.55f);
     ImGui::Begin("sinkrate_alert", nullptr, flags);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f));  /* rouge alarme */
-    ImGui::Text("TAUX DE CHUTE");
+    ImGui::Text("TAUX DE DESCENTE");
     ImGui::PopStyleColor();
     ImGui::End();
 }

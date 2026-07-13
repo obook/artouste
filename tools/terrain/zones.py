@@ -71,7 +71,12 @@ ZONES = {
     "cote-landes": {
         "bbox": (-1.62, -1.30, 43.46, 43.81),
         "recolor_sea": True,
-        "start": (-1.43, 43.66),  # arrière-plage plate vers Hossegor / Capbreton
+        # Calé sur l'hélipad de Capbreton (voir "helipads" ci-dessous) : l'ancien
+        # indice "arrière-plage plate vers Hossegor / Capbreton" tombait au ras de
+        # l'eau (0 m d'altitude, bord du lac d'Hossegor), et le calage "hélipad le
+        # plus proche" (ApplicationScene.cpp) devenait instable d'une régénération
+        # à l'autre. On vise donc directement les coordonnées exactes du pad.
+        "start": (-1.4457112839188175, 43.65393627677582),  # Capbreton
         "start_heading": 0,       # face au nord : la côte file vers Vieux-Boucau
         "grid": 1024,      # maille ~25-38 m au lieu de ~50-76 m (relief plus lisse)
         "ortho_px": 5000,  # ortho ~7,8 m/px au lieu de ~19 (limite serveur IGN : 5010)

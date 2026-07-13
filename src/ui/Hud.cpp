@@ -138,9 +138,10 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
        en démo), pour accompagner la transmission entendue. */
     renderRadioSubtitle(data, w);
 
-    /* Alerte vortex : par-dessus tous les modes de vol (mais pas prioritaire sur les
-       panneaux de confirmation/pause, dessinés ensuite). */
+    /* Alertes de vol (vortex, taux de chute) : par-dessus tous les modes de vol (mais
+       pas prioritaires sur les panneaux de confirmation/pause, dessinés ensuite). */
     renderVortexAlert(data, w, h);
+    renderSinkRateAlert(data, w, h);
 
     renderBanners(paused, confirmReset, confirmDemo, w, h);
 
@@ -317,6 +318,30 @@ void Hud::renderVortexAlert(const HudData& data, float w, float h) {
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f));  /* rouge alarme */
     ImGui::Text("         VORTEX");
     ImGui::Text("REPRENDRE DE LA VITESSE");
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
+void Hud::renderSinkRateAlert(const HudData& data, float w, float h) {
+    if (!data.sinkRateAlert) {
+        return;
+    }
+    /* Clignotement, comme le vortex et les LED d'alarme (~2 Hz). */
+    if (!data.alarmBlinkOn) {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* Juste sous l'emplacement du bandeau vortex : les deux peuvent coexister (descente
+       rapide a faible vitesse pres du sol) sans se recouvrir. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.40f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::Begin("sinkrate_alert", nullptr, flags);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f));  /* rouge alarme */
+    ImGui::Text("TAUX DE CHUTE");
     ImGui::PopStyleColor();
     ImGui::End();
 }

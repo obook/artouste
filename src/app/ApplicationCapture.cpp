@@ -188,6 +188,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     if (const char* e = std::getenv("ARTOUSTE_SHOT_VORTEX")) {
         hud.vrsIntensity = std::strtof(e, nullptr);  /* force le bandeau d'alerte vortex */
     }
+    hud.sinkRateAlert = std::getenv("ARTOUSTE_SHOT_SINKRATE") != nullptr;  /* bandeau taux de chute */
     if (m_terrain->hasGeo()) {  /* coordonnées du point de capture */
         float lon = 0.0f, lat = 0.0f;
         m_terrain->lonLatAt(shotPos.x, shotPos.z, lon, lat);

@@ -123,6 +123,28 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.turbine       = m_flight.turbine().label();
     hud.assist        = m_assist.active();
     hud.vrsIntensity  = m_flight.vrsIntensity();  /* alerte vortex (bandeau HUD) */
+
+    /* Alerte taux de chute (facon GPWS) : descente rapide pres du sol. Enveloppe
+       progressive : plus on est bas, plus le taux de chute toléré est faible. Au-dessus
+       de GPWS_MAX_AGL, aucune alerte (descente rapide normale en altitude). Coupée en
+       démo (le posé automatique la déclencherait). */
+    {
+        constexpr float GPWS_MIN_AGL   = 2.0f;    /* m : en vol seulement (pas sur le pad) */
+        constexpr float GPWS_MAX_AGL   = 120.0f;  /* m : plafond de surveillance */
+        constexpr float GPWS_SINK_NEAR = 2.5f;    /* m/s : taux toléré pres du sol */
+        constexpr float GPWS_SINK_FAR  = 8.0f;    /* m/s : taux toléré au plafond */
+        const float aglM = body.position.y
+                         - m_terrain->heightAt(body.position.x, body.position.z);
+        const float sink = -hud.varioMs;  /* positif en descente */
+        bool        alert = false;
+        if (!m_demo.active() && aglM > GPWS_MIN_AGL && aglM < GPWS_MAX_AGL) {
+            const float f         = aglM / GPWS_MAX_AGL;  /* 0 au sol -> 1 au plafond */
+            const float sinkLimit = GPWS_SINK_NEAR + (GPWS_SINK_FAR - GPWS_SINK_NEAR) * f;
+            alert                 = sink > sinkLimit;
+        }
+        hud.sinkRateAlert = alert;
+    }
+
     hud.radio         = m_audio.radioPlaying();
     hud.radioMixPct   = static_cast<int>(m_audio.radioMix() * 100.0f + 0.5f);
     if (m_terrain->hasGeo()) {  /* longitude / latitude de l'appareil */

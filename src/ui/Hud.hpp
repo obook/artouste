@@ -63,6 +63,9 @@ struct HudData {
                                            un bandeau d'alerte clignotant s'affiche (l'appareil
                                            d'époque n'a pas d'avertisseur : c'est une aide du
                                            simulateur, hors cockpit) */
+    bool        sinkRateAlert = false;  /* taux de chute pres du sol (facon GPWS) : bandeau
+                                           "TAUX DE CHUTE" clignotant. Aide du simulateur,
+                                           calculée dans fillHud (descente rapide + AGL faible) */
     bool        radio         = false;  /* flux radio en lecture : affiche un voyant "RADIO" */
     int         radioMixPct   = 0;      /* part de la radio dans le crossfade radio/hélico (0 à 100 %) */
     bool        geoValid      = false;  /* coordonnées géographiques disponibles */
@@ -143,6 +146,9 @@ private:
        Ne s'affiche que si l'intensité VRS dépasse le seuil (l'appareil réel n'a aucun
        avertisseur : c'est une aide du simulateur). */
     void renderVortexAlert(const HudData& data, float w, float h);
+    /* Alerte taux de chute (GPWS) : bandeau rouge clignotant quand la descente est
+       trop rapide pres du sol. Aide du simulateur, comme l'alerte vortex. */
+    void renderSinkRateAlert(const HudData& data, float w, float h);
     /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
     void renderRadioSubtitle(const HudData& data, float w);
 

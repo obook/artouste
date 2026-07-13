@@ -235,6 +235,7 @@ bool Application::runStartupMenu() {
         ImGui::Separator();
         ImGui::TextDisabled(
             "Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   D/Y : démo   Échap/B : quitter");
+        ImGui::TextDisabled("%s", ARTOUSTE_VERSION_STRING);
         ImGui::End();
 
         ImGui::Render();

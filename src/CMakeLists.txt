@@ -1,5 +1,34 @@
 # Cible exécutable principale du simulateur.
 
+# Version affichée dans le pied du menu de démarrage : dernière release (tag
+# v*, sans le "v") suivie du nombre total de commits, comme la notice PDF
+# (voir build.sh, section "Chaine de version affichee dans la notice"). Calculée
+# à la configuration : un ./cmake après un nouveau commit ou tag la rafraîchit,
+# mais pas un simple rebuild sans reconfiguration.
+set(ARTOUSTE_VERSION_STRING "version de développement")
+find_package(Git QUIET)
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "v*"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE ARTOUSTE_GIT_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(ARTOUSTE_GIT_TAG)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE ARTOUSTE_GIT_COMMIT_COUNT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        string(REGEX REPLACE "^v" "" ARTOUSTE_GIT_TAG "${ARTOUSTE_GIT_TAG}")
+        set(ARTOUSTE_VERSION_STRING "v${ARTOUSTE_GIT_TAG}.${ARTOUSTE_GIT_COMMIT_COUNT}")
+    endif()
+endif()
+message(STATUS "  version (pied de menu) : ${ARTOUSTE_VERSION_STRING}")
+
 add_executable(artouste
     main.cpp
     app/Application.cpp
@@ -52,6 +81,7 @@ target_include_directories(artouste PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 # développement ; un packaging Release (M7) copiera les assets à côté du binaire.
 target_compile_definitions(artouste PRIVATE
     ARTOUSTE_ASSET_DIR="${CMAKE_SOURCE_DIR}/assets"
+    ARTOUSTE_VERSION_STRING="${ARTOUSTE_VERSION_STRING}"
 )
 
 target_link_libraries(artouste

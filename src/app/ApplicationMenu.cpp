@@ -102,10 +102,15 @@ bool Application::runStartupMenu() {
     m_inMenu = true;
 
     /* Silence pendant le menu : on suspend les sons de vol (moteur, rotor, son de
-       démarrage) et le flux radio. Sans danger au lancement (l'audio n'est pas encore
-       initialisé : setPaused sort aussitôt). Au retour en vol, updateAudio rappelle
-       setPaused(false) et tout reprend. */
+       démarrage). Sans danger au lancement (l'audio n'est pas encore initialisé :
+       setPaused sort aussitôt). Au retour en vol, updateAudio rappelle setPaused(false)
+       et tout reprend. */
     m_audio.setPaused(true);
+    /* La radio, elle, est coupée pour de bon (pas seulement suspendue) : setPaused
+       laisse le flux réseau actif en arrière-plan, ce qui le ferait reprendre tout seul
+       au retour en vol -- même si l'utilisateur n'a rien redemandé. Quitter une carte
+       pour le menu doit couper la radio, comme si on l'éteignait. */
+    m_audio.stopRadio();
 
     /* Lecture des entrées, clavier et manette 1 fusionnés en six intentions :
        up/down (choisir), turb (bascule turbine), valid (démarrer), demo (lancer la

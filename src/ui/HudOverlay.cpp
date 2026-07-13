@@ -106,6 +106,21 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     const GaugeLed ledCarb = alarmeCarb(data);
     const GaugeLed ledVs   = alarmeVario(data);
 
+    /* Alerte VRS (vortex ring state) : taux de descente excessif à faible vitesse
+       sol. Une descente rapide en translation (approche normale à forte pente) ne
+       doit pas déclencher l'alarme, d'où la condition de vitesse. Reprend les
+       seuils VRS_DESCENT_MIN/MAX du modèle physique (voir FlightModel.cpp, qui les
+       utilise pour la perte de portance et le bandeau plein écran vrsIntensity) :
+       ce voyant, lui, avertit plus tôt et reste localisé au cadran V/S. varioMs est
+       négatif en descente, d'où le signe inversé dans les comparaisons. */
+    constexpr float KT_PER_KMH   = 1.0f / 1.852f;
+    constexpr float VRS_EXIT_KT  = physics::VRS_AIRSPEED_EXIT * 3.6f * KT_PER_KMH;  /* ~14 kt */
+    const float     airspeedKt   = data.airspeedKmh * KT_PER_KMH;
+    const bool      vrsApproche  = (data.varioMs < -physics::VRS_DESCENT_MIN)
+                               && (airspeedKt < VRS_EXIT_KT);
+    const bool      vrsDeveloppe = (data.varioMs < -physics::VRS_DESCENT_MAX)
+                               && (airspeedKt < VRS_EXIT_KT);
+
     struct G {
         float       value, vmin, vmax, bandMin, bandMax;
         const char* label;
@@ -140,11 +155,15 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
      * plus haut). Orange = surveiller, rouge = limite franchie. */
     struct Warn { bool on; ImU32 col; const char* text; };
     const Warn warns[] = {
-        /* Les états jaunes sont portés par les seules LED des cadrans ; le texte
-           central ne crie que les limites franchies (rouge), en attendant un
-           éventuel clignotement des LED qui le rendrait superflu. */
+        /* Les états jaunes des cadrans sont d'ordinaire portés par leur seule LED ;
+           le texte central ne crie que les limites franchies (rouge). Le VRS fait
+           exception : contrairement à une température ou un carburant bas, il se
+           développe en quelques secondes, d'où un avertissement textuel dès la
+           phase d'approche (orange) et pas seulement une fois développé (rouge). */
         {ledTmp == GaugeLed::Red, HUD_RED, "TEMPERATURE MAXI"},
         {ledCarb == GaugeLed::Red, HUD_RED, "CARBURANT BAS"},
+        {vrsApproche && !vrsDeveloppe, HUD_AMBER, "TAUX DE DESCENTE"},
+        {vrsDeveloppe, HUD_RED, "VORTEX"},
     };
     float wy = y - r - sc(38.0f);  /* au-dessus du panneau des cadrans (haut à y - r - 18) */
     for (const Warn& wn : warns) {

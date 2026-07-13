@@ -185,6 +185,9 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     hud.fuelLiters    = 480.0f;
     hud.turbine       = "EN RÉGIME";
     hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_VORTEX")) {
+        hud.vrsIntensity = std::strtof(e, nullptr);  /* force le bandeau d'alerte vortex */
+    }
     if (m_terrain->hasGeo()) {  /* coordonnées du point de capture */
         float lon = 0.0f, lat = 0.0f;
         m_terrain->lonLatAt(shotPos.x, shotPos.z, lon, lat);

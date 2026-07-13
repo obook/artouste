@@ -21,9 +21,13 @@ namespace artouste::ui::hud_widgets {
 /* Régime rotor : autour de la bande nominale 340-380 tr/min du cadran. Alarme
  * inhibée (LED éteinte, texte vert) tant que le rotor n'a pas atteint son régime
  * depuis le dernier lancement de la turbine : pendant le démarrage et
- * l'extinction, un NR bas est normal. */
+ * l'extinction, un NR bas est normal. Clignotante pendant la montée en régime du
+ * rotor (embrayage, juste après le lâcher du frein), plutôt qu'éteinte. */
 inline GaugeLed alarmeNr(const HudData& d) noexcept {
     if (!d.rotorLedArmed) {
+        if (d.rotorSpoolingUp) {  /* embrayage en cours : clignote plutôt que de rester éteinte */
+            return d.alarmBlinkOn ? GaugeLed::Green : GaugeLed::Off;
+        }
         return GaugeLed::Off;
     }
     if (d.rotorRpm < 320.0f || d.rotorRpm > 400.0f) {

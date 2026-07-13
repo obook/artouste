@@ -117,6 +117,9 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         m_nrLedArmed = true;
     }
     hud.rotorLedArmed = m_nrLedArmed;
+    /* LED du cadran NR clignotante pendant la montée en régime du rotor (état Embrayage :
+       frein lâché, le rotor accélère jusqu'au régime de vol), plutôt qu'éteinte. */
+    hud.rotorSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Embrayage);
     hud.turbineRpm    = turbineFraction * 33500.0f;      /* régime turbine nominal : ~33 500 tr/min */
     /* LED du cadran TURBINE clignotante pendant la montée en régime (état Demarrage : la
        turbine seule accélère, rotor encore immobile), plutôt qu'éteinte comme à l'arrêt. */

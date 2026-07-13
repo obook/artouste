@@ -122,6 +122,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.fuelLiters    = m_flight.fuelLiters();
     hud.turbine       = m_flight.turbine().label();
     hud.assist        = m_assist.active();
+    hud.vrsIntensity  = m_flight.vrsIntensity();  /* alerte vortex (bandeau HUD) */
     hud.radio         = m_audio.radioPlaying();
     hud.radioMixPct   = static_cast<int>(m_audio.radioMix() * 100.0f + 0.5f);
     if (m_terrain->hasGeo()) {  /* longitude / latitude de l'appareil */

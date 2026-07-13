@@ -59,6 +59,10 @@ struct HudData {
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */
     bool        assist        = false;  /* mode assisté actif : affiche un repère */
+    float       vrsIntensity  = 0.0f;   /* vortex ring state, 0..1 : au-dela d'un seuil,
+                                           un bandeau d'alerte clignotant s'affiche (l'appareil
+                                           d'époque n'a pas d'avertisseur : c'est une aide du
+                                           simulateur, hors cockpit) */
     bool        radio         = false;  /* flux radio en lecture : affiche un voyant "RADIO" */
     int         radioMixPct   = 0;      /* part de la radio dans le crossfade radio/hélico (0 à 100 %) */
     bool        geoValid      = false;  /* coordonnées géographiques disponibles */
@@ -135,6 +139,10 @@ private:
     void renderLabels(const HudData& data, float w, float h);
     void renderMinimap(const HudData& data, HudMode mode, float m);
     void renderBanners(bool paused, bool confirmReset, bool confirmDemo, float w, float h);
+    /* Alerte vortex ring state : bandeau rouge clignotant, par-dessus tous les modes.
+       Ne s'affiche que si l'intensité VRS dépasse le seuil (l'appareil réel n'a aucun
+       avertisseur : c'est une aide du simulateur). */
+    void renderVortexAlert(const HudData& data, float w, float h);
     /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
     void renderRadioSubtitle(const HudData& data, float w);
 

@@ -138,6 +138,10 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
        en démo), pour accompagner la transmission entendue. */
     renderRadioSubtitle(data, w);
 
+    /* Alerte vortex : par-dessus tous les modes de vol (mais pas prioritaire sur les
+       panneaux de confirmation/pause, dessinés ensuite). */
+    renderVortexAlert(data, w, h);
+
     renderBanners(paused, confirmReset, confirmDemo, w, h);
 
     ImGui::Render();
@@ -283,6 +287,36 @@ void Hud::renderRadioSubtitle(const HudData& data, float w) {
     /* Ambre "radio", distinct du vert instrument. */
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.78f, 0.30f, 1.0f));
     ImGui::Text(">> %s", data.radioMessage);
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
+void Hud::renderVortexAlert(const HudData& data, float w, float h) {
+    /* Seuil d'affichage : on n'alerte qu'une fois le phénomène franchement installé,
+       pour éviter un clignotement au moindre effleurement. */
+    constexpr float VORTEX_ALERT_MIN = 0.15f;
+    if (data.vrsIntensity < VORTEX_ALERT_MIN) {
+        return;
+    }
+    /* Clignotement : bandeau affiché seulement pendant la phase allumée du battement
+       des alarmes (~2 Hz), pour attirer l'oeil comme les LED d'alarme. En capture,
+       alarmBlinkOn est figé à true (bandeau visible). */
+    if (!data.alarmBlinkOn) {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* Tiers supérieur, centré : au-dessus de l'appareil et du réticule d'aide au posé,
+       sous le ruban de cap du HUD complet, et distinct du sous-titre radio (en haut). */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.30f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::Begin("vortex_alert", nullptr, flags);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f));  /* rouge alarme */
+    ImGui::Text("         VORTEX");
+    ImGui::Text("REPRENDRE DE LA VITESSE");
     ImGui::PopStyleColor();
     ImGui::End();
 }

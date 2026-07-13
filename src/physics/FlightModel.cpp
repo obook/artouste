@@ -95,12 +95,17 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * et le collectif est à puissance partielle (le pic est vers 40 %). Reprendre de
      * la vitesse fait tomber vrsVitesseSol à zéro et dissipe le phénomène. */
     float vrsReduction = 1.0f;
+    m_vrsIntensity     = 0.0f;
     if (m_realFlyPhysicsEnabled) {
         const float tauxDescente  = -m_body.velocity.y;  /* positif quand on descend */
         const float vrsDescente   = glm::smoothstep(VRS_DESCENT_MIN, VRS_DESCENT_MAX, tauxDescente);
         const float vrsVitesseSol = 1.0f - glm::smoothstep(0.0f, VRS_AIRSPEED_EXIT, airspeed);
         const float vrsPuissance  = clamp(1.0f - std::fabs(collective - 0.4f) / 0.4f, 0.0f, 1.0f);
-        vrsReduction = 1.0f - VRS_THRUST_LOSS * vrsDescente * vrsVitesseSol * vrsPuissance;
+        /* Intensité du phénomène (0 = aucun, 1 = plein), exposée au HUD pour l'alerte
+           vortex : c'est le produit des trois facteurs, avant conversion en perte de
+           portance. Nulle en mode assisté et en démo (physique réelle coupée). */
+        m_vrsIntensity = vrsDescente * vrsVitesseSol * vrsPuissance;
+        vrsReduction   = 1.0f - VRS_THRUST_LOSS * m_vrsIntensity;
     }
 
     m_lastThrust      = baseThrust * groundEffect * translationalGain * vrsReduction;

@@ -79,12 +79,17 @@ public:
     /* Carburant restant, en litres (pour le HUD et le voyant d'alerte). */
     [[nodiscard]] float fuelLiters() const noexcept { return m_fuelLiters; }
 
+    /* Intensité du vortex ring state (0 = aucun, 1 = plein), pour l'alerte HUD.
+       Toujours 0 en mode assisté et en démo (physique réelle coupée). */
+    [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
+
 private:
     RigidBody m_body;
     Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
+    float     m_vrsIntensity  = 0.0f;          /* vortex ring state, 0..1 (alerte HUD) */
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
 };
 

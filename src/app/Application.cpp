@@ -16,6 +16,7 @@
 #include <glad/glad.h>
 /* glad doit précéder GLFW. */
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
@@ -52,6 +53,25 @@ void glfwErrorCallback(int code, const char* description) {
  * qui remet le levier de collectif à zéro à la déconnexion. */
 void joystickCallback(int jid, int event) {
     input::Gamepad::onJoystickEvent(jid, event);
+}
+
+/* Charge un PNG en RGBA pour l'icône de fenêtre. Contrairement aux textures
+   OpenGL (voir Texture.cpp), GLFW attend l'origine en haut à gauche : pas de
+   retournement vertical ici. */
+bool chargerIconeFenetre(const std::filesystem::path& path, GLFWimage& image) {
+    stbi_set_flip_vertically_on_load(0);
+    int            width    = 0;
+    int            height   = 0;
+    int            channels = 0;
+    unsigned char* pixels =
+        stbi_load(path.string().c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    if (pixels == nullptr) {
+        return false;
+    }
+    image.width  = width;
+    image.height = height;
+    image.pixels = pixels;
+    return true;
 }
 
 }  /* namespace */
@@ -116,6 +136,24 @@ bool Application::initWindow() {
 
     glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);  /* synchronisation verticale (vsync) */
+
+    /* Icône de la fenêtre (barre de titre, barre des tâches Windows). Plusieurs
+       tailles : GLFW choisit celle qui convient au contexte d'affichage. */
+    const std::filesystem::path   assets = resolveAssetDir();
+    std::vector<GLFWimage>        icones;
+    for (const int taille : {16, 32, 48, 128, 256}) {
+        GLFWimage image{};
+        if (chargerIconeFenetre(assets / "icons" / ("icon-" + std::to_string(taille) + ".png"),
+                                 image)) {
+            icones.push_back(image);
+        }
+    }
+    if (!icones.empty()) {
+        glfwSetWindowIcon(m_window, static_cast<int>(icones.size()), icones.data());
+        for (const GLFWimage& image : icones) {
+            stbi_image_free(image.pixels);
+        }
+    }
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetKeyCallback(m_window, keyCallback);

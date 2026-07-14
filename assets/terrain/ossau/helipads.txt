@@ -2,3 +2,7 @@
 # Positions approximatives, à affiner sur place.
 -0.3972 42.8799 Fabrèges
 -0.4382796 42.8430108 Pic du Midi d'Ossau
+-0.4269 42.8355 Refuge de Pombie
+-0.4912 42.8484 Refuge d'Ayous
+-0.3292 42.846 Refuge d'Arrémoulit
+-0.3327 42.8628 Barrage d'Artouste

@@ -55,7 +55,21 @@ ZONES = {
             ("Col du Pourtalet", -0.4180, 42.8049),
             ("Pic d'Artouste", -0.3101, 42.8549),
             ("Lac de Bersau", -0.4949, 42.8395),
+            # Lieux ajoutés (coordonnées OpenStreetMap).
+            ("Barrage d'Artouste", -0.3327, 42.8628),
+            ("Petit train d'Artouste", -0.3428, 42.8758),
+            ("Refuge de Pombie", -0.4269, 42.8355),
+            ("Refuge d'Ayous", -0.4912, 42.8484),
+            ("Refuge d'Arrémoulit", -0.3292, 42.8460),
+            ("Lac d'Ayous", -0.4792, 42.8481),
+            ("Col d'Ayous", -0.4971, 42.8519),
+            ("Col de Suzon", -0.4234, 42.8470),
+            ("Lac de Peyreget", -0.4483, 42.8343),
+            ("Pic de Sesques", -0.5038, 42.9192),
         ],
+        # Refuges de montagne (bases de secours du PGHM, fidèles au rôle de
+        # l'Alouette II gendarmerie) et barrage d'Artouste, en plus du pad de
+        # départ et du sommet. Coordonnées OpenStreetMap.
         "helipads": [
             # Fabrèges : hameau au bord du lac, aire de départ du vol.
             ("Fabrèges", -0.3972, 42.8799),
@@ -63,6 +77,10 @@ ZONES = {
             # (~2847 m). Centrer sur le maximum local évite d'enterrer le disque
             # côté amont ; la plate-forme du moteur (heightAt + jupe) fait le reste.
             ("Pic du Midi d'Ossau", -0.4382796, 42.8430108),
+            ("Refuge de Pombie", -0.4269, 42.8355),
+            ("Refuge d'Ayous", -0.4912, 42.8484),
+            ("Refuge d'Arrémoulit", -0.3292, 42.8460),
+            ("Barrage d'Artouste", -0.3327, 42.8628),
         ],
     },
     # Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud

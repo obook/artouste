@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(Artouste
-    VERSION     0.17.0
+    VERSION     0.18.0
     DESCRIPTION "Simulateur 3D Alouette II"
     LANGUAGES   CXX C
 )

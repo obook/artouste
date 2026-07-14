@@ -309,6 +309,7 @@ ZONES = {
         # petites annexes, et garder un buildings.bin raisonnable (le détail à 2 m
         # pesait près de 30 Mo).
         "height_min": 5.0,
+        "grid": 1024,      # mailles ~24,7 m au lieu de ~49,3 m (défaut 512)
         "ortho_px": 5000,  # ville : ortho ~5,3 m/px au lieu de ~24 (limite serveur IGN : 5010)
         "title": "Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac)",
         "landmarks": [

@@ -81,7 +81,7 @@ const char* Application::padPlusProche(const vec3& heliPos, vec3& poseMonde) con
         const float d2 = dx * dx + dz * dz;
         if (d2 < distMin) {
             distMin   = d2;
-            nom       = "Pad depart";
+            nom       = "Pad départ";
             poseMonde = m_startPos;
         }
     }
@@ -209,7 +209,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         if (nomPad) {
             ui::HudData::PadGuidance& g = hud.padGuidance;
 
-            /* Ecart en coordonnées monde, puis projeté dans le repère pilote. */
+            /* Écart en coordonnées monde, puis projeté dans le repère pilote. */
             const float dxMonde   = mat.x - posePad.x;
             const float dzMonde   = mat.z - posePad.z;
             const float dist2D    = std::sqrt(dxMonde * dxMonde + dzMonde * dzMonde);

@@ -160,7 +160,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
            exception : contrairement à une température ou un carburant bas, il se
            développe en quelques secondes, d'où un avertissement textuel dès la
            phase d'approche (orange) et pas seulement une fois développé (rouge). */
-        {ledTmp == GaugeLed::Red, HUD_RED, "TEMPERATURE MAXI"},
+        {ledTmp == GaugeLed::Red, HUD_RED, "TEMPÉRATURE MAXI"},
         {ledCarb == GaugeLed::Red, HUD_RED, "CARBURANT BAS"},
         {vrsApproche && !vrsDeveloppe, HUD_AMBER, "TAUX DE DESCENTE"},
         {vrsDeveloppe, HUD_RED, "VORTEX"},

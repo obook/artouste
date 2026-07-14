@@ -16,48 +16,28 @@ Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'at
 
 ## Histoire
 
-L'Alouette II n'était pas destinée à devenir une légende. Conçue au milieu des années 1950 par la SNCASE sous la direction de l'ingénieur Charles Marchetti, elle fit son premier vol le 12 mars 1955 à Buc, aux mains du pilote d'essai Jean Boulet. Ce jour-là et pour la première fois, un hélicoptère de série volait grâce à une turbine à gaz.
-
-La turbine Turboméca Artouste IIC changea tout : plus légère, plus fiable, moins gourmande en carburant, elle ouvrit à l'hélicoptère des altitudes que la génération précédente ne pouvait qu'imaginer. Jean Boulet battit en juin 1955 le record mondial d'altitude pour hélicoptère en portant l'Alouette II à 8 209 mètres. La montagne, jusque-là hors de portée, devenait accessible à l'aviation.
-
-La Gendarmerie nationale fut l'une des premières à l'utiliser dès 1957. L'armée de l'air, la Marine puis les armées d'une trentaine de pays suivirent. Plus de 1 300 appareils furent construits entre 1956 et 1975. Certains volent encore aujourd'hui.
-
-<center><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
-
-_Alouette II SE 3130 ISNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</center>
-
-Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années 60.
-
-### Films français
-
-Tout l'or du monde (1961), Le Fanfaron (1962), Fantômas (1964), Le Grand Restaurant (1966), Le Tatoué (1968) avec Louis de Funès, La Horse (1969), Peau d'Âne (1970), Le Gendarme en balade (1970), Le Far West (1972) avec Jacques Brel, Le Guignolo (1980) avec Belmondo, La Fille de l'air (1992), Les Rivières pourpres (2000), Les Vacances du Petit Nicolas (2014).
-
-### Films internationaux
-
-On ne vit que deux fois (James Bond, 1967), Chacal (1973), Octopussy (James Bond, 1983), OSS 117 - Atout cœur à Tokyo (1966), Tintin et le Temple du Soleil (1969), Le Cercle rouge (1970), Cassandra Crossing (1976).
-
-Source : [alouettelama.com](https://www.alouettelama.com)
+L'Alouette II n'était pas destinée à devenir une légende : conçue par la SNCASE au
+milieu des années 1950, elle fut le premier hélicoptère de série au monde à voler
+grâce à une turbine à gaz, ouvrant à l'appareil des altitudes jusque-là hors de
+portée. Elle a aussi marqué le cinéma français, de Fantômas à James Bond. Voir
+[docs/HISTOIRE.md](docs/HISTOIRE.md) pour le récit complet et la liste des films.
 
 ## Démarrage rapide
 
 > [!NOTE]
-> **Au lancement**, le simulateur s'ouvre en plein écran sur un menu de choix : la
-> carte à charger et le démarrage éventuel de la turbine. On y navigue au clavier
-> (flèches, Entrée), à la souris ou à la manette. La touche `F` bascule à tout moment
-> entre plein écran et fenêtré. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à
-> ce menu ; dans le menu, `Échap` quitte le simulateur.
+> **Au lancement**, le simulateur s'ouvre sur un menu de choix : la
+> carte à charger et le démarrage éventuel de la turbine. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à ce menu ; dans le menu, `Échap` quitte le simulateur.
 
 > [!TIP]
+> La notice des commandes est disponible au téléchargement : [notice.pdf](docs/notice.pdf)
+> 
 > **Première fois aux commandes ?**
-> Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**. Un résumé des commandes est disponible au téléchargement : [notice.pdf](docs/notice.pdf)
-> 1. **Tout est prêt au départ** : le vol commence en vue arrière (poursuite) avec le HUD
->    complet et tous les instruments, en livrée armée de terre (touche `H` pour changer
->    d'affichage, `C` pour changer de vue, `L` pour changer de livrée).
-> 2. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
-> 3. **Démarrez** la turbine avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
+> Voici les trois étapes pour effectuer sans stress votre premier vol à bord de l'Alouette.
+> 1. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
+> 2. **Démarrez la turbine** avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min
->    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol de 360 tr/min. Le HUD indique l'état `"EN RÉGIME"` ou `360`
-> 4. **Décollage et vol.** Une fois le rotor en régime :
+>    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol
+> 3. **Décollage et vol.** Une fois le rotor en régime :
 >    * augmentez doucement le collectif (touche `Z` | gâchette `RT`) jusqu'à un peu plus de 50 % pour décoller de quelques mètres du sol
 >    * inclinez l'appareil au cyclique vers l'avant (flèches | stick gauche) et avancez
 >    * compensez le couple avec le palonnier (touche `D` à droite, `A` ou `Q` à gauche | stick droit)
@@ -65,7 +45,7 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 > [!NOTE]
 > **Envie d'une démo ?**
-> Lancez le programme et appuyez sur la touche `D` du menu : l'appareil joue seul,
+> À partir du menu, appuyer sur la touche `D` : l'appareil effectue seul,
 > en boucle, un vol panoramique au-dessus du bassin d'Arcachon. La touche `Échap` ou une action franche sur le manche en sort.
 
 ## Fonctionnalités du simulateur
@@ -202,221 +182,22 @@ Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
 `.zip` sous Windows) contenant le binaire autonome et toutes les ressources
 (shaders, modèle 3D, sons, terrain, textures), prête à distribuer.
 
-## Modèle 3D et sons
+## Modèle 3D, sons et textures
 
-Le modèle 3D de l'Alouette II et les sons proviennent du paquet **FlightGear**
-de Emmanuel Baranger (helijah), sous licence GPL. Le sous-ensemble utilisé par
-le simulateur (modèles `.ac`, textures, quatre boucles sonores rotor et turbine en
-intérieur et extérieur, plus le son de démarrage) est inclus dans ce dépôt avec le
-fichier `COPYING` d'origine. Source :
-<http://helijah.free.fr/flightgear/les-appareils/alouette2/appareil.htm>. S'ils
-sont absents, l'application affiche un hélicoptère procédural et reste
-silencieuse.
+Le modèle 3D et les sons de l'Alouette II proviennent du paquet FlightGear
+d'Emmanuel Baranger (licence GPL) ; à défaut, le simulateur affiche un hélicoptère
+procédural et reste silencieux. Les textures des livrées, du rotor de queue et de
+l'hélipad sont versionnées et n'ont besoin d'être régénérées qu'après
+modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/ASSETS.md).
 
-## Hélipad (régénérer l'asset)
+## Cartes (terrains)
 
-L'hélipad de la zone de départ est un modèle `.ac` texturé (`assets/models/helipad/`),
-fabriqué avec Blender. Le `.ac` et sa texture sont **versionnés** : compiler et
-lancer le simulateur ne demande donc **ni Blender ni greffon**. Les étapes
-ci-dessous ne servent qu'à le **régénérer** après modification.
-
-1. Texture (béton, anneau, H rouge), via un environnement Python isolé (hors
-   dépôt, voir `.gitignore`) :
-
-```bash
-python3 -m venv tools/.venv
-tools/.venv/bin/pip install Pillow
-tools/.venv/bin/python tools/helipad/make_texture.py assets/models/helipad/helipad.png
-```
-
-2. Modèle `.ac`, via Blender et le greffon AC3D d'Emmanuel
-   (<https://github.com/NikolaiVChr/Blender-AC3D>, fork de l'original
-   <https://github.com/majic79/Blender-AC3D>), installé comme module
-   `io_scene_ac3d` :
-
-```bash
-blender --background --python tools/helipad/make_helipad.py
-```
-
-   Compatibilité Blender < 4.1 : la version actuelle du greffon cible Blender 4.3
-   et son importateur appelle `Mesh.set_sharp_from_angle()`, une API qui n'existe
-   qu'à partir de Blender 4.1. Sous Blender 4.0, l'import d'un `.ac` plante donc
-   tant que ce point n'est pas corrigé. Le contournement consiste à garder cet
-   appel dans `io_scene_ac3d/import_ac3d.py` (vers la ligne 585) :
-
-```python
-   if hasattr(me, "set_sharp_from_angle"):
-       me.set_sharp_from_angle(angle=radians(self.crease))
-   elif hasattr(me, "use_auto_smooth"):
-       me.use_auto_smooth = True
-       me.auto_smooth_angle = radians(self.crease)
-```
-
-   Ce correctif ne touche que l'installation locale du greffon, pas le dépôt : les
-   `.ac` et leurs textures étant versionnés, compiler et lancer le simulateur ne
-   demandent ni Blender ni greffon.
-
-## Rotor de queue (régénérer le skin des pales)
-
-Les pales du rotor de queue sont peintes par un outil Blender qui importe
-`blade.ac`, lit les UV et l'envergure, puis colorie les triangles de la pale :
-métal nu en livrée d'origine (`tailrotor.png`), jaune à zébrures rouges en livrée
-Gendarmerie (`tailrotor-gendarmerie.png`). Les deux textures sont versionnées ;
-régénérer ne sert qu'après modification :
-
-```bash
-blender --background --python tools/livree/make_tailrotor.py
-```
-
-Un contrôle rapide des textures produites :
-
-```bash
-tools/.venv/bin/python tools/livree/check_tailrotor.py \
-    assets/models/Alouette-II/Models/Externals/TailRotor/tailrotor-gendarmerie.png --zebra
-```
-
-## Livrées du fuselage (régénérer les textures)
-
-La touche `L` (ou le bouton `A`) fait défiler quatre livrées : blanche,
-Gendarmerie (bleu), armée de terre (olive) et Protection civile (rouge). Chaque
-livrée peinte est produite à partir de l'atlas d'origine `texture.png` en
-reteintant les pixels neutres vers la couleur cible, sans toucher aux marquages
-saturés (cocardes tricolores). Les textures sont versionnées ; régénérer ne sert
-qu'après modification :
-
-```bash
-python3 tools/livree/make_blanche.py           # -> texture-blanche.png (blanc)
-python3 tools/livree/make_gendarmerie.py       # -> texture-gendarmerie.png (bleu)
-python3 tools/livree/make_armeedeterre.py      # -> texture-armeedeterre.png (olive)
-python3 tools/livree/make_protectioncivile.py  # -> texture-protectioncivile.png (rouge)
-python3 tools/livree/make_decals.py            # -> décalques (textes et immatriculations)
-```
-
-## Terrain (choix de la map)
-
-Chaque terrain est rangé dans son propre sous-dossier de `assets/terrain/`, par
-exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
-`assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau),
-`assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
-de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
-chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne) et
-`assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
-de Mérignac, Pessac, Cenon et Lormont) et `assets/terrain/dax/` (Dax : l'Adour,
-l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes).
-Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
-`ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
-`helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
-ligne : `lon lat nom`) et `buildings.bin` (bâtiments 3D). L'hélipad de la zone de
-départ est toujours présent en plus de ceux de `helipads.txt`.
-
-### Modifier la configuration
-
-Le fichier `assets/config.txt` règle le lancement. C'est un simple fichier texte,
-modifiable dans **n'importe quel éditeur**. Chaque ligne est une `clé valeur` ;
-une ligne qui commence par `#` est un commentaire (ignoré).
-
-Ce fichier est ta configuration personnelle et n'est donc pas versionné. S'il est
-absent au lancement, le simulateur le crée automatiquement en recopiant le modèle
-`assets/config.default.txt` (lui, versionné), puis charge cette copie. Tu peux ainsi
-modifier `assets/config.txt` à ta guise, ou le supprimer pour repartir des valeurs
-par défaut. Les clés disponibles :
-
-* `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
-* `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
-  régime** (au lieu de la séquence de démarrage d'environ une minute), pratique
-  pour décoller tout de suite en test ; `0` (défaut) pour un démarrage normal à
-  froid. La variable d'environnement `ARTOUSTE_TURBINE_DEMARREE` a la priorité
-  (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
-* `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
-  seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
-  Le bouton `Démo` du menu de démarrage (ou la touche `D`, ou le bouton `Y` de la
-  manette) lance aussi la démo ; `Échap`, ou une action sur le manche, en sort. Depuis
-  le menu, en sortir ramène au menu. Pendant la démo, la vue (`C` ou bouton `Y`), le
-  HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
-  actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
-* `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
-  cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
-  **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
-  variable d'environnement `ARTOUSTE_RADIO_URL` a la priorité. La radio est une
-  fonctionnalité optionnelle : sans libcurl à la compilation, URL vide ou réseau
-  coupé, le simulateur reste silencieux sur ce point, sans erreur. Un voyant
-  `RADIO` s'affiche dans le HUD tant que le flux joue, suivi de la part de la radio
-  dans le mixage. Les touches `-` et `+` règlent la **balance radio/hélico** (un
-  crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
-* `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
-  la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
-  `86400 / sun_time_scale` secondes. La valeur `72` (défaut) fait défiler une journée
-  entière en vingt minutes ; `144` la réduit à dix minutes ; `1` correspond au temps
-  réel, le soleil partant de l'heure locale du PC ; `0` fige le temps à midi (le soleil
-  ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à midi, afin
-  d'ouvrir sur une belle lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE` du panneau
-  supérieur droit.
-
-Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
-`assets/config.txt` et remplace :
-
-```bash
-terrain ossau
-```
-
-par :
-
-```bash
-terrain cote-landes
-```
-
-Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
-doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon`, `cauterets`, `bordeaux` ou `dax`).
-
-Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
-priorité, pratique pour essayer une map ponctuellement :
-
-```bash
-ARTOUSTE_TERRAIN=cote-landes ./build/bin/artouste
-```
-
-### Régénérer ou ajouter un terrain
-
-Les terrains sont produits hors-ligne par `tools/fetch_terrain.py` (données IGN
-Géoplateforme, Licence Ouverte Etalab 2.0). Le script prend le nom de la zone en
-argument et écrit dans `assets/terrain/<zone>/` :
-
-```bash
-tools/.venv/bin/pip install Pillow numpy scipy   # une fois
-tools/.venv/bin/python tools/fetch_terrain.py cote-landes
-```
-
-Pour ajouter une zone, copier une entrée du dictionnaire `ZONES` en tête du
-script (bornes géographiques, mer ou montagne, point de départ, lieux
-remarquables, hélipads). Voir `docs/TERRAIN.md` pour les détails du pipeline.
-
-### Bâtiments 3D (BD TOPO)
-
-Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur
-hauteur réelle (murs + toit plat). Ils sont produits à part par
-`tools/fetch_buildings.py`, qui interroge le service WFS et écrit
-`assets/terrain/<zone>/buildings.bin` :
-
-```bash
-tools/.venv/bin/python tools/fetch_buildings.py cote-landes
-tools/.venv/bin/python tools/fetch_buildings.py ossau
-```
-
-### Cartes
-
-Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/) (Institut National de l'Information Géographique et Forestière) et sont distribuées sous licence [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence). Ces données sont utilisées pour générer les terrains et les bâtiments 3D du simulateur.
-
-<img src="docs/IGN_logo_2012.png" alt="Logo IGN" width="100" />
-
-Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
-les bâtiments les plus bas (cabanes, abris) sont écartés pour ne pas alourdir la
-scène. Le seuil usuel en ville est de 2 m, relevé à 5 m sur une agglomération très
-dense comme Bordeaux ; en montagne (Ossau), il descend à 0 pour garder les cabanes et bergeries, utiles au repérage.
-
-Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
-bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise
-environ 156 000, Bordeaux (seuil à 5 m) environ 159 000, la vallée d'Ossau environ 765.
+Six cartes sont fournies (Ossau, côte landaise, bassin d'Arcachon, Cauterets,
+Bordeaux, Dax), à choisir dans `assets/config.txt` (clé `terrain`) ou via la
+variable d'environnement `ARTOUSTE_TERRAIN`. Les terrains et bâtiments 3D sont
+générés hors-ligne depuis les données IGN (Licence Ouverte Etalab 2.0). Détails,
+configuration complète et régénération : [docs/CARTES.md](docs/CARTES.md) ;
+étude du pipeline de terrain : [docs/TERRAIN.md](docs/TERRAIN.md).
 
 ## Contributions
 

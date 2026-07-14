@@ -92,7 +92,7 @@ ZONES = {
             ("Hossegor", -1.3950, 43.6640),
             ("Seignosse", -1.3780, 43.6890),
             ("Vieux-Boucau", -1.4010, 43.7880),
-            # Lieux ajoutés (coordonnées IGN, iles et lacs recoupés OpenStreetMap).
+            # Lieux ajoutés (coordonnées IGN, îles et lacs recoupés OpenStreetMap).
             ("Biarritz", -1.5639, 43.4795),
             ("Rocher de la Vierge", -1.5703, 43.4841),
             ("Aéroport de Biarritz", -1.5233, 43.4687),
@@ -137,7 +137,7 @@ ZONES = {
             ("Marcheprime", -0.8506, 44.6953),
             ("Biscarrosse", -1.1664, 44.3936),
             ("Biscarrosse-Plage", -1.2461, 44.4564),
-            # Lieux ajoutés (coordonnées IGN, ile et lac recoupés OpenStreetMap).
+            # Lieux ajoutés (coordonnées IGN, île et lac recoupés OpenStreetMap).
             ("Île aux Oiseaux", -1.1780, 44.6985),
             ("Banc d'Arguin", -1.2430, 44.5855),
             ("Phare du Cap Ferret", -1.2488, 44.6460),

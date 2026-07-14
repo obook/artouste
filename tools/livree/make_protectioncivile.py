@@ -30,14 +30,14 @@ orange  = (sat >= 0.18) & (r > g) & (g - b > 0.12) & (r - b > 0.25)
 neutral = neutral | orange
 
 # Rouge Protection civile officiel : #611716 (RGB 97, 23, 22), un rouge sombre et
-# sature. On teinte chaque pixel neutre par cette couleur en conservant l'ombrage
+# saturé. On teinte chaque pixel neutre par cette couleur en conservant l'ombrage
 # d'origine : la teinte moyenne des pixels repeints tombe sur la cible.
 TARGET = np.array([0x61, 0x17, 0x16], dtype=np.float32) / 255.0
 meanL = float(lum[neutral].mean())
-# Gain d'ombrage plafonne : sans borne haute, les reflets brillants du metal
-# saturent le canal rouge a 1.0 pendant que vert et bleu continuent de monter, ce
-# qui delave le rouge vers le rose. On bride donc le gain a 1.30 (et un plancher a
-# 0.45 pour que les creux restent un rouge sombre plutot que noir).
+# Gain d'ombrage plafonné : sans borne haute, les reflets brillants du métal
+# saturent le canal rouge à 1.0 pendant que vert et bleu continuent de monter, ce
+# qui délave le rouge vers le rose. On bride donc le gain à 1.30 (et un plancher à
+# 0.45 pour que les creux restent un rouge sombre plutôt que noir).
 gain = np.clip(lum / meanL, 0.45, 1.30)
 
 out = img.copy()

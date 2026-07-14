@@ -24,6 +24,10 @@ La Gendarmerie nationale fut l'une des premières à l'utiliser dès 1957. L'arm
 
 Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années 60.
 
+<center><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
+
+_Alouette II SE 3130 ISNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</center>
+
 ### Films français
 
 Tout l'or du monde (1961), Le Fanfaron (1962), Fantômas (1964), Le Grand Restaurant (1966), Le Tatoué (1968) avec Louis de Funès, La Horse (1969), Peau d'Âne (1970), Le Gendarme en balade (1970), Le Far West (1972) avec Jacques Brel, Le Guignolo (1980) avec Belmondo, La Fille de l'air (1992), Les Rivières pourpres (2000), Les Vacances du Petit Nicolas (2014).
@@ -297,7 +301,8 @@ exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
 de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
 chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne) et
 `assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
-de Mérignac, Pessac, Cenon et Lormont).
+de Mérignac, Pessac, Cenon et Lormont) et `assets/terrain/dax/` (Dax : l'Adour,
+l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -362,7 +367,7 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon`, `cauterets` ou `bordeaux`).
+`cote-landes`, `arcachon`, `cauterets`, `bordeaux` ou `dax`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :

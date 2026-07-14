@@ -46,10 +46,10 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 > (flèches, Entrée), à la souris ou à la manette. La touche `F` bascule à tout moment
 > entre plein écran et fenêtré. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à
 > ce menu ; dans le menu, `Échap` quitte le simulateur.
+
 > [!TIP]
 > **Première fois aux commandes ?**
-> Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
->
+> Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**. Un résumé des commandes est disponible au téléchargement : [notice.pdf](docs/notice.pdf)
 > 1. **Tout est prêt au départ** : le vol commence en vue arrière (poursuite) avec le HUD
 >    complet et tous les instruments, en livrée armée de terre (touche `H` pour changer
 >    d'affichage, `C` pour changer de vue, `L` pour changer de livrée).

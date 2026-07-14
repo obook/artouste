@@ -1,7 +1,7 @@
 /*
  * FlightAssist.cpp
  * Mise en oeuvre du mode assisté. Toutes les corrections sont pondérées par
- * l'intensité (0 a 1), qui monte ou descend progressivement a chaque bascule,
+ * l'intensité (0 à 1), qui monte ou descend progressivement à chaque bascule,
  * pour que le passage assisté <-> brut ne provoque aucun saut de comportement.
  *
  * Auteur : O. Booklage
@@ -27,7 +27,7 @@ void FlightAssist::syncTo(const Controls& raw) noexcept {
 
 Controls FlightAssist::apply(const Controls& raw, float dt) noexcept {
     /* Transition progressive de l'intensité vers sa cible (1 si l'assistance est
-     * demandée, 0 sinon), a vitesse constante : la bascule prend environ une demi-seconde. */
+     * demandée, 0 sinon), à vitesse constante : la bascule prend environ une demi-seconde. */
     const float target = m_active ? 1.0f : 0.0f;
     const float step    = ASSIST_TRANSITION_RATE * dt;
     m_intensity += clamp(target - m_intensity, -step, step);
@@ -63,7 +63,7 @@ Controls FlightAssist::apply(const Controls& raw, float dt) noexcept {
 
     /* 4. Compensation automatique du lacet : quand le collectif varie, le couple
      *    rotor fait partir le nez ; on pousse le palonnier dans le sens correctif,
-     *    proportionnellement a la variation de collectif. */
+     *    proportionnellement à la variation de collectif. */
     const float pedalsAssisted = clamp(m_pedals + deltaColl * ASSIST_ANTITORQUE_GAIN, -1.0f, 1.0f);
 
     /* On valide l'état du collectif lissé pour l'image suivante. */

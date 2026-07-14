@@ -62,10 +62,10 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         }
     }
 
-    /* Heure du soleil pour la capture : ARTOUSTE_SHOT_HOUR fixe l'heure du jour (0 a
+    /* Heure du soleil pour la capture : ARTOUSTE_SHOT_HOUR fixe l'heure du jour (0 à
        24) afin d'obtenir un lever, un plein jour ou un coucher de soleil reproductible
-       (par exemple 17.7 pour un soleil bas sur la mer). On fige le temps (echelle 0)
-       pour que le rendu reste a cette heure. */
+       (par exemple 17.7 pour un soleil bas sur la mer). On fige le temps (échelle 0)
+       pour que le rendu reste à cette heure. */
     if (const char* e = std::getenv("ARTOUSTE_SHOT_HOUR")) {
         m_sunBaseSeconds = std::strtof(e, nullptr) * 3600.0f;
         m_sunTimeScale   = 0.0f;
@@ -191,7 +191,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         hud.turbineRpm    = 0.0f;
         hud.turbine       = "ARRÊT";
     }
-    hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTE" */
+    hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTÉ" */
     if (const char* e = std::getenv("ARTOUSTE_SHOT_VORTEX")) {
         hud.vrsIntensity = std::strtof(e, nullptr);  /* force le bandeau d'alerte vortex */
     }

@@ -46,7 +46,7 @@ public:
     /* Dessine les parties retenues par la passe demandée. L'appelant a déjà
        fixé la matrice u_model ; on règle ici, pour chaque partie, son opacité
        (u_opacity) et sa texture (unité 0). 'opacityScale' multiplie l'opacité de
-       chaque partie, pour faire apparaitre un modèle en fondu (le disque flou du
+       chaque partie, pour faire apparaître un modèle en fondu (le disque flou du
        rotor selon le régime, par exemple). */
     void draw(Shader& shader, Pass pass = Pass::All, float opacityScale = 1.0f) const;
 

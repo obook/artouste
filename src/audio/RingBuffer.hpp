@@ -1,10 +1,10 @@
 /*
  * RingBuffer.hpp
- * Tampon circulaire d'octets, thread-safe a un producteur et un consommateur :
+ * Tampon circulaire d'octets, thread-safe à un producteur et un consommateur :
  * le thread réseau écrit le flux, le callback audio le lit. Capacité fixe.
  * write() bloque tant qu'il manque de la place (régule le débit réseau) ; read()
  * ne bloque jamais (le thread audio ne doit pas attendre) et renvoie ce qui est
- * disponible. close() débloque proprement a l'arret.
+ * disponible. close() débloque proprement à l'arrêt.
  *
  * Auteur : O. Booklage
  * Date : juin 2026

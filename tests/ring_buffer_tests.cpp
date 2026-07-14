@@ -42,7 +42,7 @@ TEST_CASE("bouclage : écriture/lecture par-dessus la fin du tableau", "[ringbuf
     const unsigned char a[] = {10, 11, 12, 13, 14, 15};
     REQUIRE(rb.write(a, 6));
     std::array<unsigned char, 4> tmp{};
-    REQUIRE(rb.read(tmp.data(), 4) == 4);   /* head avance a 4, size = 2 */
+    REQUIRE(rb.read(tmp.data(), 4) == 4);   /* head avance à 4, size = 2 */
 
     const unsigned char b[] = {20, 21, 22, 23};  /* va boucler par-dessus la fin */
     REQUIRE(rb.write(b, 4));

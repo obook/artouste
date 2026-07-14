@@ -68,7 +68,7 @@ TEST_CASE("La bascule du mode assisté est progressive", "[assist]") {
 TEST_CASE("Le collectif ne varie pas plus vite que la limite", "[assist]") {
     FlightAssist assist;
     assist.toggle();
-    run(assist, Controls{}, 1.0f);  /* assistance pleinement établie, collectif a 0 */
+    run(assist, Controls{}, 1.0f);  /* assistance pleinement établie, collectif à 0 */
 
     Controls raw;
     raw.collective = 1.0f;  /* coup de collectif plein, d'un coup */
@@ -92,7 +92,7 @@ TEST_CASE("Le cyclique revient au neutre en l'absence d'input", "[assist]") {
     const Controls held = run(assist, pushed, 2.0f);
     REQUIRE(held.cyclicLongitudinal > 0.5f);
 
-    /* On relâche : la consigne brute repasse a zéro, le manche est rappelé au neutre. */
+    /* On relâche : la consigne brute repasse à zéro, le manche est rappelé au neutre. */
     const Controls released = run(assist, Controls{}, 4.0f);
     REQUIRE(std::fabs(released.cyclicLongitudinal) < 0.05f);
 }
@@ -103,7 +103,7 @@ TEST_CASE("Un input brusque sur le cyclique est lissé", "[assist]") {
     run(assist, Controls{}, 1.0f);  /* assistance établie, manche au neutre */
 
     Controls raw;
-    raw.cyclicLateral = 1.0f;  /* a fond d'un coup */
+    raw.cyclicLateral = 1.0f;  /* à fond d'un coup */
 
     /* En une image, la sortie n'a pas encore rejoint la consigne (lissage). */
     const Controls out = assist.apply(raw, 1.0f / 60.0f);

@@ -16,7 +16,7 @@ namespace artouste::input {
 
 physics::Controls InputSystem::poll(float dt) noexcept {
     /* On lit toujours le clavier pour garder le collectif à jour, même quand
-     * la manette a la main : le retour au clavier se fait ainsi sans à-coup. */
+     * la manette à la main : le retour au clavier se fait ainsi sans à-coup. */
     const physics::Controls keyboardControls = m_keyboard.poll(dt);
 
     /* Le clavier est prioritaire : dès qu'une touche de pilotage est pressée,

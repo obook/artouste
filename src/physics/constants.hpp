@@ -118,7 +118,7 @@ inline constexpr float LEVEL_GAIN   = 6000.0f;  /* N.m par unité de sin(inclina
 /* --- Mode assisté ------------------------------------------------------------ */
 /* Couche de confort posée par-dessus les commandes du pilote (voir FlightAssist).
  * Elle ne change pas la physique : elle adoucit et corrige les entrées pour rendre
- * l'appareil tenable sans expérience. Valeurs a calibrer a l'usage. */
+ * l'appareil tenable sans expérience. Valeurs à calibrer à l'usage. */
 inline constexpr float ASSIST_ANTITORQUE_GAIN = 0.6f;   /* pousse le palonnier selon la variation de collectif */
 inline constexpr float ASSIST_SMOOTH_TAU      = 0.18f;  /* s : lissage des inputs (anti sur-contrôle) */
 inline constexpr float ASSIST_RECENTER_TAU    = 1.2f;   /* s : rappel doux du cyclique au neutre sans input */

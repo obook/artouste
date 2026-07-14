@@ -209,7 +209,7 @@ void Application::startDemo() {
         /* Dune du Pilat puis cap Ferret : coordonnées explicites des points de survol.
            La démo fait demi-tour au cap Ferret et revient se poser au pad. */
         ajouter(-1.2020697f, 44.5912130f, 1000.0f);  /* Dune du Pilat (panorama) */
-        ajouter(-1.2450709f, 44.6184674f, 30.0f);    /* cap Ferret (rase-mottes le long de la cote) */
+        ajouter(-1.2450709f, 44.6184674f, 30.0f);    /* cap Ferret (rase-mottes le long de la côte) */
     }
 
     /* On repart d'un état propre : appareil sur le pad, turbine à froid, puis on

@@ -84,7 +84,7 @@ vec3 Application::sunDirection(float t) const {
     /* Course du soleil : midi -> zénith (y max), 6 h / 18 h -> horizon, minuit ->
        sous l'horizon. Le -pi/2 cale midi (43200 s) sur le zénith. Le repère monde a
        X vers l'est et Z vers le sud (voir ApplicationHud) : le grand axe est-ouest
-       est donc porté par X (lever a l'est, coucher a l'ouest), et le décalage fixe en
+       est donc porté par X (lever à l'est, coucher à l'ouest), et le décalage fixe en
        Z (0.35) incline l'arc vers le sud, comme dans l'hémisphère nord. */
     constexpr float DAY = 86400.0f;
     const float angle = TWO_PI * (timeOfDaySeconds(t) / DAY) - HALF_PI;

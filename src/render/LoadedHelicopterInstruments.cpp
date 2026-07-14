@@ -71,7 +71,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
         const std::filesystem::path vsiFile = dir / "Interior/Panel/Instruments/vsi/vsi.ac";
         m_vsiOffset = PANEL_OFFSET + fgToAssimp(vsiFgOffset);
         /* Cadran : on garde face + fond, on écarte l'aiguille et le verre "vitre"
-           (opaque, il apparaitrait comme un disque noir, comme pour l'altimètre). */
+           (opaque, il apparaîtrait comme un disque noir, comme pour l'altimètre). */
         m_vsiStatic = loadPart(vsiFile, {"needle", "vitre"});
         m_vsiNeedle = loadPart(vsiFile, {"face", "fond", "vitre"});   /* l'aiguille seule */
         m_hasVsi    = !m_vsiNeedle.empty();
@@ -80,7 +80,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     /* Compas (conservateur de cap) animé : on charge hi.ac en deux morceaux. La rose
        des vents mobile est l'objet "face"; le reste (lunette "fond", symbole avion et
        index "front", boutons, bug de cap) est fixe. On écarte le verre "vitre" (opaque,
-       il apparaitrait comme un disque noir, comme pour le vario). */
+       il apparaîtrait comme un disque noir, comme pour le vario). */
     {
         const vec3                  hiFgOffset{-0.223f, -0.060f, -0.014f};
         const std::filesystem::path hiFile = dir / "Interior/Panel/Instruments/hi/hi.ac";
@@ -157,8 +157,8 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
        translate verticalement (comme FlightGear), la carte reste en place. Ce cadran
        est un disque plat (un vrai horizon est une sphère) : un grand déplacement
        laisserait déborder le ciel sur le sol ou découvrirait le fond noir. On garde
-       donc un tangage discret (facteur -0.0004 m/deg, borné a +-0.008 m). Le repère
-       de la géométrie chargée a la verticale en Y (assimp réoriente le .ac). Le
+       donc un tangage discret (facteur -0.0004 m/deg, borné à +-0.008 m). Le repère
+       de la géométrie chargée à la verticale en Y (assimp réoriente le .ac). Le
        symbole avion et la lunette (m_aiStatic) restent fixes. */
     if (m_hasAi) {
         const mat4  aiBase = root * glm::translate(mat4(1.0f), m_aiOffset);
@@ -188,7 +188,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
 
     /* Vario (VSI) animé : l'aiguille tourne autour de X selon la vitesse verticale,
        suivant la table non linéaire relevée sur le cadran (vsiNeedleAngleDeg). Le
-       calage du zéro (VSI_ZERO_OFFSET_DEG) et le sens de rotation sont a confirmer
+       calage du zéro (VSI_ZERO_OFFSET_DEG) et le sens de rotation sont à confirmer
        en vol, comme cela a été fait pour l'altimètre. */
     if (m_hasVsi) {
         constexpr float VSI_ZERO_OFFSET_DEG = 0.0f;
@@ -202,7 +202,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
 
     /* Compas animé : la rose des vents (m_hiCard) tourne autour de X avec le cap, de
        sorte que le cap courant vienne sous l'index fixe (le symbole avion m_hiStatic
-       ne bouge pas). Le sens et le calage du Nord sont a confirmer en vol (constante
+       ne bouge pas). Le sens et le calage du Nord sont à confirmer en vol (constante
        HI_ZERO_OFFSET_DEG), comme l'altimètre et le vario. */
     if (m_hasHi) {
         constexpr float HI_ZERO_OFFSET_DEG = 0.0f;
@@ -216,7 +216,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
 
     /* Anémomètre animé : l'aiguille tourne autour de X proportionnellement à la vitesse
        air. La face est linéaire (mesurée sur asi.png) : ~1.75 deg/kt. Le sens et le
-       calage du zéro (ASI_ZERO_OFFSET_DEG) sont a confirmer en vol, comme les autres. */
+       calage du zéro (ASI_ZERO_OFFSET_DEG) sont à confirmer en vol, comme les autres. */
     if (m_hasAsi) {
         constexpr float ASI_DEG_PER_KT      = 1.75f;
         constexpr float ASI_ZERO_OFFSET_DEG = 0.0f;
@@ -231,7 +231,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
 
     /* Couplemètre animé : l'aiguille tourne autour de X selon le couple estimé (couple%
        = collectif * 100 * fraction rotor, calculé par l'appelant). La face est linéaire
-       (mesurée sur torque.png) : ~2.73 deg/%. Sens et calage du zéro a confirmer en vol. */
+       (mesurée sur torque.png) : ~2.73 deg/%. Sens et calage du zéro à confirmer en vol. */
     if (m_hasTorque) {
         constexpr float TORQUE_DEG_PER_PCT     = 2.73f;
         constexpr float TORQUE_ZERO_OFFSET_DEG = 0.0f;

@@ -113,9 +113,9 @@ inline const GaugeDef GAUGES[] = {
 
 /* Vario (VSI) : convertit une vitesse verticale (en ft/min) en angle de rotation de
    l'aiguille (en degrés). Le cadran n'est pas linéaire : la table ci-dessous a été
-   relevée sur la face vsi.png (0 a 9 heures, montée vers le haut, descente vers le
+   relevée sur la face vsi.png (0 à 9 heures, montée vers le haut, descente vers le
    bas). On interpole linéairement entre les points, la descente est symétrique de la
-   montée (angle de signe opposé), et au-dela de la pleine échelle l'aiguille reste
+   montée (angle de signe opposé), et au-delà de la pleine échelle l'aiguille reste
    contre la butée (+/- 2500 ft/min). */
 inline float vsiNeedleAngleDeg(float fpm) {
     static const float kFpm[]   = {0.0f, 500.0f, 1000.0f, 2000.0f, 2500.0f};

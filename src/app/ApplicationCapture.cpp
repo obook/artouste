@@ -203,7 +203,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         hud.lonDeg   = lon;
         hud.latDeg   = lat;
     }
-    buildNavHud(hud, shotPos, hud.headingDeg);
+    buildNavHud(hud, shotPos, hud.headingDeg, 0.0f);  /* capture déterministe : phase "allumée" */
 
     /*
      * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres

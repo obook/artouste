@@ -443,7 +443,7 @@ bool Application::mainLoop() {
 
         ui::HudData hud;
         fillHud(hud, body, forward, controls, airspeed, turbineFraction, rotorFraction, t, frameDt);
-        buildNavHud(hud, body.position, hud.headingDeg);
+        buildNavHud(hud, body.position, hud.headingDeg, t);
         /* Sous-titre du message radio simulé, tant que son temps d'affichage court. */
         hud.radioMessage = (m_radioMsgShow > 0.0f) ? m_radioMsg.c_str() : "";
         /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */

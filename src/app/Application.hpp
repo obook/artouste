@@ -167,6 +167,11 @@ private:
        l'appareil sans test de profondeur pour éviter le z-fighting au ras du sol. */
     void drawHelipads(const mat4& view, const mat4& proj, const vec3& lightDir);
 
+    /* Balises HAPI du terrain (indicateur de pente d'approche) : une petite
+       lueur au sol par balise, recolorée à chaque image selon la position de
+       l'appareil par rapport à la pente d'approche visée. */
+    void drawHapi(const mat4& view, const mat4& proj, float timeSeconds);
+
     /* Ombre portée au sol (deux disques : fuselage et rotor), estompée avec
        l'altitude et posée au-dessus du relief pour ne pas le traverser en pente.
        sunDir est la direction du soleil (vers le soleil) : l'ombre est décalée à
@@ -193,7 +198,7 @@ private:
 
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
        scène et données de la minimap (position de l'appareil, points). */
-    void buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg);
+    void buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg, float timeSeconds);
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 

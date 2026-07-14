@@ -33,6 +33,14 @@ struct HudLabel {
     bool        onScreen = false;  /* le lieu est devant la caméra et dans le cadre */
     float       mapU     = 0.0f;   /* position sur la minimap : 0 ouest -> 1 est */
     float       mapV     = 0.0f;   /* 0 nord -> 1 sud */
+
+    /* Pad équipé d'une balise HAPI (voir render::Terrain::hapiUnitNear) : son point
+       (scène 3D et minimap) adopte la couleur et le clignotement de la balise
+       plutôt que la couleur générique, pour repérer la pente d'approche sans
+       chercher la lueur au sol. */
+    bool        hasHapi   = false;
+    bool        hapiGreen = true;   /* secteur courant : vert (sur/au-dessus la pente) ou rouge */
+    bool        hapiOff   = false;  /* clignotement en phase éteinte (secteurs trop haut/trop bas) */
 };
 
 /* Mode d'affichage du HUD, parcouru en boucle par la touche H / le bouton B. */

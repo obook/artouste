@@ -243,6 +243,26 @@ void Hud::renderPadGuidance(const HudData& data, float w, float h) {
     }
 }
 
+/*
+ * labelPointColor
+ * Couleur du point d'une étiquette (scène 3D ou minimap) : celle de la balise HAPI
+ * du pad si elle en a une (vert/rouge, potentiellement éteinte le temps de la phase
+ * de clignotement), sinon la couleur générique donnée par l'appelant (cyan pour un
+ * hélipad, doré pour un lieu remarquable).
+ *
+ * Auteur : O. Booklage
+ * Date : juillet 2026
+ */
+static ImU32 labelPointColor(const HudLabel& lab, ImU32 defaultColor) {
+    if (!lab.hasHapi) {
+        return defaultColor;
+    }
+    if (lab.hapiOff) {
+        return IM_COL32(0, 0, 0, 0);
+    }
+    return lab.hapiGreen ? HUD_HAPI_GREEN : HUD_RED;
+}
+
 void Hud::renderLabels(const HudData& data, float w, float h) {
     ImDrawList* dl = ImGui::GetForegroundDrawList();
 
@@ -277,7 +297,8 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
         const float     y   = lab.fy * h;
         /* Cyan pour un hélipad, jaune doré pour un lieu remarquable : le pad se
            repère au premier coup d'œil, sans se confondre avec les lieux. */
-        const ImU32 couleurPoint = lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 230);
+        const ImU32 couleurPoint =
+            labelPointColor(lab, lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 230));
         dl->AddCircleFilled(ImVec2(x, y), sc(3.0f), couleurPoint);
 
         /* Le libellé tient sur deux lignes ("nom\naltitude distance"). CalcTextSize
@@ -344,7 +365,8 @@ void Hud::renderMinimap(const HudData& data, HudMode mode, float m) {
     dl->AddRect(p0, p1, IM_COL32(255, 255, 255, 160));
     for (const HudLabel& lab : data.labels) {
         const ImVec2 q(p0.x + lab.mapU * sz, p0.y + lab.mapV * sz);
-        const ImU32  couleurPoint = lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 255);
+        const ImU32  couleurPoint =
+            labelPointColor(lab, lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 255));
         dl->AddCircleFilled(q, sc(2.5f), couleurPoint);
         dl->AddCircle(q, sc(2.5f), IM_COL32(0, 0, 0, 160));
     }

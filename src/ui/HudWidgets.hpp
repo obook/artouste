@@ -34,6 +34,7 @@ inline const ImU32 HUD_PANEL  = IM_COL32(15, 15, 15, 95);      /* fond transluci
 inline const ImU32 HUD_AMBER  = IM_COL32(255, 170, 40, 255);   /* jaune-orangé : surveiller */
 inline const ImU32 HUD_RED    = IM_COL32(255, 70, 70, 255);    /* rouge : limite franchie */
 inline const ImU32 HUD_CYAN   = IM_COL32(80, 220, 255, 255);   /* cyan : point d'hélipad, distinct des lieux */
+inline const ImU32 HUD_HAPI_GREEN = IM_COL32(20, 255, 60, 255); /* vert HAPI (plus vif que HUD_GREEN), point de pad sur la pente */
 
 /* État de la LED d'alarme d'un cadran : None = pas de LED sur ce cadran, Off = LED
  * présente mais éteinte (paramètre pas encore significatif, ex. rotor avant sa

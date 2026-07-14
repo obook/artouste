@@ -235,11 +235,18 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
                   : (v == "off")   ? ui::HudMode::Off
                                    : ui::HudMode::Corners;
     }
+    /* Angle du rotor (rad) : figé par défaut pour une capture reproductible, réglable
+       par ARTOUSTE_SHOT_ROTORANGLE (utile pour enchaîner des captures avec des pales
+       à des angles différents, par exemple pour composer une séquence animée). */
+    float shotRotorAngle = 1.3f;
+    if (const char* e = std::getenv("ARTOUSTE_SHOT_ROTORANGLE")) {
+        shotRotorAngle = std::strtof(e, nullptr);
+    }
     for (int i = 0; i < 3; ++i) {
         /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
            0,1 s tombe dans la phase allumée du flash). */
-        renderScene(base, 1.3f, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat, shotCollective,
-                    1.0f, 0.1f);
+        renderScene(base, shotRotorAngle, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat,
+                    shotCollective, 1.0f, 0.1f);
         m_hud.updateScale(fbw, fbh);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, shotHud, false);
     }

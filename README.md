@@ -402,13 +402,12 @@ tools/.venv/bin/python tools/fetch_buildings.py ossau
 
 Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/) (Institut National de l'Information Géographique et Forestière) et sont distribuées sous licence [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence). Ces données sont utilisées pour générer les terrains et les bâtiments 3D du simulateur.
 
-![Logo IGN](docs/IGN_logo_2012.png =100x200)
+<img src="docs/IGN_logo_2012.png" alt="Logo IGN" width="100" />
 
 Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
 les bâtiments les plus bas (cabanes, abris) sont écartés pour ne pas alourdir la
 scène. Le seuil usuel en ville est de 2 m, relevé à 5 m sur une agglomération très
-dense comme Bordeaux ; en montagne (Ossau), il descend à 0 pour garder les cabanes et
-bergeries, utiles au repérage.
+dense comme Bordeaux ; en montagne (Ossau), il descend à 0 pour garder les cabanes et bergeries, utiles au repérage.
 
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
 bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise

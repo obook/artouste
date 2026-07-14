@@ -18,6 +18,7 @@
 #   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 #   cauterets    Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie), montagne
 #   bordeaux     Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac), terre intérieure
+#   dax          Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, Thermes), terre intérieure
 # La variable d'environnement ARTOUSTE_TERRAIN, si définie, a la priorité.
 terrain ossau
 

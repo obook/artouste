@@ -12,9 +12,40 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Étudier la possibilité de recevoir des messages radio (pré-enregistrés, synthèse vocale) : fait, messages de la tour en synthèse vocale (Flite) avec sous-titre à l'écran
 
-- [ ] Ajouter les livées Armée de l'Air, Armée de Terre (ALAT), Marine nationale, Sécurité civile, Belgique (ALFT), Suisse : rotation par changement de livrée -> le rotor de queue  + anneau de sécurité  est le même pour tous.
+- [X] Ajouter les livées Armée de l'Air, Armée de Terre (ALAT), Marine nationale, Sécurité civile
 
-- [ ] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
+- [x] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
+
+### HAPI (aide à l'approche)
+
+- [~] Balise HAPI (Helicopter Approach Path Indicator, voir
+  `media/gt_installation_hapi.pdf`, guide DGAC/STAC janvier 2017) sur l'aérodrome
+  de Dax-Seyresse. Contrairement à l'optique réelle (4 faisceaux colorés visibles
+  chacun depuis une plage d'angle différente), le simulateur calcule à chaque
+  image l'angle d'élévation entre la balise et l'appareil du joueur (seul point
+  de vue à simuler) et n'affiche qu'une seule lueur, dans la couleur du secteur
+  correspondant -- fidèle au réel, où l'on ne voit jamais qu'une couleur à la
+  fois. Seuils repris du guide (§ 4.4) : vert clignotant (trop haut), vert fixe
+  (sur la pente, +/- 22'30"), rouge fixe (légèrement trop bas, 15' de plus),
+  rouge clignotant (trop bas). Données par carte dans un fichier optionnel
+  `hapi.txt` (`lon lat azimut_deg pente_pct nom`), généré par
+  `tools/fetch_terrain.py` (clé `hapi` de `zones.py`) comme les hélipads et les
+  lieux remarquables ; rendu dans `Application::drawHapi`
+  (`src/app/ApplicationGround.cpp`).
+
+    Calage Dax provisoire, faute de relevé d'obstacles réel : azimut 70°
+  (aligné sur la piste bitumée 07/25 de Dax-Seyresse, approche vers l'est QFU
+  07), pente 6 % (valeur usuelle pour une hélistation). Position identique à
+  l'hélipad existant, à affiner sur place (méthode IGN/OSM habituelle).
+
+    Pistes pour consolider : ouverture azimutale du faisceau (~10 % de
+  divergence dans le guide) non simulée, la balise reste visible dans son
+  secteur vertical quel que soit l'azimut d'approche ; taille de la lueur
+  exagérée (rayon fixe en mètres) faute de billboard à taille d'écran
+  constante, invisible au-delà de quelques centaines de mètres ; calage réel
+  de Dax (azimut, pente, position exacte du HAPI derrière le point cible) à
+  vérifier sur place ; HAPI sur d'autres cartes (hôpitaux avec hélistation
+  dédiée).
 
 ### Sons
 
@@ -26,8 +57,6 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Mode demo
 
-- [x] Ajouter la notice du mode DEMO dans README, après ## Démarrage rapide
-
 **Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :
 
 1. Décollage du pad (aérodrome de La Teste).
@@ -37,11 +66,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 > Note : route courte volontairement, centrée sur les deux temps forts (panorama en altitude puis rase-mottes), pour une démo plus rythmée. Altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). La Dune du Pilat (lat 44.5912130, lon -1.2020697) et le cap Ferret (lat 44.6184674, lon -1.2450709) sont des coordonnées explicites. Vitesse de croisière : 50 m/s (~180 km/h).
 
-- [ ] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
+- [X] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
 
-- [ ] Mode démo : décollage encore plus lent et doux, leger piqué avant pour avancer
+- [X] Mode démo : décollage encore plus lent et doux, leger piqué avant pour avancer
 
-- [ ] On ne sait pas quand et de quelle manière on est sorti du mode démo, trouver une solution
+- [X] On ne sait pas quand et de quelle manière on est sorti du mode démo, trouver une solution
 
 ## Terrain
 
@@ -63,7 +92,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Point de départ et nouvelles cartes
 
-- [ ] `find_flat_start` (calage du point de départ) peut retenir la surface d'un lac,
+- [X] `find_flat_start` (calage du point de départ) peut retenir la surface d'un lac,
   parfaitement plate, au lieu de la terre ferme. Contourné à la main pour la vallée
   d'Ossau (Fabrèges, au bord du lac) en recalculant `start_x`/`start_z` hors de l'eau.
   À corriger dans le pipeline : écarter les cellules d'eau (masque depuis l'orthophoto,
@@ -135,7 +164,7 @@ ou sortir de France.
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
   niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
   
-- [ ] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
+- [x] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
 ### Végétation (arbres, forêts)
 
@@ -214,7 +243,7 @@ ou sortir de France.
 
 - [ ] HudMode::Overlay avec "instruments ronds verts superposés (Super HUD)" : ce mode n'est pas dans nos fiches. C'est une bonne idée, à documenter dans PANEL.md.
 
-- [ ] Mettre un PDF du README dans les archives des binaires dans les releases
+- [X] Mettre un PDF du README dans les archives des binaires dans les releases
 
 ### Sons
 
@@ -222,7 +251,7 @@ ou sortir de France.
 
 ### Manuel
 
-- [ ] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
+- [X] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
 
 ## Interface
 
@@ -246,11 +275,10 @@ ou sortir de France.
 
 ## Distribution Windows
 
-- [ ] Le Contrôle intelligent des applications (Smart App Control) de Windows 11
+- [x] Le Contrôle intelligent des applications (Smart App Control) de Windows 11
   bloque `launch.bat` : un script non signé qui lance un `.exe` non signé, sans
-  bouton "Exécuter quand même". Pistes, du plus simple au plus durable :
-  (1) documenter dans le README la manip "clic droit sur le `.zip` > Propriétés >
-  Débloquer" avant extraction ; (2) supprimer la dépendance au `.bat` en déplaçant
-  son menu (choix de carte, turbine démarrée) dans l'exe lui-même ; (3) à terme,
-  signer l'exécutable (Authenticode, idéalement EV) pour gagner la confiance de
-  SAC/SmartScreen.
+  bouton "Exécuter quand même". Résolu par la piste (2) : `launch.bat` a été
+  retiré, son menu (choix de carte, turbine démarrée) est désormais intégré à
+  l'exe lui-même (voir Interface, menu de démarrage ImGui). Reste en réserve la
+  piste (3), signer l'exécutable (Authenticode, idéalement EV) pour gagner la
+  confiance de SAC/SmartScreen.

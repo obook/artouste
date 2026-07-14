@@ -110,6 +110,9 @@ install(FILES docs/notice.pdf DESTINATION . OPTIONAL)
 
 if(WIN32)
     set(CPACK_GENERATOR "ZIP")
+    # Pas de sous-dossier enveloppant dans le zip Windows : les fichiers sont
+    # directement à la racine une fois dézippés (CPack en crée un par défaut).
+    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 else()
     set(CPACK_GENERATOR "TGZ")
 endif()

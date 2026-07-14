@@ -275,7 +275,10 @@ void Hud::renderLabels(const HudData& data, float w, float h) {
         const HudLabel& lab = data.labels[static_cast<std::size_t>(idx)];
         const float     x   = lab.fx * w;
         const float     y   = lab.fy * h;
-        dl->AddCircleFilled(ImVec2(x, y), sc(3.0f), IM_COL32(255, 230, 90, 230));
+        /* Cyan pour un hélipad, jaune doré pour un lieu remarquable : le pad se
+           repère au premier coup d'œil, sans se confondre avec les lieux. */
+        const ImU32 couleurPoint = lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 230);
+        dl->AddCircleFilled(ImVec2(x, y), sc(3.0f), couleurPoint);
 
         /* Le libellé tient sur deux lignes ("nom\naltitude distance"). CalcTextSize
            gère le multi-ligne : largeur = ligne la plus large, hauteur = les deux
@@ -341,7 +344,8 @@ void Hud::renderMinimap(const HudData& data, HudMode mode, float m) {
     dl->AddRect(p0, p1, IM_COL32(255, 255, 255, 160));
     for (const HudLabel& lab : data.labels) {
         const ImVec2 q(p0.x + lab.mapU * sz, p0.y + lab.mapV * sz);
-        dl->AddCircleFilled(q, sc(2.5f), IM_COL32(255, 230, 90, 255));
+        const ImU32  couleurPoint = lab.generic ? HUD_CYAN : IM_COL32(255, 230, 90, 255);
+        dl->AddCircleFilled(q, sc(2.5f), couleurPoint);
         dl->AddCircle(q, sc(2.5f), IM_COL32(0, 0, 0, 160));
     }
     /* Marqueur de l'appareil : triangle orienté selon le cap (nord en haut). */

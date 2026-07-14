@@ -67,10 +67,7 @@ endif()
 
 # ImGui ne fournit pas de CMakeLists : on récupère les sources et on construit
 # notre propre cible.
-FetchContent_GetProperties(imgui)
-if(NOT imgui_POPULATED)
-    FetchContent_Populate(imgui)
-endif()
+FetchContent_MakeAvailable(imgui)
 
 add_library(imgui STATIC
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -107,10 +104,7 @@ FetchContent_Declare(stb
     GIT_TAG        master
     GIT_SHALLOW    TRUE
 )
-FetchContent_GetProperties(stb)
-if(NOT stb_POPULATED)
-    FetchContent_Populate(stb)
-endif()
+FetchContent_MakeAvailable(stb)
 add_library(stb_image INTERFACE)
 target_include_directories(stb_image SYSTEM INTERFACE ${stb_SOURCE_DIR})
 
@@ -147,10 +141,7 @@ FetchContent_Declare(miniaudio
     GIT_TAG        0.11.21
     GIT_SHALLOW    TRUE
 )
-FetchContent_GetProperties(miniaudio)
-if(NOT miniaudio_POPULATED)
-    FetchContent_Populate(miniaudio)
-endif()
+FetchContent_MakeAvailable(miniaudio)
 add_library(miniaudio INTERFACE)
 target_include_directories(miniaudio SYSTEM INTERFACE ${miniaudio_SOURCE_DIR})
 
@@ -167,10 +158,7 @@ FetchContent_Declare(flite
     GIT_TAG        v2.2
     GIT_SHALLOW    TRUE
 )
-FetchContent_GetProperties(flite)
-if(NOT flite_POPULATED)
-    FetchContent_Populate(flite)
-endif()
+FetchContent_MakeAvailable(flite)
 
 # Cœur : tous les .c de ces dossiers se compilent tels quels. La voix naturelle
 # cmu_us_slt est une voix "clustergen" (src/cg) : plus naturelle que les diphones.

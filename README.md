@@ -22,11 +22,11 @@ La turbine Turboméca Artouste IIC changea tout : plus légère, plus fiable, mo
 
 La Gendarmerie nationale fut l'une des premières à l'utiliser dès 1957. L'armée de l'air, la Marine puis les armées d'une trentaine de pays suivirent. Plus de 1 300 appareils furent construits entre 1956 et 1975. Certains volent encore aujourd'hui.
 
-Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années 60.
-
 <center><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
 
 _Alouette II SE 3130 ISNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</center>
+
+Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années 60.
 
 ### Films français
 

@@ -1,4 +1,3 @@
-# Zones d'exclusion de végétation - bassin d'Arcachon (un cercle par ligne : lon lat rayon_m)
-# Aucun arbre n'est planté dans ces cercles. Sert aux aérodromes, dont les pistes
-# et bandes enherbées sont vertes dans l'orthophoto et seraient sinon boisées.
--1.1117 44.5942 550   # Aérodrome de La Teste-de-Buch (LFCH), piste 06/24 et abords
+# Zones d'exclusion de végétation - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime) (un cercle par ligne : lon lat rayon_m)
+# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
+-1.1117 44.5942 550   # Aérodrome de La Teste-de-Buch (LFCH)

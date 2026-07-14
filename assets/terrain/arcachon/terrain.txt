@@ -1,12 +1,12 @@
 # Terrain Artouste - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime)
 # Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
 # width_m / height_m : dimensions au sol du maillage, en mètres
-cols 512
-rows 512
+cols 1024
+rows 1024
 width_m 35680.5
 height_m 48980.8
 elev_min 0.00
-elev_max 101.13
+elev_max 102.14
 lon_min -1.28
 lon_max -0.83
 lat_min 44.36
@@ -14,6 +14,6 @@ lat_max 44.8
 ortho_width 3642
 ortho_height 5000
 sea 1
+start_x -3888.9
+start_z -1364.6
 start_heading 330
-start_x -4294.2
-start_z -2060.8

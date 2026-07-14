@@ -53,8 +53,8 @@ add_library(artouste_warnings INTERFACE)
 if(MSVC)
     target_compile_options(artouste_warnings INTERFACE
         /W4 /permissive- /Zc:__cplusplus
-        # Sources et chaines en UTF-8 : indispensable pour que les accents francais
-        # (commentaires, libelles du HUD, messages) soient corrects avec MSVC.
+        # Sources et chaînes en UTF-8 : indispensable pour que les accents français
+        # (commentaires, libellés du HUD, messages) soient corrects avec MSVC.
         /utf-8
     )
     # getenv et consorts sont standard et portables : on coupe les avertissements
@@ -90,22 +90,22 @@ if(ARTOUSTE_BUILD_TESTS)
 endif()
 
 # --- Installation et packaging (M7) ------------------------------------------
-# Release complete et jouable : le binaire et l'ensemble des ressources sont
-# installes cote a cote (shaders, modele 3D, sons, terrain, textures). Le modele
-# et les sons FlightGear (GPL) sont redistribues avec leur fichier COPYING, deja
-# present dans assets/models/Alouette-II/. Le terrain (IGN) est sous Licence
-# Ouverte Etalab. Au lancement, le binaire trouve "assets" a cote de lui.
+# Release complète et jouable : le binaire et l'ensemble des ressources sont
+# installés côte à côte (shaders, modèle 3D, sons, terrain, textures). Le modèle
+# et les sons FlightGear (GPL) sont redistribués avec leur fichier COPYING, déjà
+# présent dans assets/models/Alouette-II/. Le terrain (IGN) est sous Licence
+# Ouverte Etalab. Au lancement, le binaire trouve "assets" à côté de lui.
 
 install(TARGETS artouste RUNTIME DESTINATION .)
 install(DIRECTORY assets/ DESTINATION assets)
 install(FILES README.md LICENSE DESTINATION . OPTIONAL)
-# Notice PDF des commandes, a la racine de l'archive. Le fichier est versionne
-# (la CI ne compile pas le LaTeX) : penser a le recompiler et le recommiter
-# apres toute modification de docs/notice.tex.
+# Notice PDF des commandes, à la racine de l'archive. Le fichier est versionné
+# (la CI ne compile pas le LaTeX) : penser à le recompiler et le recommiter
+# après toute modification de docs/notice.tex.
 install(FILES docs/notice.pdf DESTINATION . OPTIONAL)
 
-# Plus de script de lancement : le choix de la carte et du demarrage turbine se fait
-# desormais dans un menu integre a l'executable (voir src/app/ApplicationMenu.cpp). On
+# Plus de script de lancement : le choix de la carte et du démarrage turbine se fait
+# désormais dans un menu intégré à l'exécutable (voir src/app/ApplicationMenu.cpp). On
 # lance donc directement artouste (Linux) ou artouste.exe (Windows).
 
 if(WIN32)

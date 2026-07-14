@@ -5,7 +5,7 @@ projetée sur la scène 3D et un point sur la minimap. Ce document explique
 **comment en ajouter à une carte** (terrain) du simulateur.
 
 Aucune donnée n'est stockée ici : les hélipads viennent d'OpenStreetMap (que l'on
-interroge a la demande) et la seule source de vérité dans le dépôt est le champ
+interroge à la demande) et la seule source de vérité dans le dépôt est le champ
 `helipads` de chaque zone, dans `tools/fetch_terrain.py`. On évite ainsi toute
 liste recopiée qui se périmerait.
 
@@ -67,7 +67,7 @@ Il n'y a aucun tableau d'hélipads codé en dur dans `Application.cpp`. Le chemi
    - dédoublonner les points quasi-identiques (un même site est parfois saisi
      plusieurs fois dans OSM) ;
    - écarter ceux qui tombent hors du relief réel (une bbox rectangulaire déborde
-     du terrain) et ceux qui font doublon avec un hélipad déjà curé a la main ;
+     du terrain) et ceux qui font doublon avec un hélipad déjà curé à la main ;
    - retirer les points hors du pays voulu si l'emprise chevauche une frontière.
 
 6. **Régénérer** : `python3 tools/fetch_terrain.py <zone>` réécrit `helipads.txt`.
@@ -79,7 +79,7 @@ Il n'y a aucun tableau d'hélipads codé en dur dans `Application.cpp`. Le chemi
 
 Les hélipads proviennent d'**OpenStreetMap**, interrogé via **Overpass Turbo**
 (<https://overpass-turbo.eu/>). La donnée n'est donc pas figée dans le dépôt :
-elle se régénère a la demande en relançant la requête de l'étape 2 ci-dessus.
+elle se régénère à la demande en relançant la requête de l'étape 2 ci-dessus.
 
 Licence : **ODbL** (Open Database Licence). Mentionner "(c) OpenStreetMap
 contributors" (<https://www.openstreetmap.org/copyright>) dans les crédits du projet.

@@ -128,11 +128,11 @@ panneau principal.
 **Implémentation simulateur :**
 
 ```
-temperature_tuyere  : float  # 0 a 550 degres C
-temperature_huile   : float  # degres C
-pression_huile      : float  # 0 a 0,8 bar
+temperature_tuyere  : float  # 0 à 550 degrés C
+temperature_huile   : float  # degrés C
+pression_huile      : float  # 0 à 0,8 bar
 seuil_alerte_huile  : 0.3    # bar
-seuil_alerte_tuyere : 500    # degres C
+seuil_alerte_tuyere : 500    # degrés C
 ```
 
 ---
@@ -350,8 +350,8 @@ Tout le reste (radio, éclairage, optionnels) est hors périmètre de la version
 | TURBINE LIMITE | `tachymetre_turbine` | Rouge | > 34 000 tr/min |
 | TURBINE MAXI | `tachymetre_turbine` | Rouge clignotant | > 35 000 tr/min |
 | PRESSION HUILE | `pression_huile` | Rouge | < 0,3 bar |
-| TEMPERATURE | `temperature_tuyere` | Orange | > 480°C |
-| TEMPERATURE MAXI | `temperature_tuyere` | Rouge | > 500°C |
+| TEMPÉRATURE | `temperature_tuyere` | Orange | > 480°C |
+| TEMPÉRATURE MAXI | `temperature_tuyere` | Rouge | > 500°C |
 | CARBURANT BAS | `carburant_litres` | Orange | < 15 L |
 | CARBURANT VIDE | `carburant_litres` | Rouge | < 4 L |
 

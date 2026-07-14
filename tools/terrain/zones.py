@@ -199,7 +199,7 @@ ZONES = {
         "landmarks": [
             ("Cauterets", -0.1124, 42.8903),
             ("Chemin des cascades", -0.1246, 42.8601),  # cascade du Pas de l'Ours
-            ("Pont d'Espagne", -0.1437, 42.8556),
+            ("Pont d'Espagne", -0.1398, 42.8509),  # site réel (confluence, parking, ~1496 m)
             ("Lac de Gaube", -0.1465, 42.8400),
             ("Vignemale", -0.1456, 42.7700),
             ("Luz-Saint-Sauveur", 0.0000, 42.8730),
@@ -211,17 +211,29 @@ ZONES = {
             ("Lac d'Estom", -0.1001, 42.8063),
             ("Piméné", 0.0216, 42.7356),
             ("Pic du Marboré", -0.0171, 42.6858),
+            # Lieux ajoutés (coordonnées OpenStreetMap).
+            ("Esterre", 0.0061, 42.8749),
+            ("Esquièze-Sère", -0.0025, 42.8756),
+            ("Sazos", -0.0248, 42.8838),
+            ("Grust", -0.0318, 42.8891),
+            ("Grande Cascade de Gavarnie", -0.0045, 42.6933),
+            ("Pont Napoléon", -0.0056, 42.8584),
+            ("Thermes de Saint-Sauveur", -0.0111, 42.8637),
+            ("Cascade de Lutour", -0.1064, 42.8709),
+            ("Cascade du Cerisey", -0.1189, 42.8632),
+            ("Refuge de Bayssellance", -0.1241, 42.7794),
         ],
         # Hélistations : bases de secours en vallée (PGHM Cauterets, CRS de Gavarnie,
-        # Luz, parking du Pont d'Espagne) et deux DZ de refuge d'altitude, fidèles au
+        # Luz, parking du Pont d'Espagne) et trois DZ de refuge d'altitude, fidèles au
         # rôle de l'Alouette II en montagne (secours et ravitaillement des refuges).
         "helipads": [
             ("Cauterets", -0.1120, 42.8880),
-            ("Pont d'Espagne", -0.1440, 42.8560),
+            ("Pont d'Espagne", -0.1398, 42.8509),
             ("Gavarnie", -0.0090, 42.7330),
             ("Luz-Saint-Sauveur", 0.0000, 42.8730),
             ("Refuge des Oulettes de Gaube", -0.1412, 42.7929),
             ("Refuge des Sarradets", -0.0333, 42.6959),
+            ("Refuge de Bayssellance", -0.1241, 42.7794),
         ],
     },
     # Pic du Midi de Bigorre (Hautes-Pyrénées) : l'observatoire (~2877 m) et son

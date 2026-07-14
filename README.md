@@ -42,7 +42,6 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 > (flèches, Entrée), à la souris ou à la manette. La touche `F` bascule à tout moment
 > entre plein écran et fenêtré. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à
 > ce menu ; dans le menu, `Échap` quitte le simulateur.
-
 > [!TIP]
 > **Première fois aux commandes ?**
 > Voici les quatre étapes pour effectuer sans stress votre premier vol à bord de l'**Alouette II SE.3130**.
@@ -67,16 +66,16 @@ Source : [alouettelama.com](https://www.alouettelama.com)
 
 ## Fonctionnalités du simulateur
 
-- Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
-- Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté et pendant la démo, où le vol reste facile et prévisible.
-- En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
-- Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
-- Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth, reconnue via le mappage GLFW/SDL.
-- Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
-- Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
-- Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
+* Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
+* Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté et pendant la démo, où le vol reste facile et prévisible.
+* En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
+* Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
+* Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth, reconnue via le mappage GLFW/SDL.
+* Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
+* Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
+* Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
   dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
-- HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
+* HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
   instruments ronds verts superposés (Super HUD) ou rien. Le panneau supérieur droit
   affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant. En mode
   coins, le coin bas-droit indique aussi le nombre d'images par seconde (FPS).
@@ -88,18 +87,18 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   carburant (jaune sous 60 L, rouge sous 15 L). En Super HUD, l'alarme est une LED
   en haut à droite du cadran ; en HUD coins, la ligne concernée passe au jaune ou
   au rouge.
-- Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
+* Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
   étiquettes) et le menu de démarrage suivent la taille réelle de l'affichage
   (référence 1280x720, facteur borné de 0,75 à 3,5), et la police est reconstruite
   nette à chaque changement de taille. L'affichage reste lisible et proportionné
   du petit fenêtré au plein écran 4K, y compris en fenêtre étroite.
-- Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
+* Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
   La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
   défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
   temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
-- Mode démo automatique (bouton `Démo` du menu de démarrage) : l'appareil joue seul,
+* Mode démo automatique (bouton `Démo` du menu de démarrage) : l'appareil joue seul,
   en boucle, un vol panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de
   la turbine puis embrayage du rotor à vitesse réelle, décollage, survol de la Dune du
   Pilat à 2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à
@@ -107,12 +106,12 @@ Source : [alouettelama.com](https://www.alouettelama.com)
   sur le manche, en sort et ramène au menu de démarrage ; la vue (`C` ou bouton `Y`),
   le HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
   actifs sans l'interrompre.
-- Son du moteur et du rotor, ciel en dégradé, ombre portée.
-- Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
+* Son du moteur et du rotor, ciel en dégradé, ombre portée.
+* Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
   cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
-- Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
+* Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
-- Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
+* Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
 ## Commandes
 
@@ -181,9 +180,9 @@ est autonome, sans DLL ni redistribuable Visual C++ à installer.
 La configuration partagée est dans `.vscode/`. Lancer une fois la tâche
 "CMake : configurer" (menu Terminal > Exécuter la tâche), puis :
 
-- Ctrl+Maj+B : compiler (tâche "CMake : compiler").
-- F5 : compiler puis lancer le simulateur sous gdb.
-- Tâches "CMake : tester", "Artouste : lancer", "CMake : nettoyer" pour le reste.
+* Ctrl+Maj+B : compiler (tâche "CMake : compiler").
+* F5 : compiler puis lancer le simulateur sous gdb.
+* Tâches "CMake : tester", "Artouste : lancer", "CMake : nettoyer" pour le reste.
 
 L'IntelliSense s'appuie sur `build/compile_commands.json`.
 
@@ -317,20 +316,20 @@ absent au lancement, le simulateur le crée automatiquement en recopiant le mod�
 modifier `assets/config.txt` à ta guise, ou le supprimer pour repartir des valeurs
 par défaut. Les clés disponibles :
 
-- `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
-- `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
+* `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
+* `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
   régime** (au lieu de la séquence de démarrage d'environ une minute), pratique
   pour décoller tout de suite en test ; `0` (défaut) pour un démarrage normal à
   froid. La variable d'environnement `ARTOUSTE_TURBINE_DEMARREE` a la priorité
   (`ARTOUSTE_TURBINE_DEMARREE=1 ./build/bin/artouste`).
-- `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
+* `demo` : `1` pour lancer le **mode démo automatique** au démarrage (vol joué tout
   seul, en boucle ; le terrain est alors forcé sur `arcachon`) ; `0` (défaut) sinon.
   Le bouton `Démo` du menu de démarrage (ou la touche `D`, ou le bouton `Y` de la
   manette) lance aussi la démo ; `Échap`, ou une action sur le manche, en sort. Depuis
   le menu, en sortir ramène au menu. Pendant la démo, la vue (`C` ou bouton `Y`), le
   HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
   actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
-- `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
+* `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
   variable d'environnement `ARTOUSTE_RADIO_URL` a la priorité. La radio est une
@@ -339,7 +338,7 @@ par défaut. Les clés disponibles :
   `RADIO` s'affiche dans le HUD tant que le flux joue, suivi de la part de la radio
   dans le mixage. Les touches `-` et `+` règlent la **balance radio/hélico** (un
   crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
-- `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
+* `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
   la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
   `86400 / sun_time_scale` secondes. La valeur `72` (défaut) fait défiler une journée
   entière en vingt minutes ; `144` la réduit à dix minutes ; `1` correspond au temps
@@ -351,13 +350,13 @@ par défaut. Les clés disponibles :
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :
 
-```
+```bash
 terrain ossau
 ```
 
 par :
 
-```
+```bash
 terrain cote-landes
 ```
 
@@ -398,6 +397,12 @@ hauteur réelle (murs + toit plat). Ils sont produits à part par
 tools/.venv/bin/python tools/fetch_buildings.py cote-landes
 tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
+
+### Cartes
+
+Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/) (Institut National de l'Information Géographique et Forestière) et sont distribuées sous licence [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence). Ces données sont utilisées pour générer les terrains et les bâtiments 3D du simulateur.
+
+![Logo IGN](docs/IGN_logo_2012.png){width=100}
 
 Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
 les bâtiments les plus bas (cabanes, abris) sont écartés pour ne pas alourdir la

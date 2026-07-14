@@ -402,6 +402,15 @@ ZONES = {
         "exclusions": [
             ("Aérodrome de Dax-Seyresse (LFBE)", -1.069, 43.688, 550),
         ],
+        # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+        # media/gt_installation_hapi.pdf) sur l'hélipad de l'aérodrome. Azimut
+        # 70° : aligné sur la piste bitumée 07/25 de Dax-Seyresse (aérodrome
+        # école de l'ALAT), approche vers l'est (QFU 07). Pente 6 % : valeur
+        # usuelle pour une hélistation, faute de relevé d'obstacles réel.
+        # Position et calage provisoires, à affiner sur place (méthode IGN/OSM).
+        "hapi": [
+            ("Aérodrome de Dax-Seyresse", -1.0692, 43.6884, 70, 6),
+        ],
     },
 }
 

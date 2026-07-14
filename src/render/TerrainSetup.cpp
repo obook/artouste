@@ -53,6 +53,33 @@ void Terrain::loadPlaces(const std::filesystem::path& path, std::vector<Landmark
     std::printf("[Terrain] %zu %s chargé(s).\n", out.size(), label);
 }
 
+void Terrain::loadHapiUnits(const std::filesystem::path& path, std::vector<HapiUnit>& out) {
+    /* Format : une balise par ligne "lon lat azimut_deg pente_pct nom", le nom
+       étant le reste de la ligne (il peut contenir des espaces). Ligne vide ou
+       mal formée ignorée. */
+    std::ifstream file(path);
+    if (!file) {
+        return;  /* fichier absent pour ce terrain : tableau vide */
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        HapiUnit           hapi;
+        if (!(iss >> hapi.lon >> hapi.lat >> hapi.azimuthDeg >> hapi.slopePercent)) {
+            continue;  /* ligne vide, commentaire ou mal formée */
+        }
+        std::getline(iss, hapi.name);
+        const std::size_t first = hapi.name.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            continue;  /* coordonnées sans nom : on ignore */
+        }
+        const std::size_t last = hapi.name.find_last_not_of(" \t\r\n");
+        hapi.name               = hapi.name.substr(first, last - first + 1);
+        out.push_back(std::move(hapi));
+    }
+    std::printf("[Terrain] %zu balise(s) HAPI chargée(s).\n", out.size());
+}
+
 void Terrain::flattenPads() {
     if (m_heights.empty() || m_cols < 2 || m_rows < 2) {
         return;

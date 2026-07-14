@@ -19,6 +19,7 @@
 #include "render/Mesh.hpp"
 #include "render/Texture.hpp"
 
+#include <cmath>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -34,10 +35,59 @@ struct Landmark {
     float       lat = 0.0f;
 };
 
+/* Balise HAPI (Helicopter Approach Path Indicator) : feu au sol à 4 secteurs
+   verticaux (vert clignotant/fixe, rouge fixe/clignotant) qui indique au pilote
+   sa position par rapport à la pente d'approche visée. Chaque terrain a ses
+   propres balises, lues de hapi.txt dans son dossier (fichier absent : aucune). */
+struct HapiUnit {
+    std::string name;
+    float       lon          = 0.0f;
+    float       lat          = 0.0f;
+    float       azimuthDeg   = 0.0f;  /* cap d'approche suivi par le pilote (0 = nord) */
+    float       slopePercent = 6.0f;  /* pente d'approche visée (%), 6 % = valeur usuelle */
+};
+
 /* Rayon porteur d'une plate-forme d'hélisurface (m) : un peu plus grand que le
    disque dessiné (7 m), pour que les patins restent portés posé un peu décalé.
    Dans ce rayon, heightAt ne descend jamais sous le plateau du pad. */
 inline constexpr float PAD_PLATFORM_RADIUS_M = 8.0f;
+
+/* Hauteur du mât d'une balise HAPI au-dessus du sol (m) : le guide DGAC/STAC
+   montre un petit trépied. Partagée entre le rendu 3D (ApplicationGround.cpp)
+   et le repérage HUD (ApplicationHud.cpp), qui doivent viser le même point. */
+inline constexpr float HAPI_MAST_M = 1.0f;
+
+/* Période et fraction "allumée" du clignotement HAPI (s) : partagées pour que
+   la lueur au sol et le point d'étiquette clignotent en phase. */
+inline constexpr float HAPI_BLINK_PERIOD_S = 1.0f;
+inline constexpr float HAPI_BLINK_ON_FRAC  = 0.5f;
+
+/* Vrai pendant la phase "allumée" du clignotement HAPI à l'instant donné. */
+[[nodiscard]] inline bool hapiBlinkOn(float timeSeconds) noexcept {
+    return std::fmod(timeSeconds, HAPI_BLINK_PERIOD_S) < HAPI_BLINK_PERIOD_S * HAPI_BLINK_ON_FRAC;
+}
+
+/* Secteur HAPI vu depuis la balise en direction d'un point (distance horizontale
+   et écart vertical par rapport à elle), comparé à la pente d'approche visée.
+   Seuils repris du guide DGAC/STAC (§ 4.4) : 22'30" de part et d'autre de la
+   pente pour "sur la pente", 15' de plus pour "légèrement trop bas". À l'aplomb
+   de la balise (distance quasi nulle), l'angle n'est pas défini : on retombe sur
+   "sur la pente" plutôt que d'afficher un secteur erratique. */
+enum class HapiSector { TooHigh, OnSlope, SlightlyLow, TooLow };
+
+[[nodiscard]] HapiSector hapiSector(const HapiUnit& hapi, float horizDistM,
+                                    float vertDeltaM) noexcept;
+
+/* Vert (sur/au-dessus de la pente) ou rouge (trop bas), et faux si ce secteur
+   doit actuellement clignoter à l'arrêt (secteurs "trop haut"/"trop bas" en
+   phase éteinte). Combine hapiSector() et hapiBlinkOn() pour les deux
+   consommateurs (lueur 3D, points d'étiquette HUD). */
+struct HapiGlow {
+    bool green = true;
+    bool off   = false;
+};
+
+[[nodiscard]] HapiGlow hapiGlow(HapiSector sector, float timeSeconds) noexcept;
 
 class Terrain {
 public:
@@ -104,12 +154,24 @@ public:
        Vide si le terrain n'en fournit pas ; ne compte pas l'hélipad de départ. */
     [[nodiscard]] const std::vector<Landmark>& helipads() const noexcept { return m_helipads; }
 
+    /* Balises HAPI propres à ce terrain. Vide si le terrain n'en fournit pas. */
+    [[nodiscard]] const std::vector<HapiUnit>& hapiUnits() const noexcept { return m_hapiUnits; }
+
+    /* Balise HAPI la plus proche de (lon, lat), si elle est à moins de maxDistM ;
+       nullptr sinon. Sert à faire correspondre un hélipad à sa balise : une HAPI
+       se trouve toujours à proximité immédiate de son pad (quelques mètres, voir
+       le guide DGAC/STAC), jamais ailleurs sur le terrain. */
+    [[nodiscard]] const HapiUnit* hapiUnitNear(float lon, float lat, float maxDistM) const noexcept;
+
 private:
     void buildFlatFallback();
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
     void loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
                     const char* label);
+    /* Charge un fichier de balises HAPI "lon lat azimut_deg pente_pct nom" (un par
+       ligne) dans out. Fichier absent : out reste vide. */
+    void loadHapiUnits(const std::filesystem::path& path, std::vector<HapiUnit>& out);
     /* Aplanit le relief sous le point de départ (plateforme plate, pour que sol,
        disque et appareil posé soient à la même hauteur au spawn). */
     void flattenPads();
@@ -144,8 +206,9 @@ private:
     float              m_latMin = 0.0f;
     float              m_latMax = 0.0f;
 
-    std::vector<Landmark> m_landmarks;  /* lieux remarquables propres au terrain */
-    std::vector<Landmark> m_helipads;   /* hélipads propres au terrain (hors départ) */
+    std::vector<Landmark>  m_landmarks;  /* lieux remarquables propres au terrain */
+    std::vector<Landmark>  m_helipads;   /* hélipads propres au terrain (hors départ) */
+    std::vector<HapiUnit>  m_hapiUnits;  /* balises HAPI propres au terrain */
 
     /* Plate-forme porteuse d'un hélipad : centre monde et hauteur du plateau. */
     struct PadPlatform {

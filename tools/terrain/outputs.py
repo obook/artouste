@@ -2,8 +2,9 @@
 """
 outputs.py
 Écriture des fichiers de sortie lus par le moteur : le calage du terrain
-(terrain.txt), les lieux remarquables (landmarks.txt) et les hélipads
-(helipads.txt). Tous au format texte simple, une entrée par ligne.
+(terrain.txt), les lieux remarquables (landmarks.txt), les hélipads
+(helipads.txt) et les balises HAPI (hapi.txt). Tous au format texte simple,
+une entrée par ligne.
 
 Auteur : O. Booklage
 Licence : GPL v2
@@ -83,3 +84,20 @@ def write_exclusions():
         for name, lon, lat, radius in config.ZONE_EXCLUSIONS:
             out.write(f"{lon} {lat} {radius}   # {name}\n")
     print(f"[exclusions] {path} écrit ({len(config.ZONE_EXCLUSIONS)} cercle(s))")
+
+
+def write_hapi():
+    """Écrit les balises HAPI de la zone (un par ligne : lon lat azimut_deg
+       pente_pct nom). Aucun fichier si la zone n'en déclare pas."""
+    if not config.ZONE_HAPI:
+        return
+    path = os.path.join(config.OUT_DIR, "hapi.txt")
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(f"# Balises HAPI - {config.ZONE_TITLE} "
+                  "(un par ligne : lon lat azimut_deg pente_pct nom)\n")
+        out.write("# azimut_deg : cap d'approche suivi par le pilote (0 = nord).\n")
+        out.write("# pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).\n")
+        out.write("# Position et calage provisoires, à affiner sur place.\n")
+        for name, lon, lat, azimuth_deg, slope_pct in config.ZONE_HAPI:
+            out.write(f"{lon} {lat} {azimuth_deg} {slope_pct} {name}\n")
+    print(f"[hapi] {path} écrit ({len(config.ZONE_HAPI)} balise(s))")

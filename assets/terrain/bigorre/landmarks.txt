@@ -6,8 +6,28 @@
 0.2158 42.9469 Lac de Payolle
 0.0658 42.8983 Barèges
 0.1983 42.9781 Sainte-Marie-de-Campan
-0.1747 43.0 Campan
+0.1777 43.0169 Campan
 0.0688 42.9837 Pic de Montaigu
 0.173 42.9556 Pène Nère
 0.1508 42.9269 Pic de Sencours
 0.089 42.9619 Le Chiroulet
+0.2224 42.9466 Gripp
+0.1054 42.8961 Jardin botanique du Tourmalet
+0.1347 42.9292 Lac d'Oncet
+0.2053 42.925 Cascade du Garet
+0.1471 42.8772 Aygues-Cluses
+0.1384 43.0061 Lesponne
+0.1315 42.9053 Super Barèges
+0.1404 42.8576 Col de Madamète
+0.2095 42.8521 Lacs de Bastan
+0.2189 42.8575 Col de Bastan
+0.2007 42.866 Pic de Bastan
+0.0614 42.9594 Barrage du Herraou
+0.1774 43.0167 Mounaques de Campan
+0.0771 42.8941 L'appel sauvage
+0.0697 42.8963 La pépinière céleste
+0.1481 42.9476 Col d'Aouet
+0.1048 42.8953 Pont de la Gaubie
+0.0745 42.9016 Souriche
+0.1889 43.0059 Saint-Roch
+0.1345 42.8647 Col de Tracens

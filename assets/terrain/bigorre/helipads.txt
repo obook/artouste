@@ -4,3 +4,5 @@
 0.1447 42.9075 Col du Tourmalet
 0.1411 42.9369 Observatoire du Pic du Midi
 0.2158 42.9469 Lac de Payolle
+0.0614 42.9594 Barrage du Herraou
+0.1315 42.9053 Super Barèges

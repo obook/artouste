@@ -36,12 +36,13 @@ turbine_demarree 0
 # 0 = pas de démo. (La démo se lance aussi par le bouton Démo du menu de démarrage.)
 demo 0
 
-# arbres : 1 = végétation activée (défaut) -- des arbres en billboards sont semés sur
-# les terrains de montagne d'après l'orthophoto (là où le sol est vert et sous la
-# limite forestière). 0 = pas d'arbres (rendu plus léger sur une machine modeste).
+# arbres : 1 = végétation activée -- des arbres en billboards sont semés sur les
+# terrains de montagne d'après l'orthophoto (là où le sol est vert et sous la
+# limite forestière). 0 = pas d'arbres (défaut) -- rendu plus léger, utile sur une
+# machine modeste (ex. tablette : 30-50 fps avec les arbres contre 60 fps sans).
 # La variable d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation
 # quelle que soit cette clé.
-arbres 1
+arbres 0
 
 # radio_url : URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit.
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.

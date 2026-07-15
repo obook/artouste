@@ -16,6 +16,22 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
 
+### Lacet en approche (dérive à droite)
+
+- [ ] Dérive en lacet à droite en approche finale (réduction du collectif) :
+  diagnostic et plan de correction détaillés dans APPROACH_YAW.md (fiche
+  hors dépôt, avec CLAUDE.md). Cause : `REACTIVE_TORQUE * (collective -
+  COLL_HOVER)` (`FlightModel.cpp`) devient négatif sous le collectif de vol
+  stationnaire, ce qui pousse le nez à droite -- physiquement correct sur
+  l'Alouette II, mais peut-être trop marqué pour un pilote sans expérience.
+  Correction prévue en deux volets indépendants : atténuer ce couple
+  uniquement côté réduction de collectif (`REACTIVE_TORQUE_DESCENT_FACTOR`
+  dans `constants.hpp`, laisse la montée intacte) et, en mode assisté,
+  ajouter un terme de compensation sur l'écart absolu au collectif de vol
+  stationnaire (`ASSIST_STEADY_ANTITORQUE_GAIN` dans `FlightAssist.cpp`),
+  pour couvrir aussi une descente stabilisée et pas seulement la variation
+  du collectif.
+
 ### HAPI (aide à l'approche)
 
 - [x] Balise HAPI (Helicopter Approach Path Indicator, voir

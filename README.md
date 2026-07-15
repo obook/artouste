@@ -22,6 +22,10 @@ grâce à une turbine à gaz, ouvrant à l'appareil des altitudes jusque-là hor
 portée. Elle a aussi marqué le cinéma français, de Fantômas à James Bond. Voir
 [docs/HISTOIRE.md](docs/HISTOIRE.md) pour le récit complet et la liste des films.
 
+<div align="center"><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
+
+_Alouette II SE 3130 ISNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</div>
+
 ## Démarrage rapide
 
 > [!NOTE]

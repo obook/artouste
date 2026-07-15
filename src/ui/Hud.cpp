@@ -137,6 +137,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
     /* Sous-titre d'un message radio : par-dessus tous les modes (y compris HUD éteint
        en démo), pour accompagner la transmission entendue. */
     renderRadioSubtitle(data, w);
+    renderAutolandMessage(data, w);
 
     /* Alertes de vol (vortex, taux de descente) : par-dessus tous les modes de vol (mais
        pas prioritaires sur les panneaux de confirmation/pause, dessinés ensuite). */
@@ -215,17 +216,21 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     }
     ImGui::End();
 
-    /* Coin bas-droit : voyant du mode assisté et de la radio quand ils sont actifs,
-       et le compteur d'images par seconde (dernière ligne, donc pile dans le coin).
+    /* Coin bas-droit : voyants du mode assisté, de l'atterrissage automatique et de la
+       radio quand ils sont actifs, et le compteur d'images par seconde (dernière ligne,
+       donc pile dans le coin).
        On ne crée le panneau que s'il y a quelque chose à montrer, pour ne pas laisser
        une boîte vide (fps = 0 en capture => rien). */
-    if (data.assist || data.radio || data.fps > 0.0f) {
+    if (data.assist || data.autoland || data.radio || data.fps > 0.0f) {
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
         if (data.radio) {
             ImGui::Text("RADIO %d%%", data.radioMixPct);  /* voyant radio (touche K) + balance (-/+) */
         }
         if (data.assist) {
             ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
+        }
+        if (data.autoland) {
+            ImGui::TextUnformatted("ATTERRISSAGE AUTO");  /* touche J / croix bas */
         }
         if (data.fps > 0.0f) {
             ImGui::Text("FPS  %3.0f", static_cast<double>(data.fps));  /* cadence lissée */
@@ -288,6 +293,26 @@ void Hud::renderRadioSubtitle(const HudData& data, float w) {
     /* Ambre "radio", distinct du vert instrument. */
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.78f, 0.30f, 1.0f));
     ImGui::Text(">> %s", data.radioMessage);
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
+void Hud::renderAutolandMessage(const HudData& data, float w) {
+    if (data.autolandMessage == nullptr || data.autolandMessage[0] == '\0') {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* Même emplacement que le sous-titre radio (haut, centré, sous le ruban de cap),
+       mais légèrement plus bas pour ne pas se superposer si les deux coïncident. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, sc(112.0f)), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::Begin("autoland_msg", nullptr, flags);
+    ImGui::PushStyleColor(ImGuiCol_Text, HUD_AMBER);
+    ImGui::TextUnformatted(data.autolandMessage);
     ImGui::PopStyleColor();
     ImGui::End();
 }

@@ -11,7 +11,9 @@ add_executable(artouste_tests
     flight_assist_tests.cpp
     config_tests.cpp
     ring_buffer_tests.cpp
+    landing_autopilot_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/audio/RingBuffer.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp

@@ -28,7 +28,7 @@ namespace {
 /* Aide à l'atterrissage (mode assisté). Seuils calés sur l'Alouette II SE 3130. */
 
 /* Distance horizontale maximale pour chercher un pad autour de l'appareil (m). */
-constexpr float PAD_SEARCH_RADIUS_M = 300.0f;
+constexpr float PAD_SEARCH_RADIUS_M = 999.0f;
 
 /* Conditions d'activation du réticule : finale, basse vitesse. */
 constexpr float PAD_GUIDE_MAX_ALT_M = 50.0f;   /* altitude max au-dessus du pad */
@@ -129,25 +129,25 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.fuelLiters    = m_flight.fuelLiters();
     hud.turbine       = m_flight.turbine().label();
     hud.assist        = m_assist.active();
+    hud.autoland      = m_autoland.active();
     hud.vrsIntensity  = m_flight.vrsIntensity();  /* alerte vortex (bandeau HUD) */
 
     /* Alerte taux de descente (facon GPWS) : descente rapide pres du sol. Enveloppe
-       progressive : plus on est bas, plus le taux de descente toléré est faible. Au-dessus
-       de GPWS_MAX_AGL, aucune alerte (descente rapide normale en altitude). Coupée en
-       démo (le posé automatique la déclencherait). */
+       progressive (physics::gpwsSinkLimitMs) : plus on est bas, plus le taux de
+       descente toléré est faible. Au-dessus de GPWS_MAX_AGL, aucune alerte (descente
+       rapide normale en altitude). Coupée pendant la croisière de la démo (points de
+       passage, hors sujet ici) mais PAS pendant son retour au pad ni pendant
+       l'atterrissage automatique : ces deux phases visent maintenant un taux de
+       descente sous ce même seuil (collectifApprocheGpws, DemoPilotDetail.hpp), donc
+       l'alerte ne devrait normalement plus s'y déclencher plutôt que d'être masquée. */
     {
-        constexpr float GPWS_MIN_AGL   = 2.0f;    /* m : en vol seulement (pas sur le pad) */
-        constexpr float GPWS_MAX_AGL   = 120.0f;  /* m : plafond de surveillance */
-        constexpr float GPWS_SINK_NEAR = 2.5f;    /* m/s : taux toléré pres du sol */
-        constexpr float GPWS_SINK_FAR  = 8.0f;    /* m/s : taux toléré au plafond */
         const float aglM = body.position.y
                          - m_terrain->heightAt(body.position.x, body.position.z);
         const float sink = -hud.varioMs;  /* positif en descente */
+        const bool  surveille = !m_demo.active() || m_demo.returning();
         bool        alert = false;
-        if (!m_demo.active() && aglM > GPWS_MIN_AGL && aglM < GPWS_MAX_AGL) {
-            const float f         = aglM / GPWS_MAX_AGL;  /* 0 au sol -> 1 au plafond */
-            const float sinkLimit = GPWS_SINK_NEAR + (GPWS_SINK_FAR - GPWS_SINK_NEAR) * f;
-            alert                 = sink > sinkLimit;
+        if (surveille && aglM > physics::GPWS_MIN_AGL && aglM < physics::GPWS_MAX_AGL) {
+            alert = sink > physics::gpwsSinkLimitMs(aglM);
         }
         hud.sinkRateAlert = alert;
     }

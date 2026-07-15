@@ -30,6 +30,14 @@ public:
 
     void reset() noexcept { m_controls = physics::Controls{}; }
 
+    /* Recale le collectif mémorisé sur value, sans toucher au cyclique ni aux
+       palonniers (qui reviennent seuls au neutre). Sert à resynchroniser le levier
+       tenu par le clavier avec le collectif réel après un vol automatique (mode
+       démo ou atterrissage automatique) : sans cela, le levier resterait sur sa
+       position d'avant l'engagement et l'appareil sauterait dessus à la reprise
+       en main. */
+    void setCollective(float value) noexcept { m_controls.collective = value; }
+
 private:
     GLFWwindow*       m_window = nullptr;
     physics::Controls m_controls;

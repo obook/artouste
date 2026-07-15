@@ -142,6 +142,9 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     if (data.assist) {
         badge("MODE ASSISTE");
     }
+    if (data.autoland) {
+        badge("ATTERRISSAGE AUTO");
+    }
     if (data.radio) {
         char txt[24];
         std::snprintf(txt, sizeof(txt), "RADIO %d%%", data.radioMixPct);

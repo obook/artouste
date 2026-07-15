@@ -75,6 +75,7 @@ struct HudData {
     float       fuelLiters    = 0.0f;   /* carburant restant, en litres */
     const char* turbine       = "";     /* libellé d'état de la turbine */
     bool        assist        = false;  /* mode assisté actif : affiche un repère */
+    bool        autoland      = false;  /* atterrissage automatique engagé : affiche un repère */
     float       vrsIntensity  = 0.0f;   /* vortex ring state, 0..1 : au-dela d'un seuil,
                                            un bandeau d'alerte clignotant s'affiche (l'appareil
                                            d'époque n'a pas d'avertisseur : c'est une aide du
@@ -124,6 +125,11 @@ struct HudData {
     /* Message radio reçu : sous-titre centré en bas, affiché tant que la chaine n'est
        pas vide. Le pointeur appartient à l'appelant (durée de vie gérée côté app). */
     const char*           radioMessage = "";
+
+    /* Message court de l'atterrissage automatique (échec de l'engagement, faute de
+       pad à portée, ou auto-désengagement) : bandeau temporaire, même mécanisme que
+       radioMessage. */
+    const char*           autolandMessage = "";
 };
 
 class Hud {
@@ -168,6 +174,8 @@ private:
     void renderSinkRateAlert(const HudData& data, float w, float h);
     /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
     void renderRadioSubtitle(const HudData& data, float w);
+    /* Bandeau du message de l'atterrissage automatique, par-dessus tous les modes. */
+    void renderAutolandMessage(const HudData& data, float w);
 
     bool       m_ready          = false;
     float      m_builtFontScale = 0.0f;  /* échelle de la police déjà construite (0 = jamais) */

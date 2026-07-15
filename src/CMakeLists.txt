@@ -50,6 +50,7 @@ add_executable(artouste
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
     app/DemoPilot.cpp
+    app/LandingAutopilot.cpp
     audio/AudioEngineControl.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp

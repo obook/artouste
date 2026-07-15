@@ -54,6 +54,9 @@ void Application::handleActionButtons() {
     if (m_input->assistTogglePressed()) {  /* croix haut : mode assisté (touche M) */
         m_assist.toggle();
     }
+    if (m_input->autolandTogglePressed()) {  /* stick droit (R3) : atterrissage automatique (touche J) */
+        toggleAutoland();
+    }
 
     /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
     if (m_input->viewTogglePressed()) {
@@ -225,6 +228,11 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         case GLFW_KEY_SEMICOLON:  /* position de la touche "M" sur un clavier AZERTY */
             if (app != nullptr) {
                 app->m_assist.toggle();
+            }
+            break;
+        case GLFW_KEY_J:  /* bascule l'atterrissage automatique vers le pad le plus proche */
+            if (app != nullptr) {
+                app->toggleAutoland();
             }
             break;
         case GLFW_KEY_R:  /* demande la confirmation avant de replacer l'appareil au départ */

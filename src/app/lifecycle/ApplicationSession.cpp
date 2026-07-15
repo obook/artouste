@@ -32,6 +32,24 @@ void Application::cycleLivery() {
     m_loadedHeli->setLivery(m_livery);
 }
 
+void Application::toggleAutoland() {
+    /* Déjà engagé : on rend la main tout de suite, comme le mode assisté (touche M). */
+    if (m_autoland.active()) {
+        m_autoland.stop();
+        return;
+    }
+    vec3 posePad{0.0f, 0.0f, 0.0f};
+    if (padPlusProche(m_flight.body().position, posePad) != nullptr) {
+        m_autoland.start(posePad, m_lastControls);
+        return;
+    }
+    /* Aucun pad dans le rayon de recherche (voir padPlusProche) : rien à engager. Sans
+       message, le joueur presse la touche et ne voit rien se passer, sans comprendre
+       pourquoi (voir aussi le message d'auto-désengagement, ApplicationLoop.cpp). */
+    m_autolandMsg     = "Aucun pad à portée";
+    m_autolandMsgShow = 3.0f;
+}
+
 void Application::resetToStart() {
     m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     m_input->reset();
@@ -41,6 +59,7 @@ void Application::resetToStart() {
        subsiste après un retour au pad et l'appareil redécolle tout seul. */
     m_lastControls = physics::Controls{};
     m_assist.reset();
+    m_autoland.stop();
     m_confirmReset = false;
     /* Retour au pad : on repart d'un état d'aide au posé vierge, sinon le réticule
        (ou un score en cours d'affichage) resterait visible alors qu'on est de nouveau

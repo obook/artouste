@@ -147,8 +147,13 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
        commander le cyclique : composante avant -> tangage, droite -> roulis. En
        annulant le vecteur vitesse au-dessus du pad, l'appareil s'arrête pour se poser
        au lieu de tourner autour. */
+    /* Au retour, un filet de vitesse maintient un peu d'avance tant que l'appareil est
+       plus haut que la pente ne l'exige à cette distance (voir vitesseMinApproche) :
+       sinon il s'immobiliserait au-dessus du pad avant d'avoir fini de descendre. */
+    const float vNormeMin    = m_returning ? vitesseMinApproche(dist, agl) : 0.0f;
+    const float vNorme       = std::max(clamp(GAIN_V_DIST * dist, 0.0f, V_CROISIERE), vNormeMin);
     const vec3  versCible    = (dist > 0.001f) ? vec3{dx / dist, 0.0f, dz / dist} : vec3{0.0f};
-    const vec3  vitesseCible = versCible * clamp(GAIN_V_DIST * dist, 0.0f, V_CROISIERE);
+    const vec3  vitesseCible = versCible * vNorme;
     const vec3  ecartV{vitesseCible.x - velocity.x, 0.0f, vitesseCible.z - velocity.z};
     const vec3  avant{std::cos(heading), 0.0f, -std::sin(heading)};  /* nez, au sol */
     const vec3  droite{std::sin(heading), 0.0f, std::cos(heading)};  /* flanc droit, au sol */
@@ -157,13 +162,18 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     out.controls.cyclicLateral =
         clamp(GAIN_CYCLIQUE * glm::dot(ecartV, droite), -CYCLIQUE_MAX, CYCLIQUE_MAX);
 
-    /* Collectif : en vol, on suit la hauteur visée ; tout près du pad au retour, on
+    /* Collectif : en croisière (points de passage), on suit la hauteur visée sans
+       contrainte de taux de descente (collectifPour). Au retour vers le pad, le taux
+       de descente est plafonné sous le seuil de l'alerte GPWS du HUD
+       (collectifApprocheGpws) pour ne jamais la déclencher ; tout près du pad, on
        passe à une descente douce à vitesse verticale contrôlée (~0,4 m/s), pour une
        pose très douce et robuste à l'effet de sol (réduction de collectif en finale,
        conforme à la procédure). */
     float collectifCible;
     if (m_returning && dist < DIST_POSE) {
         collectifCible = saturate(physics::COLL_HOVER + GAIN_VZ_POSE * (VZ_POSE - velocity.y));
+    } else if (m_returning) {
+        collectifCible = collectifApprocheGpws(hauteurCible, agl, velocity.y);
     } else {
         collectifCible = collectifPour(hauteurCible, agl, velocity.y);
     }

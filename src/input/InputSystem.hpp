@@ -34,6 +34,15 @@ public:
         m_gamepad.reset();
     }
 
+    /* Recale le collectif mémorisé (clavier et manette) sur value, sans toucher au
+       reste des commandes. À utiliser quand un pilote automatique rend la main après
+       avoir piloté seul le collectif (le levier réel n'a pas suivi), pour que la
+       reprise en main ne fasse pas sauter l'appareil sur sa position d'avant. */
+    void syncCollective(float value) noexcept {
+        m_keyboard.setCollective(value);
+        m_gamepad.setCollective(value);
+    }
+
     /* Le bouton Y de la manette vient-il d'être pressé ? (change de vue) */
     [[nodiscard]] bool viewTogglePressed() noexcept { return m_gamepad.viewTogglePressed(); }
 
@@ -57,6 +66,9 @@ public:
 
     /* La croix directionnelle haut vient-elle d'être pressée ? (bascule le mode assisté) */
     [[nodiscard]] bool assistTogglePressed() noexcept { return m_gamepad.assistTogglePressed(); }
+
+    /* Le stick droit vient-il d'être enfoncé ? (clic R3, bascule l'atterrissage auto) */
+    [[nodiscard]] bool autolandTogglePressed() noexcept { return m_gamepad.autolandTogglePressed(); }
 
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 

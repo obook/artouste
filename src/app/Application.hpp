@@ -13,6 +13,7 @@
 #pragma once
 
 #include "app/DemoPilot.hpp"
+#include "app/LandingAutopilot.hpp"
 #include "audio/AudioEngine.hpp"
 #include "physics/FlightAssist.hpp"
 #include "physics/FlightModel.hpp"
@@ -214,6 +215,11 @@ private:
        par le pilote automatique m_demo. */
     void startDemo();
 
+    /* Bascule l'atterrissage automatique (touche J / croix bas) : engage m_autoland
+       vers l'hélipad le plus proche s'il est inactif, le désengage sinon (le pilote
+       reprend la main). Sans effet en démo (pas de call site pendant la démo). */
+    void toggleAutoland();
+
     static void resizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
@@ -254,6 +260,7 @@ private:
     physics::FlightModel                      m_flight;
     physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
     DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
+    LandingAutopilot                          m_autoland;      /* atterrissage automatique (touche J / croix bas) */
     std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string                               m_radioUrl;      /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
     float                                     m_sunTimeScale   = 1.0f;  /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
@@ -335,6 +342,10 @@ private:
     float                                     m_radioMsgShow  = 0.0f;   /* s restantes d'affichage du sous-titre */
     std::string                               m_radioMsg;               /* texte du message courant (anglais) */
     std::string                               m_homeStation;            /* nom de l'hélipad de départ (-> tour de contrôle) */
+    /* Message court de l'atterrissage automatique (échec de l'engagement ou
+       auto-désengagement), affiché quelques secondes dans le HUD. */
+    std::string                               m_autolandMsg;
+    float                                      m_autolandMsgShow = 0.0f;
     ui::HudMode                               m_hudMode  = ui::HudMode::Overlay;  /* HUD complet au lancement ; H fait défiler coins -> superposé -> rien */
     bool                                      m_paused   = false;
     bool                                      m_confirmReset = false;  /* panneau Oui/Non avant un reset (touche X/R) */

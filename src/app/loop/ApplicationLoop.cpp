@@ -88,6 +88,50 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
         if (demoOut.finished) {
             startDemo();  /* la démo est terminée : on la rejoue en boucle */
         }
+    } else if (m_autoland.active()) {
+        /* Une vraie action du pilote reprend la main tout de suite, comme sortir de la
+           démo (même seuil). On compare aux commandes brutes au moment de l'engagement
+           (baseline), pas au neutre : le collectif est un levier qui garde sa position
+           au repos (clavier comme manette, voir Gamepad::poll), donc rarement nul ; et
+           rien n'oblige le pilote à avoir le cyclique pile au neutre à l'instant où il
+           déclenche l'atterrissage automatique (il peut être en train de piloter). Sans
+           cette référence, la commande déjà tenue au moment de l'engagement dépasserait
+           aussitôt le seuil et désengagerait l'instant d'après.
+           Les palonniers n'entrent pas dans la somme : à la manette, le déclencheur
+           de l'atterrissage automatique est le clic du stick droit (R3), qui EST cet
+           axe. L'appui comme le relâchement du clic dévient transitoirement le stick
+           de son centre, ce qui désengagerait l'atterrissage automatique dans la
+           foulée de son activation (ou de sa désactivation) si on en tenait compte. */
+        const physics::Controls& base = m_autoland.baseline();
+        const float pilotInput = std::fabs(rawInput.cyclicLateral - base.cyclicLateral)
+                               + std::fabs(rawInput.cyclicLongitudinal - base.cyclicLongitudinal)
+                               + std::fabs(rawInput.collective - base.collective);
+        if (pilotInput > 0.15f) {
+            m_autoland.stop();
+            controls = m_assist.apply(rawInput, frameDt);
+            m_autolandMsg     = "Atterrissage automatique interrompu";
+            m_autolandMsgShow = 3.0f;
+        } else {
+            const physics::RigidBody& body    = m_flight.body();
+            const vec3                fwd     = body.orientation * vec3{1.0f, 0.0f, 0.0f};
+            const float                heading = std::atan2(-fwd.z, fwd.x);
+            const float                agl     = body.position.y
+                                    - m_terrain->heightAt(body.position.x, body.position.z);
+            controls = m_autoland.update(frameDt, body.position, body.velocity, heading, agl);
+            if (!m_autoland.active()) {
+                /* Vient de rendre la main (posé, effet de sol évacué) : le levier réel
+                   (clavier/manette) n'a pas bougé pendant le vol automatique et garde sa
+                   position d'avant l'engagement. Sans resynchronisation, le collectif
+                   sauterait dessus à l'image suivante (assistance repliée = commandes
+                   brutes telles quelles, voir FlightAssist::apply) et l'appareil
+                   redécollerait tout seul. Le mode assisté, lui, n'a pas été sollicité
+                   pendant le vol automatique (apply() n'est pas appelé dans cette
+                   branche) : son état lissé interne est tout aussi figé sur sa valeur
+                   d'avant l'engagement, d'où le même risque s'il est actif en parallèle. */
+                m_input->syncCollective(controls.collective);
+                m_assist.reset();
+            }
+        }
     } else {
         controls = m_assist.apply(rawInput, frameDt);
     }
@@ -275,9 +319,14 @@ bool Application::mainLoop() {
         m_flight.setGroundHeight(m_terrain->heightAt(pos.x, pos.z));
 
         /* Difficultés de pilotage (altitude, VNE, vol latéral, vortex ring state) :
-           coupées en mode assisté et en démo, pour garder un vol facile et un parcours
-           de démonstration prévisible jusqu'à 2000 m. */
-        m_flight.setRealFlyPhysicsEnabled(!m_assist.active() && !m_demo.active());
+           coupées en mode assisté, en démo et en atterrissage automatique, pour garder
+           un vol facile et un parcours prévisible. Sans quoi l'atterrissage automatique
+           traverse en toute fin d'approche l'enveloppe du vortex ring state (descente
+           de 3 à 7 m/s à faible vitesse, voir VRS_DESCENT_MIN/MAX) : la perte de
+           portance qui en résulte (jusqu'à -35 %, VRS_THRUST_LOSS) empêche le collectif
+           de tenir le taux de descente visé, d'où une arrivée bien plus dure que prévu. */
+        m_flight.setRealFlyPhysicsEnabled(!m_assist.active() && !m_demo.active()
+                                        && !m_autoland.active());
 
         /* État physique avant le dernier pas, conservé pour interpoler le rendu. */
         physics::RigidBody prevBody = m_flight.body();
@@ -334,6 +383,12 @@ bool Application::mainLoop() {
         buildNavHud(hud, body.position, hud.headingDeg, t);
         /* Sous-titre du message radio simulé, tant que son temps d'affichage court. */
         hud.radioMessage = (m_radioMsgShow > 0.0f) ? m_radioMsg.c_str() : "";
+        /* Message de l'atterrissage automatique (échec de l'engagement ou
+           auto-désengagement), tant que son temps d'affichage court. */
+        if (m_autolandMsgShow > 0.0f) {
+            m_autolandMsgShow -= frameDt;
+        }
+        hud.autolandMessage = (m_autolandMsgShow > 0.0f) ? m_autolandMsg.c_str() : "";
         /* En démo, le HUD est éteint mais on garde les étiquettes des lieux. */
         m_hud.updateScale(m_width, m_height);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, m_hudMode, m_paused, m_confirmReset, m_confirmDemo, m_demo.active());

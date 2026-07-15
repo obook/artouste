@@ -11,6 +11,8 @@
  *   bouton X        -> replace l'appareil au point de départ
  *   bouton Back     -> met en pause ou reprend
  *   LB + RB         -> retour au menu (combinaison, pour éviter les retours accidentels)
+ *   croix haut      -> bascule le mode assisté
+ *   stick droit (appui) -> bascule l'atterrissage automatique (R3 sur PS4/PS5)
  * La manette conserve un état d'une image à l'autre : la position du levier de
  * collectif et l'état précédent des boutons (pour détecter le moment de l'appui).
  *
@@ -70,8 +72,16 @@ public:
      * pressée (bascule le mode assisté, comme la touche M). */
     [[nodiscard]] bool assistTogglePressed() noexcept;
 
+    /* Vrai une seule fois, au moment où le stick droit vient d'être enfoncé (clic R3,
+     * comme la touche J) : bascule l'atterrissage automatique. */
+    [[nodiscard]] bool autolandTogglePressed() noexcept;
+
     /* Remet le levier de collectif à zéro. */
     void reset() noexcept { m_collective = 0.0f; }
+
+    /* Recale le levier de collectif mémorisé sur value (voir Keyboard::setCollective,
+       même besoin de resynchronisation après un vol automatique). */
+    void setCollective(float value) noexcept { m_collective = value; }
 
     /* Amorce les états de front des boutons avec l'état courant de la manette : un
      * bouton déjà tenu ne comptera pas comme un nouvel appui à la prochaine lecture.
@@ -89,7 +99,8 @@ private:
     bool  m_prevX      = false; /* état du bouton X à l'image précédente */
     bool  m_prevMenu   = false; /* état de la combinaison LB + RB à l'image précédente */
     bool  m_prevA      = false; /* état du bouton A à l'image précédente */
-    bool  m_prevDpadUp = false; /* état de la croix haut à l'image précédente */
+    bool  m_prevDpadUp    = false; /* état de la croix haut à l'image précédente */
+    bool  m_prevRightThumb = false; /* état du clic du stick droit (R3) à l'image précédente */
 };
 
 }  /* namespace artouste::input */

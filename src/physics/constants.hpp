@@ -165,6 +165,25 @@ inline constexpr float VRS_DESCENT_MAX    = 7.0f;     /* m/s : VRS développé *
 inline constexpr float VRS_AIRSPEED_EXIT  = 7.0f;     /* m/s (~14 kt) : sortie par translation */
 inline constexpr float VRS_THRUST_LOSS    = 0.35f;    /* fraction max de portance perdue */
 
+/* --- Alerte taux de descente (façon GPWS) -------------------------------------- */
+/* Seuils de l'alerte "TAUX DE DESCENTE" du HUD (voir ui/HudAlarms.hpp et
+   ApplicationHudInstruments.cpp) : plus on est bas, plus le taux de descente
+   toléré est faible. Partagés avec le guidage du pilote automatique
+   (DemoPilotDetail.hpp), qui vise un taux de descente sous ce seuil en approche
+   pour ne jamais déclencher l'alerte -- au lieu de la couper pendant l'approche. */
+inline constexpr float GPWS_MIN_AGL   = 2.0f;    /* m : alerte active seulement en vol (pas sur le pad) */
+inline constexpr float GPWS_MAX_AGL   = 120.0f;  /* m : plafond de surveillance */
+inline constexpr float GPWS_SINK_NEAR = 2.5f;    /* m/s : taux toléré près du sol */
+inline constexpr float GPWS_SINK_FAR  = 8.0f;    /* m/s : taux toléré au plafond */
+
+/* Taux de descente toléré par l'alerte GPWS à une hauteur-sol donnée (m/s) :
+   enveloppe progressive entre GPWS_SINK_NEAR (au sol) et GPWS_SINK_FAR (au
+   plafond de surveillance). */
+inline constexpr float gpwsSinkLimitMs(float aglM) noexcept {
+    const float f = (aglM < 0.0f) ? 0.0f : (aglM > GPWS_MAX_AGL) ? 1.0f : (aglM / GPWS_MAX_AGL);
+    return GPWS_SINK_NEAR + (GPWS_SINK_FAR - GPWS_SINK_NEAR) * f;
+}
+
 /* --- Garde-fous numériques --------------------------------------- */
 /* Limites de sécurité pour éviter que le calcul ne s'emballe. */
 inline constexpr float MAX_SPEED    = 120.0f;   /* vitesse maximale, en m/s */

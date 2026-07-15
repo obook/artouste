@@ -221,23 +221,35 @@ bool Gamepad::assistTogglePressed() noexcept {
     return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_UP, m_prevDpadUp);
 }
 
+bool Gamepad::autolandTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevRightThumb = false;
+        return false;
+    }
+    /* Clic du stick droit (R3 sur PS4/PS5) : bascule l'atterrissage automatique
+       (comme la touche J). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_RIGHT_THUMB, m_prevRightThumb);
+}
+
 void Gamepad::primeButtons() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
         /* Pas de manette : rien à tenir, tous les fronts repartent au repos. */
         m_prevY = m_prevStart = m_prevB = m_prevBack = m_prevX = m_prevMenu = m_prevA =
-            m_prevDpadUp = false;
+            m_prevDpadUp = m_prevRightThumb = false;
         return;
     }
     const auto down = [&](int b) { return state.buttons[b] == GLFW_PRESS; };
-    m_prevY      = down(GLFW_GAMEPAD_BUTTON_Y);
-    m_prevStart  = down(GLFW_GAMEPAD_BUTTON_START);
-    m_prevB      = down(GLFW_GAMEPAD_BUTTON_B);
-    m_prevBack   = down(GLFW_GAMEPAD_BUTTON_BACK);
-    m_prevX      = down(GLFW_GAMEPAD_BUTTON_X);
-    m_prevA      = down(GLFW_GAMEPAD_BUTTON_A);
-    m_prevDpadUp = down(GLFW_GAMEPAD_BUTTON_DPAD_UP);
-    m_prevMenu   = down(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER) && down(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
+    m_prevY          = down(GLFW_GAMEPAD_BUTTON_Y);
+    m_prevStart      = down(GLFW_GAMEPAD_BUTTON_START);
+    m_prevB          = down(GLFW_GAMEPAD_BUTTON_B);
+    m_prevBack       = down(GLFW_GAMEPAD_BUTTON_BACK);
+    m_prevX          = down(GLFW_GAMEPAD_BUTTON_X);
+    m_prevA          = down(GLFW_GAMEPAD_BUTTON_A);
+    m_prevDpadUp     = down(GLFW_GAMEPAD_BUTTON_DPAD_UP);
+    m_prevRightThumb = down(GLFW_GAMEPAD_BUTTON_RIGHT_THUMB);
+    m_prevMenu       = down(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER) && down(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
 }
 
 bool Gamepad::isActive() noexcept {

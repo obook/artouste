@@ -50,6 +50,14 @@ ZONE = {
         ("Capbreton", -1.4457112839188175, 43.65393627677582),
         ("Hossegor", -1.4438385382046726, 43.661316497891036),
     ],
+    # Estacade de Capbreton (jetée sud du chenal du Boucarot, où sont fixés les
+    # deux feux d'entrée du port, l'un vert au bout de l'estacade sud, l'autre
+    # rouge au bout de la digue nord, cf. instructions nautiques). Un arbre y
+    # poussait par erreur (bande de sable/eau mal classée par le scatter de
+    # végétation) : exclusion nécessaire, comme pour les pistes d'aérodrome.
+    "exclusions": [
+        ("Estacade de Capbreton", -1.4488, 43.6552, 200),
+    ],
     # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
     # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
     # départ (aucune piste réelle recensée ici, contrairement à Dax) ; pente

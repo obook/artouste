@@ -170,6 +170,23 @@ ou sortir de France.
   
 - [x] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
+- [ ] Placer les deux phares (feux d'entrée de port) de Capbreton, à l'embouchure
+  du chenal du Boucarot : un vert au bout de l'estacade sud (environ
+  `-1.4488, 43.6552`), un rouge au bout de la digue nord (environ
+  `-1.4483, 43.6567`, d'après l'almanach nautique : "North Dike" Fl(2)R.6s,
+  "South estacade" Fl(2)G.6s). Repérés après un signalement : un arbre
+  poussait par erreur à l'emplacement de l'estacade sud, corrigé par une
+  entrée `exclusions` dans `zones/cote_landes.py`, mais aucune structure n'y
+  est encore dessinée.
+  Candidats trouvés dans `fgdata` (dépôt GitLab `flightgear/fgdata`,
+  `Models/Maritime/Misc/`) : `left_bank_beacon.ac` et `right_bank_beacon.ac`,
+  exactement le couple de balises de rive gauche/droite qu'il faut ici.
+  Contrairement aux bâtiments (BD TOPO, auto-extrudés) et aux hélipads (disque
+  `assets/models/helipad/helipad.ac` déjà instancié), il n'existe aucun
+  mécanisme pour poser un modèle ponctuel arbitraire à une coordonnée donnée :
+  à construire, sur le modèle du chargement de l'hélipad (charger le `.ac`,
+  instancier au lon/lat voulu, poser sur `heightAt`).
+
 ### Végétation (arbres, forêts)
 
 - [~] Prototype d'arbres en billboards instanciés (`render::Vegetation`). Chaque

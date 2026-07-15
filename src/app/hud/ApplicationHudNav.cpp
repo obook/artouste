@@ -79,24 +79,26 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         label.mapV    = z / (2.0f * halfH) + 0.5f;
 
         /* Pad équipé d'une balise HAPI toute proche (voir hapiUnitNear) : le point
-           de l'étiquette adopte la couleur/clignotement de la balise plutôt que la
-           couleur générique du pad, pour lire la pente d'approche sans chercher la
-           lueur au sol. Même calcul (secteur + clignotement) que la lueur 3D
-           (Application::drawHapi), pour rester en phase avec elle. */
-        if (generic) {
-            if (const render::HapiUnit* hapi = m_terrain->hapiUnitNear(place.lon, place.lat, 100.0f)) {
-                float hx = 0.0f, hz = 0.0f;
-                m_terrain->worldAt(hapi->lon, hapi->lat, hx, hz);
-                const float hy         = m_terrain->heightAt(hx, hz) + render::HAPI_MAST_M;
-                const float hdx        = heliPos.x - hx;
-                const float hdz        = heliPos.z - hz;
-                const float horizDist  = std::sqrt(hdx * hdx + hdz * hdz);
-                const render::HapiSector sector = render::hapiSector(*hapi, horizDist, heliPos.y - hy);
-                const render::HapiGlow   glow   = render::hapiGlow(sector, timeSeconds);
-                label.hasHapi   = true;
-                label.hapiGreen = glow.green;
-                label.hapiOff   = glow.off;
-            }
+           de l'étiquette adopte la couleur/clignotement de la balise plutôt que sa
+           couleur par défaut (cyan générique ou doré pour un lieu nommé), pour lire
+           la pente d'approche sans chercher la lueur au sol. Vaut aussi pour un lieu
+           nommé qui coïncide avec le pad (l'aérodrome de Dax-Seyresse, par exemple) :
+           sinon son point doré fixe resterait affiché à la place du vert/rouge HAPI,
+           qui ne doit jamais laisser paraître d'ambre. Même calcul (secteur +
+           clignotement) que la lueur 3D (Application::drawHapi), pour rester en phase
+           avec elle. */
+        if (const render::HapiUnit* hapi = m_terrain->hapiUnitNear(place.lon, place.lat, 100.0f)) {
+            float hx = 0.0f, hz = 0.0f;
+            m_terrain->worldAt(hapi->lon, hapi->lat, hx, hz);
+            const float hy         = m_terrain->heightAt(hx, hz) + render::HAPI_MAST_M;
+            const float hdx        = heliPos.x - hx;
+            const float hdz        = heliPos.z - hz;
+            const float horizDist  = std::sqrt(hdx * hdx + hdz * hdz);
+            const render::HapiSector sector = render::hapiSector(*hapi, horizDist, heliPos.y - hy);
+            const render::HapiGlow   glow   = render::hapiGlow(sector, timeSeconds);
+            label.hasHapi   = true;
+            label.hapiGreen = glow.green;
+            label.hapiOff   = glow.off;
         }
 
         const float y    = altSol + 25.0f;

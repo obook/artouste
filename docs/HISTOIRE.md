@@ -8,7 +8,7 @@ La Gendarmerie nationale fut l'une des premières à l'utiliser dès 1957. L'arm
 
 <center><img src="photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
 
-_Alouette II SE 3130 ISNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</center>
+_Alouette II SE 3130 SNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</center>
 
 Au cinéma, les Alouette apparaissent dans plusieurs films à partir des années 60.
 

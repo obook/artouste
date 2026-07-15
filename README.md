@@ -205,8 +205,8 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 
 ## Cartes (terrains)
 
-Six cartes sont fournies (Ossau, côte landaise, bassin d'Arcachon, Cauterets,
-Bordeaux, Dax), à choisir dans `assets/config.txt` (clé `terrain`) ou via la
+Sept cartes sont fournies (Ossau, côte landaise, bassin d'Arcachon, Cauterets,
+Bordeaux, Dax, Pic du Midi de Bigorre), à choisir dans `assets/config.txt` (clé `terrain`) ou via la
 variable d'environnement `ARTOUSTE_TERRAIN`. Les terrains et bâtiments 3D sont
 générés hors-ligne depuis les données IGN (Licence Ouverte Etalab 2.0). Détails,
 configuration complète et régénération : [docs/CARTES.md](docs/CARTES.md) ;

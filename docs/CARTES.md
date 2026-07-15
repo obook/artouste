@@ -7,8 +7,10 @@ exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
 de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
 chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne) et
 `assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
-de Mérignac, Pessac, Cenon et Lormont) et `assets/terrain/dax/` (Dax : l'Adour,
-l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes).
+de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (Dax : l'Adour,
+l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes) et
+`assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
+Tourmalet, la station de La Mongie).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -75,7 +77,7 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon`, `cauterets`, `bordeaux` ou `dax`).
+`cote-landes`, `arcachon`, `cauterets`, `bordeaux`, `dax` ou `bigorre`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :

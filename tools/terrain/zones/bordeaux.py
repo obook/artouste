@@ -51,4 +51,11 @@ ZONE = {
         ("Hôpital Haut-Lévêque (Pessac)", -0.6330, 44.7908),
         ("Hôpital Saint-André", -0.5790, 44.8333),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
+    # départ (90°, valeur par défaut : pas de start_heading propre à cette
+    # zone) ; pente 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Aéroport de Bordeaux-Mérignac", -0.6964, 44.8362, 90, 6),
+    ],
 }

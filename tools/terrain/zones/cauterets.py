@@ -56,4 +56,11 @@ ZONE = {
         ("Refuge des Sarradets", -0.0333, 42.6959),
         ("Refuge de Bayssellance", -0.1241, 42.7794),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
+    # départ (aucune piste réelle recensée ici, contrairement à Dax) ; pente
+    # 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Cauterets", -0.1120, 42.8880, 180, 6),
+    ],
 }

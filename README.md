@@ -75,6 +75,15 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   carburant (jaune sous 60 L, rouge sous 15 L). En Super HUD, l'alarme est une LED
   en haut à droite du cadran ; en HUD coins, la ligne concernée passe au jaune ou
   au rouge.
+* Balise HAPI (Helicopter Approach Path Indicator) sur le pad de départ de chaque
+  carte : un repère au sol qui indique la pente d'approche par sa couleur, selon
+  les seuils du guide DGAC/STAC -- vert clignotant si trop haut, vert fixe sur la
+  pente, rouge fixe légèrement trop bas, rouge clignotant si trop bas. Le point de
+  l'étiquette HUD (coin ou minimap) reprend cette couleur, qu'il s'agisse du pad
+  lui-même ou d'un lieu remarquable qui coïncide avec lui (l'aérodrome de
+  Dax-Seyresse, par exemple) ; hors des seuils, le point s'éteint plutôt que de
+  passer à une couleur intermédiaire. Données par carte dans un fichier optionnel
+  `hapi.txt` (`lon lat azimut_deg pente_pct nom`), voir [docs/CARTES.md](docs/CARTES.md).
 * Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
   étiquettes) et le menu de démarrage suivent la taille réelle de l'affichage
   (référence 1280x720, facteur borné de 0,75 à 3,5), et la police est reconstruite

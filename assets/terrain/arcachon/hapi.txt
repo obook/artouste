@@ -1,0 +1,5 @@
+# Balises HAPI - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime) (un par ligne : lon lat azimut_deg pente_pct nom)
+# azimut_deg : cap d'approche suivi par le pilote (0 = nord).
+# pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).
+# Position et calage provisoires, à affiner sur place.
+-1.116442178115823 44.596643236436016 330 6 Aérodrome de La Teste

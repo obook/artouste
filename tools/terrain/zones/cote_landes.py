@@ -50,4 +50,11 @@ ZONE = {
         ("Capbreton", -1.4457112839188175, 43.65393627677582),
         ("Hossegor", -1.4438385382046726, 43.661316497891036),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
+    # départ (aucune piste réelle recensée ici, contrairement à Dax) ; pente
+    # 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Capbreton", -1.4457112839188175, 43.65393627677582, 0, 6),
+    ],
 }

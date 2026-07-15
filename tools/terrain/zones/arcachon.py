@@ -53,4 +53,11 @@ ZONE = {
     "exclusions": [
         ("Aérodrome de La Teste-de-Buch (LFCH)", -1.1117, 44.5942, 550),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
+    # départ (aucune piste réelle recensée ici, contrairement à Dax) ; pente
+    # 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Aérodrome de La Teste", -1.116442178115823, 44.596643236436016, 330, 6),
+    ],
 }

@@ -62,4 +62,11 @@ ZONE = {
         ("Barrage du Herraou", 0.0614, 42.9594),
         ("Super Barèges", 0.1315, 42.9053),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de
+    # départ (aucune piste réelle recensée ici, contrairement à Dax) ; pente
+    # 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("La Mongie", 0.1783, 42.9094, 270, 6),
+    ],
 }

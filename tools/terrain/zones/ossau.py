@@ -61,4 +61,11 @@ ZONE = {
         ("Refuge d'Arrémoulit", -0.3292, 42.8460),
         ("Barrage d'Artouste", -0.3327, 42.8628),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ (Fabrèges). Azimut
+    # = cap de départ (aucune piste réelle recensée ici, contrairement à
+    # Dax) ; pente 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Fabrèges", -0.3972, 42.8799, 180, 6),
+    ],
 }

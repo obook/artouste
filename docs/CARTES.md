@@ -12,8 +12,10 @@ l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
-ligne : `lon lat nom`) et `buildings.bin` (bâtiments 3D). L'hélipad de la zone de
-départ est toujours présent en plus de ceux de `helipads.txt`.
+ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
+ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README)
+et `buildings.bin` (bâtiments 3D). L'hélipad de la
+zone de départ est toujours présent en plus de ceux de `helipads.txt`.
 
 ## Modifier la configuration
 

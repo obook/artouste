@@ -18,9 +18,10 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### HAPI (aide à l'approche)
 
-- [~] Balise HAPI (Helicopter Approach Path Indicator, voir
-  `media/gt_installation_hapi.pdf`, guide DGAC/STAC janvier 2017) sur l'aérodrome
-  de Dax-Seyresse. Contrairement à l'optique réelle (4 faisceaux colorés visibles
+- [x] Balise HAPI (Helicopter Approach Path Indicator, voir
+  `media/gt_installation_hapi.pdf`, guide DGAC/STAC janvier 2017) sur le pad de
+  départ de chaque carte (d'abord l'aérodrome de Dax-Seyresse seul, puis étendu
+  aux six autres cartes). Contrairement à l'optique réelle (4 faisceaux colorés visibles
   chacun depuis une plage d'angle différente), le simulateur calcule à chaque
   image l'angle d'élévation entre la balise et l'appareil du joueur (seul point
   de vue à simuler) et n'affiche qu'une seule lueur, dans la couleur du secteur
@@ -44,7 +45,10 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
   exagérée (rayon fixe en mètres) faute de billboard à taille d'écran
   constante, invisible au-delà de quelques centaines de mètres ; calage réel
   de Dax (azimut, pente, position exacte du HAPI derrière le point cible) à
-  vérifier sur place ; HAPI sur d'autres cartes (hôpitaux avec hélistation
+  vérifier sur place ; sur les six autres cartes, faute de piste ou de DZ
+  réelle recensée, l'azimut vaut simplement le cap de départ (`start_heading`)
+  et la position est calée sur le pad plutôt que sur un relevé de terrain ;
+  HAPI sur d'autres hélipads que celui de départ (hôpitaux avec hélistation
   dédiée).
 
 ### Sons

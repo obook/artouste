@@ -31,18 +31,23 @@ message(STATUS "  version (pied de menu) : ${ARTOUSTE_VERSION_STRING}")
 
 add_executable(artouste
     main.cpp
-    app/Application.cpp
+    app/lifecycle/ApplicationLifecycle.cpp
+    app/lifecycle/ApplicationWindow.cpp
+    app/lifecycle/ApplicationSession.cpp
     app/scene/ApplicationAssets.cpp
     app/scene/ApplicationScene.cpp
     app/loop/ApplicationLoop.cpp
     app/loop/ApplicationRotorRadio.cpp
     app/ApplicationInput.cpp
-    app/ApplicationRender.cpp
+    app/render/ApplicationSun.cpp
+    app/render/ApplicationRender.cpp
+    app/render/ApplicationRenderEffects.cpp
     app/ApplicationGround.cpp
     app/hud/ApplicationHudInstruments.cpp
     app/hud/ApplicationHudNav.cpp
     app/ApplicationCapture.cpp
-    app/ApplicationMenu.cpp
+    app/menu/ApplicationMenu.cpp
+    app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
     app/DemoPilot.cpp
     audio/AudioEngineControl.cpp

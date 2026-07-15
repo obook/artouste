@@ -20,6 +20,8 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <utility>
+#include <vector>
 
 namespace artouste::render {
 
@@ -46,6 +48,52 @@ public:
 
 private:
     void release() noexcept;
+
+    /* Zone circulaire (aérodromes, etc.) où l'on ne plante aucun arbre. */
+    struct Exclusion {
+        float x, z, r2;
+    };
+
+    /* Conversion d'une position monde (x est, z sud) en pixel de l'orthophoto
+       (colonne 0 = ouest, rangée 0 = nord). Partagée par le masquage et le semis. */
+    static void toPixel(float x, float z, float halfW, float halfH, int orthoW, int orthoH,
+                        int& ox, int& oy) noexcept;
+    /* Couleur normalisée (0..1) du pixel (ox, oy) de l'orthophoto RGB. */
+    static void orthoRGB(const unsigned char* ortho, int orthoW, int ox, int oy,
+                         float& r, float& g, float& b) noexcept;
+
+    /* Masque d'eau (flood fill depuis les repères "Lac" de landmarks.txt, puis
+       dilaté pour dégager la rive). Les lacs sans graine d'eau trouvée sous leur
+       repère sont rangés dans fallbackLakes (dégagés par un disque de secours au
+       semis). Voir VegetationMasks.cpp. */
+    std::vector<unsigned char> buildWaterMask(const std::filesystem::path& terrainDir,
+                                              const Terrain& terrain, const unsigned char* ortho,
+                                              int orthoW, int orthoH, float halfW, float halfH,
+                                              std::vector<std::pair<float, float>>& fallbackLakes) const;
+    /* Masque d'emprise des bâtiments (buildings.bin, rastérisé à la résolution de
+       l'orthophoto) : aucun arbre n'y est planté. Voir VegetationMasks.cpp. */
+    std::vector<unsigned char> buildBuildingMask(const std::filesystem::path& terrainDir,
+                                                 const Terrain& terrain, int orthoW, int orthoH,
+                                                 float halfW, float halfH) const;
+    /* Zones d'exclusion (exclusions.txt, facultatif). Voir VegetationMasks.cpp. */
+    std::vector<Exclusion> loadExclusions(const std::filesystem::path& terrainDir,
+                                          const Terrain& terrain) const;
+
+    /* Boucle de placement sur la grille de semis, puis éclaircissement au budget si
+       le nombre d'arbres dépasse TARGET_TREES. Renvoie le tampon d'instances (six
+       flottants par arbre : centre, largeur, espèce, azimut). Voir
+       VegetationScatter.cpp. */
+    std::vector<float> scatterTrees(const Terrain& terrain, const unsigned char* ortho,
+                                    int orthoW, int orthoH, float halfW, float halfH,
+                                    float spacing, bool clear, float sx, float sz,
+                                    const std::vector<unsigned char>& water,
+                                    const std::vector<unsigned char>& building,
+                                    const std::vector<Exclusion>& exclusions,
+                                    const std::vector<std::pair<float, float>>& fallbackLakes) const;
+
+    /* Téléverse la géométrie de base (billboard en croix) et le tampon d'instances
+       dans un VAO/VBO/EBO. */
+    void uploadGpuBuffers(const std::vector<float>& instances);
 
     Texture       m_sprite;
     unsigned int  m_vao          = 0;

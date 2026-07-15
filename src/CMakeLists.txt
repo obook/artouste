@@ -56,8 +56,11 @@ add_executable(artouste
     render/Camera.cpp
     render/Terrain.cpp
     render/TerrainSetup.cpp
+    render/hapi/Hapi.cpp
     render/Buildings.cpp
-    render/Vegetation.cpp
+    render/vegetation/Vegetation.cpp
+    render/vegetation/VegetationMasks.cpp
+    render/vegetation/VegetationScatter.cpp
     render/Clouds.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp
@@ -68,7 +71,9 @@ add_executable(artouste
     render/LoadedHelicopterInstruments.cpp
     render/LoadedHelicopterDraw.cpp
     ui/Hud.cpp
-    ui/HudOverlay.cpp
+    ui/hud/HudSuperOverlay.cpp
+    ui/hud/HudPadGuidance.cpp
+    ui/hud/HudLabelsMinimap.cpp
     audio/AudioEngine.cpp
     audio/RingBuffer.cpp
     audio/RadioStream.cpp

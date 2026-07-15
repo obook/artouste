@@ -226,9 +226,10 @@ volontairement simplifiés, mais ils en respectent l'esprit.
 | Vol latéral ou arrière | Limité à 18 kt. Au-delà, le rotor anticouple sature et l'autorité au palonnier diminue, comme sur l'appareil réel. |
 | Vortex ring state | En descente verticale rapide (plus de 3 m/s) à faible vitesse sol et à puissance partielle, le rotor retombe dans son propre souffle et perd de la portance. On s'en dégage en accélérant vers l'avant (cyclique en avant). |
 
-Ces quatre difficultés sont désactivées en mode assisté et pendant la démo : le vol
-y reste facile et le parcours de démonstration prévisible. Les effets qui aident le
-pilote (effet de sol, effet de translation) restent actifs dans tous les cas.
+Ces quatre difficultés sont désactivées en mode assisté, pendant la démo et pendant
+l'atterrissage automatique : le vol y reste facile et le parcours de démonstration
+prévisible. Les effets qui aident le pilote (effet de sol, effet de translation)
+restent actifs dans tous les cas.
 
 En vue cockpit, une vibration légère de la cabine reproduit les trois impulsions
 par tour du rotor tripale (3/rev, environ 18 Hz au régime nominal). Cet effet est

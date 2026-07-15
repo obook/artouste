@@ -16,11 +16,13 @@ Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'at
 
 ## Histoire
 
-L'Alouette II n'était pas destinée à devenir une légende : conçue par la Société nationale des constructions aéronautiques du Sud-Est (SNCASE) au
+L'Alouette II n'était pas destinée à devenir une légende.
+
+Conçue par la Société nationale des constructions aéronautiques du Sud-Est (SNCASE) au
 milieu des années 1950, elle fut le premier hélicoptère de série au monde à voler
 grâce à une turbine à gaz, ouvrant à l'appareil des altitudes jusque-là hors de
-portée. Elle a aussi marqué le cinéma français, de Fantômas à James Bond. Voir
-[docs/HISTOIRE.md](docs/HISTOIRE.md) pour le récit complet et la liste des films.
+portée. Elle a aussi marqué le cinéma, de Fantômas à James Bond. Voir
+[docs/HISTOIRE.md](docs/HISTOIRE.md) pour le récit complet.
 
 <div align="center"><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
 

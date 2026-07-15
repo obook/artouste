@@ -24,7 +24,7 @@ portée. Elle a aussi marqué le cinéma français, de Fantômas à James Bond. 
 
 <div align="center"><img src="docs/photo/SE3130-ISNCASE-DAX.jpg" alt="SE 3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)" width="480" />
 
-_Alouette II SE 3130 SNCASE - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</div>
+_Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_</div>
 
 ## Démarrage rapide
 

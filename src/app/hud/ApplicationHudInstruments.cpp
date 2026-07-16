@@ -199,10 +199,19 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         m_padGuideGrace -= frameDt;  /* décompte du délai de grâce après un décollage */
     }
     if (aideAtterrissage) {
-        /* Point de référence : le mât rotor, pas l'origine du modèle. Au parking,
-           l'origine est reculée de ROTOR_FORWARD_OFFSET pour centrer le mât sur le H
-           (voir ApplicationScene). Mesurer l'écart depuis le mât évite un biais
-           longitudinal constant qui décalait le trait horizontal du réticule. */
+        /* Point de référence horizontal : le mât rotor, pas l'origine du modèle. Au
+           parking, l'origine est reculée de ROTOR_FORWARD_OFFSET pour centrer le mât
+           sur le H (voir ApplicationScene). Mesurer l'écart depuis le mât évite un
+           biais longitudinal constant qui décalait le trait horizontal du réticule.
+           SEULEMENT pour dx/dz : forward suit le tangage de l'appareil (pas seulement
+           le cap), donc mat.y varie avec l'assiette (jusqu'à environ
+           ROTOR_FORWARD_OFFSET * sin(tangage), plusieurs dizaines de cm à quelques
+           degrés de piqué) sans rapport avec la hauteur-sol réelle. altSurPad -- dont
+           dépendent le score au posé et la visibilité du réticule -- doit rester basé
+           sur body.position.y, le point que la physique de contact utilise réellement
+           (voir FlightModel::update, "posé sur les patins") : sinon un appareil encore
+           légèrement piqué en finale déclenche le score alors que les patins sont
+           encore au-dessus du pad. */
         const vec3  mat = body.position
                         + forward * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
         vec3        posePad{0.0f, 0.0f, 0.0f};
@@ -214,7 +223,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
             const float dxMonde   = mat.x - posePad.x;
             const float dzMonde   = mat.z - posePad.z;
             const float dist2D    = std::sqrt(dxMonde * dxMonde + dzMonde * dzMonde);
-            const float altSurPad = mat.y - posePad.y;
+            const float altSurPad = body.position.y - posePad.y;
 
             /* right : axe latéral pilote (droite positive) dérivé de forward. */
             const vec3 right = glm::normalize(glm::cross(forward, vec3{0.0f, 1.0f, 0.0f}));

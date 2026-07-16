@@ -324,6 +324,17 @@ ou sortir de France.
 - [ ] En plein écran, prévoir éventuellement une bascule true borderless-windowed sous
   Windows (au lieu du plein écran moniteur) si l'Alt-Tab ou le multi-écran pose souci.
 
+- [ ] Double commande élève/instructeur (deux manettes en même temps) : aujourd'hui
+  `Gamepad::activePad()` ne lit que le premier slot GLFW reconnu comme manette
+  (`src/input/Gamepad.cpp:66-73`), la seconde manette branchée est totalement ignorée.
+  Pour un pilotage à deux comme dans un vrai hélicoptère à double commande, il faudrait
+  lire tous les slots connectés et fusionner les axes, par exemple en prenant pour
+  chaque axe celui des deux qui s'écarte le plus du neutre (imite des commandes
+  mécaniquement liées). Reste à trancher l'arbitrage des boutons à bascule (turbine,
+  vue, HUD, menu, livrée, mode assisté) si les deux joueurs appuient en même temps :
+  soit un seul pilote désigné a la main dessus, soit un bouton de prise de commande
+  dédié à l'instructeur.
+
 ## Distribution Windows
 
 - [x] Le Contrôle intelligent des applications (Smart App Control) de Windows 11

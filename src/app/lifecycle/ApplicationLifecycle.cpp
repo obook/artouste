@@ -134,7 +134,14 @@ bool Application::initWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
+    /* Anti-crénelage (MSAA) : clé "msaa" de config.txt (4x par défaut), surchargée par
+       la variable d'environnement ARTOUSTE_MSAA (prioritaire). Le MSAA coûte cher en
+       bande passante sur GPU intégré, d'où ce levier (0, 2, 4, 8). */
+    int samples = m_config.msaa;
+    if (const char* env = std::getenv("ARTOUSTE_MSAA"); env != nullptr && env[0] != '\0') {
+        samples = std::atoi(env);
+    }
+    glfwWindowHint(GLFW_SAMPLES, samples);
 
     m_window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, nullptr, nullptr);
     if (m_window == nullptr) {
@@ -181,6 +188,7 @@ bool Application::initGL() {
     std::printf("Renderer: %s\n", glGetString(GL_RENDERER));
 
     glfwGetFramebufferSize(m_window, &m_width, &m_height);
+    std::printf("Framebuffer : %d x %d\n", m_width, m_height);
     glViewport(0, 0, m_width, m_height);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
@@ -194,6 +202,9 @@ int Application::run() {
     if (!assetsDisponibles()) {
         return EXIT_FAILURE;
     }
+    /* Configuration lue avant l'ouverture de la fenêtre : le MSAA doit être connu à
+       la création du contexte GLFW. Réutilisée ensuite par initScene. */
+    m_config = loadConfig(resolveAssetDir() / "config.txt");
     if (!initWindow()) {
         return EXIT_FAILURE;
     }

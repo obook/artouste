@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
 #include "audio/AudioEngine.hpp"
@@ -21,6 +22,7 @@
 #include "render/Livery.hpp"
 #include "ui/Hud.hpp"
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -312,9 +314,19 @@ private:
        coupe la démo -- retour au menu immédiat, alors que le pilote n'a rien demandé. */
     float                                      m_demoInputGraceS = 0.0f;
 
+    /* Configuration lue au lancement (assets/config.txt). Chargée tôt dans run(),
+       avant l'ouverture de la fenêtre, car le MSAA doit être connu à sa création ;
+       réutilisée ensuite par initScene (terrain, démo, végétation...). */
+    app::Config                               m_config;
+
     /* Végétation active (clé "arbres" de config.txt, vrai par défaut, forcée à faux
        par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
     bool                                      m_treesEnabled = true;
+
+    /* Budget d'arbres effectif (clé "tree_max" de config.txt, surchargée par
+       ARTOUSTE_TREE_MAX), résolu dans initScene et passé à Vegetation par loadTerrain.
+       0 = laisser Vegetation appliquer son défaut. */
+    std::size_t                               m_treeBudget = 0;
 
     /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend
        la main pour réafficher le menu de démarrage (au lieu de quitter). */

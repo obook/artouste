@@ -30,10 +30,12 @@ class Terrain;
 class Vegetation {
 public:
     /* Sème la végétation sur le terrain à partir de son orthophoto (dossier du
-       terrain) et du sprite d'arbre donné. Sans orthophoto ou sans sprite, l'objet
-       reste vide (built() faux) et draw() ne fait rien. */
+       terrain) et du sprite d'arbre donné. treeBudget borne le nombre d'arbres
+       soumis au GPU (au-delà, le semis est éclairci uniformément) : c'est le levier
+       de performance principal. Sans orthophoto ou sans sprite, l'objet reste vide
+       (built() faux) et draw() ne fait rien. */
     Vegetation(const std::filesystem::path& terrainDir, const Terrain& terrain,
-               const std::filesystem::path& spritePath);
+               const std::filesystem::path& spritePath, std::size_t treeBudget);
     ~Vegetation();
 
     Vegetation(const Vegetation&)            = delete;
@@ -101,6 +103,7 @@ private:
     unsigned int  m_instanceVbo  = 0;
     unsigned int  m_ebo          = 0;
     std::size_t   m_count        = 0;  /* nombre d'arbres semés */
+    std::size_t   m_budget       = 0;  /* plafond d'arbres (voir scatterTrees) */
 };
 
 }  /* namespace artouste::render */

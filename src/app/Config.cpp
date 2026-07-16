@@ -9,6 +9,7 @@
 
 #include "app/Config.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -104,6 +105,19 @@ Config loadConfig(const std::filesystem::path& path) {
                 cfg.sunTimeScale = std::stof(value);
             } catch (const std::exception&) {
                 std::fprintf(stderr, "[Config] sun_time_scale invalide : %s\n", value.c_str());
+            }
+        } else if (key == "tree_max") {
+            try {
+                cfg.treeBudget = std::max(0, std::stoi(value));
+            } catch (const std::exception&) {
+                std::fprintf(stderr, "[Config] tree_max invalide : %s\n", value.c_str());
+            }
+        } else if (key == "msaa") {
+            try {
+                /* Bornes GLFW usuelles : 0, 2, 4, 8. On borne au cas où. */
+                cfg.msaa = std::clamp(std::stoi(value), 0, 16);
+            } catch (const std::exception&) {
+                std::fprintf(stderr, "[Config] msaa invalide : %s\n", value.c_str());
             }
         } else {
             std::fprintf(stderr, "[Config] clé inconnue ignorée : %s\n", key.c_str());

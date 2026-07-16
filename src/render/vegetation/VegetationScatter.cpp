@@ -245,14 +245,11 @@ std::vector<float> Vegetation::scatterTrees(
     }
 
     /* Budget : au-delà, éclaircissement uniforme (échantillonnage déterministe par
-       indice), sans troncature spatiale, pour limiter le surdessin des grandes cartes. */
-    std::size_t budget = TARGET_TREES;
-    if (const char* env = std::getenv("ARTOUSTE_TREE_MAX"); env != nullptr && env[0] != '\0') {
-        const long v = std::strtol(env, nullptr, 10);
-        if (v > 0) {
-            budget = static_cast<std::size_t>(v);
-        }
-    }
+       indice), sans troncature spatiale, pour limiter le surdessin des grandes cartes.
+       La valeur vient de la config (clé "tree_max", défaut TARGET_TREES) ou de la
+       variable d'environnement ARTOUSTE_TREE_MAX, résolue en amont dans initScene ;
+       0 signifie "budget par défaut" (sécurité si l'appelant n'en fournit pas). */
+    const std::size_t budget = (m_budget > 0) ? m_budget : TARGET_TREES;
     if (count > budget) {
         const float        keep = static_cast<float>(budget) / static_cast<float>(count);
         std::vector<float> thinned;

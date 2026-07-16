@@ -59,3 +59,20 @@ radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
 # En temps réel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
 # part de midi, pour démarrer sur une belle lumière. Avec 0, il reste figé à midi.
 sun_time_scale 72
+
+# ----------------------------------------------------------------------------
+# Performances (utile sur GPU intégré ou tablette : plus la charge est basse,
+# plus la cadence est élevée et moins la machine chauffe).
+# ----------------------------------------------------------------------------
+
+# tree_max : budget de végétation (nombre maximum d'arbres soumis au GPU). Au-delà,
+# le semis est éclairci uniformément. C'est le poste de rendu le plus coûteux quand
+# les arbres sont actifs (voir la clé "arbres"). Défaut 1600000 ; descendez vers
+# 500000, voire 300000, sur une machine modeste. Sans effet si "arbres 0".
+# La variable d'environnement ARTOUSTE_TREE_MAX, si définie, a la priorité.
+tree_max 1600000
+
+# msaa : anti-crénelage (échantillons par pixel). 4 (défaut) lisse bien les contours ;
+# 2 allège la bande passante mémoire (différence peu visible en 1080p) ; 0 le désactive
+# (le plus rapide). La variable d'environnement ARTOUSTE_MSAA, si définie, a la priorité.
+msaa 4

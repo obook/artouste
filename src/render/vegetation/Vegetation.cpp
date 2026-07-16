@@ -71,7 +71,8 @@ void Vegetation::orthoRGB(const unsigned char* ortho, int orthoW, int ox, int oy
 }
 
 Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& terrain,
-                       const std::filesystem::path& spritePath) {
+                       const std::filesystem::path& spritePath, std::size_t treeBudget)
+    : m_budget(treeBudget) {
     /* Sprite d'arbre : sans lui, rien à dessiner. */
     m_sprite = Texture(spritePath);
     if (!m_sprite.valid()) {

@@ -25,6 +25,8 @@
 #include "util/Math.hpp"
 
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 namespace artouste::app {
 
@@ -283,6 +285,22 @@ bool Application::mainLoop() {
         /* On borne le pas de temps : cela évite un saut brutal à la première
          * image ou après un gel (débogage, fenêtre déplacée). */
         const float frameDt = clamp(static_cast<float>(clock.dt()), 0.0f, 0.1f);
+
+        /* Journal de cadence (diagnostic) : ARTOUSTE_FPS_LOG=1 imprime les images
+         * par seconde sur la sortie d'erreur, une fois par seconde. Sert à
+         * distinguer un plafond vsync d'un vrai manque de performance GPU. */
+        static const bool logFps = std::getenv("ARTOUSTE_FPS_LOG") != nullptr;
+        if (logFps) {
+            static int    frames = 0;
+            static double last   = glfwGetTime();
+            ++frames;
+            const double now = glfwGetTime();
+            if (now - last >= 1.0) {
+                std::fprintf(stderr, "[fps] %.1f\n", frames / (now - last));
+                frames = 0;
+                last   = now;
+            }
+        }
 
         /* Tout est figé en pause comme pendant un panneau de confirmation : la
          * physique, mais aussi la démo, la caméra d'orbite et la vibration cockpit

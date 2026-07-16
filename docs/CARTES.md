@@ -61,6 +61,17 @@ par défaut. Les clés disponibles :
   ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à midi, afin
   d'ouvrir sur une belle lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE`
   du panneau supérieur droit.
+* `tree_max` : **budget de végétation**, soit le nombre maximum d'arbres soumis à la
+  carte graphique. Au-delà, le semis est éclairci uniformément. C'est le poste de
+  rendu le plus lourd quand les arbres sont actifs (clé `arbres` ; `arbres 0` les
+  coupe). La valeur par défaut est `1600000` ; sur une machine modeste ou une tablette,
+  `500000` voire `300000` allègent nettement la charge, au prix d'une forêt plus
+  clairsemée. La variable d'environnement `ARTOUSTE_TREE_MAX` a la priorité.
+* `msaa` : **anti-crénelage**, le nombre d'échantillons par pixel. `4` (défaut) lisse
+  bien les contours ; `2` réduit la bande passante mémoire de la carte graphique, pour
+  une différence peu visible en 1080p ; `0` le désactive, ce qui est le plus rapide.
+  Sur un GPU intégré qui peine ou une tablette qui chauffe, `2` puis `0` sont les
+  premiers réglages à essayer. La variable d'environnement `ARTOUSTE_MSAA` a la priorité.
 
 Par exemple, pour passer de la vallée d'Ossau à la côte landaise, ouvre
 `assets/config.txt` et remplace :

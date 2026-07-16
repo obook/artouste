@@ -30,6 +30,7 @@
 #include "render/Texture.hpp"
 #include "util/Math.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -146,7 +147,9 @@ void Application::initScene() {
      * d'environnement ARTOUSTE_TERRAIN, si elle est définie, a la priorité (pratique
      * pour tester une autre map sans toucher au fichier).
      */
-    const app::Config config = app::loadConfig(assets / "config.txt");
+    /* Configuration déjà chargée au lancement (run(), avant l'ouverture de la fenêtre
+       pour le MSAA). On la réutilise ici plutôt que de relire le fichier. */
+    const app::Config& config = m_config;
 
     /* Mode démo automatique : clé "demo" de la configuration, surchargée par la
        variable d'environnement ARTOUSTE_DEMO (prioritaire). */
@@ -161,6 +164,18 @@ void Application::initScene() {
     m_treesEnabled = config.trees;
     if (std::getenv("ARTOUSTE_NO_TREES") != nullptr) {
         m_treesEnabled = false;
+    }
+
+    /* Budget d'arbres : clé "tree_max" de la config, surchargée par la variable
+       d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
+       loadTerrain. C'est le principal levier de performance (poste de rendu le plus
+       coûteux sur GPU intégré). */
+    m_treeBudget = static_cast<std::size_t>(std::max(0, config.treeBudget));
+    if (const char* env = std::getenv("ARTOUSTE_TREE_MAX"); env != nullptr && env[0] != '\0') {
+        const long v = std::strtol(env, nullptr, 10);
+        if (v > 0) {
+            m_treeBudget = static_cast<std::size_t>(v);
+        }
     }
 
     std::string        terrainName = config.terrain;
@@ -292,7 +307,8 @@ void Application::loadTerrain(const std::string& name) {
        calculé dans initScene. Atlas de sprites partagé entre terrains. */
     if (m_treesEnabled) {
         m_vegetation = std::make_unique<render::Vegetation>(
-            terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png");
+            terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png",
+            m_treeBudget);
     } else {
         m_vegetation.reset();
     }

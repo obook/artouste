@@ -54,6 +54,19 @@ struct Config {
          144 -> journée complète en 10 min (départ à midi)
          0   -> temps figé à midi (le soleil ne bouge pas) */
     float sunTimeScale = 1.0f;
+
+    /* Budget de végétation : nombre maximum d'arbres soumis au GPU. Au-delà, le
+       semis est éclairci uniformément. C'est le poste de rendu le plus coûteux sur
+       GPU intégré : baissez-le (par exemple 500000) pour gagner des images par
+       seconde et réduire la chauffe sur une machine modeste ou une tablette. La
+       variable d'environnement ARTOUSTE_TREE_MAX, si définie, a la priorité. */
+    int treeBudget = 1'600'000;
+
+    /* Anti-crénelage (MSAA) : nombre d'échantillons par pixel. 4 (défaut) lisse bien
+       les contours ; 2 allège la bande passante mémoire (peu visible en 1080p) ; 0
+       le désactive. La variable d'environnement ARTOUSTE_MSAA, si définie, a la
+       priorité. */
+    int msaa = 4;
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

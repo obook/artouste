@@ -36,7 +36,8 @@ float LandingAutopilot::rampeCollectif(float cible, float dt) noexcept {
 }
 
 physics::Controls LandingAutopilot::update(float dt, const vec3& position, const vec3& velocity,
-                                           float heading, float agl) noexcept {
+                                           float heading, float agl,
+                                           const std::function<float(float, float)>& terrainHeight) noexcept {
     physics::Controls out;
     if (!m_active) {
         return out;
@@ -81,12 +82,19 @@ physics::Controls LandingAutopilot::update(float dt, const vec3& position, const
     /* Collectif : hauteur d'approche proportionnelle à la distance, avec un taux de
        descente plafonné sous le seuil de l'alerte GPWS du HUD (collectifApprocheGpws,
        comme le retour au pad de la démo), puis vitesse verticale tenue en finale
-       (derniers mètres avant le pad). */
+       (derniers mètres avant le pad). Un relief intermédiaire (col, flanc de montagne)
+       peut imposer de monter plus haut que ne le ferait la seule pente d'approche :
+       voir hauteurMinRelief. Non bornée par ALT_PLAFOND (qui limite la montée en
+       transit pour rester réaliste, pas une contrainte de sécurité) : franchir le
+       relief prime toujours sur rester bas. */
     float collectifCible;
     if (dist < DIST_POSE) {
         collectifCible = saturate(physics::COLL_HOVER + GAIN_VZ_POSE * (VZ_POSE - velocity.y));
     } else {
-        const float hauteurCible = clamp(GAIN_ALT_RETOUR * dist, 0.0f, ALT_PLAFOND);
+        const float hauteurPente  = clamp(GAIN_ALT_RETOUR * dist, 0.0f, ALT_PLAFOND);
+        const float hauteurRelief = terrainHeight ? hauteurMinRelief(position, m_target, dist, terrainHeight)
+                                                   : 0.0f;
+        const float hauteurCible  = (hauteurRelief > hauteurPente) ? hauteurRelief : hauteurPente;
         collectifCible            = collectifApprocheGpws(hauteurCible, agl, velocity.y);
     }
     out.collective = rampeCollectif(collectifCible, dt);

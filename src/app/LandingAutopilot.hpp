@@ -16,6 +16,8 @@
 #include "physics/Controls.hpp"
 #include "util/Math.hpp"
 
+#include <functional>
+
 namespace artouste::app {
 
 class LandingAutopilot {
@@ -45,10 +47,16 @@ public:
     /* Avance l'atterrissage d'un pas de temps et renvoie les commandes à appliquer.
        position et velocity sont l'état courant de l'appareil (repère monde) ; heading
        est le cap (lacet, rad) ; agl est la hauteur au-dessus du sol sous l'appareil.
+       terrainHeight (optionnel), renvoie l'altitude du sol en un point (x, z) : sert à
+       anticiper un relief entre l'appareil et le pad (col, flanc de montagne) qui
+       imposerait de monter plus tôt que ne le ferait la seule pente d'approche vers le
+       pad (voir demo_detail::hauteurMinRelief). Omis (valeur par défaut), l'anticipation
+       est simplement désactivée -- comportement inchangé, terrain plat supposé.
        Se désengage de lui-même (active() devient faux) une fois le collectif ramené
        au sol (voir m_grounded). */
     physics::Controls update(float dt, const vec3& position, const vec3& velocity,
-                             float heading, float agl) noexcept;
+                             float heading, float agl,
+                             const std::function<float(float, float)>& terrainHeight = {}) noexcept;
 
 private:
     float rampeCollectif(float cible, float dt) noexcept;

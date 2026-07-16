@@ -119,7 +119,8 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
             const float                heading = std::atan2(-fwd.z, fwd.x);
             const float                agl     = body.position.y
                                     - m_terrain->heightAt(body.position.x, body.position.z);
-            controls = m_autoland.update(frameDt, body.position, body.velocity, heading, agl);
+            controls = m_autoland.update(frameDt, body.position, body.velocity, heading, agl,
+                                         [this](float x, float z) { return m_terrain->heightAt(x, z); });
             if (!m_autoland.active()) {
                 /* Vient de rendre la main (posé, effet de sol évacué) : le levier réel
                    (clavier/manette) n'a pas bougé pendant le vol automatique et garde sa

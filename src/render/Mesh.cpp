@@ -108,4 +108,16 @@ void Mesh::draw() const {
     glBindVertexArray(0);
 }
 
+void Mesh::drawRange(int firstIndex, int indexCount) const {
+    if (indexCount <= 0 || firstIndex < 0 || firstIndex + indexCount > m_indexCount) {
+        return;
+    }
+    glBindVertexArray(m_vao);
+    /* Décalage en octets dans l'EBO (indices sur 4 octets). */
+    const auto offset = static_cast<std::size_t>(firstIndex) * sizeof(unsigned int);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT,
+                   reinterpret_cast<void*>(offset));
+    glBindVertexArray(0);
+}
+
 }  /* namespace artouste::render */

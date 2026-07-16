@@ -182,8 +182,20 @@ ou sortir de France.
   bassin d'Arcachon : ~187 000 bâtiments.
 
     Pistes plus tard : variété des toits (plat/2 pentes selon la nature BD TOPO),
-  niveaux de détail (LOD) pour alléger les grandes villes, bâtiments sur Ossau.
-  
+  niveaux de détail (LOD) pour les bâtiments lointains, bâtiments sur Ossau.
+
+- [x] Culling des bâtiments au rendu (champ de vue et brume). Le maillage unique est
+  découpé en tuiles spatiales (grille d'environ 2 500 m), chacune dotée de sa boîte
+  englobante et de sa plage d'indices. À chaque image, seules les tuiles présentes dans
+  le champ de vue et en deçà de la brume sont dessinées (`Mesh::drawRange`). Le recalage
+  d'origine s'annulant dans le produit final, le frustum s'extrait directement des
+  coordonnées monde (`proj * vue`). Le gain est net en survol des grandes villes côtières :
+  sur le bassin d'Arcachon, la charge GPU passe d'environ 95 % à 85 % et la cadence
+  remonte vers 60 images par seconde. Les villes intérieures très denses comme Bordeaux,
+  où toute l'agglomération tient dans le champ, restent bornées par la géométrie visible
+  et appellent le LOD. Le diagnostic `ARTOUSTE_NO_CULL` désactive le culling pour mesurer
+  son gain.
+
 - [x] Mettre aussi les petits bâtiments pour toutes les cartes avec des montagnes ou peu de villes
 
 - [ ] Placer les deux phares (feux d'entrée de port) de Capbreton, à l'embouchure
@@ -228,12 +240,14 @@ ou sortir de France.
   Même brume que le terrain / les bâtiments ;
   test alpha (pas de mélange), donc l'ordre de dessin n'importe pas. Chaque maille
   de la grille de semis donne au plus un arbre, donc l'espacement fixe la densité
-  (1 arbre / espacement^2). Un budget global (~1,6 M, `ARTOUSTE_TREE_MAX`) éclaircit
-  ensuite le semis de façon uniforme sur les grandes cartes très boisées (Bordeaux
-  passe de ~4,9 M à ~1,6 M) pour limiter le surdessin des billboards croisés. Activée
-  par défaut : clé `arbres` de config.txt (`arbres 0` pour désactiver) ;
-  `ARTOUSTE_NO_TREES` force la désactivation en priorité ; `ARTOUSTE_TREE_SPACING` règle
-  la densité (défaut 8 m). En un seul appel de rendu instancié (plafond de sécurité à 6 M).
+  (1 arbre / espacement^2). Un budget global (~1,6 M, clé `tree_max` de config.txt ou
+  la variable `ARTOUSTE_TREE_MAX`) éclaircit ensuite le semis de façon uniforme sur les
+  grandes cartes très boisées (Bordeaux passe de ~4,9 M à ~1,6 M) pour limiter le
+  surdessin des billboards croisés ; le baisser (500 000, voire 300 000) allège la charge
+  sur une machine modeste. Activée par défaut : clé `arbres` de config.txt (`arbres 0`
+  pour désactiver) ; `ARTOUSTE_NO_TREES` force la désactivation en priorité ;
+  `ARTOUSTE_TREE_SPACING` règle la densité (défaut 8 m). En un seul appel de rendu
+  instancié (plafond de sécurité à 6 M).
   Sprites PHOTOGRAPHIQUES : cellules extraites des atlas d'arbres de FlightGear
   (`assets/vegetation/fgdata-trees/`, GPL v2 -- voir CREDITS.txt), assemblées en
   `trees_atlas.png` par `tools/vegetation/compose_trees_atlas.py` (arbre calé sur la

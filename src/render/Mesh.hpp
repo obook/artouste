@@ -37,6 +37,12 @@ public:
 
     void draw() const;
 
+    /* Dessine une sous-plage d'indices [firstIndex, firstIndex + indexCount) au lieu
+       de la totalité. Sert au dessin par tuiles (culling) : un maillage unique, mais
+       seules les plages visibles sont tirées. firstIndex et indexCount sont en indices
+       (pas en octets). */
+    void drawRange(int firstIndex, int indexCount) const;
+
     [[nodiscard]] bool empty() const noexcept { return m_indexCount == 0; }
 
 private:

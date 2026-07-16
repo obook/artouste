@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <utility>
 #include <vector>
@@ -126,12 +127,9 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     }
     constexpr float PAD_CLEAR_M2 = 15.0f * 15.0f;  /* rayon dégagé autour d'un pad, au carré */
 
-    std::vector<Vertex>       verts;
-    std::vector<unsigned int> idx;
-    /* Estimation grossière (murs + toit, ~5 côtés en moyenne) pour limiter les
-       réallocations sur les grandes villes. */
-    verts.reserve(static_cast<std::size_t>(count) * 25);
-    idx.reserve(static_cast<std::size_t>(count) * 45);
+    /* La géométrie n'est plus accumulée dans un tampon unique : chaque bâtiment est
+       rangé dans une tuile spatiale (voir plus bas), puis les tuiles sont concaténées
+       en fin de construction. Cela permet le culling par tuile au rendu. */
 
     /* Le filtre "bâtiment sur l'eau" ne vaut que pour les terrains de bord de mer
        (drapeau sea). En montagne (sea 0), le niveau 0 est juste le point le plus bas
@@ -150,6 +148,22 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     }
     const float halfW = terrain.halfWidth();
     const float halfH = terrain.halfHeight();
+
+    /* Grille de tuiles pour le culling au rendu : chaque bâtiment est rangé dans la
+       tuile de son centre. TILE_M fixe la finesse : trop petit multiplie les tuiles
+       (surcoût CPU par image), trop grand rend le culling grossier. ~1200 m est un bon
+       compromis à l'échelle d'une ville. Chaque tuile accumule sa propre géométrie et
+       sa boîte englobante (monde) ; le tout est concaténé après la boucle. */
+    constexpr float TILE_M = 2500.0f;
+    const int       cols   = std::max(1, static_cast<int>((2.0f * halfW) / TILE_M) + 1);
+    const int       rows   = std::max(1, static_cast<int>((2.0f * halfH) / TILE_M) + 1);
+    struct TileBuild {
+        std::vector<Vertex>       v;
+        std::vector<unsigned int> i;
+        vec3                      mn{1e30f, 1e30f, 1e30f};
+        vec3                      mx{-1e30f, -1e30f, -1e30f};
+    };
+    std::vector<TileBuild> tiles(static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows));
 
     std::vector<float> px, pz;  /* emprise en coordonnées monde (réutilisé par bâtiment) */
     std::size_t        skippedWater = 0;  /* bâtiments écartés car bâtis sur l'eau */
@@ -247,6 +261,21 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
 
         const float top = base + height;
 
+        /* Tuile de ce bâtiment (d'après son centre) et mise à jour de sa boîte
+           englobante monde (emprise au sol, du sol au sommet). */
+        const int  col = std::clamp(static_cast<int>((cx + halfW) / TILE_M), 0, cols - 1);
+        const int  row = std::clamp(static_cast<int>((cz + halfH) / TILE_M), 0, rows - 1);
+        TileBuild& tb  = tiles[static_cast<std::size_t>(row) * static_cast<std::size_t>(cols)
+                              + static_cast<std::size_t>(col)];
+        for (std::size_t k = 0; k < n; ++k) {
+            tb.mn.x = std::min(tb.mn.x, px[k]);
+            tb.mx.x = std::max(tb.mx.x, px[k]);
+            tb.mn.z = std::min(tb.mn.z, pz[k]);
+            tb.mx.z = std::max(tb.mx.z, pz[k]);
+        }
+        tb.mn.y = std::min(tb.mn.y, base);
+        tb.mx.y = std::max(tb.mx.y, top);
+
         const float rj   = jitter(b, 0.12f);
         const vec3  wall = WALL_COLOR;
         const vec3  roof = pickRoof(b) * rj;  /* teinte panachée, nuancée en luminosité */
@@ -270,8 +299,8 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             const vec3 bj{px[j], base, pz[j]};
             const vec3 tj{px[j], top, pz[j]};
             const vec3 ti{px[i], top, pz[i]};
-            pushTriangle(verts, idx, bi, bj, tj, normal, wall);
-            pushTriangle(verts, idx, bi, tj, ti, normal, wall);
+            pushTriangle(tb.v, tb.i, bi, bj, tj, normal, wall);
+            pushTriangle(tb.v, tb.i, bi, tj, ti, normal, wall);
         }
 
         /* Toit plat : éventail de triangles depuis le premier sommet (correct pour
@@ -281,7 +310,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             const vec3 a{px[0], top, pz[0]};
             const vec3 c{px[i], top, pz[i]};
             const vec3 d{px[i + 1], top, pz[i + 1]};
-            pushTriangle(verts, idx, a, c, d, up, roof);
+            pushTriangle(tb.v, tb.i, a, c, d, up, roof);
         }
 
         ++m_count;
@@ -297,8 +326,110 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     if (m_count == 0) {
         return;
     }
+
+    /* Concaténation des tuiles en un maillage unique : on garde, pour chacune, sa
+       plage d'indices [firstIndex, +indexCount) et sa boîte englobante, pour ne
+       dessiner au rendu que les tuiles visibles (voir draw). L'ordre des tuiles n'a
+       pas d'importance ; seules les plages comptent. */
+    std::vector<Vertex>       verts;
+    std::vector<unsigned int> idx;
+    verts.reserve(static_cast<std::size_t>(count) * 25);
+    idx.reserve(static_cast<std::size_t>(count) * 45);
+    for (const TileBuild& t : tiles) {
+        if (t.i.empty()) {
+            continue;
+        }
+        const auto vertexBase = static_cast<unsigned int>(verts.size());
+        const int  firstIndex = static_cast<int>(idx.size());
+        verts.insert(verts.end(), t.v.begin(), t.v.end());
+        for (const unsigned int ix : t.i) {
+            idx.push_back(ix + vertexBase);
+        }
+        m_tiles.push_back(Tile{firstIndex, static_cast<int>(t.i.size()), t.mn, t.mx});
+    }
+
     m_mesh = Mesh(verts, idx);
-    std::printf("[Buildings] %zu bâtiments extrudés (%zu sommets).\n", m_count, verts.size());
+    std::printf("[Buildings] %zu bâtiments extrudés (%zu sommets, %zu tuiles).\n", m_count,
+                verts.size(), m_tiles.size());
+}
+
+/* Extrait les 6 plans du frustum (méthode Gribb-Hartmann) d'une matrice monde -> clip.
+   Chaque plan (a,b,c,d) : un point (x,y,z) est du bon côté si a*x+b*y+c*z+d >= 0. Pas
+   de normalisation : seul le signe importe pour le test boîte/frustum. */
+namespace {
+
+void extractFrustum(const mat4& m, vec4 planes[6]) {
+    /* GLM est en colonnes majeures : m[col][row]. Les "lignes" de la matrice sont
+       donc (m[0][r], m[1][r], m[2][r], m[3][r]). */
+    const vec4 r0{m[0][0], m[1][0], m[2][0], m[3][0]};
+    const vec4 r1{m[0][1], m[1][1], m[2][1], m[3][1]};
+    const vec4 r2{m[0][2], m[1][2], m[2][2], m[3][2]};
+    const vec4 r3{m[0][3], m[1][3], m[2][3], m[3][3]};
+    planes[0] = r3 + r0;  /* gauche  */
+    planes[1] = r3 - r0;  /* droite  */
+    planes[2] = r3 + r1;  /* bas     */
+    planes[3] = r3 - r1;  /* haut    */
+    planes[4] = r3 + r2;  /* proche  */
+    planes[5] = r3 - r2;  /* lointain*/
+}
+
+/* Vrai si la boîte [mn, mx] est entièrement du mauvais côté d'au moins un plan (donc
+   hors du frustum). On teste le "sommet positif" de la boîte pour chaque plan : le coin
+   le plus avancé dans le sens de la normale. S'il est déjà dehors, toute la boîte l'est. */
+bool boxOutsideFrustum(const vec4 planes[6], const vec3& mn, const vec3& mx) {
+    for (int p = 0; p < 6; ++p) {
+        const vec4& pl = planes[p];
+        const float vx = (pl.x >= 0.0f) ? mx.x : mn.x;
+        const float vy = (pl.y >= 0.0f) ? mx.y : mn.y;
+        const float vz = (pl.z >= 0.0f) ? mx.z : mn.z;
+        if (pl.x * vx + pl.y * vy + pl.z * vz + pl.w < 0.0f) {
+            return true;
+        }
+    }
+    return false;
+}
+
+}  /* namespace */
+
+void Buildings::draw(const mat4& worldViewProj, const vec3& camWorldPos) const {
+    if (m_tiles.empty() || m_mesh.empty()) {
+        return;
+    }
+
+    /* Diagnostic : ARTOUSTE_NO_CULL dessine tout le maillage d'un coup (culling
+       désactivé), pour mesurer le gain du culling par tuiles. */
+    static const bool noCull = std::getenv("ARTOUSTE_NO_CULL") != nullptr;
+    if (noCull) {
+        m_mesh.draw();
+        return;
+    }
+
+    /* Distance de culling : au-delà, un bâtiment est entièrement noyé dans la brume
+       (u_fogEnd du shader de bâtiments), donc invisible. Doit rester alignée sur FOG_END
+       (app/AppConstants.hpp) ; on ne dessine pas les tuiles dont le point le plus proche
+       dépasse cette distance. */
+    constexpr float FAR_CULL_M  = 22000.0f;
+    constexpr float FAR_CULL_M2 = FAR_CULL_M * FAR_CULL_M;
+
+    vec4 planes[6];
+    extractFrustum(worldViewProj, planes);
+
+    for (const Tile& t : m_tiles) {
+        /* Hors champ ? */
+        if (boxOutsideFrustum(planes, t.mn, t.mx)) {
+            continue;
+        }
+        /* Point de la boîte le plus proche de la caméra : si déjà au-delà de la brume,
+           toute la tuile l'est. */
+        const float cx = std::max(t.mn.x, std::min(camWorldPos.x, t.mx.x));
+        const float cy = std::max(t.mn.y, std::min(camWorldPos.y, t.mx.y));
+        const float cz = std::max(t.mn.z, std::min(camWorldPos.z, t.mx.z));
+        const float dx = cx - camWorldPos.x, dy = cy - camWorldPos.y, dz = cz - camWorldPos.z;
+        if (dx * dx + dy * dy + dz * dz > FAR_CULL_M2) {
+            continue;
+        }
+        m_mesh.drawRange(t.firstIndex, t.indexCount);
+    }
 }
 
 }  /* namespace artouste::render */

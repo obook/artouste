@@ -141,7 +141,10 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         m_buildingShader->setVec3("u_fogColor", fogColor);
         m_buildingShader->setFloat("u_fogStart", FOG_START);
         m_buildingShader->setFloat("u_fogEnd", FOG_END);
-        m_buildings->draw();
+        /* Culling par tuiles : le recalage d'origine (u_model = toRel) s'annule dans le
+           produit final, donc le frustum en coordonnées monde s'extrait de proj * vue
+           monde (m_camera.view()), et la caméra est prise en position monde. */
+        m_buildings->draw(proj * m_camera.view(), m_camera.position());
     }
 
     /*

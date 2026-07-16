@@ -19,9 +19,33 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <iterator>
+#include <string>
 #include <thread>
 
 namespace {
+
+/* Charge la base de mappings SDL (gamecontrollerdb.txt) pour que la sonde
+ * reconnaisse les mêmes manettes que le simulateur (dont les Xbox récentes en
+ * Bluetooth, absentes de la base intégrée de GLFW). On cherche le fichier via
+ * ARTOUSTE_ASSETS puis dans "assets" à côté du répertoire courant. Silencieux
+ * si le fichier est introuvable. */
+void chargerMappings() {
+    std::string chemin = "assets/gamecontrollerdb.txt";
+    if (const char* env = std::getenv("ARTOUSTE_ASSETS")) {
+        chemin = std::string(env) + "/gamecontrollerdb.txt";
+    }
+    std::ifstream in(chemin, std::ios::binary);
+    if (!in) {
+        return;
+    }
+    const std::string contenu((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+    if (!contenu.empty()) {
+        glfwUpdateGamepadMappings(contenu.c_str());
+    }
+}
 
 void errorCallback(int code, const char* description) {
     std::fprintf(stderr, "[GLFW] erreur %d : %s\n", code, description);
@@ -89,6 +113,8 @@ int main() {
         std::fprintf(stderr, "Impossible d'initialiser GLFW.\n");
         return EXIT_FAILURE;
     }
+
+    chargerMappings();
 
     std::printf("Sonde manette - GLFW %s\n", glfwGetVersionString());
     std::printf("Branche ta manette Xbox ; Ctrl+C pour quitter.\n");

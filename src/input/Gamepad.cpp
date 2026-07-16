@@ -15,6 +15,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <fstream>
+#include <iterator>
+#include <string>
 
 namespace artouste::input {
 
@@ -74,6 +78,28 @@ bool readState(GLFWgamepadstate& state) noexcept {
 }
 
 }  /* namespace */
+
+void Gamepad::loadMappings(const std::filesystem::path& assetDir) noexcept {
+    const std::filesystem::path fichier = assetDir / "gamecontrollerdb.txt";
+    std::ifstream in(fichier, std::ios::binary);
+    if (!in) {
+        /* Fichier absent : ce n'est pas une erreur. GLFW garde sa base intégrée,
+         * qui reconnaît déjà la plupart des manettes courantes. */
+        return;
+    }
+    const std::string contenu((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+    if (contenu.empty()) {
+        return;
+    }
+    /* glfwUpdateGamepadMappings accepte le fichier entier (une ligne par manette) ;
+     * les mappings du fichier complètent ou remplacent ceux de la base intégrée. */
+    if (glfwUpdateGamepadMappings(contenu.c_str()) != GLFW_TRUE) {
+        std::fprintf(stderr,
+                     "Artouste : base de mappings manette non chargée (%s).\n",
+                     fichier.string().c_str());
+    }
+}
 
 bool Gamepad::isPresent() noexcept {
     return activePad() >= 0;

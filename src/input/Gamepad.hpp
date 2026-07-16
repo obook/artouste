@@ -25,10 +25,20 @@
 
 #include "physics/Controls.hpp"
 
+#include <filesystem>
+
 namespace artouste::input {
 
 class Gamepad {
 public:
+    /* Charge la base communautaire de mappings SDL (gamecontrollerdb.txt) depuis
+     * le dossier des ressources, pour reconnaître les manettes absentes de la base
+     * intégrée de GLFW -- dont les modèles Xbox récents en Bluetooth (product 0B13),
+     * qui n'y figurent pas encore. À appeler une fois, juste après glfwInit.
+     * Silencieux si le fichier est absent : GLFW conserve alors sa base intégrée,
+     * qui couvre déjà les manettes les plus courantes. */
+    static void loadMappings(const std::filesystem::path& assetDir) noexcept;
+
     /* Manette branchée ET reconnue (mapping SDL disponible) ? */
     [[nodiscard]] static bool isPresent() noexcept;
 

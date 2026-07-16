@@ -21,6 +21,7 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
+#include "input/Gamepad.hpp"
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
@@ -124,6 +125,10 @@ bool Application::initWindow() {
         std::fprintf(stderr, "Impossible d'initialiser GLFW.\n");
         return false;
     }
+
+    /* Base de mappings manette (SDL_GameControllerDB) : reconnaît les manettes
+       absentes de la base intégrée de GLFW, dont les Xbox récentes en Bluetooth. */
+    input::Gamepad::loadMappings(resolveAssetDir());
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);

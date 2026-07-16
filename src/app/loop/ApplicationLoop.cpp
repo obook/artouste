@@ -99,14 +99,15 @@ physics::Controls Application::computeControls(const physics::Controls& rawInput
            déclenche l'atterrissage automatique (il peut être en train de piloter). Sans
            cette référence, la commande déjà tenue au moment de l'engagement dépasserait
            aussitôt le seuil et désengagerait l'instant d'après.
-           Les palonniers n'entrent pas dans la somme : à la manette, le déclencheur
-           de l'atterrissage automatique est le clic du stick droit (R3), qui EST cet
-           axe. L'appui comme le relâchement du clic dévient transitoirement le stick
-           de son centre, ce qui désengagerait l'atterrissage automatique dans la
-           foulée de son activation (ou de sa désactivation) si on en tenait compte. */
+           Les palonniers entrent dans la somme comme les autres axes : le déclencheur
+           de l'atterrissage automatique est RB (Gamepad::autolandTogglePressed), une
+           gâchette d'épaule indépendante du stick droit (palonniers) -- contrairement
+           à l'ancien déclencheur (clic du stick droit, R3), l'engagement ou le
+           désengagement de l'atterrissage automatique ne dévie plus cet axe. */
         const physics::Controls& base = m_autoland.baseline();
         const float pilotInput = std::fabs(rawInput.cyclicLateral - base.cyclicLateral)
                                + std::fabs(rawInput.cyclicLongitudinal - base.cyclicLongitudinal)
+                               + std::fabs(rawInput.pedals - base.pedals)
                                + std::fabs(rawInput.collective - base.collective);
         if (pilotInput > 0.15f) {
             m_autoland.stop();

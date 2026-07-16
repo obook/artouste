@@ -11,8 +11,10 @@
  *   bouton X        -> replace l'appareil au point de départ
  *   bouton Back     -> met en pause ou reprend
  *   LB + RB         -> retour au menu (combinaison, pour éviter les retours accidentels)
- *   croix haut      -> bascule le mode assisté
- *   stick droit (appui) -> bascule l'atterrissage automatique (R3 sur PS4/PS5)
+ *   LB              -> bascule le mode assisté (L1 sur PS4/PS5), sauf combiné à RB
+ *                       (retour au menu, voir plus haut)
+ *   RB              -> bascule l'atterrissage automatique (R1 sur PS4/PS5), sauf
+ *                       combiné à LB (retour au menu, voir plus haut)
  * La manette conserve un état d'une image à l'autre : la position du levier de
  * collectif et l'état précédent des boutons (pour détecter le moment de l'appui).
  *
@@ -78,12 +80,15 @@ public:
      * défiler la livrée, comme la touche L). */
     [[nodiscard]] bool liveryTogglePressed() noexcept;
 
-    /* Vrai une seule fois, au moment où la croix directionnelle haut vient d'être
-     * pressée (bascule le mode assisté, comme la touche M). */
+    /* Vrai une seule fois, au moment où LB (L1 sur PS4/PS5) vient d'être pressée
+     * seule (bascule le mode assisté, comme la touche M) -- pas si RB est aussi
+     * tenu, cette combinaison étant réservée au retour au menu (menuPressed). */
     [[nodiscard]] bool assistTogglePressed() noexcept;
 
-    /* Vrai une seule fois, au moment où le stick droit vient d'être enfoncé (clic R3,
-     * comme la touche J) : bascule l'atterrissage automatique. */
+    /* Vrai une seule fois, au moment où RB (R1 sur PS4/PS5) vient d'être pressée
+     * seule (bascule l'atterrissage automatique, comme la touche J) -- pas si LB
+     * est aussi tenu, cette combinaison étant réservée au retour au menu
+     * (menuPressed). */
     [[nodiscard]] bool autolandTogglePressed() noexcept;
 
     /* Remet le levier de collectif à zéro. */
@@ -109,8 +114,8 @@ private:
     bool  m_prevX      = false; /* état du bouton X à l'image précédente */
     bool  m_prevMenu   = false; /* état de la combinaison LB + RB à l'image précédente */
     bool  m_prevA      = false; /* état du bouton A à l'image précédente */
-    bool  m_prevDpadUp    = false; /* état de la croix haut à l'image précédente */
-    bool  m_prevRightThumb = false; /* état du clic du stick droit (R3) à l'image précédente */
+    bool  m_prevLeftBumper  = false; /* état de LB à l'image précédente */
+    bool  m_prevRightBumper = false; /* état de RB à l'image précédente */
 };
 
 }  /* namespace artouste::input */

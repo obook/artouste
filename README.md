@@ -39,7 +39,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 > 
 > **Première fois aux commandes ?**
 > Voici les trois étapes pour effectuer sans stress votre premier vol à bord de l'Alouette.
-> 1. **Activez le mode assisté** : touche `M` | croix directionnelle haut, un message à l'écran le confirme.
+> 1. **Activez le mode assisté** : touche `M` | `LB`, un message à l'écran le confirme.
 > 2. **Démarrez la turbine** avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
 >    * La turbine monte seule en régime jusqu'à 33 500 tr/min
 >    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol
@@ -62,7 +62,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 * Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
 * Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
 * Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
-* Atterrissage automatique (touche `J` / stick droit) : engage le pilote automatique vers l'hélipad le plus proche (dans un rayon de 999 m, sinon la touche n'a aucun effet), qui rejoint la pente d'approche du HAPI (6 %), se pose en douceur et rend la main une fois le collectif ramené au sol. Une action franche sur le manche ou le collectif désengage l'atterrissage automatique et rend la main tout de suite (les palonniers sont exclus de cette détection : à la manette, le déclencheur est le clic du stick droit, qui en est aussi l'axe).
+* Atterrissage automatique (touche `J` / `RB`) : engage le pilote automatique vers l'hélipad le plus proche (dans un rayon de 999 m, sinon la touche n'a aucun effet), qui rejoint la pente d'approche du HAPI (6 %), se pose en douceur et rend la main une fois le collectif ramené au sol. Une action franche sur le manche, le palonnier ou le collectif désengage l'atterrissage automatique et rend la main tout de suite.
 * Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
 * Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
   dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
@@ -124,8 +124,8 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 | Turbine (démarrer/couper) | `T`          | bouton `Start`       |
 | Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |
 | Livrée (blanche/Gendarmerie/armée de terre/Protection civile) | `L` | bouton `A` (vert) |
-| Mode assisté (confort)  | `M`            | croix directionnelle haut |
-| Atterrissage automatique (pad le plus proche) | `J` | stick droit (clic ; `R3` sur PS4/PS5) |
+| Mode assisté (confort)  | `M`            | `LB` (`L1` sur PS4/PS5) |
+| Atterrissage automatique (pad le plus proche) | `J` | `RB` (`R1` sur PS4/PS5) |
 | HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
 | Plein écran (fenêtré/plein écran) | `F`  | -                    |
 | Pause                   | `P`            | bouton `Back`        |

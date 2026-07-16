@@ -64,10 +64,10 @@ public:
     /* Le bouton A vient-il d'être pressé ? (fait défiler la livrée) */
     [[nodiscard]] bool liveryTogglePressed() noexcept { return m_gamepad.liveryTogglePressed(); }
 
-    /* La croix directionnelle haut vient-elle d'être pressée ? (bascule le mode assisté) */
+    /* LB (L1) vient-elle d'être pressée seule ? (bascule le mode assisté) */
     [[nodiscard]] bool assistTogglePressed() noexcept { return m_gamepad.assistTogglePressed(); }
 
-    /* Le stick droit vient-il d'être enfoncé ? (clic R3, bascule l'atterrissage auto) */
+    /* RB (R1) vient-elle d'être pressée seule ? (bascule l'atterrissage automatique) */
     [[nodiscard]] bool autolandTogglePressed() noexcept { return m_gamepad.autolandTogglePressed(); }
 
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }

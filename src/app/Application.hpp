@@ -217,7 +217,7 @@ private:
        par le pilote automatique m_demo. */
     void startDemo();
 
-    /* Bascule l'atterrissage automatique (touche J / croix bas) : engage m_autoland
+    /* Bascule l'atterrissage automatique (touche J / RB) : engage m_autoland
        vers l'hélipad le plus proche s'il est inactif, le désengage sinon (le pilote
        reprend la main). Sans effet en démo (pas de call site pendant la démo). */
     void toggleAutoland();
@@ -260,9 +260,9 @@ private:
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;
     physics::FlightModel                      m_flight;
-    physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / croix haut) */
+    physics::FlightAssist                     m_assist;        /* mode assisté : confort de pilotage (touche M / LB) */
     DemoPilot                                 m_demo;          /* pilote automatique du mode démo (inactif par défaut) */
-    LandingAutopilot                          m_autoland;      /* atterrissage automatique (touche J / croix bas) */
+    LandingAutopilot                          m_autoland;      /* atterrissage automatique (touche J / RB) */
     std::filesystem::path                     m_musicPath;     /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string                               m_radioUrl;      /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
     float                                     m_sunTimeScale   = 1.0f;  /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */

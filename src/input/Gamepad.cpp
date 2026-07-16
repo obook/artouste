@@ -240,22 +240,37 @@ bool Gamepad::liveryTogglePressed() noexcept {
 bool Gamepad::assistTogglePressed() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
-        m_prevDpadUp = false;
+        m_prevLeftBumper = false;
         return false;
     }
-    /* Croix directionnelle haut : bascule le mode assisté (comme la touche M). */
-    return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_UP, m_prevDpadUp);
+    /* LB (L1 sur PS4/PS5) : bascule le mode assisté (comme la touche M). Ignorée si
+       RB est aussi tenu : cette combinaison sert au retour au menu (menuPressed),
+       pas au mode assisté -- sans quoi les deux se déclencheraient à la fois. On
+       mémorise l'état brut de LB (pas "LB sans RB") pour ne pas redéclencher au
+       relâchement de RB si LB était resté tenu pendant la combinaison. */
+    const bool lb           = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS;
+    const bool rb           = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS;
+    const bool nouvelAppui  = lb && !rb && !m_prevLeftBumper;
+    m_prevLeftBumper        = lb;
+    return nouvelAppui;
 }
 
 bool Gamepad::autolandTogglePressed() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
-        m_prevRightThumb = false;
+        m_prevRightBumper = false;
         return false;
     }
-    /* Clic du stick droit (R3 sur PS4/PS5) : bascule l'atterrissage automatique
-       (comme la touche J). */
-    return risingEdge(state, GLFW_GAMEPAD_BUTTON_RIGHT_THUMB, m_prevRightThumb);
+    /* RB (R1 sur PS4/PS5) : bascule l'atterrissage automatique (comme la touche J).
+       Ignorée si LB est aussi tenu : cette combinaison sert au retour au menu
+       (menuPressed), pas à l'atterrissage automatique -- sans quoi les deux se
+       déclencheraient à la fois. Même logique de mémorisation que
+       assistTogglePressed (état brut de RB, pas "RB sans LB"). */
+    const bool rb           = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS;
+    const bool lb           = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS;
+    const bool nouvelAppui  = rb && !lb && !m_prevRightBumper;
+    m_prevRightBumper       = rb;
+    return nouvelAppui;
 }
 
 void Gamepad::primeButtons() noexcept {
@@ -263,19 +278,19 @@ void Gamepad::primeButtons() noexcept {
     if (!readState(state)) {
         /* Pas de manette : rien à tenir, tous les fronts repartent au repos. */
         m_prevY = m_prevStart = m_prevB = m_prevBack = m_prevX = m_prevMenu = m_prevA =
-            m_prevDpadUp = m_prevRightThumb = false;
+            m_prevLeftBumper = m_prevRightBumper = false;
         return;
     }
     const auto down = [&](int b) { return state.buttons[b] == GLFW_PRESS; };
-    m_prevY          = down(GLFW_GAMEPAD_BUTTON_Y);
-    m_prevStart      = down(GLFW_GAMEPAD_BUTTON_START);
-    m_prevB          = down(GLFW_GAMEPAD_BUTTON_B);
-    m_prevBack       = down(GLFW_GAMEPAD_BUTTON_BACK);
-    m_prevX          = down(GLFW_GAMEPAD_BUTTON_X);
-    m_prevA          = down(GLFW_GAMEPAD_BUTTON_A);
-    m_prevDpadUp     = down(GLFW_GAMEPAD_BUTTON_DPAD_UP);
-    m_prevRightThumb = down(GLFW_GAMEPAD_BUTTON_RIGHT_THUMB);
-    m_prevMenu       = down(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER) && down(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
+    m_prevY           = down(GLFW_GAMEPAD_BUTTON_Y);
+    m_prevStart       = down(GLFW_GAMEPAD_BUTTON_START);
+    m_prevB           = down(GLFW_GAMEPAD_BUTTON_B);
+    m_prevBack        = down(GLFW_GAMEPAD_BUTTON_BACK);
+    m_prevX           = down(GLFW_GAMEPAD_BUTTON_X);
+    m_prevA           = down(GLFW_GAMEPAD_BUTTON_A);
+    m_prevLeftBumper  = down(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER);
+    m_prevRightBumper = down(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
+    m_prevMenu        = m_prevLeftBumper && m_prevRightBumper;
 }
 
 bool Gamepad::isActive() noexcept {

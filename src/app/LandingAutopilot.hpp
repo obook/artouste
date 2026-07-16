@@ -1,6 +1,6 @@
 /*
  * LandingAutopilot.hpp
- * Atterrissage automatique déclenchable en vol libre (touche J / croix bas) :
+ * Atterrissage automatique déclenchable en vol libre (touche J / RB) :
  * guide l'appareil vers un pad donné et se pose en douceur, puis rend la main.
  * Reprend le guidage d'approche et de pose de DemoPilot (voir DemoPilotDetail.hpp),
  * sans la route à plusieurs points ni la séquence d'arrêt turbine propres à la démo :

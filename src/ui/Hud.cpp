@@ -230,7 +230,7 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
             ImGui::TextUnformatted("MODE ASSISTE");  /* vert hérité, comme les instruments */
         }
         if (data.autoland) {
-            ImGui::TextUnformatted("ATTERRISSAGE AUTO");  /* touche J / croix bas */
+            ImGui::TextUnformatted("ATTERRISSAGE AUTO");  /* touche J / RB */
         }
         if (data.fps > 0.0f) {
             ImGui::Text("FPS  %3.0f", static_cast<double>(data.fps));  /* cadence lissée */

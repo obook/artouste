@@ -2,16 +2,17 @@
 """
 make_tailguard.py
 Isole l'arceau de protection du rotor de queue de l'Alouette II, fondu dans l'objet
-'structure' de alouette.ac, pour pouvoir le peindre selon la livrée (jaune en
-Gendarmerie, gris métal en origine). Génère aussi les deux textures unies de
-l'arceau.
+'structure' de alouette.ac, pour pouvoir le peindre en jaune (repère de sécurité,
+sur TOUTES les livrées, pas seulement Gendarmerie malgré le nom du fichier -
+voir LoadedHelicopter::setLivery) plutôt qu'en gris métal d'origine. Génère
+aussi les deux textures unies de l'arceau.
 
 Transformation (à lancer sur l'alouette.ac ORIGINAL ; restaurer d'abord depuis git
 si on régénère : git checkout <commit-origine> -- .../Models/alouette.ac) :
   alouette.ac (original)
     -> alouette.ac        : fuselage SANS l'arceau (la D-hoop est retirée) ;
     -> tailguard.ac       : la D-hoop seule (pièce séparée, rechargée par le moteur) ;
-    -> tailguard-gendarmerie.png : jaune uni (232,154,1) ;
+    -> tailguard-gendarmerie.png : jaune RAL 1023 uni (245,168,0) ;
     -> tailguard-origine.png     : gris métal uni (100,104,111).
 
 Piège : à l'export, le greffon AC3D perd les textures si l'image n'est pas chargée
@@ -123,8 +124,8 @@ def main():
     bpy.ops.export_scene.export_ac3d(filepath=ALOUETTE)
     print("[tailguard] écrit alouette.ac (sans arceau)")
 
-    # Textures unies de l'arceau (jaune Gendarmerie, gris métal origine).
-    texture_unie("tailguard-gendarmerie.png", (232, 154, 1))
+    # Textures unies de l'arceau (jaune RAL 1023, gris métal origine).
+    texture_unie("tailguard-gendarmerie.png", (245, 168, 0))
     texture_unie("tailguard-origine.png", (100, 104, 111))
 
 

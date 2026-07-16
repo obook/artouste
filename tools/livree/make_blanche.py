@@ -29,11 +29,13 @@ neutral = sat < 0.18
 orange  = (sat >= 0.18) & (r > g) & (g - b > 0.12) & (r - b > 0.25)
 neutral = neutral | orange
 
-# Blanc pur : #ffffff. On teinte chaque pixel neutre par cette couleur en conservant
-# l'ombrage d'origine : le pixel de luminance moyenne devient blanc, les creux
-# (lignes de tôle, recoins) restent un gris clair, les hautes lumières saturent en
-# blanc. Le fuselage lit comme une peinture blanche, pas comme un aplat plat.
-TARGET = np.array([0xff, 0xff, 0xff], dtype=np.float32) / 255.0
+# Blanc cassé (#f0f0ec) plutôt que blanc pur : avec la peinture #ffffff, le gain
+# multiplicatif saturait environ 70 % des pixels neutres en blanc absolu, ce qui
+# aplatissait le modelé du fuselage et rendait la livrée éblouissante en plein
+# soleil. En visant un blanc légèrement moins lumineux, moins de pixels touchent
+# la butée à 1.0 : les hautes lumières restent claires mais l'ombrage (lignes de
+# tôle, recoins) reste lisible.
+TARGET = np.array([0xf0, 0xf0, 0xec], dtype=np.float32) / 255.0
 meanL = float(lum[neutral].mean())
 gain = lum / meanL  # 1.0 pour un pixel de luminance moyenne -> couleur cible exacte
 

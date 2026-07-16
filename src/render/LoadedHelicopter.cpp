@@ -141,6 +141,23 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
                           {"tete", "casque", "corps", "=brasg", "=brasd", "avantbras",
                            "manche", "cuisseg", "jambeg", "piedg"});
 
+    /* Tenue du pilote (chemise et casque) selon la livrée : chaque segment ci-
+       dessus est un découpage indépendant du même general_pilot.ac/.png, donc
+       chacun reçoit sa propre copie des trois textures de rechange (voir
+       PilotSkin). La tête (m_pilot/m_pilotCockpit) porte le casque ; les autres
+       segments ne portent que la chemise, mais le repeint est sans effet là où
+       le segment ne couvre pas cette zone de l'atlas. */
+    const std::filesystem::path pilotDir = dir / "Pilot";
+    loadPilotSkin(pilotDir, m_pilot);
+    loadPilotSkin(pilotDir, m_pilotCockpit);
+    loadPilotSkin(pilotDir, m_legLeft);
+    loadPilotSkin(pilotDir, m_legRight);
+    loadPilotSkin(pilotDir, m_armUpper);
+    loadPilotSkin(pilotDir, m_forearm);
+    loadPilotSkin(pilotDir, m_grip);
+    loadPilotSkin(pilotDir, m_armUpperLeft);
+    loadPilotSkin(pilotDir, m_forearmLeft);
+
     /* Palonnier : pédales gauche (paloG) et droite (paloD) isolées, pour les faire
        basculer en sens opposé au palonnier. */
     m_pedalLeft  = loadPart(dir / "Interior/Panel/Instruments/pedals/pedals.ac", {"palod"});
@@ -212,6 +229,15 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_decalRegAyem     = makeDecal(dir / "decal-fayem.png");
 }
 
+void LoadedHelicopter::loadPilotSkin(const std::filesystem::path& pilotDir, Model& model) {
+    PilotSkin skin;
+    skin.model            = &model;
+    skin.gendarmerie      = model.acquireTexture(pilotDir / "general_pilot-gendarmerie.png");
+    skin.armeeDeTerre     = model.acquireTexture(pilotDir / "general_pilot-armeedeterre.png");
+    skin.protectionCivile = model.acquireTexture(pilotDir / "general_pilot-protectioncivile.png");
+    m_pilotSkins.push_back(skin);
+}
+
 void LoadedHelicopter::setLivery(Livery livery) {
     m_livery = livery;
 
@@ -224,6 +250,20 @@ void LoadedHelicopter::setLivery(Livery livery) {
         case Livery::Blanche:          fuselageTex = m_liveryBlanche;          break;
     }
     m_fuselage.setLivery(fuselageTex);
+
+    /* Tenue du pilote (chemise et casque) : bleu Gendarmerie, olive armée de
+       terre, orange Protection civile ; la livrée blanche garde la tenue
+       civile d'origine (nullptr = texture d'origine, comme le fuselage). */
+    for (const PilotSkin& skin : m_pilotSkins) {
+        const Texture* pilotTex = nullptr;
+        switch (livery) {
+            case Livery::Gendarmerie:      pilotTex = skin.gendarmerie;      break;
+            case Livery::ArmeeDeTerre:     pilotTex = skin.armeeDeTerre;     break;
+            case Livery::ProtectionCivile: pilotTex = skin.protectionCivile; break;
+            case Livery::Blanche:          pilotTex = nullptr;               break;
+        }
+        skin.model->setLivery(pilotTex);
+    }
 
     /* Pales de queue : zébrées jaune/rouge sur TOUTES les livrées. C'est un repère
        de sécurité du rotor de queue (très visible), qu'on conserve quelle que soit

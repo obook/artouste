@@ -59,7 +59,8 @@ public:
 
     /* Applique une livrée : origine (métal), Gendarmerie (bleu) ou armée de terre
        (olive). Commute la texture du fuselage, des pales et de l'arceau de queue,
-       et choisit les marquages dessinés par drawLivery. */
+       la tenue (chemise et casque) de tous les segments du pilote, et choisit les
+       marquages dessinés par drawLivery. */
     void setLivery(Livery livery);
 
     /* Rayon du rotor principal, en mètres (longueur d'une pale). */
@@ -102,6 +103,25 @@ private:
 
     /* Passe transparente : marquages de la livrée courante puis vitrages. */
     void drawLivery(Shader& shader, const mat4& root) const;
+
+    /* Tenue de rechange (chemise et casque) d'un segment du pilote : une texture
+       de rechange par livrée non blanche (la blanche garde la tenue d'origine,
+       chemise civile). Tous les segments du pilote (torse, bras, jambes) sont
+       découpés dans le même fichier general_pilot.ac/.png (voir le constructeur),
+       donc chacun a besoin de sa propre copie de ces textures de rechange : une
+       Model ne partage pas son cache de textures avec les autres. */
+    struct PilotSkin {
+        Model*         model            = nullptr;
+        const Texture* gendarmerie      = nullptr;
+        const Texture* armeeDeTerre     = nullptr;
+        const Texture* protectionCivile = nullptr;
+    };
+    /* Charge les trois tenues de rechange d'un segment du pilote et l'enregistre
+       pour que setLivery() puisse ensuite commuter sa texture. Appelé une fois
+       par segment (torse, bras, jambes) depuis le constructeur. */
+    void loadPilotSkin(const std::filesystem::path& pilotDir, Model& model);
+
+    std::vector<PilotSkin> m_pilotSkins;
 
     Model              m_fuselage;
     const Texture*     m_liveryBlanche          = nullptr;  /* livrée blanche (fuselage) */

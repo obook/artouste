@@ -36,8 +36,15 @@ constexpr float PAD_GUIDE_MIN_ALT_M = -2.0f;   /* en dessous : on est sous le so
 constexpr float PAD_GUIDE_MAX_KMH   = 37.0f;   /* vitesse air max (37 km/h ~ 20 kt) */
 constexpr float PAD_GUIDE_GRACE_S   = 15.0f;   /* s sans réticule après un décollage du pad */
 
-/* Conditions de détection du posé. */
-constexpr float PAD_LAND_MAX_ALT_M  = 0.8f;    /* hauteur patins (~0,5 m) + marge */
+/* Conditions de détection du posé. altSurPad vient de body.position.y (voir plus
+   bas), le point que FlightModel colle exactement à m_groundHeight au contact
+   (FlightModel.cpp, "Posé sur les patins") : à la pose réelle, altSurPad vaut donc
+   0, pas une hauteur de patin. La marge ci-dessous n'est qu'une tolérance de
+   détection (jitter et léger écart de relief entre le pad et la position exacte),
+   alignée sur AGL_POSE (DemoPilotDetail.hpp), le seuil auquel l'atterrissage
+   automatique coupe lui-même le collectif. Avec 0,8 m, le score s'affichait
+   pendant que l'appareil tenait encore un vol stationnaire bas, avant ce contact. */
+constexpr float PAD_LAND_MAX_ALT_M  = 0.2f;    /* tolérance de détection du contact (m) */
 constexpr float PAD_LAND_MAX_SPEED  = 2.0f;    /* vitesse sol max (m/s) pour valider */
 
 /* Durée d'affichage du score après le posé (s). */

@@ -80,7 +80,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   au rouge.
 * Balise HAPI (Helicopter Approach Path Indicator) sur le pad de départ de chaque
   carte : un repère au sol qui indique la pente d'approche par sa couleur, selon
-  les seuils du guide DGAC/STAC -- vert clignotant si trop haut, vert fixe sur la
+  les seuils du guide DGAC/STAC : vert clignotant si trop haut, vert fixe sur la
   pente, rouge fixe légèrement trop bas, rouge clignotant si trop bas. Le point de
   l'étiquette HUD (coin ou minimap) reprend cette couleur, qu'il s'agisse du pad
   lui-même ou d'un lieu remarquable qui coïncide avec lui (l'aérodrome de

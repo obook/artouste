@@ -24,6 +24,9 @@
 
 % Texte fond coloré
 \usepackage{xcolor}
+% Schémas des manettes (voir \manettexbox et \manetteps)
+\usepackage{xparse}
+\usepackage{etoolbox}
 % Couleurs des boutons Xbox
 \definecolor{xbox_A_vert}{RGB}{0, 255, 0}
 \definecolor{xbox_B_rouge}{RGB}{255, 0, 0}
@@ -65,6 +68,168 @@
       minimum size=2ex] at (0,0) {#3};}%
 }
 
+% Schémas des deux manettes. Chaque famille a sa propre macro : au-delà du nom
+% des boutons, les deux boîtiers n'ont pas du tout la même géométrie (sticks
+% côte à côte au centre sur la PlayStation, décalés sur la Xbox ; croix et
+% boutons au même niveau sur la PlayStation ; pavé tactile), donc les mutualiser
+% reviendrait à empiler des conditions pour chaque coordonnée.
+%
+% Les silhouettes sont relevées sur les dessins de docs/controllers/ (voir les
+% .txt qui les accompagnent pour la source et la licence) : on décrit la
+% silhouette par une liste de points et TikZ génère lui-même les courbes qui
+% les relient. Chaque point de droite a son miroir exact à gauche.
+%
+% Surtout PAS de "rounded corners" sur ces tracés : sur un plot[smooth cycle],
+% cette option mange les raccords entre courbes de Bézier et fait apparaître un
+% pic pointu au milieu du bord supérieur.
+%
+% Les étiquettes restent courtes (le détail de chaque commande est dans les
+% tableaux ci-dessous) et les flèches d'un même côté s'éventent de haut en bas
+% dans l'ordre de leurs points de départ, pour qu'aucune n'en croise une autre.
+%
+% Paramètres communs : #1 à #4 = glyphes des boutons haut / gauche / droite /
+% bas (Y/X/B/A ou Triangle/Carré/Rond/Croix).
+
+% --- Manette Xbox ----------------------------------------------------------
+% Repères de la silhouette : le bord supérieur creuse au centre (2.47) entre
+% les deux bosses d'épaulière (2.84) ; le point le plus large (4.26) est bas,
+% pas à mi-hauteur ; les poignées descendent jusqu'à -3.08, bien plus bas que
+% le creux central du bas (-1.43).
+\NewDocumentCommand{\manettexbox}{mmmm}{%
+\begin{center}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tikzpicture}[>=stealth, thick, lbl/.style={font=\small}]
+  % Gâchettes (LT/RT) puis épaulières (LB/RB), dessinées AVANT le boîtier :
+  % celui-ci est opaque, donc il masque de lui-même la part qui rentre dedans
+  % et il ne reste que ce qui déborde de l'épaule, comme sur une vraie manette
+  % vue de face. Les poser par-dessus obligerait à border chaque rectangle sur
+  % l'épaule, qui est courbe : c'est ainsi que le Y finissait par toucher le RB.
+  % Le sommet du boîtier vaut 2.84 à l'aplomb des bosses, l'épaulière monte à
+  % 3.02 et la gâchette dépasse encore au-dessus.
+  \draw[fill=gray!25, rounded corners=3pt] (-2.75, 2.60) rectangle (-2.00, 3.28);
+  \draw[fill=gray!25, rounded corners=3pt] ( 2.00, 2.60) rectangle ( 2.75, 3.28);
+  \draw[fill=gray!35, rounded corners=4pt] (-3.15, 2.20) rectangle (-1.60, 3.02);
+  \draw[fill=gray!35, rounded corners=4pt] ( 1.60, 2.20) rectangle ( 3.15, 3.02);
+  \draw[thick, fill=gray!12]
+    plot [smooth cycle, tension=0.75] coordinates {
+      (0, 2.47) (0.78, 2.52) (1.45, 2.77) (2.49, 2.84) (3.31, 2.23)
+      (3.89, 0.47) (4.26, -1.75) (4.08, -2.84) (3.61, -3.08) (2.64, -2.66)
+      (1.90, -1.93) (1.06, -1.49) (0, -1.43) (-1.06, -1.49) (-1.90, -1.93)
+      (-2.64, -2.66) (-3.61, -3.08) (-4.08, -2.84) (-4.26, -1.75)
+      (-3.89, 0.47) (-3.31, 2.23) (-2.49, 2.84) (-1.45, 2.77) (-0.78, 2.52)
+    };
+
+  % Stick gauche (cyclique) en haut à gauche, stick droit (palonnier) en bas à
+  % droite : la disposition décalée propre à la manette Xbox.
+  \draw[fill=gray!40] (-2.46, 1.82) circle (0.55);
+  \draw[fill=gray!60] (-2.46, 1.82) circle (0.30);
+  \draw[fill=gray!40] ( 1.26, 0.26) circle (0.55);
+  \draw[fill=gray!60] ( 1.26, 0.26) circle (0.30);
+
+  % Croix directionnelle : aucune fonction dans le simulateur, donc dessinée
+  % mais volontairement laissée sans étiquette.
+  \draw[fill=gray!30] (-1.76, 0.11) rectangle (-0.76, 0.41);
+  \draw[fill=gray!30] (-1.41, -0.24) rectangle (-1.11, 0.76);
+
+  % Back / Start, de part et d'autre du bouton guide central.
+  \draw[fill=gray!35] (-0.83, 1.57) circle (0.13);
+  \draw[fill=gray!35] ( 0.83, 1.57) circle (0.13);
+
+  % Losange des quatre boutons de face. Les glyphes sont dimensionnés en ex
+  % (ils servent aussi au fil du texte dans les tableaux), donc leur taille
+  % ignore l'échelle du schéma : sans agrandissement ils font 0.19 de rayon au
+  % lieu des 0.25 relevés sur le dessin de référence.
+  \node at ( 2.45, 2.23) {\scalebox{1.3}{#1}};
+  \node at ( 1.84, 1.61) {\scalebox{1.3}{#2}};
+  \node at ( 3.08, 1.60) {\scalebox{1.3}{#3}};
+  \node at ( 2.46, 0.98) {\scalebox{1.3}{#4}};
+
+  \draw[->] (-2.40, 3.18) -- (-7.2,  3.6) node[lbl,anchor=east] {LT : \textbf{Collectif} $-$};
+  \draw[->] (-3.05, 2.70) -- (-7.2,  2.6) node[lbl,anchor=east] {LB : \textbf{Assisté} / Menu};
+  \draw[->] (-2.46, 1.82) -- (-7.2,  1.5) node[lbl,anchor=east] {Stick gauche : \textbf{Cyclique}};
+  \draw[->] (-0.83, 1.57) -- (-2.0,  3.7) node[lbl,anchor=south] {\texttt{Back} : \textbf{Pause}};
+  \draw[->] ( 0.83, 1.57) -- ( 2.0,  3.7) node[lbl,anchor=south] {\texttt{Start} : \textbf{Turbine}};
+  \draw[->] ( 2.40, 3.18) -- ( 7.2,  3.6) node[lbl,anchor=west] {RT : \textbf{Collectif} $+$};
+  \draw[->] ( 3.05, 2.70) -- ( 7.2,  2.6) node[lbl,anchor=west] {RB : \textbf{Autoland} / Menu};
+  \draw[->] ( 2.45, 2.23) -- ( 7.2,  1.6) node[lbl,anchor=west] {#1 : \textbf{Vue}};
+  \draw[->] ( 3.08, 1.60) -- ( 7.2,  0.6) node[lbl,anchor=west] {#3 : \textbf{HUD}};
+  \draw[->] ( 1.84, 1.61) -- ( 7.2, -0.4) node[lbl,anchor=west] {#2 : \textbf{Reset} position};
+  \draw[->] ( 2.46, 0.98) -- ( 7.2, -1.4) node[lbl,anchor=west] {#4 : \textbf{Livrée}};
+  \draw[->] ( 1.26, 0.26) -- ( 1.26, -3.9) node[lbl,anchor=north] {Stick droit : \textbf{Palonnier}};
+\end{tikzpicture}%
+}
+\end{center}%
+}
+
+% --- Manette PlayStation (DualShock 4) -------------------------------------
+% Repères de la silhouette : bord supérieur presque droit (2.43 au centre, 2.58
+% sur les bosses d'épaulière) ; le point le plus large (4.28) est bas ; les
+% poignées descendent à -2.62 et le creux entre elles reste haut (-0.74).
+\NewDocumentCommand{\manetteps}{mmmm}{%
+\begin{center}
+\resizebox{1.0\linewidth}{!}{%
+\begin{tikzpicture}[>=stealth, thick, lbl/.style={font=\small}]
+  % Gâchettes (L2/R2) puis épaulières (L1/R1) avant le boîtier, même principe
+  % que sur la version Xbox : c'est lui qui masque ce qui rentre dedans.
+  \draw[fill=gray!25, rounded corners=3pt] (-2.55, 2.40) rectangle (-2.00, 3.05);
+  \draw[fill=gray!25, rounded corners=3pt] ( 2.00, 2.40) rectangle ( 2.55, 3.05);
+  \draw[fill=gray!35, rounded corners=4pt] (-3.00, 2.10) rectangle (-1.85, 2.80);
+  \draw[fill=gray!35, rounded corners=4pt] ( 1.85, 2.10) rectangle ( 3.00, 2.80);
+  \draw[thick, fill=gray!12]
+    plot [smooth cycle, tension=0.75] coordinates {
+      (0, 2.43) (1.12, 2.43) (2.11, 2.58) (3.13, 2.53) (3.67, 1.67)
+      (3.94, 0.67) (4.15, -0.36) (4.28, -1.43) (4.00, -2.41) (3.01, -2.62)
+      (2.39, -1.83) (2.04, -0.85) (1.05, -0.90) (0, -0.74) (-1.05, -0.90)
+      (-2.04, -0.85) (-2.39, -1.83) (-3.01, -2.62) (-4.00, -2.41)
+      (-4.28, -1.43) (-4.15, -0.36) (-3.94, 0.67) (-3.67, 1.67)
+      (-3.13, 2.53) (-2.11, 2.58) (-1.12, 2.43)
+    };
+
+  % Pavé tactile : trait caractéristique de la DualShock, dessiné mais sans
+  % étiquette (aucune fonction dans le simulateur).
+  \draw[fill=gray!18, rounded corners=3pt] (-1.33, 0.88) rectangle (1.33, 2.35);
+
+  % Les deux sticks sont côte à côte au centre, à la même hauteur : gauche =
+  % cyclique, droit = palonnier.
+  \draw[fill=gray!40] (-1.37, 0.00) circle (0.62);
+  \draw[fill=gray!60] (-1.37, 0.00) circle (0.34);
+  \draw[fill=gray!40] ( 1.37, 0.00) circle (0.62);
+  \draw[fill=gray!60] ( 1.37, 0.00) circle (0.34);
+
+  % Croix directionnelle : aucune fonction dans le simulateur, donc dessinée
+  % mais volontairement laissée sans étiquette.
+  \draw[fill=gray!30] (-3.22, 1.05) rectangle (-2.22, 1.35);
+  \draw[fill=gray!30] (-2.87, 0.70) rectangle (-2.57, 1.70);
+
+  % Share / Options, de part et d'autre du pavé tactile.
+  \draw[fill=gray!35, rounded corners=1pt] (-1.83, 1.95) rectangle (-1.67, 2.33);
+  \draw[fill=gray!35, rounded corners=1pt] ( 1.67, 1.95) rectangle ( 1.83, 2.33);
+
+  % Losange des quatre boutons de face. Même remarque que sur la version Xbox,
+  % avec un agrandissement plus fort : les boutons de la DualShock sont plus
+  % gros (0.30 de rayon sur le dessin de référence, contre 0.25).
+  \node at ( 2.72, 1.80) {\scalebox{1.6}{#1}};
+  \node at ( 2.10, 1.20) {\scalebox{1.6}{#2}};
+  \node at ( 3.34, 1.20) {\scalebox{1.6}{#3}};
+  \node at ( 2.72, 0.60) {\scalebox{1.6}{#4}};
+
+  \draw[->] (-2.28, 2.95) -- (-7.2,  3.4) node[lbl,anchor=east] {L2 : \textbf{Collectif} $-$};
+  \draw[->] (-2.90, 2.72) -- (-7.2,  2.4) node[lbl,anchor=east] {L1 : \textbf{Assisté} / Menu};
+  \draw[->] (-1.37, 0.00) -- (-7.2, -1.2) node[lbl,anchor=east] {Stick gauche : \textbf{Cyclique}};
+  \draw[->] (-1.75, 2.14) -- (-2.4,  3.5) node[lbl,anchor=south] {\texttt{Share} : \textbf{Pause}};
+  \draw[->] ( 1.75, 2.14) -- ( 2.4,  3.5) node[lbl,anchor=south] {\texttt{Options} : \textbf{Turbine}};
+  \draw[->] ( 2.28, 2.95) -- ( 7.2,  3.4) node[lbl,anchor=west] {R2 : \textbf{Collectif} $+$};
+  \draw[->] ( 2.90, 2.72) -- ( 7.2,  2.4) node[lbl,anchor=west] {R1 : \textbf{Autoland} / Menu};
+  \draw[->] ( 2.72, 1.80) -- ( 7.2,  1.5) node[lbl,anchor=west] {#1 : \textbf{Vue}};
+  \draw[->] ( 3.34, 1.20) -- ( 7.2,  0.5) node[lbl,anchor=west] {#3 : \textbf{HUD}};
+  \draw[->] ( 2.10, 1.20) -- ( 7.2, -0.5) node[lbl,anchor=west] {#2 : \textbf{Reset} position};
+  \draw[->] ( 2.72, 0.60) -- ( 7.2, -1.5) node[lbl,anchor=west] {#4 : \textbf{Livrée}};
+  \draw[->] ( 1.37, 0.00) -- ( 1.37, -3.6) node[lbl,anchor=north] {Stick droit : \textbf{Palonnier}};
+\end{tikzpicture}%
+}
+\end{center}%
+}
+
 % Bloc de titre repris a l'identique sur chaque version (Xbox puis PlayStation).
 % \maketitle ne peut servir qu'une seule fois : on definit notre propre bloc pour
 % pouvoir reprendre exactement le meme titre en tete de la partie PlayStation.
@@ -90,14 +255,16 @@
 
 \begin{center}\large\textbf{Manette Xbox}\end{center}
 
-\begin{center}
-	\includegraphics[scale=0.4]{Aérospatiale_Alouette_II_schema.png}
-\end{center}
+%\begin{center}
+%	\includegraphics[scale=0.4]{Aérospatiale_Alouette_II_schema.png}
+%\end{center}
 
 \section*{Introduction}
 Ce document décrit les commandes disponibles pour piloter le simulateur Artouste, tant au clavier qu'avec une manette de jeu \textbf{Xbox} USB ou Bluetooth.
 
-\section{Commandes de vol}
+\manettexbox{\boutonxbox{xbox_Y_jaune}{black}{Y}}{\boutonxbox{xbox_X_bleu}{white}{X}}{\boutonxbox{xbox_B_rouge}{white}{B}}{\boutonxbox{xbox_A_vert}{black}{A}}
+
+\section*{Commandes de vol}
 
 \begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
 \hline
@@ -156,6 +323,13 @@ Retour au menu (quitter depuis le menu) & \texttt{\'Echap} & LB + RB \\
 \hline
 \end{tabularx}
 
+\vfill
+\noindent
+\footnotesize\emph{Le schéma de la manette a été redessiné d'après
+\href{https://commons.wikimedia.org/wiki/File:Xbox360_gamepad.svg}{Xbox360\_gamepad.svg}
+(Wikimedia Commons), placé dans le domaine public au titre de la licence
+Creative Commons CC0 1.0.}\normalsize
+
 \clearpage
 
 % ================= Version manette PlayStation (2 pages) =================
@@ -169,12 +343,14 @@ Retour au menu (quitter depuis le menu) & \texttt{\'Echap} & LB + RB \\
 
 \begin{center}\large\textbf{Manette PlayStation}\end{center}
 
-\begin{center}
-	\includegraphics[scale=0.4]{Aérospatiale_Alouette_II_schema.png}
-\end{center}
+%\begin{center}
+%	\includegraphics[scale=0.4]{Aérospatiale_Alouette_II_schema.png}
+%\end{center}
 
 \section*{Introduction}
 Ce document décrit les commandes disponibles pour piloter le simulateur Artouste, tant au clavier qu'avec les manettes de jeu \textbf{PlayStation 4 (DualShock 4)} ou \textbf{PlayStation 5 (DualSense)} USB ou Bluetooth.
+
+\manetteps{\symtriangle{}}{\symcarre{}}{\symrond{}}{\symcroix{}}
 
 \section{Commandes de vol}
 
@@ -234,5 +410,12 @@ D\'emo (lancer depuis le menu / en sortir) & D au menu ; \texttt{\'Echap} pour s
 Retour au menu (quitter depuis le menu) & \texttt{\'Echap} & L1 + R1 \\
 \hline
 \end{tabularx}
+
+\vfill
+\noindent
+\footnotesize\emph{Le schéma de la manette a été redessiné d'après
+\href{https://fr.wikipedia.org/wiki/Fichier:Dualshock_4_Layout.svg}{Dualshock\_4\_Layout.svg}
+(Wikipédia), disponible selon les termes de la licence Creative Commons
+Attribution 3.0 Non Transposé.}\normalsize
 
 \end{document}

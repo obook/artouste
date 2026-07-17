@@ -22,26 +22,26 @@ ZONE = {
     "landmarks": [
         ("Bayonne", -1.4750, 43.4933),
         ("Anglet", -1.5150, 43.4850),
-        ("Boucau", -1.4711, 43.5269),
+        ("Boucau", -1.4862, 43.5237),  # mairie/église
         ("Tarnos", -1.4606, 43.5408),
-        ("Ondres", -1.4510, 43.5650),
-        ("Labenne", -1.4347, 43.5917),
+        ("Ondres", -1.4479, 43.5612),  # mairie/église
+        ("Labenne", -1.4260, 43.5947),  # mairie/église
         ("Capbreton", -1.4310, 43.6420),
-        ("Hossegor", -1.3950, 43.6640),
-        ("Seignosse", -1.3780, 43.6890),
+        ("Hossegor", -1.4276, 43.6589),  # mairie
+        ("Seignosse", -1.3739, 43.6897),  # mairie
         ("Vieux-Boucau", -1.4010, 43.7880),
         # Lieux ajoutés (coordonnées IGN, îles et lacs recoupés OpenStreetMap).
-        ("Biarritz", -1.5639, 43.4795),
+        ("Biarritz", -1.5570, 43.4824),  # mairie
         ("Rocher de la Vierge", -1.5703, 43.4841),
         ("Aéroport de Biarritz", -1.5233, 43.4687),
-        ("Soustons", -1.3413, 43.7699),
+        ("Soustons", -1.3284, 43.7539),  # mairie
         ("Lac d'Hossegor", -1.4287, 43.6722),
         ("Étang de Soustons", -1.3292, 43.7703),
         ("Étang Blanc", -1.3653, 43.7094),
         ("St-Vincent-de-Tyrosse", -1.3055, 43.6667),
-        ("Bénesse-Maremne", -1.3695, 43.6338),
+        ("Bénesse-Maremne", -1.3594, 43.6342),  # mairie
         ("Marais d'Orx", -1.3972, 43.6007),
-        ("Saint-Martin-de-Seignanx", -1.3952, 43.5354),
+        ("Saint-Martin-de-Seignanx", -1.3863, 43.5447),  # mairie
     ],
     # Coordonnées relevées sur Google Maps.
     "helipads": [

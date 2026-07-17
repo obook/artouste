@@ -1,7 +1,7 @@
 # Helipads - bassin d'Arcachon (Cap Ferret, Biscarrosse, Marcheprime) (un par ligne : lon lat nom)
 # Positions approximatives, à affiner sur place.
 -1.116442178115823 44.596643236436016 Aérodrome de La Teste
--1.1669 44.6327 Hôpital Jean-Hameau (La Teste-de-Buch)
+-1.1138 44.6132 Hôpital Jean-Hameau (La Teste-de-Buch)
 -1.151 44.5421 Base aérienne 120 (Cazaux)
 -1.1479 44.6599 Port d'Arcachon
 -1.2383 44.6565 Jetée de Bélisaire (Cap Ferret)

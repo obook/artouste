@@ -21,17 +21,17 @@ ZONE = {
         ("Cauterets", -0.1124, 42.8903),
         ("Chemin des cascades", -0.1246, 42.8601),  # cascade du Pas de l'Ours
         ("Pont d'Espagne", -0.1398, 42.8509),  # site réel (confluence, parking, ~1496 m)
-        ("Lac de Gaube", -0.1465, 42.8400),
-        ("Vignemale", -0.1456, 42.7700),
-        ("Luz-Saint-Sauveur", 0.0000, 42.8730),
+        ("Lac de Gaube", -0.139722, 42.831138),
+        ("Vignemale", -0.1472, 42.77389),
+        ("Luz-Saint-Sauveur", -0.0033, 42.8715),  # église fortifiée Saint-André
         ("Gèdre", 0.0175, 42.7847),
         ("Gavarnie", -0.0086, 42.7335),
-        ("Brèche de Roland", -0.0386, 42.6975),
+        ("Brèche de Roland", -0.03361, 42.69083),
         ("Cirque de Gavarnie", -0.0090, 42.6963),
         # Lieux ajoutés (coordonnées recoupées IGN + OpenStreetMap).
         ("Lac d'Estom", -0.1001, 42.8063),
         ("Piméné", 0.0216, 42.7356),
-        ("Pic du Marboré", -0.0171, 42.6858),
+        ("Pic du Marboré", 0.0119, 42.6925),
         # Lieux ajoutés (coordonnées OpenStreetMap).
         ("Esterre", 0.0061, 42.8749),
         ("Esquièze-Sère", -0.0025, 42.8756),
@@ -51,7 +51,7 @@ ZONE = {
         ("Cauterets", -0.1120, 42.8880),
         ("Pont d'Espagne", -0.1398, 42.8509),
         ("Gavarnie", -0.0090, 42.7330),
-        ("Luz-Saint-Sauveur", 0.0000, 42.8730),
+        ("Luz-Saint-Sauveur", -0.0033, 42.8715),
         ("Refuge des Oulettes de Gaube", -0.1412, 42.7929),
         ("Refuge des Sarradets", -0.0333, 42.6959),
         ("Refuge de Bayssellance", -0.1241, 42.7794),

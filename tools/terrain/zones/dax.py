@@ -22,25 +22,25 @@ ZONE = {
         ("Cathédrale Notre-Dame de Dax", -1.0530, 43.7088),
         ("Fontaine chaude", -1.0526, 43.7110),
         ("Pont Vieux", -1.0541, 43.7125),
-        ("Les Arènes de Dax", -1.0679, 43.7013),
+        ("Les Arènes de Dax", -1.0498, 43.7131),
         ("Aérodrome de Dax-Seyresse", -1.0692, 43.6884),
         ("Musée de l'ALAT", -1.0635, 43.6922),
         ("Saint-Paul-lès-Dax", -1.0511, 43.7250),  # mairie : centre-ville réel
-        ("Les Thermes de Dax", -1.0686, 43.7664),
+        ("Les Thermes de Dax", -1.0649, 43.7290),  # Thermes de Christus, le plus grand établissement
         ("Hippodrome de Dax", -1.0669, 43.7625),
         ("Narrosse", -1.0071, 43.6950),
         ("Yzosse", -1.0152, 43.7121),
         ("Seyresse", -1.0635, 43.6840),
-        ("Oeyreluy", -1.0808, 43.6749),
-        ("Tercis-les-Bains", -1.1125, 43.6725),
+        ("Oeyreluy", -1.0795, 43.6723),  # mairie
+        ("Tercis-les-Bains", -1.1090, 43.6702),  # bourg de Palisse (mairie/église)
         ("Bénesse-lès-Dax", -1.0377, 43.6428),
         # Lieux ajoutés (coordonnées géocodeur IGN et OpenStreetMap).
-        ("Mées", -1.1171, 43.7075),
-        ("Angoumé", -1.1380, 43.6884),
+        ("Mées", -1.1106, 43.7025),  # mairie/église
+        ("Angoumé", -1.1352, 43.6904),  # mairie
         ("Heugas", -1.0808, 43.6405),
-        ("Saugnac-et-Cambran", -0.9912, 43.6738),
+        ("Saugnac-et-Cambran", -0.9935, 43.6710),  # bourg de Saugnac (mairie/église)
         ("Candresse", -0.9814, 43.7116),
-        ("Gourbera", -1.0506, 43.8007),
+        ("Gourbera", -1.0488, 43.8041),  # mairie/église
         ("Berceau de Saint-Vincent-de-Paul", -1.0105, 43.7453),
         ("Parc Théodore Denis", -1.0511, 43.7125),
         ("Stade Maurice Boyau", -1.0458, 43.7121),

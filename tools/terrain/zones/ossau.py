@@ -23,7 +23,7 @@ ZONE = {
     "landmarks": [
         ("Lac d'Artouste", -0.3325, 42.8589),
         ("Pic du Midi d'Ossau", -0.4380, 42.8430),
-        ("Pic Palas", -0.3600, 42.8400),
+        ("Pic Palas", -0.3133, 42.8495),
         ("Fabrèges", -0.3972, 42.8799),
         # Lieux ajoutés (coordonnées géocodeur IGN, data.geopf.fr).
         ("Lac de Fabrèges", -0.3974, 42.8767),

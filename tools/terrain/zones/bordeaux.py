@@ -24,31 +24,31 @@ ZONE = {
         ("Place de la Bourse", -0.5697, 44.8412),
         ("Cité du Vin", -0.5508, 44.8625),
         ("Pont de pierre", -0.5648, 44.8385),
-        ("Mérignac", -0.6470, 44.8430),
+        ("Mérignac", -0.6570, 44.8451),  # mairie
         ("Pessac", -0.6311, 44.8067),
         ("Talence", -0.5912, 44.8080),
-        ("Bègles", -0.5478, 44.8083),
+        ("Bègles", -0.5436, 44.8082),  # mairie
         ("Cenon", -0.5300, 44.8560),
-        ("Lormont", -0.5180, 44.8740),
+        ("Lormont", -0.5231, 44.8800),  # mairie
         ("Le Bouscat", -0.5972, 44.8650),
-        ("Bruges", -0.6005, 44.8775),
+        ("Bruges", -0.6127, 44.8815),  # mairie
         ("Stade Matmut Atlantique", -0.5614, 44.8956),
-        ("Aéroport de Mérignac", -0.6964, 44.8362),
+        ("Aéroport de Mérignac", -0.7028, 44.8309),  # aérogare
         # Lieux ajoutés (coordonnées géocodeur IGN).
         ("Cathédrale Saint-André", -0.5779, 44.8376),
         ("Gare Saint-Jean", -0.5564, 44.8262),
         ("Pont Chaban-Delmas", -0.5517, 44.8581),
-        ("Pont d'Aquitaine", -0.5449, 44.8814),
-        ("Gradignan", -0.6125, 44.7686),
-        ("Floirac", -0.5211, 44.8325),
-        ("Villenave-d'Ornon", -0.5579, 44.7724),
+        ("Pont d'Aquitaine", -0.5390, 44.8803),
+        ("Gradignan", -0.6083, 44.7725),  # mairie
+        ("Floirac", -0.5276, 44.8305),  # mairie
+        ("Villenave-d'Ornon", -0.5717, 44.7829),  # mairie
     ],
     # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
     # la carte ; à affiner si besoin).
     "helipads": [
         ("Aéroport de Bordeaux-Mérignac", -0.6964, 44.8362),
-        ("CHU Pellegrin", -0.6045, 44.8378),
-        ("Hôpital Haut-Lévêque (Pessac)", -0.6330, 44.7908),
+        ("CHU Pellegrin", -0.6039, 44.8275),
+        ("Hôpital Haut-Lévêque (Pessac)", -0.6609, 44.7853),
         ("Hôpital Saint-André", -0.5790, 44.8333),
     ],
     # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir

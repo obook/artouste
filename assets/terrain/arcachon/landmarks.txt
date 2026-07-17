@@ -5,17 +5,17 @@
 -1.2114 44.5886 Dune du Pilat
 -1.145 44.6314 La Teste-de-Buch
 -1.0697 44.6361 Gujan-Mestras
--0.9744 44.6453 Biganos
+-0.9768 44.6422 Biganos
 -1.0186 44.6839 Audenge
 -1.1044 44.7436 Andernos-les-Bains
 -1.1392 44.7686 Arès
--0.8506 44.6953 Marcheprime
+-0.8538 44.692 Marcheprime
 -1.1664 44.3936 Biscarrosse
--1.2461 44.4564 Biscarrosse-Plage
+-1.2505 44.445 Biscarrosse-Plage
 -1.178 44.6985 Île aux Oiseaux
 -1.243 44.5855 Banc d'Arguin
 -1.2488 44.646 Phare du Cap Ferret
--1.0085 44.6272 Le Teich
--1.2068 44.7167 Lège-Cap-Ferret
--1.0449 44.4755 Sanguinet
+-1.0211 44.6347 Le Teich
+-1.1465 44.7926 Lège-Cap-Ferret
+-1.0763 44.4837 Sanguinet
 -1.1453 44.4779 Lac de Cazaux

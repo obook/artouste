@@ -4,20 +4,20 @@
 -0.5697 44.8412 Place de la Bourse
 -0.5508 44.8625 Cité du Vin
 -0.5648 44.8385 Pont de pierre
--0.647 44.843 Mérignac
+-0.657 44.8451 Mérignac
 -0.6311 44.8067 Pessac
 -0.5912 44.808 Talence
--0.5478 44.8083 Bègles
+-0.5436 44.8082 Bègles
 -0.53 44.856 Cenon
--0.518 44.874 Lormont
+-0.5231 44.88 Lormont
 -0.5972 44.865 Le Bouscat
--0.6005 44.8775 Bruges
+-0.6127 44.8815 Bruges
 -0.5614 44.8956 Stade Matmut Atlantique
--0.6964 44.8362 Aéroport de Mérignac
+-0.7028 44.8309 Aéroport de Mérignac
 -0.5779 44.8376 Cathédrale Saint-André
 -0.5564 44.8262 Gare Saint-Jean
 -0.5517 44.8581 Pont Chaban-Delmas
--0.5449 44.8814 Pont d'Aquitaine
--0.6125 44.7686 Gradignan
--0.5211 44.8325 Floirac
--0.5579 44.7724 Villenave-d'Ornon
+-0.539 44.8803 Pont d'Aquitaine
+-0.6083 44.7725 Gradignan
+-0.5276 44.8305 Floirac
+-0.5717 44.7829 Villenave-d'Ornon

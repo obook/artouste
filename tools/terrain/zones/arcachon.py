@@ -21,27 +21,27 @@ ZONE = {
         ("Dune du Pilat", -1.2114, 44.5886),
         ("La Teste-de-Buch", -1.1450, 44.6314),
         ("Gujan-Mestras", -1.0697, 44.6361),
-        ("Biganos", -0.9744, 44.6453),
+        ("Biganos", -0.9768, 44.6422),  # mairie
         ("Audenge", -1.0186, 44.6839),
         ("Andernos-les-Bains", -1.1044, 44.7436),
         ("Arès", -1.1392, 44.7686),
-        ("Marcheprime", -0.8506, 44.6953),
+        ("Marcheprime", -0.8538, 44.6920),  # mairie
         ("Biscarrosse", -1.1664, 44.3936),
-        ("Biscarrosse-Plage", -1.2461, 44.4564),
+        ("Biscarrosse-Plage", -1.2505, 44.4450),
         # Lieux ajoutés (coordonnées IGN, île et lac recoupés OpenStreetMap).
         ("Île aux Oiseaux", -1.1780, 44.6985),
         ("Banc d'Arguin", -1.2430, 44.5855),
         ("Phare du Cap Ferret", -1.2488, 44.6460),
-        ("Le Teich", -1.0085, 44.6272),
-        ("Lège-Cap-Ferret", -1.2068, 44.7167),
-        ("Sanguinet", -1.0449, 44.4755),
+        ("Le Teich", -1.0211, 44.6347),  # mairie
+        ("Lège-Cap-Ferret", -1.1465, 44.7926),  # mairie (Lège-Bourg, siège de la commune)
+        ("Sanguinet", -1.0763, 44.4837),  # mairie
         ("Lac de Cazaux", -1.1453, 44.4779),
     ],
     # Coordonnées relevées sur Google Maps, complétées au géocodeur IGN et
     # OpenStreetMap.
     "helipads": [
         ("Aérodrome de La Teste", -1.116442178115823, 44.596643236436016),
-        ("Hôpital Jean-Hameau (La Teste-de-Buch)", -1.1669, 44.6327),
+        ("Hôpital Jean-Hameau (La Teste-de-Buch)", -1.1138, 44.6132),
         ("Base aérienne 120 (Cazaux)", -1.1510, 44.5421),
         ("Port d'Arcachon", -1.1479, 44.6599),
         ("Jetée de Bélisaire (Cap Ferret)", -1.2383, 44.6565),

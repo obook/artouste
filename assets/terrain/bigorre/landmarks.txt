@@ -3,9 +3,8 @@
 0.1411 42.9369 Pic du Midi de Bigorre
 0.1447 42.9075 Col du Tourmalet
 0.1783 42.9094 La Mongie
-0.2158 42.9469 Lac de Payolle
 0.0658 42.8983 Barèges
-0.1983 42.9781 Sainte-Marie-de-Campan
+0.2276 42.9843 Sainte-Marie-de-Campan
 0.1777 43.0169 Campan
 0.0688 42.9837 Pic de Montaigu
 0.173 42.9556 Pène Nère

@@ -2,8 +2,8 @@
 """
 bigorre
 Pic du Midi de Bigorre (Hautes-Pyrénées) : l'observatoire (~2877 m) et son
-antenne, le col du Tourmalet et la station de La Mongie, avec le lac de Payolle
-et Sainte-Marie-de-Campan au nord. Haute montagne sans mer ; comme Ossau et
+antenne, le col du Tourmalet et la station de La Mongie, avec Sainte-Marie-de-
+Campan au nord. Haute montagne sans mer ; comme Ossau et
 Cauterets on garde les petites constructions (cabanes, granges) utiles au
 repérage. Emprise compacte (~18x19 km), calée sur le modèle ossau (grille 1024,
 ortho 5000). Le Pic est ~36 km à l'est du bord de la carte ossau, donc hors
@@ -23,9 +23,8 @@ ZONE = {
         ("Pic du Midi de Bigorre", 0.1411, 42.9369),
         ("Col du Tourmalet", 0.1447, 42.9075),
         ("La Mongie", 0.1783, 42.9094),
-        ("Lac de Payolle", 0.2158, 42.9469),
         ("Barèges", 0.0658, 42.8983),
-        ("Sainte-Marie-de-Campan", 0.1983, 42.9781),
+        ("Sainte-Marie-de-Campan", 0.2276, 42.9843),
         ("Campan", 0.1777, 43.0169),  # mairie : le point précédent était sur un versant
         # Lieux ajoutés (coordonnées recoupées IGN + OpenStreetMap).
         ("Pic de Montaigu", 0.0688, 42.9837),
@@ -58,7 +57,6 @@ ZONE = {
         ("La Mongie", 0.1783, 42.9094),
         ("Col du Tourmalet", 0.1447, 42.9075),
         ("Observatoire du Pic du Midi", 0.1411, 42.9369),
-        ("Lac de Payolle", 0.2158, 42.9469),
         ("Barrage du Herraou", 0.0614, 42.9594),
         ("Super Barèges", 0.1315, 42.9053),
     ],

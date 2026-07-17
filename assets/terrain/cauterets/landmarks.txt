@@ -3,16 +3,16 @@
 -0.1124 42.8903 Cauterets
 -0.1246 42.8601 Chemin des cascades
 -0.1398 42.8509 Pont d'Espagne
--0.1465 42.84 Lac de Gaube
--0.1456 42.77 Vignemale
-0.0 42.873 Luz-Saint-Sauveur
+-0.139722 42.831138 Lac de Gaube
+-0.1472 42.77389 Vignemale
+-0.0033 42.8715 Luz-Saint-Sauveur
 0.0175 42.7847 Gèdre
 -0.0086 42.7335 Gavarnie
--0.0386 42.6975 Brèche de Roland
+-0.03361 42.69083 Brèche de Roland
 -0.009 42.6963 Cirque de Gavarnie
 -0.1001 42.8063 Lac d'Estom
 0.0216 42.7356 Piméné
--0.0171 42.6858 Pic du Marboré
+0.0119 42.6925 Pic du Marboré
 0.0061 42.8749 Esterre
 -0.0025 42.8756 Esquièze-Sère
 -0.0248 42.8838 Sazos

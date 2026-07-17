@@ -33,10 +33,10 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 > [!NOTE]
 > **Au lancement**, le simulateur s'ouvre sur un menu de choix : la
 > carte à charger et le démarrage éventuel de la turbine. En vol, `Échap` (ou `LB` + `RB` à la manette) ramène à ce menu ; dans le menu, `Échap` quitte le simulateur.
+> 
+> La notice des commandes est disponible au téléchargement : [notice.pdf](docs/notice.pdf)
 
 > [!TIP]
-> La notice des commandes est disponible au téléchargement : [notice.pdf](docs/notice.pdf)
-> 
 > **Première fois aux commandes ?**
 > Voici les trois étapes pour effectuer sans stress votre premier vol à bord de l'Alouette.
 > 1. **Activez le mode assisté** : touche `M` | `LB`, un message à l'écran le confirme.

@@ -17,7 +17,8 @@ ZONE = {
     # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
     "height_min": 0.0,
     "grid": 1024,      # mailles ~17,5 m (défaut 512 pour les autres zones)
-    "ortho_px": 4096,  # hauteur d'ortho ~4,4 m/px (défaut 2048)
+    "ortho_px": 4970,  # ortho ~3,6 m/px (bbox plus large que haute : largeur WMS
+                       # deja a ~5008 px, tout pres de la limite serveur 5010)
     "title": "vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)",
     "landmarks": [
         ("Lac d'Artouste", -0.3325, 42.8589),

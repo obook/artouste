@@ -6,7 +6,7 @@ antenne, le col du Tourmalet et la station de La Mongie, avec le lac de Payolle
 et Sainte-Marie-de-Campan au nord. Haute montagne sans mer ; comme Ossau et
 Cauterets on garde les petites constructions (cabanes, granges) utiles au
 repérage. Emprise compacte (~18x19 km), calée sur le modèle ossau (grille 1024,
-ortho 4096). Le Pic est ~36 km à l'est du bord de la carte ossau, donc hors
+ortho 5000). Le Pic est ~36 km à l'est du bord de la carte ossau, donc hors
 emprise : il fallait une carte propre plutôt qu'un simple landmark.
 """
 
@@ -17,7 +17,7 @@ ZONE = {
     "start_heading": 270,      # face à l'ouest : le Tourmalet et le pic du Midi
     "height_min": 0.0,
     "grid": 1024,      # mailles ~17,5 m (comme ossau)
-    "ortho_px": 4096,  # hauteur d'ortho ~4,4 m/px (comme ossau)
+    "ortho_px": 5000,  # ortho ~3,8 m/px (limite serveur IGN : 5010)
     "title": "Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie)",
     "landmarks": [
         ("Pic du Midi de Bigorre", 0.1411, 42.9369),

@@ -11,8 +11,8 @@ lon_min -0.52
 lon_max -0.3
 lat_min 42.8
 lat_max 42.96
-ortho_width 4127
-ortho_height 4096
+ortho_width 5008
+ortho_height 4970
 sea 0
 start_heading 180
 start_x 991.2

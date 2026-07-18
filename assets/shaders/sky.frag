@@ -15,6 +15,7 @@ out vec4 frag_color;
 uniform mat4 u_invViewProj;
 uniform vec3 u_sunDir;
 uniform vec3 u_moonDir;  // direction vers la lune (opposée au soleil)
+uniform float u_time;    // horloge d'animation (s), pour le scintillement des étoiles
 
 void main()
 {
@@ -75,6 +76,27 @@ void main()
 	float moonMask = smoothstep(-0.02, 0.05, dir.y);     // rayon de vue au-dessus de l'horizon
 	vec3 moonColor = vec3(0.85, 0.88, 0.98);           // blanc legerement bleute
 	color += moonColor * (moonGlow + moonCore) * moonMask * night * moonUp;
+
+	// etoiles : champ procedural (pas de texture), une "etoile" par cellule d'une
+	// grille 3D imaginaire dont dir est quantifie -- pas parfaitement uniforme sur
+	// la sphere (grille cubique), mais invisible a l'oeil pour de simples points.
+	// Visibles seulement la nuit (night) et au-dessus de l'horizon (fondu progressif,
+	// comme la lune) pour ne pas cribler l'horizon encore eclairci par le crepuscule.
+	vec3 starCell = floor(dir * 400.0);
+	vec3 hp = fract(starCell * 0.3183099 + vec3(0.10, 0.20, 0.30)) * 17.0;
+	float starHash = fract(hp.x * hp.y * hp.z * (hp.x + hp.y + hp.z));
+	float starPresence = smoothstep(0.996, 1.0, starHash);
+	vec3 bp = fract((starCell + 7.0) * 0.3183099 + vec3(0.10, 0.20, 0.30)) * 17.0;
+	float starBright = fract(bp.x * bp.y * bp.z * (bp.x + bp.y + bp.z));
+	float starMask = smoothstep(0.0, 0.25, dir.y);
+	// Scintillement : dephasage et vitesse propres a chaque etoile (tirés de ses
+	// propres hash, starHash/starBright, déjà calculés) pour qu'elles ne clignotent
+	// pas toutes ensemble. Fondu 0.55-1.0 : jamais totalement éteintes.
+	float twinklePhase = starBright * 6.28318;
+	float twinkleSpeed = mix(0.6, 2.2, fract(starHash * 13.0));
+	float twinkle = mix(0.55, 1.0, 0.5 + 0.5 * sin(u_time * twinkleSpeed + twinklePhase));
+	float stars = starPresence * mix(0.4, 1.0, starBright) * twinkle * starMask * night;
+	color += vec3(stars);
 
 	//Tone mapping
 	color = vec3(1.0) - exp(-color * 1.3);

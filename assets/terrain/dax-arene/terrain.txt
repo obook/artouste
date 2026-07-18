@@ -1,4 +1,4 @@
-# Terrain Artouste - recadre depuis dax (mode zombie, sous-region)
+# Terrain Artouste - invasion - Happy DeathHour (mode zombies)
 # Repere monde identique a la carte source (origin_x/origin_z) : tous les
 # fichiers en coordonnees monde restent valides sans decalage.
 cols 142

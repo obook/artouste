@@ -144,8 +144,14 @@ struct HudData {
         float elapsedS     = 0.0f;
         bool  belowCeiling = false;  /* sous le plafond : les zombies peuvent viser */
         bool  gameOver     = false;
-        int   score        = 0;      /* vagues intégralement survécues */
+        int   score        = 0;      /* points, voir app::CombatMode::score */
         int   kills        = 0;      /* zombies tués depuis le début de la session */
+
+        /* Annonce de kill multiple à afficher (0 = aucune, 1 = double, 2 = triple,
+           3 = carnage), voir app::CombatMode::KillAnnouncement -- valeur brute plutôt
+           que l'enum pour garder HudData indépendant du module combat, comme le
+           reste de cette structure (vec3 exclu, voir zombieMapPoints plus bas). */
+        int   killAnnounceKind = 0;
 
         /* Points des zombies sur la minimap (fractions 0-1 dans l'emprise du
            terrain, même convention que HudLabel::mapU/mapV). Pas de type vec2

@@ -136,24 +136,32 @@ RocketSystem::UpdateResult RocketSystem::update(
            compte les mises à mort pour le son. */
         ++res.explosions;
         m_explosions.push_back(Explosion{center, 0.0f});
+        res.explosionPositions.push_back(center);
         /* Trace de brûlure persistante au sol (s'estompe en ~45 s). */
         if (m_scorches.size() >= MAX_SCORCHES) {
             m_scorches.erase(m_scorches.begin());  /* retire la plus ancienne */
         }
         m_scorches.push_back(Scorch{center, 0.0f});
 
-        std::vector<ZombieHorde::Zombie>& zombies = horde.zombies();
+        int                                killsHere = 0;
+        std::vector<ZombieHorde::Zombie>& zombies   = horde.zombies();
         for (std::size_t i = 0; i < zombies.size(); ++i) {
             if (zombies[i].state != ZombieHorde::State::Alive) {
                 continue;
             }
             if (glm::distance(zombies[i].position, center) <= EXPLOSION_RADIUS_M) {
+                const vec3 zombiePos = zombies[i].position;
                 horde.applyDamage(i, BLAST_DAMAGE);
                 if (zombies[i].state == ZombieHorde::State::Dying) {
                     ++res.kills;
+                    ++killsHere;
+                    res.zombieDeathPositions.push_back(zombiePos);
+                } else {
+                    res.zombieHitPositions.push_back(zombiePos);
                 }
             }
         }
+        res.explosionKillCounts.push_back(killsHere);
 
         it = m_rockets.erase(it);
     }

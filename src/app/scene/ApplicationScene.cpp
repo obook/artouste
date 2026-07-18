@@ -135,11 +135,17 @@ void Application::initScene() {
        m_explosionFx->built() reste faux, aucune explosion 3D dessinée. */
     const std::filesystem::path explosionModel = assets / "models" / "zombie" / "explosion.glb";
     if (std::filesystem::exists(explosionModel)) {
-        /* Rayon monde 3,5 m (proche de la zone létale). Départ d'anim a 0,5 s
-           (boule de feu deja formée -> franche des l'impact), puis 1,2 s jouées a
-           vitesse réelle -- cette tranche (playSpan) DOIT égaler RocketSystem::
-           EXPLOSION_DURATION_S pour que le flipbook ne saute pas. */
-        m_explosionFx = std::make_unique<render::ExplosionFx>(explosionModel, 3.5f, 0.5f, 1.2f);
+        /* Rayon monde 3,5 m (proche de la zone létale). Le clip (12 images figées
+           enchainees, 3,0 s au total -- voir le diagnostic [ExplosionModel] au
+           chargement) n'affiche nativement que 4 images/s : saccadé si on ne
+           montre qu'une tranche de 1,2 s (RocketSystem::EXPLOSION_DURATION_S,
+           la vie réelle de l'explosion) a vitesse native, comme avant (5 images
+           vues sur 12). Départ d'anim a 0,3 s (saute juste la toute première
+           image, encore informe) puis lecture accélérée x2,25 pour atteindre la
+           fin du clip (3,0 s) en 1,2 s de vie réelle : les ~11 images restantes
+           défilent dans le même temps de vie, sensiblement moins saccadé, sans
+           toucher au fichier ni a ses images (photos de feu réalistes). */
+        m_explosionFx = std::make_unique<render::ExplosionFx>(explosionModel, 3.5f, 0.3f, 1.2f, 2.25f);
     }
 
     const auto discData = render::primitives::softDisc(6.0f, 48);
@@ -369,6 +375,19 @@ void Application::initScene() {
                on entre directement dans le combat, pas de séquence de démarrage
                (~1 min) à subir face à la horde. */
             m_flight.turbine().forceRunning();
+
+            /* Arène dédiée (Happy DeathHour, zombie_only.txt) : nuit figée plutôt que
+               l'heure du jour normale -- ambiance de combat nocturne constante, sans
+               cycle jour/nuit dans une arène fermée. 19h00 place la lune à ~14° au-dessus
+               de l'horizon dans l'axe du cap de départ (voir sunDirection,
+               ApplicationSun.cpp) : bien visible depuis le cockpit sans lever la tête
+               (vérifié par capture -- au-delà de ~20°, la vue cockpit, inclinée vers le
+               bas, la sort du cadre). */
+            if (std::filesystem::exists(assets / "terrain" / m_terrainName / "zombie_only.txt")) {
+                constexpr float NIGHT_HOUR_S = 19.0f * 3600.0f;
+                m_sunBaseSeconds = NIGHT_HOUR_S;
+                m_sunTimeScale   = 0.0f;
+            }
         }
     } else {
         m_combat.stop();

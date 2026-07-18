@@ -29,3 +29,29 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   TheSoundFXGuy_YT, sous licence
   [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
   Fichier : `assets/sounds/combat/explosion.wav`.
+
+- **Zombie touché (mode zombie)** : "female_growl2.wav"
+  (<https://freesound.org/people/xpoki/sounds/432762/>) par xpoki, sous licence
+  [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/).
+  Fichier : `assets/sounds/combat/zombie_hit.wav`.
+
+- **Zombie tué (mode zombie)** : "Zombie_36.wav"
+  (<https://freesound.org/people/LittleRobotSoundFactory/sounds/316264/>) par
+  LittleRobotSoundFactory, sous licence
+  [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
+  Fichier : `assets/sounds/combat/zombie_death.wav`.
+
+- **Jet de boulette toxique (mode zombie)** : "Firework Launch (2)"
+  (<https://freesound.org/people/LukaCafuka/sounds/750685/>) par LukaCafuka,
+  sous licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/toxic_throw.wav`.
+
+- **Impact de boulette toxique (mode zombie)** : "SZ_Squish_09.wav"
+  (<https://freesound.org/people/PaulMorek/sounds/196726/>) par PaulMorek, sous
+  licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/toxic_impact.wav`.
+
+- **Nouvelle vague (mode zombie)** : "Dark Loop #2"
+  (<https://freesound.org/people/danlucaz/sounds/514164/>) par danlucaz, sous
+  licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/wave_start.wav`.

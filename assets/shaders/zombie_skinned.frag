@@ -39,13 +39,16 @@ void main() {
         discard;  /* alpha test : bords nets (cheveux, découpes du modèle) */
     }
 
-    /* Variété entre zombies : on décale la teinte selon la graine d'instance,
-       mais SEULEMENT sur les zones colorées (vetements) -- la peau et les gris,
-       peu saturés, restent quasi inchangés. */
+    /* Variété entre zombies : on décale la teinte selon la graine d'instance.
+       La texture (rampe de couleurs) mélange peau et vêtements dans les mêmes
+       plages de saturation -- impossible de les distinguer proprement par ce
+       seul critère -- donc l'angle max reste faible pour que la peau ne
+       vire jamais vers une teinte improbable (vert, bleu...), au prix d'une
+       variété un peu plus discrète sur les vêtements saturés. */
     float maxc = max(albedo.r, max(albedo.g, albedo.b));
     float minc = min(albedo.r, min(albedo.g, albedo.b));
     float sat  = maxc - minc;
-    float amt  = (v_colorSeed * 2.0 - 1.0) * 2.5 * smoothstep(0.06, 0.30, sat);
+    float amt  = (v_colorSeed * 2.0 - 1.0) * 0.6 * smoothstep(0.06, 0.30, sat);
     albedo.rgb = clamp(hueShift(albedo.rgb, amt), 0.0, 1.0);
 
     vec3  n       = normalize(v_normal);

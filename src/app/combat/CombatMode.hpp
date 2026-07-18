@@ -102,14 +102,18 @@ public:
     [[nodiscard]] float healthPct() const noexcept { return m_playerHealth / PLAYER_HEALTH_MAX; }
     [[nodiscard]] bool  gameOver() const noexcept { return m_gameOver; }
 
-    /* Vague en cours, score (vagues intégralement survécues) et durée totale
-       de la session -- pour le HUD (étape 5). */
+    /* Vague en cours et durée totale de la session -- pour le HUD (étape 5). */
     [[nodiscard]] int   wave() const noexcept { return m_waves.waveNumber(); }
-    [[nodiscard]] int   score() const noexcept { return m_waves.score(); }
     [[nodiscard]] float elapsedS() const noexcept { return m_elapsedS; }
 
+    /* Score en points : 25 par zombie tué, mais bonifié par explosion selon le
+       nombre de victimes fauchées d'un coup (kill multiple) -- 75 pour un
+       double kill, 125 pour un triple kill ou plus -- plutôt que la simple
+       somme de kills individuels (voir killScoreForCount, CombatMode.cpp). */
+    [[nodiscard]] int   score() const noexcept { return m_score; }
+
     /* Nombre total de zombies tués depuis le début de la session (par les
-       explosions de roquettes) : compteur distinct du score de vagues, pour le
+       explosions de roquettes) : compteur distinct du score en points, pour le
        HUD. */
     [[nodiscard]] int   kills() const noexcept { return m_kills; }
 
@@ -119,14 +123,39 @@ public:
        ces événements pour déclencher les sons, même principe que le son de
        démarrage turbine (comparaison d'état d'une image à l'autre). */
     struct SoundEvents {
-        bool fired     = false;  /* un coup de mitrailleuse est parti */
-        bool hit       = false;  /* un coup a touché un zombie */
-        bool killed    = false;  /* un coup a tué un zombie */
-        bool threw     = false;  /* au moins un zombie a lancé une boulette toxique */
-        bool impacted  = false;  /* une boulette toxique a touché l'appareil */
-        bool waveStart = false;  /* une nouvelle vague vient de commencer */
+        bool fired = false;  /* un coup de mitrailleuse est parti, depuis muzzlePos */
+        vec3 muzzlePos{0.0f};
+
+        /* Une entrée par explosion de roquette survenue ce pas, à sa position
+           réelle (pour le volume selon la distance à l'hélico, voir
+           AudioEngine::playExplosion etc.) : le bruit d'explosion accompagne
+           toujours l'impact, et en plus un cri de zombie touché ou tué selon
+           qu'elle a fait au moins une victime (mutuellement exclusifs, voir
+           RocketSystem::ExplosionEvent). */
+        std::vector<vec3> explosionPositions;
+        std::vector<vec3> zombieHitPositions;
+        std::vector<vec3> zombieDeathPositions;
+
+        /* Une entrée par boulette toxique lancée ce pas, à son origine (bras du
+           zombie lanceur). */
+        std::vector<vec3> throwPositions;
+
+        bool impacted = false;  /* une boulette toxique a touché l'appareil (à sa position : distance nulle) */
+
+        /* Nouvelle vague : son non spatial, à volume fixe -- seule exception au
+           principe "volume selon la distance à l'hélico" (voir AudioEngine::playWaveStart). */
+        bool waveStart = false;
     };
     [[nodiscard]] const SoundEvents& soundEvents() const noexcept { return m_events; }
+
+    /* Annonce affichée au HUD quand une même explosion fauche plusieurs zombies
+       d'un coup (voir killScoreForCount, même seuils que le score) : reste
+       affichée KILL_ANNOUNCE_DURATION_S après l'explosion qui l'a déclenchée,
+       puis retombe à None. */
+    enum class KillAnnouncement { None, Double, Triple, Carnage };
+    [[nodiscard]] KillAnnouncement killAnnouncement() const noexcept {
+        return m_killAnnounceTimer > 0.0f ? m_killAnnounce : KillAnnouncement::None;
+    }
 
     /* Flash de bouche courant (retour visuel du tir, indépendant du son -- voir
        ApplicationRenderEffects.cpp) : actif quelques dizaines de ms après
@@ -166,11 +195,19 @@ private:
 
     bool             m_active        = false;
     bool             m_gameOver      = false;
+    /* Force l'annonce sonore (waveStart) au tout premier update() suivant
+       start() : la manche 1 est peuplée par start() lui-même, avant le
+       premier update(), donc la comparaison de numéro de manche habituelle ne
+       la détecterait jamais (voir CombatMode::start/update). */
+    bool             m_firstWavePending = false;
     float            m_playerHealth  = PLAYER_HEALTH_MAX;
     float            m_elapsedS      = 0.0f;  /* durée totale de la session en cours */
     int              m_kills         = 0;     /* zombies tués depuis le début de la session */
+    int              m_score         = 0;     /* points, voir score() */
     float            m_lastPlayerAgl = 0.0f;  /* hauteur sol de la dernière image (voir belowCeiling) */
     float            m_muzzleFlashTimer = 0.0f;  /* s restantes d'affichage du flash de bouche */
+    KillAnnouncement m_killAnnounce      = KillAnnouncement::None;
+    float            m_killAnnounceTimer = 0.0f;  /* s restantes d'affichage de l'annonce */
     vec3             m_lastMuzzlePos{0.0f};
     vec3             m_lastFireDir{1.0f, 0.0f, 0.0f};
     SoundEvents      m_events;                /* réinitialisés à chaque update() */

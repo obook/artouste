@@ -36,10 +36,23 @@ public:
     void spawn(const vec3& origin, const vec3& dir) noexcept;
 
     /* Événements d'un pas de temps, pour les sons (voir CombatMode) : la
-       logique elle-même ignore l'audio. */
+       logique elle-même ignore l'audio. Les positions sont à grain fin (une
+       entrée par ZOMBIE touché/tué, pas par explosion) : une explosion qui
+       fauche trois zombies d'un coup doit faire entendre trois cris distincts,
+       pas un seul. explosionPositions, elle, reste une entrée par explosion
+       (le bruit d'impact est systématique, qu'elle ait ou non touché
+       quelqu'un). */
     struct UpdateResult {
-        int explosions = 0;  /* nombre de roquettes ayant explosé ce pas */
-        int kills      = 0;  /* zombies tués par les explosions ce pas */
+        int                explosions = 0;  /* nombre de roquettes ayant explosé ce pas */
+        int                kills      = 0;  /* zombies tués par les explosions ce pas */
+        std::vector<vec3>  explosionPositions;    /* une entrée par explosion */
+        std::vector<vec3>  zombieHitPositions;    /* une entrée par zombie touché sans être tué */
+        std::vector<vec3>  zombieDeathPositions;  /* une entrée par zombie tué */
+        /* Nombre de zombies tués par CHAQUE explosion (même ordre/longueur que
+           explosionPositions) : sert au score (voir CombatMode), qui bonifie
+           les kills multiples (plusieurs zombies fauchés par la même
+           roquette) plutôt que de simplement compter les morts une à une. */
+        std::vector<int>  explosionKillCounts;
     };
 
     /* Avance chaque roquette (gravité + position), détecte l'impact (sol via

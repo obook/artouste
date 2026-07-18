@@ -17,9 +17,9 @@
 namespace artouste::render {
 
 ExplosionFx::ExplosionFx(const std::filesystem::path& modelPath, float worldRadius, float animStartS,
-                         float playSpanS)
+                         float playSpanS, float animSpeed)
     : m_model(modelPath), m_worldRadius(worldRadius), m_animStartS(animStartS),
-      m_playSpanS(playSpanS) {}
+      m_playSpanS(playSpanS), m_animSpeed(animSpeed) {}
 
 void ExplosionFx::draw(Shader& shader, const mat4& toRel, const std::vector<Instance>& explosions) {
     if (!m_model.built() || explosions.empty()) {
@@ -38,10 +38,12 @@ void ExplosionFx::draw(Shader& shader, const mat4& toRel, const std::vector<Inst
 
     for (const Instance& ex : explosions) {
         const float p = clamp(ex.progress, 0.0f, 1.0f);
-        /* Temps d'animation a VITESSE REELLE, démarré ou la boule de feu est deja
-           formée (animStartS) : franc des l'impact, pas de construction en
-           retard. */
-        const float             t       = m_animStartS + p * m_playSpanS;
+        /* Temps d'animation, démarré ou la boule de feu est deja formée
+           (animStartS) : franc des l'impact, pas de construction en retard.
+           animSpeed accélère la lecture interne du clip par rapport a la vie
+           réelle de l'explosion (playSpanS), pour un flipbook natif a bas
+           cadencement (voir ExplosionFx.hpp). */
+        const float             t       = m_animStartS + p * m_playSpanS * m_animSpeed;
         const std::vector<mat4> globals = m_model.poseAtTime(t);
 
         /* Croissance continue tres légere et enveloppe de fondu : apparition

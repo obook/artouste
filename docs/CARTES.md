@@ -5,18 +5,21 @@ exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
 `assets/terrain/cote-landes/` (côte basco-landaise, de Bayonne à Vieux-Boucau),
 `assets/terrain/arcachon/` (bassin d'Arcachon, du Cap Ferret à Marcheprime,
 de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
-chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne) et
+chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne),
 `assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
 de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (Dax : l'Adour,
-l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes) et
+l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
-Tourmalet, la station de La Mongie).
+Tourmalet, la station de La Mongie) et `assets/terrain/dax-arene/` (arène
+recadrée depuis `dax`, dédiée au mode zombie -- voir la section dédiée
+ci-dessous, affichée au menu sous le nom **Happy DeathHour**).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
 ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
-ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README)
-et `buildings.bin` (bâtiments 3D). L'hélipad de la
+ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
+`buildings.bin` (bâtiments 3D), `zombies.txt` et `zombie_only.txt` (mode
+zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
 
 ## Modifier la configuration
@@ -123,6 +126,31 @@ hauteur réelle (murs + toit plat). Ils sont produits à part par
 tools/.venv/bin/python tools/fetch_buildings.py cote-landes
 tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
+
+## Mode zombie
+
+Deux fichiers optionnels par carte activent le mode zombie (combat contre une
+horde, roquettes, munitions, vagues à difficulté croissante, score) -- voir
+[notice.pdf](notice.pdf) pour les commandes (tir : `Ctrl gauche` au clavier,
+clic du stick droit `R3` à la manette) :
+
+* `zombies.txt` : présence = carte **compatible** avec le mode zombie. Un
+  point de spawn par ligne (`x z`, coordonnées monde). Sur une carte compatible
+  mais pas dédiée (ci-dessous), le mode reste optionnel : bouton `Mode Zombie`
+  du menu de démarrage, ou touche `Z` / bouton `LB` (Xbox) / `L1`
+  (PlayStation) une fois la carte sélectionnée.
+* `zombie_only.txt` : présence = carte **dédiée** au mode zombie (arène de
+  combat, pas d'usage touristique). Le combat démarre directement au
+  lancement normal de la carte (`Démarrer`/`Entrée`/bouton `A`), sans passer
+  par le bouton `Mode Zombie`. Ces cartes sont classées systématiquement en
+  dernier dans la liste du menu (peu importe l'ordre alphabétique de leur nom
+  de dossier), et leur nuit est figée en permanence (pas de cycle jour/nuit)
+  avec la lune visible depuis le cockpit dès le lancement.
+
+La seule carte dédiée fournie est `assets/terrain/dax-arene/` (arène recadrée
+depuis `dax`), affichée au menu sous le nom **Happy DeathHour** -- le libellé
+vient de la première ligne de son `terrain.txt`, comme pour toute carte (voir
+plus haut).
 
 ## Cartes
 

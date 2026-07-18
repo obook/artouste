@@ -17,6 +17,7 @@
 
 #include <miniaudio.h>
 
+#include <list>
 #include <vector>
 
 namespace artouste::audio {
@@ -59,7 +60,26 @@ inline float dopplerPitch(float closingSpeed) noexcept {
     return SOUND_SPEED / (SOUND_SPEED - v);
 }
 
+/* Atténuation des sons ponctuels du mode zombie selon la distance à l'hélico
+ * (voir AudioEngine::playExplosion et consorts) : plein volume jusqu'à
+ * FULL_VOLUME_DIST_M, silence au-delà de SILENT_DIST_M, transition adoucie
+ * entre les deux (plus agréable qu'une chute linéaire). */
+inline constexpr float SOUND_FULL_VOLUME_DIST_M = 20.0f;
+inline constexpr float SOUND_SILENT_DIST_M       = 250.0f;
+
+inline float distanceAttenuation(const vec3& sourcePos, const vec3& listenerPos) noexcept {
+    const float dist = glm::length(sourcePos - listenerPos);
+    const float t    = clamp01((dist - SOUND_FULL_VOLUME_DIST_M) /
+                             (SOUND_SILENT_DIST_M - SOUND_FULL_VOLUME_DIST_M));
+    const float smooth = t * t * (3.0f - 2.0f * t);
+    return 1.0f - smooth;
+}
+
 }  /* namespace audio_detail */
+
+/* Purge les instances de lecture ponctuelles arrivées à leur fin (voir
+   AudioEngineCombat.cpp) : appelée chaque image depuis AudioEngine::update. */
+void reapOneShots(std::list<ma_sound>& oneShots);
 
 struct AudioEngine::Impl {
     ma_engine engine{};
@@ -82,7 +102,12 @@ struct AudioEngine::Impl {
     /* Sons ponctuels du mode zombie (tir, touché, mort, jet, impact, nouvelle
        vague), chargés paresseusement à la première lecture depuis
        combatSoundsDir (voir AudioEngine::initCombatSounds), même principe que
-       musicSound. combatSoundsDir vide (init jamais appelée) : silencieux. */
+       musicSound. combatSoundsDir vide (init jamais appelée) : silencieux.
+       Chacun (sauf waveStartSound) sert de MODÈLE, entièrement décodé
+       (MA_SOUND_FLAG_DECODE) et jamais joué lui-même : chaque lecture en copie
+       une nouvelle instance à la volée (ma_sound_init_copy, peu coûteux car les
+       données décodées sont partagées) dans oneShots, pour que plusieurs
+       occurrences du même son se superposent au lieu de s'interrompre. */
     std::filesystem::path combatSoundsDir;
     ma_sound  gunfireSound{};
     ma_sound  explosionSound{};
@@ -90,7 +115,7 @@ struct AudioEngine::Impl {
     ma_sound  zombieDeathSound{};
     ma_sound  toxicThrowSound{};
     ma_sound  toxicImpactSound{};
-    ma_sound  waveStartSound{};
+    ma_sound  waveStartSound{};  /* seule exception : rejoué depuis le début, jamais copié (voir playWaveStart) */
     bool      gunfireLoaded     = false;
     bool      explosionLoaded   = false;
     bool      zombieHitLoaded   = false;
@@ -98,6 +123,13 @@ struct AudioEngine::Impl {
     bool      toxicThrowLoaded  = false;
     bool      toxicImpactLoaded = false;
     bool      waveStartLoaded   = false;
+
+    /* Instances de lecture en cours, une par appel à playGunfire/playExplosion/
+       etc. std::list : contrairement à un vector, il ne déplace jamais les
+       éléments existants (une réallocation invaliderait les ma_sound déjà
+       démarrés). Purgées à chaque image (voir reapOneShots, appelé depuis
+       update()) dès que ma_sound_at_end() les signale terminées. */
+    std::list<ma_sound> oneShots;
 
     /* Message radio : voix de synthèse (Flite) "radioïsée", générée à la volée sans
        fichier. Le tampon PCM doit rester en vie tant que la source l'utilise : ici. */

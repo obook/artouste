@@ -68,7 +68,10 @@ std::string lireTitreCarte(const std::filesystem::path& terrainTxt, const std::s
 }
 
 /* Recense les cartes : chaque sous-dossier de assets/terrain contenant un terrain.txt,
-   trié par nom pour un ordre stable (la première est le choix par défaut). */
+   trié par nom pour un ordre stable (la première est le choix par défaut), sauf les
+   cartes dédiées au mode zombie (zombieOnly, ex. Happy DeathHour/dax-arene) qui
+   passent systématiquement en dernier -- ce sont des arènes à part, pas des cartes de
+   tourisme normales, et les mélanger dans le tri alphabétique n'aurait pas de sens. */
 std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets) {
     namespace fs = std::filesystem;
     std::vector<MapEntry> cartes;
@@ -91,8 +94,12 @@ std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets) {
             cartes.push_back({nom, lireTitreCarte(txt, nom), zombieCapable, zombieOnly});
         }
     }
-    std::sort(cartes.begin(), cartes.end(),
-              [](const MapEntry& a, const MapEntry& b) { return a.dir < b.dir; });
+    std::sort(cartes.begin(), cartes.end(), [](const MapEntry& a, const MapEntry& b) {
+        if (a.zombieOnly != b.zombieOnly) {
+            return !a.zombieOnly;  /* les cartes dédiées au mode zombie passent en dernier */
+        }
+        return a.dir < b.dir;
+    });
     return cartes;
 }
 
@@ -243,7 +250,13 @@ bool Application::runStartupMenu() {
         ImGui::Separator();
         ImGui::TextUnformatted("Carte :");
         for (std::size_t i = 0; i < cartes.size(); ++i) {
-            const std::string libelle = cartes[i].dir + "  -  " + cartes[i].title;
+            /* Le nom de dossier technique (ex. "dax-arene") n'a pas sa place devant une
+               arène dédiée au mode zombie (ex. "Happy DeathHour") : titre seul, sans
+               prefixe, pour ces cartes-là. Les autres gardent le prefixe (utile pour
+               retrouver le dossier a faire correspondre a la clé "terrain" de
+               config.txt). */
+            const std::string libelle =
+                cartes[i].zombieOnly ? cartes[i].title : (cartes[i].dir + "  -  " + cartes[i].title);
             if (ImGui::RadioButton(libelle.c_str(), selection == i)) {
                 selection = i;
             }

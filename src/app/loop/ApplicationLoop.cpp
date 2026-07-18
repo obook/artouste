@@ -398,29 +398,35 @@ bool Application::mainLoop() {
 
             /* Sons ponctuels du mode zombie, déclenchés sur les événements de
                cette image (voir CombatMode::SoundEvents) : même principe que
-               le son de démarrage turbine (comparaison d'état, updateAudio). */
+               le son de démarrage turbine (comparaison d'état, updateAudio).
+               Chacun est spatial (volume selon la distance de sa position
+               réelle à l'hélico, ici body.position) et joue une instance
+               indépendante par occurrence -- plusieurs zombies touchés la
+               même image sonnent donc ensemble plutôt que de se couper la
+               parole. Seul playWaveStart (plus bas) échappe à ce principe. */
             const CombatMode::SoundEvents& combatEvents = m_combat.soundEvents();
             if (combatEvents.fired) {
-                m_audio.playGunfire();
+                m_audio.playGunfire(combatEvents.muzzlePos, body.position);
             }
-            /* hit est vrai à chaque explosion de roquette, kill ou non (voir
-               RocketSystem::UpdateResult) : le bruit d'explosion joue à chaque
-               impact, indépendamment du cri de zombie touché/tué ci-dessous
-               (habillage optionnel, silencieux tant que ses fichiers propres
-               ne sont pas fournis). */
-            if (combatEvents.hit) {
-                m_audio.playExplosion();
+            /* explosionPositions porte une entrée par explosion de roquette,
+               kill ou non (voir RocketSystem::UpdateResult) : le bruit
+               d'explosion joue à chaque impact, indépendamment du cri de
+               zombie touché/tué ci-dessous (habillage optionnel, silencieux
+               tant que ses fichiers propres ne sont pas fournis). */
+            for (const vec3& soundPos : combatEvents.explosionPositions) {
+                m_audio.playExplosion(soundPos, body.position);
             }
-            if (combatEvents.killed) {
-                m_audio.playZombieDeath();
-            } else if (combatEvents.hit) {
-                m_audio.playZombieHit();
+            for (const vec3& soundPos : combatEvents.zombieDeathPositions) {
+                m_audio.playZombieDeath(soundPos, body.position);
             }
-            if (combatEvents.threw) {
-                m_audio.playToxicThrow();
+            for (const vec3& soundPos : combatEvents.zombieHitPositions) {
+                m_audio.playZombieHit(soundPos, body.position);
+            }
+            for (const vec3& soundPos : combatEvents.throwPositions) {
+                m_audio.playToxicThrow(soundPos, body.position);
             }
             if (combatEvents.impacted) {
-                m_audio.playToxicImpact();
+                m_audio.playToxicImpact(body.position, body.position);
             }
             if (combatEvents.waveStart) {
                 m_audio.playWaveStart();

@@ -66,6 +66,9 @@ AudioEngine::~AudioEngine() {
     if (m_impl->waveStartLoaded) {
         ma_sound_uninit(&m_impl->waveStartSound);
     }
+    for (ma_sound& s : m_impl->oneShots) {
+        ma_sound_uninit(&s);
+    }
     if (m_impl->msgSoundReady) {
         ma_sound_uninit(&m_impl->msgSound);
     }
@@ -132,6 +135,8 @@ void AudioEngine::update(float collective, float airspeed, float turbineFraction
     if (!m_impl->engineInit) {
         return;
     }
+    reapOneShots(m_impl->oneShots);
+
     const float   turbine  = clamp01(turbineFraction);  /* régime turbine [0, 1] */
     const float   rotor    = clamp01(rotorFraction);    /* régime rotor   [0, 1] */
     const ViewMix mix      = viewMix(view);

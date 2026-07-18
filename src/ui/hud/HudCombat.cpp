@@ -69,7 +69,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
 
     ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
     ImGui::Text("MANCHE %d   SCORE %d", data.combat.wave, data.combat.score);
-    ImGui::Text("ZTUES %d", data.combat.kills);
+    ImGui::Text("ÉLIMINATIONS %d", data.combat.kills);
     const int totalSec = static_cast<int>(data.combat.elapsedS);
     ImGui::Text("TEMPS %02d:%02d", totalSec / 60, totalSec % 60);
     ImGui::PopStyleColor();
@@ -96,6 +96,30 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
 
     ImGui::End();
 
+    /* Annonce de kill multiple (double/triple/carnage) : bandeau bref, haut de
+       l'écran, distinct du panneau permanent ci-dessus -- couleur et taille
+       montent avec la gravité, mêmes seuils que le score (voir
+       CombatMode::killScoreForCount). Rien à afficher (killAnnounceKind == 0)
+       la plupart du temps : un kill simple ne mérite pas d'annonce. */
+    if (data.combat.killAnnounceKind != 0) {
+        const char* texte;
+        ImU32       couleur;
+        float       echelle;
+        switch (data.combat.killAnnounceKind) {
+            case 1:  texte = "DOUBLE KILL !"; couleur = HUD_GREEN; echelle = 1.3f; break;
+            case 2:  texte = "TRIPLE KILL !"; couleur = HUD_AMBER; echelle = 1.6f; break;
+            default: texte = "CARNAGE !";     couleur = HUD_RED;   echelle = 2.0f; break;
+        }
+        ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.22f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowBgAlpha(0.0f);
+        ImGui::Begin("kill_announce", nullptr, COMBAT_FLAGS | ImGuiWindowFlags_NoBackground);
+        ImGui::SetWindowFontScale(echelle);
+        ImGui::PushStyleColor(ImGuiCol_Text, couleur);
+        ImGui::TextUnformatted(texte);
+        ImGui::PopStyleColor();
+        ImGui::End();
+    }
+
     if (data.combat.gameOver) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.80f);
@@ -104,7 +128,8 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
         ImGui::Text("          GAME OVER");
         ImGui::PopStyleColor();
         ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
-        ImGui::Text("Manches survécues : %d", data.combat.score);
+        ImGui::Text("Score : %d points", data.combat.score);
+        ImGui::Text("Manche atteinte : %d", data.combat.wave);
         ImGui::Text("Zombies tués : %d", data.combat.kills);
         ImGui::Text("Temps tenu : %02d:%02d", totalSec / 60, totalSec % 60);
         ImGui::Text("A / O : retour au menu");

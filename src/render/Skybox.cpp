@@ -27,12 +27,13 @@ Skybox::~Skybox() {
     }
 }
 
-void Skybox::draw(Shader& shader, const mat4& invRotProj, const vec3& sunDir,
-                  const vec3& moonDir) const {
+void Skybox::draw(Shader& shader, const mat4& invRotProj, const vec3& sunDir, const vec3& moonDir,
+                  float timeSeconds) const {
     shader.use();
     shader.setMat4("u_invViewProj", invRotProj);
     shader.setVec3("u_sunDir", sunDir);
     shader.setVec3("u_moonDir", moonDir);
+    shader.setFloat("u_time", timeSeconds);
 
     /*
      * On désactive le test et l'écriture de profondeur le temps de

@@ -29,14 +29,20 @@ class Shader;
 class ExplosionFx {
 public:
     /* Charge le modele d'explosion. worldRadius est le rayon (m) auquel la boule
-       de feu est mise a l'échelle dans le monde. L'animation est jouée a VITESSE
-       REELLE de animStartS a animStartS + playSpanS (l'appelant fait défiler
-       progress de 0 a 1 sur playSpanS secondes, ni accéléré ni ralenti, sinon le
-       flipbook "saute"). animStartS permet de démarrer la ou la boule de feu est
-       DEJA formée, pour qu'elle soit franche des l'impact plutot que de se
-       construire en retard. Absent/illisible : built() reste faux. */
+       de feu est mise a l'échelle dans le monde. L'appelant fait défiler progress
+       de 0 a 1 sur playSpanS secondes (durée de vie réelle de l'explosion, voir
+       RocketSystem::EXPLOSION_DURATION_S) ; animStartS permet de démarrer la ou
+       la boule de feu est DEJA formée, pour qu'elle soit franche des l'impact
+       plutot que de se construire en retard. animSpeed (1.0 = vitesse native du
+       flipbook) accélère la lecture INTERNE du clip par rapport a playSpanS :
+       utile quand le clip source a un cadencement natif bas (quelques images
+       par seconde, flipbook saccadé) et qu'on veut en montrer davantage dans le
+       même temps de vie -- sans quoi playSpanS secondes de vie ne parcourent
+       que playSpanS secondes de clip, donc peu d'images distinctes si le clip
+       est plus long que la vie de l'explosion. Absent/illisible : built() reste
+       faux. */
     ExplosionFx(const std::filesystem::path& modelPath, float worldRadius, float animStartS,
-                float playSpanS);
+                float playSpanS, float animSpeed = 1.0f);
 
     [[nodiscard]] bool built() const noexcept { return m_model.built(); }
 
@@ -59,6 +65,7 @@ private:
     float          m_worldRadius = 1.0f;
     float          m_animStartS  = 0.0f;
     float          m_playSpanS   = 1.0f;
+    float          m_animSpeed   = 1.0f;
 };
 
 }  /* namespace artouste::render */

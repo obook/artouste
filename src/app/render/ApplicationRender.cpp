@@ -70,7 +70,7 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
        soustraction de grands nombres, ce qui supprime le tremblement du soleil. */
     /* La lune est modélisée à l'opposé du soleil (voir drawGroundShadow) : elle est
        donc levée quand le soleil est couché. */
-    m_sky->draw(*m_skyShader, glm::inverse(proj * mat4(mat3(view))), lightDir, -lightDir);
+    m_sky->draw(*m_skyShader, glm::inverse(proj * mat4(mat3(view))), lightDir, -lightDir, timeSeconds);
 
     /* Plan de mer : grand quadrilatère bleu qui se perd dans la brume au loin.
      * Il est toujours sous la mer du terrain (dessinée à y=0) et n'a jamais à

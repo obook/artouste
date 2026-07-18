@@ -15,6 +15,7 @@
 #pragma once
 
 #include "audio/RadioStream.hpp"
+#include "util/Math.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -69,14 +70,23 @@ public:
      * lecture (comme playMusic). À appeler une fois à l'initialisation de la
      * scène (voir Application::initScene) ; les play* ci-dessous restent
      * silencieux, sans erreur, tant qu'aucun fichier n'est trouvé dans ce
-     * dossier (assets/sounds/combat/ par défaut). */
+     * dossier (assets/sounds/combat/ par défaut).
+     *
+     * Chaque appel (sauf playWaveStart) crée sa propre instance de lecture,
+     * détruite automatiquement dès la fin de la lecture (voir reapOneShots dans
+     * AudioEngine.cpp) : plusieurs sons identiques peuvent ainsi se superposer
+     * (deux zombies tués la même image, par exemple) sans se couper la parole.
+     * 'sourcePos' est la position monde de l'événement (explosion, zombie...),
+     * 'listenerPos' celle de l'hélico ; le volume décroît avec leur distance.
+     * playWaveStart() est la seule exception : annonce de vague non spatiale, à
+     * volume fixe, qui réutilise un unique son rejoué depuis le début. */
     void initCombatSounds(const std::filesystem::path& dir);
-    void playGunfire();
-    void playExplosion();
-    void playZombieHit();
-    void playZombieDeath();
-    void playToxicThrow();
-    void playToxicImpact();
+    void playGunfire(const vec3& sourcePos, const vec3& listenerPos);
+    void playExplosion(const vec3& sourcePos, const vec3& listenerPos);
+    void playZombieHit(const vec3& sourcePos, const vec3& listenerPos);
+    void playZombieDeath(const vec3& sourcePos, const vec3& listenerPos);
+    void playToxicThrow(const vec3& sourcePos, const vec3& listenerPos);
+    void playToxicImpact(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
 
     /* Flux radio internet branché sur le moteur audio. URL vide ou libcurl absente :

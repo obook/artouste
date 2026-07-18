@@ -318,6 +318,13 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         hud.combat.gameOver     = m_combat.gameOver();
         hud.combat.score        = m_combat.score();
         hud.combat.kills        = m_combat.kills();
+        using KillAnnouncement  = CombatMode::KillAnnouncement;
+        switch (m_combat.killAnnouncement()) {
+            case KillAnnouncement::Double:  hud.combat.killAnnounceKind = 1; break;
+            case KillAnnouncement::Triple:  hud.combat.killAnnounceKind = 2; break;
+            case KillAnnouncement::Carnage: hud.combat.killAnnounceKind = 3; break;
+            case KillAnnouncement::None:    hud.combat.killAnnounceKind = 0; break;
+        }
 
         /* Mire : projette un point loin devant l'appareil dans l'axe de tir
            (repère corps, canon fixe -- voir CombatMode::update, même axe que

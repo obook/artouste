@@ -30,9 +30,10 @@ public:
        translation) : le fragment en tire directement la direction du rayon, sans
        soustraire la position caméra (qui, en milliers de mètres, faisait trembloter
        le soleil par perte de précision). 'sunDir' donne la position du soleil et
-       'moonDir' celle de la lune (opposée au soleil), dessinée la nuit. */
-    void draw(Shader& shader, const mat4& invRotProj, const vec3& sunDir,
-              const vec3& moonDir) const;
+       'moonDir' celle de la lune (opposée au soleil), dessinée la nuit. 'timeSeconds'
+       (horloge d'animation, comme ailleurs dans le rendu) fait scintiller les étoiles. */
+    void draw(Shader& shader, const mat4& invRotProj, const vec3& sunDir, const vec3& moonDir,
+              float timeSeconds) const;
 
 private:
     unsigned int m_vao = 0;

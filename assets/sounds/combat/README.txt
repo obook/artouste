@@ -9,4 +9,4 @@ suivants (WAV, comme les autres sons du dépôt) pour les activer :
   zombie_death.wav    - zombie tué par l'explosion
   toxic_throw.wav     - un zombie lance une boulette toxique
   toxic_impact.wav    - une boulette toxique touche l'appareil
-  wave_start.wav      - une nouvelle manche commence (à partir de la 2e)
+  wave_start.wav      - une nouvelle manche commence (dès la 1re)

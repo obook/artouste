@@ -174,6 +174,17 @@ SkinnedModel::SkinnedModel(const std::filesystem::path& path) {
             if (name.find("zombie") == std::string::npos) {
                 continue;
             }
+            /* lpFemale_zombie_C reste figée en pose de repos (jambes, bras) alors
+               que ses données d'animation sont, à l'examen, aussi complètes que
+               les 9 autres variantes (canaux, poids de sommets, squelette --
+               vérifié os par os) : le défaut vient très probablement de la
+               conversion Assimp de ce maillage précis (glTF -> aiMesh/aiBone),
+               pas du fichier source. Faute d'avoir isolé la cause exacte,
+               exclue explicitement plutôt que de faire glisser un zombie sur
+               dix devant le joueur. */
+            if (name.find("lpfemale_zombie_c") != std::string::npos) {
+                continue;
+            }
         }
 
         MeshData md;

@@ -153,13 +153,14 @@ void Hud::renderMinimap(const HudData& data, HudMode mode, float m) {
         dl->AddCircleFilled(q, sc(2.5f), couleurPoint);
         dl->AddCircle(q, sc(2.5f), IM_COL32(0, 0, 0, 160));
     }
-    /* Mode zombie : petits points rouges, distincts des lieux/hélipads (dorés/
-       cyan) et bien visibles pour repérer la horde sans avoir à les chercher
-       dans le paysage. Dessinés avant le marqueur de l'appareil pour que
-       celui-ci reste au-dessus en cas de chevauchement. */
+    /* Mode zombie : petits points verts, distincts des lieux/hélipads (dorés/
+       cyan) et du marqueur de l'appareil (rouge) -- bien visibles pour repérer
+       la horde sans avoir à la chercher dans le paysage. Dessinés avant le
+       marqueur de l'appareil pour que celui-ci reste au-dessus en cas de
+       chevauchement. */
     for (const HudData::CombatHud::MapPoint& zp : data.combat.zombieMapPoints) {
         const ImVec2 q(p0.x + zp.u * sz, p0.y + zp.v * sz);
-        dl->AddCircleFilled(q, sc(2.5f), IM_COL32(255, 40, 40, 255));
+        dl->AddCircleFilled(q, sc(2.5f), HUD_GREEN);
         dl->AddCircle(q, sc(2.5f), IM_COL32(0, 0, 0, 160));
     }
 

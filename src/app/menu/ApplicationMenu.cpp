@@ -388,6 +388,12 @@ void Application::applyMenuSession() {
     } else {
         m_combat.stop();
     }
+
+    /* Après m_combat.start()/stop() ci-dessus : réévalue le cycle jour/nuit depuis
+       la config (ou la nuit figée d'une arène dédiée) -- indispensable ici aussi,
+       sans quoi revenir d'une telle arène vers une carte normale garderait le
+       temps figé pour le reste de la session (voir ApplicationScene::initScene). */
+    applySunSchedule();
 }
 
 }  /* namespace artouste::app */

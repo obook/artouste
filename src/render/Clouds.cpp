@@ -72,8 +72,16 @@ Clouds::Clouds(const Terrain& terrain, const std::filesystem::path& puffPath) {
     const float origX = terrain.originX();  /* centre de l'emprise (0 sauf carte recadrée) */
     const float origZ = terrain.originZ();
 
-    const int cols = std::max(1, static_cast<int>((2.0f * halfW) / CLOUD_SPACING));
-    const int rows = std::max(1, static_cast<int>((2.0f * halfH) / CLOUD_SPACING));
+    /* Grille d'au moins 3x3 mailles même sur une petite carte (arène de mode
+       zombie recadrée, quelques km²) : avec une seule maille, la probabilité
+       CLOUD_PROB (28 %) donne 72 % de chances de tirer un ciel totalement vide
+       -- exactement ce qui arrivait sur Happy DeathHour. cellW/cellH (plutôt que
+       CLOUD_SPACING tel quel) font que les mailles couvrent toujours l'emprise
+       réelle du terrain, quel que soit ce plancher. */
+    const int   cols  = std::max(3, static_cast<int>((2.0f * halfW) / CLOUD_SPACING));
+    const int   rows  = std::max(3, static_cast<int>((2.0f * halfH) / CLOUD_SPACING));
+    const float cellW = (2.0f * halfW) / static_cast<float>(cols);
+    const float cellH = (2.0f * halfH) / static_cast<float>(rows);
 
     for (int r = 0; r < rows && m_puffs.size() < MAX_PUFFS; ++r) {
         for (int c = 0; c < cols && m_puffs.size() < MAX_PUFFS; ++c) {
@@ -83,8 +91,8 @@ Clouds::Clouds(const Terrain& terrain, const std::filesystem::path& puffPath) {
                 continue;  /* maille sans nuage : ciel épars */
             }
             /* Centre du nuage, perturbé dans la maille. */
-            const float cx = origX - halfW + (static_cast<float>(c) + unitOf(seed ^ 0x11u)) * CLOUD_SPACING;
-            const float cz = origZ - halfH + (static_cast<float>(r) + unitOf(seed ^ 0x22u)) * CLOUD_SPACING;
+            const float cx = origX - halfW + (static_cast<float>(c) + unitOf(seed ^ 0x11u)) * cellW;
+            const float cz = origZ - halfH + (static_cast<float>(r) + unitOf(seed ^ 0x22u)) * cellH;
             const float base = base0 + (unitOf(seed ^ 0x33u) - 0.5f) * 300.0f;
 
             /* Dimensions du cumulus : nettement plus large que haut (aspect aplati de

@@ -88,6 +88,13 @@ void CombatMode::start(const std::filesystem::path& terrainDir,
 
 void CombatMode::stop() noexcept {
     m_active = false;
+    /* Sans ce reset, mourir en arène (m_gameOver = true, voir update()) laissait
+       le drapeau collé pour toute la suite de la session : sur la carte suivante
+       (non zombie, où seul stop() est appelé, jamais start()), le bouton A du
+       gestionnaire d'entrées restait détourné vers "confirmer le retour au menu"
+       (voir ApplicationInput.cpp, branche m_combat.gameOver()) au lieu de son
+       usage normal (livrée). */
+    m_gameOver = false;
     m_horde.clear();
     m_projectiles.clear();
     m_rockets.clear();

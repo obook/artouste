@@ -293,38 +293,6 @@ void Application::initScene() {
         m_radioUrl = env;
     }
 
-    /* Cycle jour/nuit : vitesse du temps (clé `sun_time_scale` de la config, 1 =
-       temps réel). m_sunBaseSeconds est l'heure d'origine du soleil (s depuis
-       minuit), voir Application::sunDirection :
-         - en temps réel (échelle 1) on part de l'heure locale du PC ;
-         - sinon (temps accéléré ou figé) on part de midi, pour démarrer sur une belle
-           lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une échelle nulle,
-           le soleil reste donc figé à midi. */
-    m_sunTimeScale = config.sunTimeScale;
-    if (m_sunTimeScale == 1.0f) {
-        const std::time_t now = std::time(nullptr);
-        std::tm           local{};
-#if defined(_WIN32)
-        localtime_s(&local, &now);
-#else
-        localtime_r(&now, &local);
-#endif
-        m_sunBaseSeconds = static_cast<float>(local.tm_hour) * 3600.0f
-                         + static_cast<float>(local.tm_min) * 60.0f
-                         + static_cast<float>(local.tm_sec);
-        std::printf("[scène] cycle jour/nuit : temps réel, heure locale au lancement %02d:%02d.\n",
-                    local.tm_hour, local.tm_min);
-    } else {
-        constexpr float NOON = 12.0f * 3600.0f;  /* midi */
-        m_sunBaseSeconds = NOON;
-        if (m_sunTimeScale == 0.0f) {
-            std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
-        } else {
-            std::printf("[scène] cycle jour/nuit : temps accéléré (x%g), départ à midi.\n",
-                        static_cast<double>(m_sunTimeScale));
-        }
-    }
-
     /*
      * On utilise le vrai modèle FlightGear s'il est présent : le sous-ensemble
      * nécessaire est versionné dans le dépôt (le paquet FlightGear complet, lui,
@@ -375,23 +343,16 @@ void Application::initScene() {
                on entre directement dans le combat, pas de séquence de démarrage
                (~1 min) à subir face à la horde. */
             m_flight.turbine().forceRunning();
-
-            /* Arène dédiée (Happy DeathHour, zombie_only.txt) : nuit figée plutôt que
-               l'heure du jour normale -- ambiance de combat nocturne constante, sans
-               cycle jour/nuit dans une arène fermée. 19h00 place la lune à ~14° au-dessus
-               de l'horizon dans l'axe du cap de départ (voir sunDirection,
-               ApplicationSun.cpp) : bien visible depuis le cockpit sans lever la tête
-               (vérifié par capture -- au-delà de ~20°, la vue cockpit, inclinée vers le
-               bas, la sort du cadre). */
-            if (std::filesystem::exists(assets / "terrain" / m_terrainName / "zombie_only.txt")) {
-                constexpr float NIGHT_HOUR_S = 19.0f * 3600.0f;
-                m_sunBaseSeconds = NIGHT_HOUR_S;
-                m_sunTimeScale   = 0.0f;
-            }
         }
     } else {
         m_combat.stop();
     }
+
+    /* Cycle jour/nuit : après m_combat.start()/stop() ci-dessus, pour que la
+       nuit figée d'une arène dédiée (voir applySunSchedule) puisse s'appliquer
+       ou, en repartant sur une carte normale, soit bien réévaluée depuis la
+       config plutôt que de garder le réglage de la carte précédente. */
+    applySunSchedule();
 }
 
 void Application::loadTerrain(const std::string& name) {
@@ -461,6 +422,56 @@ void Application::loadTerrain(const std::string& name) {
         const float parkZ = START_Z - avant.z * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
         m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
         m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
+    }
+}
+
+void Application::applySunSchedule() {
+    /* Cycle jour/nuit : vitesse du temps (clé `sun_time_scale` de la config, 1 =
+       temps réel). m_sunBaseSeconds est l'heure d'origine du soleil (s depuis
+       minuit), voir Application::sunDirection :
+         - en temps réel (échelle 1) on part de l'heure locale du PC ;
+         - sinon (temps accéléré ou figé) on part de midi, pour démarrer sur une belle
+           lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une échelle nulle,
+           le soleil reste donc figé à midi. */
+    m_sunTimeScale = m_config.sunTimeScale;
+    if (m_sunTimeScale == 1.0f) {
+        const std::time_t now = std::time(nullptr);
+        std::tm           local{};
+#if defined(_WIN32)
+        localtime_s(&local, &now);
+#else
+        localtime_r(&now, &local);
+#endif
+        m_sunBaseSeconds = static_cast<float>(local.tm_hour) * 3600.0f
+                         + static_cast<float>(local.tm_min) * 60.0f
+                         + static_cast<float>(local.tm_sec);
+        std::printf("[scène] cycle jour/nuit : temps réel, heure locale au lancement %02d:%02d.\n",
+                    local.tm_hour, local.tm_min);
+    } else {
+        constexpr float NOON = 12.0f * 3600.0f;  /* midi */
+        m_sunBaseSeconds = NOON;
+        if (m_sunTimeScale == 0.0f) {
+            std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
+        } else {
+            std::printf("[scène] cycle jour/nuit : temps accéléré (x%g), départ à midi.\n",
+                        static_cast<double>(m_sunTimeScale));
+        }
+    }
+
+    /* Arène dédiée au mode zombie (Happy DeathHour, zombie_only.txt) : nuit figée
+       plutôt que le réglage ci-dessus -- ambiance de combat nocturne constante,
+       sans cycle jour/nuit dans une arène fermée. 19h00 place la lune à ~14°
+       au-dessus de l'horizon dans l'axe du cap de départ (voir sunDirection,
+       ApplicationSun.cpp) : bien visible depuis le cockpit sans lever la tête
+       (vérifié par capture -- au-delà de ~20°, la vue cockpit, inclinée vers le
+       bas, la sort du cadre). Testé sur m_combat.active() : sans ce garde-fou,
+       quitter cette arène pour une carte normale garderait le temps figé
+       indéfiniment, faute d'être jamais réévalué depuis la config. */
+    if (m_combat.active() &&
+        std::filesystem::exists(m_assetsDir / "terrain" / m_terrainName / "zombie_only.txt")) {
+        constexpr float NIGHT_HOUR_S = 19.0f * 3600.0f;
+        m_sunBaseSeconds = NIGHT_HOUR_S;
+        m_sunTimeScale   = 0.0f;
     }
 }
 

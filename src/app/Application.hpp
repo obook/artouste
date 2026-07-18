@@ -124,6 +124,16 @@ private:
        la démo est lancée alors qu'une autre carte est affichée. */
     void loadTerrain(const std::string& name);
 
+    /* (Re)règle l'heure/vitesse du soleil (m_sunTimeScale/m_sunBaseSeconds) : la
+       clé sun_time_scale de la config par défaut, sauf sur une arène dédiée au
+       mode zombie (zombie_only.txt du terrain courant, ex. Happy DeathHour) où la
+       nuit est figée en permanence. Appelée par initScene ET applyMenuSession
+       (pas seulement au premier lancement) : sans quoi une session qui visite une
+       telle arène puis change de carte garde le temps figé indéfiniment sur les
+       cartes suivantes -- le réglage n'était jamais réévalué à partir de la
+       config lors d'un changement de carte en cours de session. */
+    void applySunSchedule();
+
     /* Auxiliaires de la boucle principale : chacun prend en charge une étape, pour
        que mainLoop reste un enchaînement lisible plutôt qu'un long bloc unique. */
 

@@ -1,0 +1,3 @@
+# Marque cette carte comme dédiée au mode zombie (voir ApplicationMenu.cpp) :
+# choisir "dax-arene" au menu lance directement le combat, sans bouton "Mode
+# Zombie" ni raccourci Z/LB, puisque cette carte n'a pas d'autre usage.

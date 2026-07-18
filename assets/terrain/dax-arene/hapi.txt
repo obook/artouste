@@ -1,0 +1,5 @@
+# Balises HAPI - Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, thermes) (un par ligne : lon lat azimut_deg pente_pct nom)
+# azimut_deg : cap d'approche suivi par le pilote (0 = nord).
+# pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).
+# Position et calage provisoires, à affiner sur place.
+-1.0692 43.6884 70 6 Aérodrome de Dax-Seyresse

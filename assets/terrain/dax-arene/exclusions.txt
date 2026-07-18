@@ -1,0 +1,3 @@
+# Zones d'exclusion de végétation - Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, thermes) (un cercle par ligne : lon lat rayon_m)
+# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
+-1.069 43.688 550   # Aérodrome de Dax-Seyresse (LFBE)

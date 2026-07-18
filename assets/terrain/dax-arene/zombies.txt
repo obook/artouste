@@ -1,0 +1,15 @@
+# Points de spawn du mode zombie - Dax (un par ligne : x z, coordonnées monde
+# en mètres). Cercle d'environ 200 m de rayon autour de l'aérodrome de
+# Dax-Seyresse, dans la zone dégagée d'exclusions.txt (550 m sans végétation).
+# La présence de ce fichier sert aussi de drapeau : il signale au menu que
+# cette carte propose le mode zombie (voir ApplicationMenu.cpp, étape 5).
+264.0 3518.0
+225.8 3635.6
+125.8 3708.2
+2.2 3708.2
+-97.8 3635.6
+-136.0 3518.0
+-97.8 3400.4
+2.2 3327.8
+125.8 3327.8
+225.8 3400.4

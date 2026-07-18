@@ -1,0 +1,21 @@
+# Terrain Artouste - recadre depuis dax (mode zombie, sous-region)
+# Repere monde identique a la carte source (origin_x/origin_z) : tous les
+# fichiers en coordonnees monde restent valides sans decalage.
+cols 142
+rows 93
+width_m 1996.0
+height_m 2002.2
+elev_min 0.00
+elev_max 108.79
+lon_min -1.082405
+lon_max -1.057595
+lat_min 43.679629
+lat_max 43.697615
+ortho_width 448
+ortho_height 449
+sea 0
+start_x -162.8
+start_z 3406.0
+start_heading 0
+origin_x -0.00
+origin_z 3493.03

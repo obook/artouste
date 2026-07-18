@@ -18,6 +18,9 @@
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
 #include "render/Clouds.hpp"
+#include "render/combat/ExplosionFx.hpp"
+#include "render/combat/SkinnedZombies.hpp"
+#include "render/combat/Projectiles.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
@@ -49,6 +52,29 @@ namespace {
  * l'axe (plus naturel). Petit, pour rester loin de la sortie d'échappement.
  */
 constexpr float ROTOR_PARK_JITTER = 0.26f;  /* ~15 degrés */
+
+/*
+ * Capacité du tampon d'instances du mode zombie (nombre maximal de zombies
+ * dessinés simultanément, voir render::SkinnedZombies). Dimensionnée large
+ * pour les manches tardives (gestionnaire de vagues) ; le point de spawn
+ * initial n'en utilise qu'une poignée (zombies.txt).
+ */
+constexpr std::size_t ZOMBIE_CAPACITY = 300;
+
+/*
+ * Nombre de groupes de phase de marche (rendu skinné) : l'animation est posée à
+ * autant d'instants déphasés, chaque zombie étant rattaché à un groupe, pour une
+ * marche désynchronisée à coût maîtrisé (voir render::SkinnedZombies). Six suffit
+ * à casser l'effet "tous au même pas" sans multiplier les dessins.
+ */
+constexpr int ZOMBIE_PHASE_GROUPS = 6;
+
+/*
+ * Capacité du tampon d'instances des boulettes toxiques (voir
+ * app::ProjectileSystem::MAX_PROJECTILES, même valeur -- inutile de réserver
+ * plus côté GPU que ce que la logique de jeu peut produire à la fois).
+ */
+constexpr std::size_t PROJECTILE_CAPACITY = 64;
 
 }  /* namespace */
 
@@ -84,7 +110,37 @@ void Application::initScene() {
                                                           assets / "shaders" / "vegetation.frag");
     m_cloudShader = std::make_unique<render::Shader>(assets / "shaders" / "clouds.vert",
                                                      assets / "shaders" / "clouds.frag");
+    m_zombieShader = std::make_unique<render::Shader>(assets / "shaders" / "zombie_skinned.vert",
+                                                      assets / "shaders" / "zombie_skinned.frag");
+    m_projectileShader = std::make_unique<render::Shader>(assets / "shaders" / "projectile.vert",
+                                                          assets / "shaders" / "projectile.frag");
+    m_explosionShader = std::make_unique<render::Shader>(assets / "shaders" / "explosion.vert",
+                                                         assets / "shaders" / "explosion.frag");
     m_sky         = std::make_unique<render::Skybox>();
+
+    /* Mode zombie : pack de personnages skinnés (marche + bras animés) chargé une
+       seule fois (indépendant de la carte), voir CREDITS.md pour l'attribution.
+       Absent : m_zombiesRender reste nul, aucun zombie ne sera dessiné (CombatMode
+       peut malgré tout s'activer sur les cartes compatibles, sans effet visuel). */
+    const std::filesystem::path zombieModel = assets / "models" / "zombie" / "zombies_animated.glb";
+    if (std::filesystem::exists(zombieModel)) {
+        m_zombiesRender =
+            std::make_unique<render::SkinnedZombies>(zombieModel, ZOMBIE_CAPACITY, ZOMBIE_PHASE_GROUPS);
+    }
+    /* Boulettes toxiques : billboard procédural, pas de modèle à charger. */
+    m_projectilesRender = std::make_unique<render::Projectiles>(PROJECTILE_CAPACITY);
+
+    /* Explosions 3D des roquettes : modèle animé chargé une fois. Rayon monde
+       proche de la zone létale (RocketSystem::EXPLOSION_RADIUS_M = 3 m). Absent :
+       m_explosionFx->built() reste faux, aucune explosion 3D dessinée. */
+    const std::filesystem::path explosionModel = assets / "models" / "zombie" / "explosion.glb";
+    if (std::filesystem::exists(explosionModel)) {
+        /* Rayon monde 3,5 m (proche de la zone létale). Départ d'anim a 0,5 s
+           (boule de feu deja formée -> franche des l'impact), puis 1,2 s jouées a
+           vitesse réelle -- cette tranche (playSpan) DOIT égaler RocketSystem::
+           EXPLOSION_DURATION_S pour que le flipbook ne saute pas. */
+        m_explosionFx = std::make_unique<render::ExplosionFx>(explosionModel, 3.5f, 0.5f, 1.2f);
+    }
 
     const auto discData = render::primitives::softDisc(6.0f, 48);
     m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
@@ -215,6 +271,12 @@ void Application::initScene() {
     m_input      = std::make_unique<input::InputSystem>(m_window);
     m_hud.init(m_window);
     m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
+    /* Mode zombie : dossier des sons ponctuels, séparé des sons de l'hélicoptère
+       (voir AudioEngine::initCombatSounds). Fichiers absents pour l'instant :
+       silencieux, sans erreur -- à fournir ultérieurement dans
+       assets/sounds/combat/ (gunfire.wav, zombie_hit.wav, zombie_death.wav,
+       toxic_throw.wav, toxic_impact.wav, wave_start.wav). */
+    m_audio.initCombatSounds(assets / "sounds" / "combat");
 
     /* Flux radio internet : URL de la clé "radio_url" de la config, surchargée par
        la variable d'environnement ARTOUSTE_RADIO_URL (prioritaire). Vide = pas de
@@ -288,6 +350,28 @@ void Application::initScene() {
         std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
         m_demoFromMenu = m_menuDemo;
         startDemo();
+    }
+
+    /* Mode zombie demandé au menu (bouton "Mode Zombie", visible seulement sur les
+       cartes compatibles, voir ApplicationMenu.cpp) : démarre la session de combat sur
+       le terrain qui vient d'être chargé. Sans effet si la carte n'a pas de
+       zombies.txt (CombatMode::active() reste faux). */
+    if (m_menuCombat) {
+        m_combat.start(assets / "terrain" / m_terrainName,
+                       [this](float x, float z) { return m_terrain->heightAt(x, z); });
+        if (m_combat.active()) {
+            /* Vue bloquée en cockpit pendant tout le combat (voir ApplicationInput.cpp,
+               qui empêche d'en sortir) : c'est la vue la plus immersive pour viser au
+               canon fixe, et elle évite les vues externes qui ne serviraient à rien
+               dans une arène confinée. */
+            m_viewMode = 1;
+            /* Turbine et rotor déjà au régime, quel que soit le choix du menu :
+               on entre directement dans le combat, pas de séquence de démarrage
+               (~1 min) à subir face à la horde. */
+            m_flight.turbine().forceRunning();
+        }
+    } else {
+        m_combat.stop();
     }
 }
 

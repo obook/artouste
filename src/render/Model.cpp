@@ -28,6 +28,17 @@ const Texture* Model::acquireTexture(const std::filesystem::path& path) {
     return raw;
 }
 
+const Texture* Model::acquireEmbeddedTexture(const std::string& key, const unsigned char* data,
+                                             std::size_t size) {
+    if (auto it = m_textures.find(key); it != m_textures.end()) {
+        return it->second.get();
+    }
+    auto           texture = std::make_unique<Texture>(data, size);
+    const Texture* raw     = texture.get();
+    m_textures.emplace(key, std::move(texture));
+    return raw;
+}
+
 void Model::addPart(Mesh&& mesh, const Texture* texture, bool transparent, float opacity) {
     m_parts.push_back(Part{std::move(mesh), texture, transparent, opacity});
 }

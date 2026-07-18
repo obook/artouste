@@ -197,10 +197,12 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
        TOUJOURS disponible, que le mode assisté soit actif ou non : le réticule ne
        s'affiche de toute façon qu'en finale basse vitesse près d'un pad (voir g.active
        plus bas), donc il n'encombre jamais le vol de croisière. Le rendu (Hud::render)
-       la dessine par-dessus tous les modes d'affichage (coins et Super HUD). */
-    const bool aideAtterrissage = m_demo.active()
-                                ? m_demo.returning()
-                                : true;
+       la dessine par-dessus tous les modes d'affichage (coins et Super HUD). Absente en
+       mode zombie : poser l'appareil n'a aucun sens pendant un combat, la mire de
+       centrage encombrerait sans raison la mire de tir du canon. */
+    const bool aideAtterrissage = m_combat.active()
+                                ? false
+                                : (m_demo.active() ? m_demo.returning() : true);
     hud.padGuidance = {};
     if (m_padGuideGrace > 0.0f) {
         m_padGuideGrace -= frameDt;  /* décompte du délai de grâce après un décollage */
@@ -299,6 +301,41 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
         m_wasOnGround = false;
         m_wasAirborne = false;
         m_scoreTimer  = 0.0f;
+    }
+
+    /* Mode zombie : vie, munitions, vague, chrono, plafond d'altitude et fin
+       de partie (voir CombatMode). hud.combat.active reste faux (valeur par
+       défaut) sur les cartes/modes sans combat : HudCombat.cpp ne dessine
+       alors rien. */
+    hud.combat.active = m_combat.active();
+    if (hud.combat.active) {
+        hud.combat.healthPct    = m_combat.healthPct();
+        hud.combat.ammoCurrent  = m_combat.ammo();
+        hud.combat.ammoMax      = m_combat.ammoMax();
+        hud.combat.wave         = m_combat.wave();
+        hud.combat.elapsedS     = m_combat.elapsedS();
+        hud.combat.belowCeiling = m_combat.belowCeiling();
+        hud.combat.gameOver     = m_combat.gameOver();
+        hud.combat.score        = m_combat.score();
+        hud.combat.kills        = m_combat.kills();
+
+        /* Mire : projette un point loin devant l'appareil dans l'axe de tir
+           (repère corps, canon fixe -- voir CombatMode::update, même axe que
+           fireDir) selon la caméra active, même technique que les étiquettes
+           de lieux (ApplicationHudNav.cpp::addLabel). */
+        constexpr float RETICLE_DISTANCE_M = 150.0f;
+        const vec3       aimPoint = body.position + forward * RETICLE_DISTANCE_M;
+        const mat4        viewProj = m_camera.proj() * m_camera.view();
+        const vec4         clip     = viewProj * vec4{aimPoint, 1.0f};
+        hud.combat.reticleOnScreen  = false;
+        if (clip.w > 0.1f) {
+            const vec3 ndc = vec3(clip) / clip.w;
+            if (ndc.z < 1.0f && std::fabs(ndc.x) < 1.02f && std::fabs(ndc.y) < 1.02f) {
+                hud.combat.reticleFx      = ndc.x * 0.5f + 0.5f;
+                hud.combat.reticleFy      = 1.0f - (ndc.y * 0.5f + 0.5f);
+                hud.combat.reticleOnScreen = true;
+            }
+        }
     }
 }
 

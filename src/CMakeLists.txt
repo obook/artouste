@@ -51,6 +51,12 @@ add_executable(artouste
     app/Config.cpp
     app/DemoPilot.cpp
     app/LandingAutopilot.cpp
+    app/combat/CombatMode.cpp
+    app/combat/ZombieHorde.cpp
+    app/combat/Weapon.cpp
+    app/combat/RocketSystem.cpp
+    app/combat/ProjectileSystem.cpp
+    app/combat/WaveManager.cpp
     audio/AudioEngineControl.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp
@@ -58,6 +64,7 @@ add_executable(artouste
     physics/RigidBody.cpp
     physics/FlightModel.cpp
     physics/FlightAssist.cpp
+    physics/Raycast.cpp
     physics/Turbine.cpp
     render/Shader.cpp
     render/Mesh.cpp
@@ -70,6 +77,11 @@ add_executable(artouste
     render/vegetation/Vegetation.cpp
     render/vegetation/VegetationMasks.cpp
     render/vegetation/VegetationScatter.cpp
+    render/SkinnedModel.cpp
+    render/ExplosionModel.cpp
+    render/combat/SkinnedZombies.cpp
+    render/combat/ExplosionFx.cpp
+    render/combat/Projectiles.cpp
     render/Clouds.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp
@@ -83,7 +95,9 @@ add_executable(artouste
     ui/hud/HudSuperOverlay.cpp
     ui/hud/HudPadGuidance.cpp
     ui/hud/HudLabelsMinimap.cpp
+    ui/hud/HudCombat.cpp
     audio/AudioEngine.cpp
+    audio/AudioEngineCombat.cpp
     audio/RingBuffer.cpp
     audio/RadioStream.cpp
 )

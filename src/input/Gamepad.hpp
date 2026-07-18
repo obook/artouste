@@ -15,6 +15,10 @@
  *                       (retour au menu, voir plus haut)
  *   RB              -> bascule l'atterrissage automatique (R1 sur PS4/PS5), sauf
  *                       combiné à LB (retour au menu, voir plus haut)
+ *   R3 (clic stick droit) -> tir (mitrailleuse), mode zombie uniquement -- état
+ *                       maintenu (pas un front montant comme les autres boutons) ;
+ *                       ancien déclencheur de l'atterrissage automatique, libéré
+ *                       depuis son passage sur RB
  * La manette conserve un état d'une image à l'autre : la position du levier de
  * collectif et l'état précédent des boutons (pour détecter le moment de l'appui).
  *
@@ -90,6 +94,11 @@ public:
      * est aussi tenu, cette combinaison étant réservée au retour au menu
      * (menuPressed). */
     [[nodiscard]] bool autolandTogglePressed() noexcept;
+
+    /* R3 (clic du stick droit) est-il actuellement tenu ? État maintenu (pas un
+       front montant) : le tir dure tant que le bouton est enfoncé, mode zombie
+       uniquement (voir CombatMode/Weapon). */
+    [[nodiscard]] bool fireHeld() const noexcept;
 
     /* Remet le levier de collectif à zéro. */
     void reset() noexcept { m_collective = 0.0f; }

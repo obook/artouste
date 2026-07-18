@@ -148,6 +148,8 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     }
     const float halfW = terrain.halfWidth();
     const float halfH = terrain.halfHeight();
+    const float origX = terrain.originX();  /* centre de l'emprise (0 sauf carte recadrée) */
+    const float origZ = terrain.originZ();
 
     /* Grille de tuiles pour le culling au rendu : chaque bâtiment est rangé dans la
        tuile de son centre. TILE_M fixe la finesse : trop petit multiplie les tuiles
@@ -199,12 +201,18 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         cx /= static_cast<float>(npts);
         cz /= static_cast<float>(npts);
 
+        /* Bâtiment hors de l'emprise courante (carte recadrée) : ignoré, sinon il
+           flotterait au-delà du bord du relief. */
+        if (std::fabs(cx - origX) > halfW || std::fabs(cz - origZ) > halfH) {
+            continue;
+        }
+
         /* Cabane bâtie sur l'eau (port ostréicole) : sol bas ET de couleur d'eau dans
            l'ortho (voir WATER_ALT_M / WATER_RED / WATER_BLUE_BIAS). On la teste au
            centre de l'emprise et on l'écarte pour ne pas la faire flotter sur le bassin. */
         if (filterWater && ortho != nullptr && base <= WATER_ALT_M) {
-            const float u  = (cx + halfW) / (2.0f * halfW);   /* 0 = ouest, 1 = est */
-            const float v  = (cz + halfH) / (2.0f * halfH);   /* 0 = nord,  1 = sud */
+            const float u  = (cx - origX + halfW) / (2.0f * halfW);   /* 0 = ouest, 1 = est */
+            const float v  = (cz - origZ + halfH) / (2.0f * halfH);   /* 0 = nord,  1 = sud */
             const int   ox = std::clamp(static_cast<int>(u * static_cast<float>(orthoW - 1)), 0, orthoW - 1);
             const int   oy = std::clamp(static_cast<int>(v * static_cast<float>(orthoH - 1)), 0, orthoH - 1);
             const unsigned char* p = ortho + (static_cast<std::size_t>(oy) * static_cast<std::size_t>(orthoW)
@@ -263,8 +271,8 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
 
         /* Tuile de ce bâtiment (d'après son centre) et mise à jour de sa boîte
            englobante monde (emprise au sol, du sol au sommet). */
-        const int  col = std::clamp(static_cast<int>((cx + halfW) / TILE_M), 0, cols - 1);
-        const int  row = std::clamp(static_cast<int>((cz + halfH) / TILE_M), 0, rows - 1);
+        const int  col = std::clamp(static_cast<int>((cx - origX + halfW) / TILE_M), 0, cols - 1);
+        const int  row = std::clamp(static_cast<int>((cz - origZ + halfH) / TILE_M), 0, rows - 1);
         TileBuild& tb  = tiles[static_cast<std::size_t>(row) * static_cast<std::size_t>(cols)
                               + static_cast<std::size_t>(col)];
         for (std::size_t k = 0; k < n; ++k) {

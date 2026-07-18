@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 
 namespace artouste::render {
 
@@ -80,7 +81,27 @@ const Texture* resolveTexture(Model& model, const aiScene* scene, const aiMesh* 
         AI_SUCCESS) {
         return nullptr;
     }
-    return model.acquireTexture(baseDir / path.C_Str());
+    const std::string rawPath = path.C_Str();
+
+    /* Texture EMBARQUÉE dans le fichier (glTF/.glb, cas du modèle de zombie) :
+       Assimp renvoie alors un chemin de la forme "*N" (N = indice dans
+       scene->mTextures) plutôt qu'un vrai chemin de fichier sur disque. */
+    if (!rawPath.empty() && rawPath.front() == '*') {
+        const int index = std::atoi(rawPath.c_str() + 1);
+        if (index < 0 || static_cast<unsigned int>(index) >= scene->mNumTextures) {
+            return nullptr;
+        }
+        const aiTexture* tex = scene->mTextures[index];
+        if (tex->mHeight != 0) {
+            /* Texture non compressée (RGBA brut) : aucun modèle du dépôt n'en
+               fournit pour l'instant, hors périmètre. */
+            return nullptr;
+        }
+        return model.acquireEmbeddedTexture(
+            rawPath, reinterpret_cast<const unsigned char*>(tex->pcData), tex->mWidth);
+    }
+
+    return model.acquireTexture(baseDir / rawPath);
 }
 
 /* Traite un nœud de l'arbre du modèle, puis ses enfants (récursivement). Chaque

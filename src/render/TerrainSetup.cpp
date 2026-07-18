@@ -92,8 +92,9 @@ void Terrain::flattenPads() {
        pointu (pic du Midi d'Ossau). */
     constexpr float PAD_RADIUS_M = 12.0f;
     if (m_hasStart) {
-        const float colf = (m_startX / m_widthM + 0.5f) * static_cast<float>(m_cols - 1);
-        const float rowf = (m_startZ / m_heightM + 0.5f) * static_cast<float>(m_rows - 1);
+        /* Emprise centrée sur (m_originX, m_originZ) : coordonnées locales. */
+        const float colf = ((m_startX - m_originX) / m_widthM + 0.5f) * static_cast<float>(m_cols - 1);
+        const float rowf = ((m_startZ - m_originZ) / m_heightM + 0.5f) * static_cast<float>(m_rows - 1);
         flattenAround(colf, rowf, PAD_RADIUS_M);
     }
 }

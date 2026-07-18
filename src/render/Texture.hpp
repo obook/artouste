@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 
 namespace artouste::render {
@@ -19,6 +20,13 @@ class Texture {
 public:
     Texture() = default;
     explicit Texture(const std::filesystem::path& path);
+
+    /* Décode une image (PNG/JPG) depuis un tampon mémoire au lieu d'un fichier :
+       sert aux textures embarquées dans un modèle glTF/.glb (voir
+       ModelLoader::resolveTexture, cas d'une texture référencée "*N" plutôt
+       qu'un chemin de fichier). */
+    Texture(const unsigned char* data, std::size_t size);
+
     ~Texture();
 
     Texture(const Texture&)            = delete;
@@ -34,6 +42,10 @@ public:
     [[nodiscard]] unsigned int id() const noexcept { return m_id; }
 
 private:
+    /* Envoie des pixels RGBA déjà décodés vers le GPU (commun aux deux
+       constructeurs, fichier ou mémoire). */
+    void upload(const unsigned char* pixels, int width, int height);
+
     unsigned int m_id = 0;
 };
 

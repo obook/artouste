@@ -79,6 +79,26 @@ struct AudioEngine::Impl {
     bool      paused             = false;  /* boucles suspendues (pause du jeu) */
     float     radioMix           = 0.45f;  /* crossfade radio/hélico : 0 = tout hélico, 1 = tout radio */
 
+    /* Sons ponctuels du mode zombie (tir, touché, mort, jet, impact, nouvelle
+       vague), chargés paresseusement à la première lecture depuis
+       combatSoundsDir (voir AudioEngine::initCombatSounds), même principe que
+       musicSound. combatSoundsDir vide (init jamais appelée) : silencieux. */
+    std::filesystem::path combatSoundsDir;
+    ma_sound  gunfireSound{};
+    ma_sound  explosionSound{};
+    ma_sound  zombieHitSound{};
+    ma_sound  zombieDeathSound{};
+    ma_sound  toxicThrowSound{};
+    ma_sound  toxicImpactSound{};
+    ma_sound  waveStartSound{};
+    bool      gunfireLoaded     = false;
+    bool      explosionLoaded   = false;
+    bool      zombieHitLoaded   = false;
+    bool      zombieDeathLoaded = false;
+    bool      toxicThrowLoaded  = false;
+    bool      toxicImpactLoaded = false;
+    bool      waveStartLoaded   = false;
+
     /* Message radio : voix de synthèse (Flite) "radioïsée", générée à la volée sans
        fichier. Le tampon PCM doit rester en vie tant que la source l'utilise : ici. */
     std::vector<float> msgData;             /* PCM mono du message en cours */

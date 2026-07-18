@@ -130,6 +130,44 @@ struct HudData {
        pad à portée, ou auto-désengagement) : bandeau temporaire, même mécanisme que
        radioMessage. */
     const char*           autolandMessage = "";
+
+    /* Mode zombie : vie, munitions, vague, chrono et fin de partie (voir
+       app::CombatMode). belowCeiling rend visible la mécanique du plafond
+       d'altitude des boulettes toxiques (TOXIC_CEILING_M) : sans ce repère, le
+       joueur ne peut pas deviner pourquoi il se fait toucher ou non. */
+    struct CombatHud {
+        bool  active       = false;
+        float healthPct    = 1.0f;
+        int   ammoCurrent  = 0;
+        int   ammoMax      = 0;
+        int   wave         = 0;
+        float elapsedS     = 0.0f;
+        bool  belowCeiling = false;  /* sous le plafond : les zombies peuvent viser */
+        bool  gameOver     = false;
+        int   score        = 0;      /* vagues intégralement survécues */
+        int   kills        = 0;      /* zombies tués depuis le début de la session */
+
+        /* Points des zombies sur la minimap (fractions 0-1 dans l'emprise du
+           terrain, même convention que HudLabel::mapU/mapV). Pas de type vec2
+           ici : Hud.hpp reste volontairement indépendant de glm/util::Math,
+           comme le reste de HudData (lonDeg/latDeg en float bruts, etc.). */
+        struct MapPoint {
+            float u = 0.0f;
+            float v = 0.0f;
+        };
+        std::vector<MapPoint> zombieMapPoints;
+
+        /* Mire du canon fixe : projection écran (fraction 0-1) d'un point loin
+           devant l'appareil dans l'axe de tir (voir Application::fillHud). Le
+           canon ne suit pas le regard (pas de viseur mobile, voir Weapon) --
+           sans repère, impossible de savoir où partent réellement les balles.
+           reticleOnScreen faux si ce point tombe hors du cadre (canon qui ne
+           vise pas dans la direction actuellement regardée par la caméra). */
+        bool  reticleOnScreen = false;
+        float reticleFx       = 0.5f;
+        float reticleFy       = 0.5f;
+    };
+    CombatHud combat;
 };
 
 class Hud {
@@ -176,6 +214,10 @@ private:
     void renderRadioSubtitle(const HudData& data, float w);
     /* Bandeau du message de l'atterrissage automatique, par-dessus tous les modes. */
     void renderAutolandMessage(const HudData& data, float w);
+    /* Mode zombie : panneau vie/munitions/vague/chrono/plafond, par-dessus tous les
+       modes (comme les alertes de vol) ; bandeau de fin de partie si gameOver.
+       Ne dessine rien si data.combat.active est faux. */
+    void renderCombatHud(const HudData& data, HudMode mode, float w, float h);
 
     bool       m_ready          = false;
     float      m_builtFontScale = 0.0f;  /* échelle de la police déjà construite (0 = jamais) */

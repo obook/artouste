@@ -122,6 +122,10 @@ physics::Controls Keyboard::poll(float dt) noexcept {
     return m_controls;
 }
 
+bool Keyboard::fireHeld() const noexcept {
+    return m_window != nullptr && down(m_window, GLFW_KEY_LEFT_CONTROL);
+}
+
 bool Keyboard::isActive() const noexcept {
     if (m_window == nullptr) {
         return false;

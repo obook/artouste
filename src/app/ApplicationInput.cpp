@@ -58,8 +58,10 @@ void Application::handleActionButtons() {
         toggleAutoland();
     }
 
-    /* Bouton Y de la manette : change de vue, comme la touche C du clavier. */
-    if (m_input->viewTogglePressed()) {
+    /* Bouton Y de la manette : change de vue, comme la touche C du clavier. Sans
+       effet en mode zombie : la vue reste bloquée en cockpit (voir CombatMode::
+       start, qui la force en entrant en combat). */
+    if (m_input->viewTogglePressed() && !m_combat.active()) {
         m_viewMode = (m_viewMode + 1) % 4;
     }
 
@@ -85,6 +87,14 @@ void Application::handleActionButtons() {
             startDemo();
         } else if (m_input->hudTogglePressed()) {
             m_confirmDemo = false;
+        }
+    } else if (m_combat.gameOver()) {
+        /* Fin de partie du mode zombie (0 PV) : A confirme le retour au menu
+           (bandeau et score affichés à l'étape 5 -- ici seule la mécanique
+           est en place). Pas de "Non" : la partie est terminée. */
+        if (m_input->liveryTogglePressed()) {
+            m_combat.stop();
+            m_returnToMenu = true;
         }
     } else {
         if (m_input->hudTogglePressed()) {  /* B : fait défiler les modes HUD (comme H) */
@@ -198,6 +208,16 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
         return;
     }
 
+    /* Fin de partie du mode zombie (0 PV) : O ou Entrée confirme le retour au
+       menu, pas de "Non" (la partie est terminée). */
+    if (app != nullptr && app->m_combat.gameOver()) {
+        if (key == GLFW_KEY_O || key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
+            app->m_combat.stop();
+            app->m_returnToMenu = true;
+        }
+        return;
+    }
+
     switch (key) {
         case GLFW_KEY_ESCAPE:  /* retour au menu de démarrage (et non plus quitter) */
             if (app != nullptr) {
@@ -205,7 +225,8 @@ void Application::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int
             }
             break;
         case GLFW_KEY_C:  /* change de vue (poursuite -> cockpit -> orbite) */
-            if (app != nullptr) {
+            /* Sans effet en mode zombie : vue bloquée en cockpit. */
+            if (app != nullptr && !app->m_combat.active()) {
                 app->m_viewMode = (app->m_viewMode + 1) % 4;
             }
             break;

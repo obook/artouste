@@ -143,6 +143,7 @@ void Hud::render(const HudData& data, HudMode mode, bool paused, bool confirmRes
        pas prioritaires sur les panneaux de confirmation/pause, dessinés ensuite). */
     renderVortexAlert(data, w, h);
     renderSinkRateAlert(data, w, h);
+    renderCombatHud(data, mode, w, h);
 
     renderBanners(paused, confirmReset, confirmDemo, w, h);
 

@@ -30,11 +30,14 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     }
     const float halfW = m_terrain->halfWidth();
     const float halfH = m_terrain->halfHeight();
+    /* Emprise centrée sur (origX, origZ) en monde (0 sauf carte recadrée). */
+    const float origX = m_terrain->originX();
+    const float origZ = m_terrain->originZ();
 
     /* Minimap : orthophoto + position de l'appareil (fractions 0-1 dans l'emprise). */
     hud.mapTexId      = m_terrain->orthoTexId();
-    hud.mapHeliU      = heliPos.x / (2.0f * halfW) + 0.5f;
-    hud.mapHeliV      = heliPos.z / (2.0f * halfH) + 0.5f;
+    hud.mapHeliU      = (heliPos.x - origX) / (2.0f * halfW) + 0.5f;
+    hud.mapHeliV      = (heliPos.z - origZ) / (2.0f * halfH) + 0.5f;
     /* headingDeg est déjà un cap boussole (0 = nord, 90 = est, sens horaire), ce
        qu'attend la flèche de la minimap (nord en haut). */
     hud.mapHeadingDeg = headingDeg;
@@ -46,7 +49,7 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
                               bool generic) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(place.lon, place.lat, x, z);
-        if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
+        if (std::fabs(x - origX) > halfW || std::fabs(z - origZ) > halfH) {
             return;  /* hors du terrain courant */
         }
         const float altSol = m_terrain->heightAt(x, z);  /* altitude sol du repère (m ASL) */
@@ -75,8 +78,8 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         ui::HudLabel label;
         label.name    = buf;
         label.generic = generic;
-        label.mapU    = x / (2.0f * halfW) + 0.5f;
-        label.mapV    = z / (2.0f * halfH) + 0.5f;
+        label.mapU    = (x - origX) / (2.0f * halfW) + 0.5f;
+        label.mapV    = (z - origZ) / (2.0f * halfH) + 0.5f;
 
         /* Pad équipé d'une balise HAPI toute proche (voir hapiUnitNear) : le point
            de l'étiquette adopte la couleur/clignotement de la balise plutôt que sa
@@ -122,11 +125,34 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
        générique : quand un pad coïncide avec un lieu nommé (sommet du pic du Midi
        d'Ossau, hélipads de bigorre...), c'est le nom du lieu qui reste lisible -- et
        il porte désormais lui aussi l'altitude et la distance. */
-    for (const render::Landmark& lm : m_terrain->landmarks()) {
-        addLabel(lm, lm.name.c_str(), false);
+    /* Absentes en mode zombie : dans une arène confinée, les étiquettes de lieux
+       (et leurs points sur la minimap) n'apporteraient rien et encombreraient
+       l'écran pendant le combat. Les points rouges de la horde (ci-dessous)
+       restent affichés : c'est le seul repérage utile ici. */
+    if (!m_combat.active()) {
+        for (const render::Landmark& lm : m_terrain->landmarks()) {
+            addLabel(lm, lm.name.c_str(), false);
+        }
+        for (const render::Landmark& pad : m_terrain->helipads()) {
+            addLabel(pad, "Hélisurface", true);
+        }
     }
-    for (const render::Landmark& pad : m_terrain->helipads()) {
-        addLabel(pad, "Hélisurface", true);
+
+    /* Mode zombie : points de repérage sur la minimap (voir
+       Hud::renderMinimap). Même formule u/v que le marqueur de l'appareil et
+       les lieux remarquables ci-dessus, pas de vraie étiquette 3D -- l'usager
+       a demandé un repérage sur la minimap, pas un nuage de noms qui
+       encombrerait la scène avec une dizaine de zombies à l'écran. */
+    if (m_combat.active()) {
+        for (const vec3& zpos : m_combat.zombiePositions()) {
+            if (std::fabs(zpos.x - origX) > halfW || std::fabs(zpos.z - origZ) > halfH) {
+                continue;  /* hors de l'emprise du terrain courant */
+            }
+            ui::HudData::CombatHud::MapPoint pt;
+            pt.u = (zpos.x - origX) / (2.0f * halfW) + 0.5f;
+            pt.v = (zpos.z - origZ) / (2.0f * halfH) + 0.5f;
+            hud.combat.zombieMapPoints.push_back(pt);
+        }
     }
 }
 

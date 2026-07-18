@@ -15,6 +15,7 @@
 #include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
+#include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
 #include "physics/FlightAssist.hpp"
 #include "physics/FlightModel.hpp"
@@ -42,6 +43,9 @@ class Skybox;
 class Mesh;
 class Model;
 class Texture;
+class SkinnedZombies;
+class ExplosionFx;
+class Projectiles;
 }  /* namespace artouste::render */
 
 namespace artouste::input {
@@ -182,6 +186,11 @@ private:
     void drawGroundShadow(const mat4& base, float rotorFraction, const mat4& view,
                           const mat4& proj, const vec3& sunDir);
 
+    /* Traces de brûlure au sol laissées par les impacts de roquettes (mode
+       zombie) : décalques sombres qui s'estompent en ~45 s, dessinés avec le
+       maillage et le shader d'ombre (voir CombatMode::scorches). */
+    void drawScorchMarks(const mat4& view, const mat4& proj);
+
     /* Lueurs liées au moteur : strombo (flash rouge anti-collision au-dessus de la
        cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge
        à la sortie de la turbine, d'intensité croissante avec le régime). */
@@ -244,6 +253,9 @@ private:
     std::unique_ptr<render::Shader>           m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
     std::unique_ptr<render::Shader>           m_vegetationShader; /* arbres en billboards instanciés */
     std::unique_ptr<render::Shader>           m_cloudShader;    /* nuages en billboards (mélange alpha) */
+    std::unique_ptr<render::Shader>           m_zombieShader;   /* mode zombie : modèle 3D skinné instancié */
+    std::unique_ptr<render::Shader>           m_projectileShader; /* mode zombie : boulettes toxiques (billboard) */
+    std::unique_ptr<render::Shader>           m_explosionShader;  /* mode zombie : explosion 3D animée (émissive) */
     std::unique_ptr<render::Skybox>           m_sky;
     std::unique_ptr<render::Mesh>             m_shadowDisc;
     std::unique_ptr<render::Mesh>             m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -256,6 +268,10 @@ private:
     std::unique_ptr<render::Buildings>        m_buildings;     /* bâtiments 3D (BD TOPO extrudée) */
     std::unique_ptr<render::Vegetation>       m_vegetation;    /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds>           m_clouds;        /* nuages en billboards (prototype) */
+    std::unique_ptr<render::SkinnedZombies>   m_zombiesRender; /* mode zombie : pack skinné animé, chargé une fois */
+    std::unique_ptr<render::Projectiles>      m_projectilesRender; /* mode zombie : boulettes toxiques */
+    std::unique_ptr<render::ExplosionFx>      m_explosionFx;   /* mode zombie : explosions 3D à l'impact des roquettes */
+    CombatMode                                m_combat;        /* mode zombie : horde et état de session */
     std::unique_ptr<render::HelicopterModel>  m_helicopter;    /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli;    /* modèle FlightGear si présent */
     std::unique_ptr<input::InputSystem>       m_input;
@@ -299,6 +315,7 @@ private:
     std::string                               m_menuTerrain;
     int                                       m_menuTurbine = -1;
     bool                                      m_menuDemo    = false;  /* le menu a lancé la démo (bouton "Démo") */
+    bool                                      m_menuCombat  = false;  /* le menu a lancé le mode zombie (bouton "Mode Zombie") */
 
     /* Vrai quand la démo en cours a été lancée depuis le menu de démarrage : en sortir
        (Échap, reprise des commandes...) ramène alors au menu, au lieu de rendre la main

@@ -70,6 +70,12 @@ public:
     /* RB (R1) vient-elle d'être pressée seule ? (bascule l'atterrissage automatique) */
     [[nodiscard]] bool autolandTogglePressed() noexcept { return m_gamepad.autolandTogglePressed(); }
 
+    /* R3 (manette) ou Ctrl gauche (clavier) sont-ils actuellement tenus ? État
+       maintenu, mode zombie uniquement (voir CombatMode/Weapon). */
+    [[nodiscard]] bool fireHeld() const noexcept {
+        return m_gamepad.fireHeld() || m_keyboard.fireHeld();
+    }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

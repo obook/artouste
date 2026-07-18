@@ -97,6 +97,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         agl = std::strtof(e, nullptr);
     }
 
+
     /* L'appareil est placé en vol au-dessus de la côte (sa position de départ),
        de sorte que la capture montre le relief réel et la mer sous lui.
        ARTOUSTE_SHOT_LON / ARTOUSTE_SHOT_LAT le placent ailleurs (terrain

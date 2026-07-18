@@ -307,7 +307,7 @@ bool Application::mainLoop() {
         /* Tout est figé en pause comme pendant un panneau de confirmation : la
          * physique, mais aussi la démo, la caméra d'orbite et la vibration cockpit
          * (qui suivent m_animTime, lequel n'avance pas tant qu'on est figé). */
-        const bool frozen = m_paused || m_confirmReset || m_confirmDemo;
+        const bool frozen = m_paused || m_confirmReset || m_confirmDemo || m_combat.gameOver();
         if (!frozen) {
             m_animTime += frameDt;
         }
@@ -389,6 +389,42 @@ bool Application::mainLoop() {
            Figé en pause, comme le reste. */
         if (!frozen) {
             updateRadioMessage(turbineFraction, frameDt);
+            /* Mode zombie : tir (R3/Ctrl gauche) et avancement de la horde.
+               Figé en pause comme le reste, pour ne pas laisser les zombies
+               continuer d'agir ni la gâchette tirer pendant un panneau de
+               confirmation. */
+            m_combat.update(frameDt, body, m_input->fireHeld(),
+                            [this](float x, float z) { return m_terrain->heightAt(x, z); });
+
+            /* Sons ponctuels du mode zombie, déclenchés sur les événements de
+               cette image (voir CombatMode::SoundEvents) : même principe que
+               le son de démarrage turbine (comparaison d'état, updateAudio). */
+            const CombatMode::SoundEvents& combatEvents = m_combat.soundEvents();
+            if (combatEvents.fired) {
+                m_audio.playGunfire();
+            }
+            /* hit est vrai à chaque explosion de roquette, kill ou non (voir
+               RocketSystem::UpdateResult) : le bruit d'explosion joue à chaque
+               impact, indépendamment du cri de zombie touché/tué ci-dessous
+               (habillage optionnel, silencieux tant que ses fichiers propres
+               ne sont pas fournis). */
+            if (combatEvents.hit) {
+                m_audio.playExplosion();
+            }
+            if (combatEvents.killed) {
+                m_audio.playZombieDeath();
+            } else if (combatEvents.hit) {
+                m_audio.playZombieHit();
+            }
+            if (combatEvents.threw) {
+                m_audio.playToxicThrow();
+            }
+            if (combatEvents.impacted) {
+                m_audio.playToxicImpact();
+            }
+            if (combatEvents.waveStart) {
+                m_audio.playWaveStart();
+            }
         }
 
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);

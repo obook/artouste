@@ -59,6 +59,13 @@ public:
        si elle est déjà dans le cache, on réutilise celle-ci. */
     const Texture* acquireTexture(const std::filesystem::path& path);
 
+    /* Comme acquireTexture, mais pour une texture EMBARQUÉE dans le fichier
+       modèle (glTF/.glb) plutôt que sur disque : key doit être unique par
+       texture (par exemple sa référence Assimp "*N"), data/size ses octets
+       bruts encodés (PNG/JPG). Voir ModelLoader::resolveTexture. */
+    const Texture* acquireEmbeddedTexture(const std::string& key, const unsigned char* data,
+                                          std::size_t size);
+
     /* Remplace, à l'affichage, la texture de toutes les parties texturées par
        celle-ci (livrée de rechange). Passer nullptr pour revenir aux textures
        d'origine. Les parties sans texture (le vitrage) ne sont pas touchées. */

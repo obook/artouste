@@ -12,14 +12,21 @@ add_executable(artouste_tests
     config_tests.cpp
     ring_buffer_tests.cpp
     landing_autopilot_tests.cpp
+    combat_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/Weapon.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/RocketSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/ProjectileSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/WaveManager.cpp
     ${CMAKE_SOURCE_DIR}/src/audio/RingBuffer.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightModel.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightAssist.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
+    ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).

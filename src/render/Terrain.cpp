@@ -33,11 +33,14 @@ namespace {
 bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float& widthM,
                   float& heightM, float& elevMin, float& elevMax, bool& drawSea,
                   bool& hasStart, float& startX, float& startZ, float& startHeadingDeg,
-                  bool& hasGeo, float& lonMin, float& lonMax, float& latMin, float& latMax) {
+                  bool& hasGeo, float& lonMin, float& lonMax, float& latMin, float& latMax,
+                  float& originX, float& originZ) {
     std::ifstream file(path);
     if (!file) {
         return false;
     }
+    originX = 0.0f;  /* facultatifs : 0 = emprise centrée sur l'origine du monde */
+    originZ = 0.0f;
     bool hasCols = false, hasRows = false, hasW = false, hasH = false, hasMin = false,
          hasMax = false;
     bool hasStartX = false, hasStartZ = false;
@@ -70,6 +73,10 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> startZ, hasStartZ = true;
         } else if (key == "start_heading") {  /* cap initial (deg boussole), facultatif */
             file >> startHeadingDeg;
+        } else if (key == "origin_x") {  /* décalage d'origine (carte recadrée), facultatif */
+            file >> originX;
+        } else if (key == "origin_z") {
+            file >> originZ;
         } else if (key == "lon_min") {
             file >> lonMin, hasLonMin = true;
         } else if (key == "lon_max") {
@@ -102,7 +109,7 @@ Terrain::Terrain(const std::filesystem::path& dir) {
 
     if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
                       m_drawSea, m_hasStart, m_startX, m_startZ, m_startHeadingDeg, m_hasGeo,
-                      m_lonMin, m_lonMax, m_latMin, m_latMax)) {
+                      m_lonMin, m_lonMax, m_latMin, m_latMax, m_originX, m_originZ)) {
         std::fprintf(stderr, "[Terrain] calage absent (%s), repli sur un sol plat.\n",
                      meta.string().c_str());
         buildFlatFallback();
@@ -170,8 +177,8 @@ Terrain::Terrain(const std::filesystem::path& dir) {
 
     for (int j = 0; j < m_rows; ++j) {
         for (int i = 0; i < m_cols; ++i) {
-            const float x = -halfW + static_cast<float>(i) * dx;
-            const float z = -halfH + static_cast<float>(j) * dz;  /* rangée 0 = nord (Z min) */
+            const float x = m_originX - halfW + static_cast<float>(i) * dx;
+            const float z = m_originZ - halfH + static_cast<float>(j) * dz;  /* rangée 0 = nord (Z min) */
             const float y = m_heights[idx(i, j)];
 
             /* Normale par différences finies sur le relief (voisins bornés au bord). */
@@ -227,13 +234,16 @@ float Terrain::heightAt(float x, float z) const noexcept {
     }
     const float halfW = 0.5f * m_widthM;
     const float halfH = 0.5f * m_heightM;
-    if (x < -halfW || x > halfW || z < -halfH || z > halfH) {
+    /* Coordonnées locales, l'emprise étant centrée sur (m_originX, m_originZ). */
+    const float lx = x - m_originX;
+    const float lz = z - m_originZ;
+    if (lx < -halfW || lx > halfW || lz < -halfH || lz > halfH) {
         return 0.0f;  /* hors emprise : on est au-dessus de la mer */
     }
 
     /* Coordonnées fractionnaires dans la grille (colonne = est, rangée = sud). */
-    const float fx = (x + halfW) / m_widthM * static_cast<float>(m_cols - 1);
-    const float fz = (z + halfH) / m_heightM * static_cast<float>(m_rows - 1);
+    const float fx = (lx + halfW) / m_widthM * static_cast<float>(m_cols - 1);
+    const float fz = (lz + halfH) / m_heightM * static_cast<float>(m_rows - 1);
     const int   i0 = static_cast<int>(fx);
     const int   j0 = static_cast<int>(fz);
     const int   i1 = i0 < m_cols - 1 ? i0 + 1 : i0;

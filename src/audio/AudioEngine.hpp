@@ -64,6 +64,21 @@ public:
     void playMusic(const std::filesystem::path& file);
     void stopMusic();
 
+    /* Mode zombie : mémorise le dossier des sons ponctuels (tir, touché, mort,
+     * jet, impact, nouvelle vague), chargés paresseusement à leur première
+     * lecture (comme playMusic). À appeler une fois à l'initialisation de la
+     * scène (voir Application::initScene) ; les play* ci-dessous restent
+     * silencieux, sans erreur, tant qu'aucun fichier n'est trouvé dans ce
+     * dossier (assets/sounds/combat/ par défaut). */
+    void initCombatSounds(const std::filesystem::path& dir);
+    void playGunfire();
+    void playExplosion();
+    void playZombieHit();
+    void playZombieDeath();
+    void playToxicThrow();
+    void playToxicImpact();
+    void playWaveStart();
+
     /* Flux radio internet branché sur le moteur audio. URL vide ou libcurl absente :
      * no-op silencieux. startRadio (re)démarre le flux, stopRadio le coupe,
      * toggleRadio bascule (touche K), pollRadio finalise l'init du son une fois le

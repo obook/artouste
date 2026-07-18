@@ -109,8 +109,9 @@ add_library(stb_image INTERFACE)
 target_include_directories(stb_image SYSTEM INTERFACE ${stb_SOURCE_DIR})
 
 # ---------------------------------------------------------------------------
-# Assimp - import du modèle 3D. On ne compile QUE l'importeur AC3D (.ac, format
-# du modèle FlightGear) pour garder un build raisonnable, et aucun exporteur.
+# Assimp - import du modèle 3D. On ne compile QUE les importeurs utilisés (AC3D
+# pour le modèle FlightGear de l'hélicoptère, glTF pour les modèles du mode
+# zombie) afin de garder un build raisonnable, et aucun exporteur.
 # ---------------------------------------------------------------------------
 set(ASSIMP_BUILD_TESTS                       OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL                           OFF CACHE BOOL "" FORCE)
@@ -120,6 +121,7 @@ set(ASSIMP_NO_EXPORT                         ON  CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT    OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT    OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_AC_IMPORTER                 ON  CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER                ON  CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_DRACO                       OFF CACHE BOOL "" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS                OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL_PDB                       OFF CACHE BOOL "" FORCE)

@@ -19,6 +19,9 @@
 #include "render/Buildings.hpp"
 #include "render/Vegetation.hpp"
 #include "render/Clouds.hpp"
+#include "render/combat/ExplosionFx.hpp"
+#include "render/combat/SkinnedZombies.hpp"
+#include "render/combat/Projectiles.hpp"
 #include "render/Camera.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
@@ -195,9 +198,72 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
         glDisable(GL_BLEND);
     }
 
+    /*
+     * Mode zombie : pack de personnages SKINNES (marche + bras animés), rendu
+     * instancié par groupes de phase (voir render::SkinnedZombies). Mêmes
+     * uniformes d'éclairage/brume que le modèle normal, plus u_bones (matrices
+     * d'os) posé par le renderer par lot. Le tampon d'instances est reconstruit
+     * chaque image à partir de l'état courant de la horde (CombatMode) :
+     * position/orientation de chaque zombie, et son "kind" (variante + groupe).
+     * timeSeconds sert d'horloge d'animation.
+     */
+    if (m_combat.active() && m_zombiesRender && m_zombiesRender->built()) {
+        m_zombieShader->use();
+        m_zombieShader->setMat4("u_model", toRel);
+        m_zombieShader->setMat4("u_view", view);
+        m_zombieShader->setMat4("u_proj", proj);
+        m_zombieShader->setVec3("u_lightDir", lightDir);
+        m_zombieShader->setVec3("u_camPos", camPosRel);
+        m_zombieShader->setVec3("u_fogColor", fogColor);
+        m_zombieShader->setFloat("u_fogStart", FOG_START);
+        m_zombieShader->setFloat("u_fogEnd", FOG_END);
+        m_zombieShader->setInt("u_texture", 0);
+        m_zombiesRender->updateInstances(m_combat.zombieTransforms(), m_combat.zombieHitFlashes(),
+                                         m_combat.zombieKinds());
+        m_zombiesRender->draw(*m_zombieShader, timeSeconds);
+    }
+
+    /*
+     * Boulettes toxiques : billboard face caméra, mêmes uniformes que les
+     * zombies (pas de texture, la forme est procédurale, voir
+     * projectile.frag).
+     */
+    if (m_combat.active() && m_projectilesRender && m_projectilesRender->built()) {
+        m_projectileShader->use();
+        m_projectileShader->setMat4("u_model", toRel);
+        m_projectileShader->setMat4("u_view", view);
+        m_projectileShader->setMat4("u_proj", proj);
+        m_projectilesRender->updateInstances(m_combat.projectileInstances());
+        m_projectilesRender->draw();
+    }
+
+
+    /*
+     * Explosions 3D des roquettes : modèle animé émissif joué a chaque impact
+     * (voir render::ExplosionFx). Rendu additif dans la passe principale (profondeur
+     * lue, pas écrite) pour s'occulter correctement derriere le relief et l'appareil.
+     */
+    if (m_combat.active() && m_explosionFx && m_explosionFx->built()) {
+        const auto blasts = m_combat.explosions();
+        if (!blasts.empty()) {
+            std::vector<render::ExplosionFx::Instance> instances;
+            instances.reserve(blasts.size());
+            for (const auto& b : blasts) {
+                instances.push_back(render::ExplosionFx::Instance{b.center, b.progress});
+            }
+            m_explosionShader->use();
+            m_explosionShader->setMat4("u_view", view);
+            m_explosionShader->setMat4("u_proj", proj);
+            m_explosionShader->setInt("u_texture", 0);
+            m_explosionFx->draw(*m_explosionShader, toRel, instances);
+        }
+    }
+
+
     /* Décalques au sol, dessinés avant l'appareil (voir ApplicationGround.cpp). */
     drawHelipads(view, proj, lightDir);
     drawHapi(view, proj, timeSeconds);
+    drawScorchMarks(view, proj);  /* traces d'impact des roquettes (mode zombie) */
     drawGroundShadow(base, rotorFraction, view, proj, lightDir);
 
     /* Hélicoptère : modèle texturé réel s'il est chargé, sinon version dessinée. */

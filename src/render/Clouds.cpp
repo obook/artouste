@@ -69,6 +69,8 @@ Clouds::Clouds(const Terrain& terrain, const std::filesystem::path& puffPath) {
     const float base0 = std::max(1000.0f, terrain.maxElevation() * 0.85f);
     const float halfW = terrain.halfWidth() * SKY_MARGIN;
     const float halfH = terrain.halfHeight() * SKY_MARGIN;
+    const float origX = terrain.originX();  /* centre de l'emprise (0 sauf carte recadrée) */
+    const float origZ = terrain.originZ();
 
     const int cols = std::max(1, static_cast<int>((2.0f * halfW) / CLOUD_SPACING));
     const int rows = std::max(1, static_cast<int>((2.0f * halfH) / CLOUD_SPACING));
@@ -81,8 +83,8 @@ Clouds::Clouds(const Terrain& terrain, const std::filesystem::path& puffPath) {
                 continue;  /* maille sans nuage : ciel épars */
             }
             /* Centre du nuage, perturbé dans la maille. */
-            const float cx = -halfW + (static_cast<float>(c) + unitOf(seed ^ 0x11u)) * CLOUD_SPACING;
-            const float cz = -halfH + (static_cast<float>(r) + unitOf(seed ^ 0x22u)) * CLOUD_SPACING;
+            const float cx = origX - halfW + (static_cast<float>(c) + unitOf(seed ^ 0x11u)) * CLOUD_SPACING;
+            const float cz = origZ - halfH + (static_cast<float>(r) + unitOf(seed ^ 0x22u)) * CLOUD_SPACING;
             const float base = base0 + (unitOf(seed ^ 0x33u) - 0.5f) * 300.0f;
 
             /* Dimensions du cumulus : nettement plus large que haut (aspect aplati de

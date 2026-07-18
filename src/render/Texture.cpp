@@ -35,7 +35,27 @@ Texture::Texture(const std::filesystem::path& path) {
         std::fprintf(stderr, "[Texture] échec du chargement : %s\n", path.string().c_str());
         return;
     }
+    upload(pixels, width, height);
+    stbi_image_free(pixels);
+}
 
+Texture::Texture(const unsigned char* data, std::size_t size) {
+    stbi_set_flip_vertically_on_load(1);
+
+    int width    = 0;
+    int height   = 0;
+    int channels = 0;
+    unsigned char* pixels = stbi_load_from_memory(data, static_cast<int>(size), &width, &height,
+                                                  &channels, STBI_rgb_alpha);
+    if (pixels == nullptr) {
+        std::fprintf(stderr, "[Texture] échec du décodage (image embarquée).\n");
+        return;
+    }
+    upload(pixels, width, height);
+    stbi_image_free(pixels);
+}
+
+void Texture::upload(const unsigned char* pixels, int width, int height) {
     /* On crée l'objet texture OpenGL puis on lui transfère les pixels. */
     glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id);
@@ -52,7 +72,6 @@ Texture::Texture(const std::filesystem::path& path) {
 
     /* Les pixels sont désormais dans la mémoire du GPU : on libère le CPU. */
     glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_image_free(pixels);
 }
 
 /* Le destructeur rend la texture au GPU pour éviter toute fuite mémoire. */

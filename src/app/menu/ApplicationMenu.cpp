@@ -15,6 +15,7 @@
 #include "app/Application.hpp"
 
 #include "render/LoadedHelicopter.hpp"
+#include "render/Terrain.hpp"
 #include "ui/HudWidgets.hpp"
 
 #include <glad/glad.h>
@@ -39,6 +40,11 @@ namespace {
 struct MapEntry {
     std::string dir;    /* nom du sous-dossier de assets/terrain (= nom du terrain) */
     std::string title;  /* libellé lisible, tiré de la première ligne de terrain.txt */
+    bool        zombieCapable = false;  /* présence de zombies.txt : mode zombie proposé */
+    /* Présence de zombie_only.txt : carte dédiée au mode zombie (ex. dax-arene),
+       sans autre usage -- lancer normalement (Démarrer/Entrée/A) suffit à
+       démarrer le combat, pas besoin du bouton "Mode Zombie" ni de Z/LB. */
+    bool        zombieOnly = false;
 };
 
 /* Titre lisible d'une carte : première ligne de son terrain.txt, débarrassée du préfixe
@@ -74,7 +80,15 @@ std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets) {
         const fs::path txt = e.path() / "terrain.txt";
         if (fs::exists(txt)) {
             const std::string nom = e.path().filename().string();
-            cartes.push_back({nom, lireTitreCarte(txt, nom)});
+            /* Présence de zombies.txt : même mécanisme que les autres fichiers
+               optionnels par carte (exclusions.txt, hapi.txt) -- voir
+               render::Terrain et app::WaveManager, qui le lisent chacun de
+               leur côté sans dépendre l'un de l'autre. */
+            const bool zombieCapable = fs::exists(e.path() / "zombies.txt");
+            /* Même mécanisme, pour distinguer une carte dédiée (dax-arene) d'une
+               carte normale qui proposerait le mode zombie en option. */
+            const bool zombieOnly = fs::exists(e.path() / "zombie_only.txt");
+            cartes.push_back({nom, lireTitreCarte(txt, nom), zombieCapable, zombieOnly});
         }
     }
     std::sort(cartes.begin(), cartes.end(),
@@ -94,6 +108,7 @@ bool Application::runStartupMenu() {
     bool        turbine   = false;  /* turbine et rotor déjà démarrés au lancement ? */
     bool        lancer    = false;  /* passe à true quand l'utilisateur valide */
     bool        demoChoisi = false; /* passe à true si l'utilisateur choisit la démo */
+    bool        modeZombieChoisi = false;  /* passe à true si l'utilisateur choisit le mode zombie */
 
     /* Le menu lit les entrées directement dans GLFW (clavier + manette) plutôt que la
        navigation interne d'ImGui : comportement déterministe, indépendant du focus et du
@@ -113,18 +128,22 @@ bool Application::runStartupMenu() {
        pour le menu doit couper la radio, comme si on l'éteignait. */
     m_audio.stopRadio();
 
-    /* Lecture des entrées, clavier et manette 1 fusionnés en six intentions :
+    /* Lecture des entrées, clavier et manette 1 fusionnés en sept intentions :
        up/down (choisir), turb (bascule turbine), valid (démarrer), demo (lancer la
-       démo), quit (quitter). */
+       démo), zombie (lancer le mode zombie, si la carte le propose), quit (quitter).
+       Le curseur souris étant masqué en plein écran, TOUT doit rester accessible au
+       clavier/à la manette -- les boutons ImGui ne sont qu'un raccourci pour qui a
+       la souris, jamais le seul chemin. */
     auto lireEntrees = [this](bool& up, bool& down, bool& valid, bool& turb, bool& demo,
-                              bool& quit) {
-        up    = glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS;
-        down  = glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS;
-        valid = glfwGetKey(m_window, GLFW_KEY_ENTER) == GLFW_PRESS ||
+                              bool& zombie, bool& quit) {
+        up     = glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS;
+        down   = glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS;
+        valid  = glfwGetKey(m_window, GLFW_KEY_ENTER) == GLFW_PRESS ||
                 glfwGetKey(m_window, GLFW_KEY_KP_ENTER) == GLFW_PRESS;
-        turb  = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
-        demo  = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
-        quit  = glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+        turb   = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        demo   = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
+        zombie = glfwGetKey(m_window, GLFW_KEY_Z) == GLFW_PRESS;
+        quit   = glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
         /* Première manette reconnue, quel que soit son slot (un périphérique virtuel
            peut occuper le slot 0 et reléguer la vraie manette plus loin) -- même logique
            qu'en vol (input::Gamepad). */
@@ -137,14 +156,15 @@ bool Application::runStartupMenu() {
         }
         GLFWgamepadstate gp;
         if (jid >= 0 && glfwGetGamepadState(jid, &gp) == GLFW_TRUE) {
-            up    = up || gp.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS ||
+            up     = up || gp.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS ||
                     gp.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] < -0.5f;
-            down  = down || gp.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] == GLFW_PRESS ||
+            down   = down || gp.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] == GLFW_PRESS ||
                     gp.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] > 0.5f;
-            valid = valid || gp.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS;
-            turb  = turb || gp.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS;
-            demo  = demo || gp.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS;
-            quit  = quit || gp.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS;
+            valid  = valid || gp.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS;
+            turb   = turb || gp.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS;
+            demo   = demo || gp.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS;
+            zombie = zombie || gp.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS;
+            quit   = quit || gp.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS;
         }
     };
 
@@ -158,15 +178,16 @@ bool Application::runStartupMenu() {
        du menu -- typiquement l'Échap qui vient de faire sortir du vol -- ne doit pas
        compter comme un nouvel appui, sinon le menu se refermerait aussitôt (quitter). */
     bool pvUp = false, pvDown = false, pvValid = false, pvQuit = false, pvTurb = false,
-         pvDemo = false;
+         pvDemo = false, pvZombie = false;
     glfwPollEvents();
-    lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvQuit);
+    lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvZombie, pvQuit);
 
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !lancer) {
         glfwPollEvents();
 
-        bool up = false, down = false, valid = false, turb = false, demo = false, quit = false;
-        lireEntrees(up, down, valid, turb, demo, quit);
+        bool up = false, down = false, valid = false, turb = false, demo = false,
+             zombie = false, quit = false;
+        lireEntrees(up, down, valid, turb, demo, zombie, quit);
 
         if (edge(up, pvUp) && selection > 0) {
             --selection;
@@ -183,6 +204,15 @@ bool Application::runStartupMenu() {
         if (edge(demo, pvDemo)) {  /* touche D / bouton Y : lancer la démonstration */
             demoChoisi = true;
             lancer     = true;
+        }
+        /* touche Z / bouton LB : lancer le mode zombie -- seulement si la carte
+           en surbrillance le propose EN OPTION (même condition que le bouton
+           ImGui). Une carte dédiée (zombieOnly, ex. dax-arene) n'a pas besoin
+           de ce raccourci : un lancement normal suffit (voir plus bas). */
+        if (edge(zombie, pvZombie) && cartes[selection].zombieCapable &&
+            !cartes[selection].zombieOnly) {
+            modeZombieChoisi = true;
+            lancer           = true;
         }
         if (edge(quit, pvQuit)) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);  /* Échap dans le menu = quitter */
@@ -229,6 +259,17 @@ bool Application::runStartupMenu() {
             demoChoisi = true;
             lancer     = true;
         }
+        /* Mode zombie EN OPTION : seulement proposé sur une carte qui fournit des
+           points de spawn (zombies.txt) SANS être dédiée au mode zombie (voir
+           zombieOnly juste en dessous) -- une carte dédiée (dax-arene) lance le
+           combat par un démarrage normal, ce bouton serait redondant. */
+        if (cartes[selection].zombieCapable && !cartes[selection].zombieOnly) {
+            ImGui::SameLine();
+            if (ImGui::Button("Mode Zombie", ImVec2(ui::hud_widgets::sc(140.0f), 0.0f))) {
+                modeZombieChoisi = true;
+                lancer           = true;
+            }
+        }
         ImGui::SameLine();
         if (ImGui::Button("Quitter", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
@@ -236,6 +277,9 @@ bool Application::runStartupMenu() {
         ImGui::Separator();
         ImGui::TextDisabled(
             "Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   D/Y : démo   Échap/B : quitter");
+        if (cartes[selection].zombieCapable && !cartes[selection].zombieOnly) {
+            ImGui::TextDisabled("Z / LB : mode zombie");
+        }
         ImGui::TextDisabled("%s", ARTOUSTE_VERSION_STRING);
         ImGui::End();
 
@@ -253,6 +297,11 @@ bool Application::runStartupMenu() {
     m_menuTerrain = cartes[selection].dir;
     m_menuTurbine = turbine ? 1 : 0;
     m_menuDemo    = demoChoisi;  /* démo demandée : lancée par initScene/applyMenuSession */
+    /* Mode zombie demandé : soit explicitement (bouton/Z/LB), soit implicitement
+       si la carte choisie est dédiée au mode zombie (zombieOnly, ex. dax-arene) --
+       elle n'a alors pas d'autre usage, un lancement normal doit y démarrer le
+       combat. Lancé par initScene/applyMenuSession. */
+    m_menuCombat = modeZombieChoisi || cartes[selection].zombieOnly;
     /* Présentation de départ, identique à chaque lancement depuis le menu : vue
        arrière (poursuite), HUD complet et livrée armée de terre. Les moteurs, eux,
        sont remis dans l'état choisi ci-dessus (turbine démarrée ou à froid) par
@@ -309,6 +358,22 @@ void Application::applyMenuSession() {
         startDemo();
     } else {
         m_demo.stop();
+    }
+
+    /* Mode zombie demandé au menu : démarre (ou arrête) la session de combat sur
+       le terrain courant, comme au premier lancement (voir ApplicationScene.cpp
+       ::initScene). Sans effet si la carte n'a pas de zombies.txt. */
+    if (m_menuCombat) {
+        m_combat.start(m_assetsDir / "terrain" / m_terrainName,
+                       [this](float x, float z) { return m_terrain->heightAt(x, z); });
+        if (m_combat.active()) {
+            m_viewMode = 1;  /* vue bloquée en cockpit pendant le combat (voir ApplicationInput.cpp) */
+            /* Turbine et rotor déjà au régime, quel que soit le choix du menu (voir
+               ApplicationScene::initScene, même logique au premier lancement). */
+            m_flight.turbine().forceRunning();
+        }
+    } else {
+        m_combat.stop();
     }
 }
 

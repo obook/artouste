@@ -108,10 +108,12 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
        s'ils tombent hors de l'emprise courante. */
     const float halfW = m_terrain->halfWidth();
     const float halfH = m_terrain->halfHeight();
+    const float origX = m_terrain->originX();
+    const float origZ = m_terrain->originZ();
     for (const render::Landmark& pad : m_terrain->helipads()) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(pad.lon, pad.lat, x, z);
-        if (std::fabs(x) <= halfW && std::fabs(z) <= halfH) {
+        if (std::fabs(x - origX) <= halfW && std::fabs(z - origZ) <= halfH) {
             drawPad(x, z);
         }
     }
@@ -161,6 +163,8 @@ void Application::drawHapi(const mat4& view, const mat4& proj, float timeSeconds
     const vec3 acPos  = m_flight.body().position;
     const float halfW = m_terrain->halfWidth();
     const float halfH = m_terrain->halfHeight();
+    const float origX = m_terrain->originX();
+    const float origZ = m_terrain->originZ();
 
     m_flatShader->use();
     m_flatShader->setMat4("u_view", view);
@@ -183,7 +187,7 @@ void Application::drawHapi(const mat4& view, const mat4& proj, float timeSeconds
     for (const render::HapiUnit& hapi : units) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(hapi.lon, hapi.lat, x, z);
-        if (std::fabs(x) > halfW || std::fabs(z) > halfH) {
+        if (std::fabs(x - origX) > halfW || std::fabs(z - origZ) > halfH) {
             continue;  /* balise hors de l'emprise courante */
         }
         const vec3 hapiPos{x, m_terrain->heightAt(x, z) + render::HAPI_MAST_M, z};
@@ -334,6 +338,46 @@ void Application::drawGroundShadow(const mat4& base, float rotorFraction, const 
     const vec3      fwd         = glm::normalize(vec3(base[0]));
     const float     heading     = std::atan2(-fwd.z, fwd.x);
     drawEllipse(scaleXZ * (2.0f / 6.0f), shadowAlpha * alphaMult, heading, CABIN_ELONG);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0.0f, 0.0f);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+void Application::drawScorchMarks(const mat4& view, const mat4& proj) {
+    if (!m_combat.active() || !m_shadowShader || !m_shadowDisc) {
+        return;
+    }
+    const std::vector<RocketSystem::ScorchView> scorches = m_combat.scorches();
+    if (scorches.empty()) {
+        return;
+    }
+
+    constexpr float DISC_MESH_R  = 6.0f;   /* rayon du maillage de disque (cf. disc(6, ...)) */
+    constexpr float SCORCH_R_M   = 3.5f;   /* rayon au sol de la trace (m) */
+    constexpr float SCORCH_ALPHA = 0.55f;  /* opacité max (gris foncé, pas noir pur) */
+    const float     scale        = SCORCH_R_M / DISC_MESH_R;
+
+    m_shadowShader->use();
+    m_shadowShader->setMat4("u_view", view);
+    m_shadowShader->setMat4("u_proj", proj);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    /* Décalage de profondeur pour ne pas lutter avec le sol (comme l'ombre). */
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -1.0f);
+
+    for (const RocketSystem::ScorchView& s : scorches) {
+        const mat4 model =
+            glm::translate(mat4(1.0f), vec3{s.center.x, s.center.y + 0.05f, s.center.z} - m_renderOrigin) *
+            glm::scale(mat4(1.0f), vec3{scale, 1.0f, scale});
+        m_shadowShader->setMat4("u_model", model);
+        m_shadowShader->setFloat("u_alpha", SCORCH_ALPHA * s.alpha);
+        m_shadowDisc->draw();
+    }
 
     glDisable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(0.0f, 0.0f);

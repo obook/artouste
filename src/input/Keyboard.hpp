@@ -28,6 +28,11 @@ public:
      * quelle source de commande est utilisée. */
     [[nodiscard]] bool isActive() const noexcept;
 
+    /* Ctrl gauche est-elle actuellement tenue ? État maintenu (pas un front
+     * montant) : équivalent clavier de Gamepad::fireHeld, mode zombie
+     * uniquement. */
+    [[nodiscard]] bool fireHeld() const noexcept;
+
     void reset() noexcept { m_controls = physics::Controls{}; }
 
     /* Recale le collectif mémorisé sur value, sans toucher au cyclique ni aux

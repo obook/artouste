@@ -273,6 +273,14 @@ bool Gamepad::autolandTogglePressed() noexcept {
     return nouvelAppui;
 }
 
+bool Gamepad::fireHeld() const noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        return false;
+    }
+    return state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] == GLFW_PRESS;
+}
+
 void Gamepad::primeButtons() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {

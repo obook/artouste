@@ -34,6 +34,9 @@
 #include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
 #include "render/Texture.hpp"
+#include "render/combat/ExplosionFx.hpp"
+#include "render/combat/SkinnedZombies.hpp"
+#include "render/combat/Projectiles.hpp"
 
 #include <cstdio>
 #include <cstdlib>

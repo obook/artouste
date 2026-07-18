@@ -45,6 +45,10 @@ public:
      * simplement ignoré par OpenGL, sans erreur.
      */
     void setMat4(const std::string& name, const mat4& value);
+    /* Envoie un tableau de 'count' matrices 4x4 contiguës (float, colonne-major,
+       16 flottants chacune) à un uniforme tableau (par exemple u_bones[] du
+       shader de skinning) en un seul appel. */
+    void setMat4Array(const std::string& name, const float* values, int count);
     void setVec2(const std::string& name, const vec2& value);
     void setVec3(const std::string& name, const vec3& value);
     void setVec4(const std::string& name, const vec4& value);

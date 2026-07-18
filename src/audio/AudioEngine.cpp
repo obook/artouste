@@ -48,6 +48,24 @@ AudioEngine::~AudioEngine() {
     if (m_impl->musicLoaded) {
         ma_sound_uninit(&m_impl->musicSound);
     }
+    if (m_impl->gunfireLoaded) {
+        ma_sound_uninit(&m_impl->gunfireSound);
+    }
+    if (m_impl->zombieHitLoaded) {
+        ma_sound_uninit(&m_impl->zombieHitSound);
+    }
+    if (m_impl->zombieDeathLoaded) {
+        ma_sound_uninit(&m_impl->zombieDeathSound);
+    }
+    if (m_impl->toxicThrowLoaded) {
+        ma_sound_uninit(&m_impl->toxicThrowSound);
+    }
+    if (m_impl->toxicImpactLoaded) {
+        ma_sound_uninit(&m_impl->toxicImpactSound);
+    }
+    if (m_impl->waveStartLoaded) {
+        ma_sound_uninit(&m_impl->waveStartSound);
+    }
     if (m_impl->msgSoundReady) {
         ma_sound_uninit(&m_impl->msgSound);
     }

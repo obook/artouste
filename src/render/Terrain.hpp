@@ -57,6 +57,9 @@ public:
 
     [[nodiscard]] float halfWidth() const noexcept { return 0.5f * m_widthM; }
     [[nodiscard]] float halfHeight() const noexcept { return 0.5f * m_heightM; }
+    /* Centre de l'emprise en coordonnées monde (0 sauf carte recadrée). */
+    [[nodiscard]] float originX() const noexcept { return m_originX; }
+    [[nodiscard]] float originZ() const noexcept { return m_originZ; }
     [[nodiscard]] float maxElevation() const noexcept { return m_elevMax; }
 
     /* Faut-il dessiner le plan de mer ? Faux pour un terrain de montagne (sans mer),
@@ -77,8 +80,8 @@ public:
        L'emprise est centrée sur l'origine : colonne ouest = -halfWidth, rangée nord
        = -halfHeight. */
     void lonLatAt(float x, float z, float& lon, float& lat) const noexcept {
-        const float colFrac = x / m_widthM + 0.5f;
-        const float rowFrac = z / m_heightM + 0.5f;
+        const float colFrac = (x - m_originX) / m_widthM + 0.5f;
+        const float rowFrac = (z - m_originZ) / m_heightM + 0.5f;
         lon = m_lonMin + colFrac * (m_lonMax - m_lonMin);
         lat = m_latMax - rowFrac * (m_latMax - m_latMin);
     }
@@ -87,8 +90,8 @@ public:
     void worldAt(float lon, float lat, float& x, float& z) const noexcept {
         const float colFrac = (lon - m_lonMin) / (m_lonMax - m_lonMin);
         const float rowFrac = (m_latMax - lat) / (m_latMax - m_latMin);
-        x = (colFrac - 0.5f) * m_widthM;
-        z = (rowFrac - 0.5f) * m_heightM;
+        x = (colFrac - 0.5f) * m_widthM + m_originX;
+        z = (rowFrac - 0.5f) * m_heightM + m_originZ;
     }
 
     /* Identifiant OpenGL de l'orthophoto (pour l'afficher dans la minimap). */
@@ -140,6 +143,14 @@ private:
     int                m_rows    = 0;
     float              m_widthM  = 0.0f;  /* dimension est-ouest au sol (m) */
     float              m_heightM = 0.0f;  /* dimension nord-sud au sol (m) */
+    /* Décalage de l'origine du terrain en coordonnées monde (m) : par défaut 0,
+       l'emprise est centrée sur l'origine du monde. Non nul pour une carte
+       RECADREE (sous-région d'un terrain plus grand) : la grille reste centrée
+       sur (m_originX, m_originZ) au lieu de (0,0), si bien que tous les fichiers
+       en coordonnées monde (spawns, bâtiments, hélipads...) restent valides sans
+       décalage. Voir terrain.txt "origin_x"/"origin_z". */
+    float              m_originX = 0.0f;
+    float              m_originZ = 0.0f;
     float              m_elevMin = 0.0f;
     float              m_elevMax = 0.0f;
     bool               m_drawSea = true;   /* dessiner le plan de mer (bord de mer) */

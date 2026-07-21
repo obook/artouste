@@ -10,9 +10,11 @@ chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne),
 de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (Dax : l'Adour,
 l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
-Tourmalet, la station de La Mongie) et `assets/terrain/dax-arene/` (arène
-recadrée depuis `dax`, dédiée au mode zombie -- voir la section dédiée
-ci-dessous, affichée au menu sous le nom **Happy DeathHour**).
+Tourmalet, la station de La Mongie), `assets/terrain/paris/` (Paris intra-muros :
+la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de
+Vincennes) et `assets/terrain/dax-arene/` (arène recadrée depuis `dax`, dédiée
+au mode zombie -- voir la section dédiée ci-dessous, affichée au menu sous le
+nom **Happy DeathHour**).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
@@ -91,7 +93,7 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon`, `cauterets`, `bordeaux`, `dax` ou `bigorre`).
+`cote-landes`, `arcachon`, `cauterets`, `bordeaux`, `dax`, `bigorre` ou `paris`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :
@@ -164,8 +166,16 @@ Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr
 Le seuil de hauteur dépend de la zone (clé `height_min` du dictionnaire `ZONES`) :
 les bâtiments les plus bas (cabanes, abris) sont écartés pour ne pas alourdir la
 scène. Le seuil usuel en ville est de 2 m, relevé à 5 m sur une agglomération très
-dense comme Bordeaux ; en montagne (Ossau), il descend à 0 pour garder les cabanes et bergeries, utiles au repérage.
+dense comme Bordeaux, et à 10 m sur Paris ; en montagne (Ossau), il descend à
+0 pour garder les cabanes et bergeries, utiles au repérage. Paris intra-muros est
+nettement plus dense en bâtiments que Bordeaux à surface égale : son emprise est
+donc resserrée à la ville elle-même (sans les communes de la petite couronne), et
+son seuil de hauteur relevé à 10 m (le bâti parisien est presque partout un
+immeuble haussmannien, largement au-dessus) pour garder un `buildings.bin`
+comparable aux autres cartes -- voir le commentaire en tête de
+`tools/terrain/zones/paris.py`.
 
 Le moteur charge ce fichier s'il est présent ; sinon, le terrain s'affiche sans
 bâtiments. Le bassin d'Arcachon en compte environ 187 000, la côte basco-landaise
-environ 156 000, Bordeaux (seuil à 5 m) environ 159 000, la vallée d'Ossau environ 765.
+environ 156 000, Bordeaux (seuil à 5 m) environ 159 000, Paris (seuil à 10 m)
+environ 124 000, la vallée d'Ossau environ 765.

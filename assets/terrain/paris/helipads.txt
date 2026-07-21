@@ -1,0 +1,4 @@
+# Helipads - Paris (tour Eiffel, Notre-Dame, Montmartre, Champs-Élysées) (un par ligne : lon lat nom)
+# Positions approximatives, à affiner sur place.
+2.2705 48.8305 Héliport de Paris (Issy-les-Moulineaux)
+2.2748 48.8397 Hôpital européen Georges-Pompidou

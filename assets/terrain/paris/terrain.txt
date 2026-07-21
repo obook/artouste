@@ -1,0 +1,19 @@
+# Terrain Artouste - Paris (tour Eiffel, Notre-Dame, Montmartre, Champs-Élysées)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 1024
+rows 1024
+width_m 18017.0
+height_m 9684.8
+elev_min 0.00
+elev_max 132.21
+lon_min 2.224
+lon_max 2.47
+lat_min 48.815
+lat_max 48.902
+ortho_width 5001
+ortho_height 2688
+sea 0
+start_x -5926.4
+start_z 3214.1
+start_heading 90

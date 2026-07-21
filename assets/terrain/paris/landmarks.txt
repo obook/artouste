@@ -1,0 +1,28 @@
+# Lieux remarquables - Paris (tour Eiffel, Notre-Dame, Montmartre, Champs-Élysées) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+2.3488 48.8534 Paris
+2.2945 48.8584 Tour Eiffel
+2.3499 48.853 Notre-Dame de Paris
+2.295 48.8738 Arc de Triomphe
+2.3376 48.8606 Musée du Louvre
+2.3431 48.8867 Sacré-Coeur
+2.3459 48.8462 Panthéon
+2.3212 48.8656 Place de la Concorde
+2.3125 48.8566 Hôtel des Invalides
+2.3316 48.8719 Opéra Garnier
+2.3696 48.8532 Place de la Bastille
+2.3522 48.8606 Centre Pompidou
+2.322 48.8421 Tour Montparnasse
+2.3372 48.8462 Jardin du Luxembourg
+2.2988 48.8556 Champ de Mars
+2.3553 48.8809 Gare du Nord
+2.3739 48.8447 Gare de Lyon
+2.3203 48.8412 Gare Montparnasse
+2.3934 48.8614 Cimetière du Père-Lachaise
+2.3822 48.8809 Parc des Buttes-Chaumont
+2.25 48.8642 Bois de Boulogne
+2.2384 48.8636 Hippodrome de Longchamp
+2.4322 48.829 Bois de Vincennes
+2.4378 48.8422 Château de Vincennes
+2.347 48.8555 Île de la Cité
+2.3565 48.8514 Île Saint-Louis

@@ -118,8 +118,11 @@ remarquables, hélipads). Voir [TERRAIN.md](TERRAIN.md) pour les détails du pip
 ## Bâtiments 3D (BD TOPO)
 
 Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur
-hauteur réelle (murs + toit plat). Ils sont produits à part par
-`tools/fetch_buildings.py`, qui interroge le service WFS et écrit
+hauteur réelle (murs + toit plat). Les murs sont habillés d'une texture de
+façade tuilée (fenêtres, voir `assets/textures/facade.png`, générée par
+`tools/facade/generer_facade.py`) répétée en coordonnées réelles (mètres) ;
+le toit garde une couleur unie panachée (tuile, ardoise). Ils sont produits à
+part par `tools/fetch_buildings.py`, qui interroge le service WFS et écrit
 `assets/terrain/<zone>/buildings.bin` :
 
 ```bash

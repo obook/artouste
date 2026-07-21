@@ -17,6 +17,7 @@
 #include <stb_image.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +32,14 @@ namespace {
 /* Couleurs régionales (côte basque et Landes) : murs clairs, toitures en tuile.
    Une légère variation par bâtiment évite l'aspect uniforme d'une ville monochrome. */
 const vec3 WALL_COLOR{0.86f, 0.84f, 0.80f};  /* enduit clair */
+
+/* Taille réelle (mètres) de la tuile de façade (assets/textures/facade.png,
+   voir tools/facade/generer_facade.py -- mêmes valeurs des deux côtés) : les UV
+   des murs sont calculés en mètres réels / cette taille, pour que la texture se
+   pose à la même échelle sur un pavillon et sur un immeuble, sans dépendre du
+   nombre de sommets de l'emprise. */
+constexpr float FACADE_TILE_W_M = 12.0f;
+constexpr float FACADE_TILE_H_M = 6.0f;
 
 /* Palette de toitures : plutôt que la même tuile partout, on panache quelques
    teintes pour donner une impression de variété (toits neufs, patinés, quelques
@@ -90,6 +99,27 @@ void pushTriangle(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
     idx.push_back(base);
     idx.push_back(base + 1);
     idx.push_back(base + 2);
+}
+
+/* Quad d'un mur (bi, bj en bas ; ti, tj en haut, mêmes côtés), avec des UV
+   réels : u parcourt la largeur du côté (0 à sa longueur / FACADE_TILE_W_M), v
+   la hauteur depuis le sol du bâtiment (0 à sa hauteur / FACADE_TILE_H_M). La
+   texture de façade (voir building.frag) se répète ainsi à échelle constante
+   quelle que soit la taille du bâtiment. */
+void pushWallQuad(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
+                  const vec3& bi, const vec3& bj, const vec3& tj, const vec3& ti,
+                  const vec3& normal, const vec3& color, float u1, float vTop) {
+    const auto base = static_cast<unsigned int>(verts.size());
+    verts.push_back(Vertex{bi, normal, color, {0.0f, 0.0f}});
+    verts.push_back(Vertex{bj, normal, color, {u1, 0.0f}});
+    verts.push_back(Vertex{tj, normal, color, {u1, vTop}});
+    verts.push_back(Vertex{ti, normal, color, {0.0f, vTop}});
+    idx.push_back(base);
+    idx.push_back(base + 1);
+    idx.push_back(base + 2);
+    idx.push_back(base);
+    idx.push_back(base + 2);
+    idx.push_back(base + 3);
 }
 
 }  /* namespace */
@@ -285,10 +315,15 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         tb.mx.y = std::max(tb.mx.y, top);
 
         const float rj   = jitter(b, 0.12f);
-        const vec3  wall = WALL_COLOR;
+        /* Seed décorrélée de celle du toit (voir pickRoof) : mur et toit ne doivent
+           pas varier de concert. */
+        const float wj   = jitter(b * 2654435761u + 1u, 0.08f);
+        const vec3  wall = WALL_COLOR * wj;
         const vec3  roof = pickRoof(b) * rj;  /* teinte panachée, nuancée en luminosité */
 
-        /* Murs : un quad vertical par côté de l'emprise. */
+        /* Murs : un quad vertical par côté de l'emprise, texturé en façade (UV réels,
+           voir pushWallQuad et FACADE_TILE_*). */
+        const float vTop = height / FACADE_TILE_H_M;
         for (std::size_t i = 0; i < n; ++i) {
             const std::size_t j  = (i + 1) % n;
             const float       ex = px[j] - px[i];
@@ -307,8 +342,9 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             const vec3 bj{px[j], base, pz[j]};
             const vec3 tj{px[j], top, pz[j]};
             const vec3 ti{px[i], top, pz[i]};
-            pushTriangle(tb.v, tb.i, bi, bj, tj, normal, wall);
-            pushTriangle(tb.v, tb.i, bi, tj, ti, normal, wall);
+            const float sideLen = std::sqrt(ex * ex + ez * ez);
+            pushWallQuad(tb.v, tb.i, bi, bj, tj, ti, normal, wall,
+                        sideLen / FACADE_TILE_W_M, vTop);
         }
 
         /* Toit plat : éventail de triangles depuis le premier sommet (correct pour

@@ -191,6 +191,13 @@ void Application::initScene() {
         m_terrainDetail = std::make_unique<render::Texture>(detailPath);
     }
 
+    /* Façade tuilée des bâtiments (fenêtres), voir u_facade dans building.frag.
+       Absente : le shader reçoit une unité vide, les murs restent en couleur unie. */
+    const std::filesystem::path facadePath = assets / "textures" / "facade.png";
+    if (std::filesystem::exists(facadePath)) {
+        m_buildingFacade = std::make_unique<render::Texture>(facadePath);
+    }
+
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */
     const vec3 up{0.0f, 1.0f, 0.0f};
     const std::vector<render::Vertex> seaVerts = {

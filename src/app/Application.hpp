@@ -273,6 +273,7 @@ private:
     std::unique_ptr<render::Model>           m_helipadModel;  /* hélipad texturé (modèle Blender) */
     std::unique_ptr<render::Mesh>             m_padSkirt;      /* jupe sous le disque (pad perché) */
     std::unique_ptr<render::Texture>          m_terrainDetail; /* grain rocheux du terrain (unité 1) */
+    std::unique_ptr<render::Texture>          m_buildingFacade; /* façade tuilée des bâtiments (unité 0) */
     std::unique_ptr<render::Mesh>             m_sea;           /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain>          m_terrain;
     std::unique_ptr<render::Buildings>        m_buildings;     /* bâtiments 3D (BD TOPO extrudée) */

@@ -7,8 +7,10 @@ exemple `assets/terrain/ossau/` (vallée d'Ossau, montagne),
 de Biscarrosse à Arès), `assets/terrain/cauterets/` (Cauterets - Gavarnie :
 chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne),
 `assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
-de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (Dax : l'Adour,
-l'aérodrome de Seyresse et le musée de l'ALAT, les Thermes),
+de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (centre-ville de
+Dax et aérodrome de Seyresse : cathédrale, Pont Vieux, arènes, musée de l'ALAT,
+Saint-Paul-lès-Dax et les Thermes -- recadrée sur la ville pour un sol net,
+voir ci-dessous),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
 Tourmalet, la station de La Mongie), `assets/terrain/paris/` (Paris intra-muros :
 la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de

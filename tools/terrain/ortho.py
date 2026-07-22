@@ -10,7 +10,9 @@ Licence : GPL v2
 """
 
 import io
+import math
 import os
+import time
 import urllib.parse
 import urllib.request
 
@@ -61,10 +63,9 @@ def fill_nodata(arr):
     return out
 
 
-def fetch_ortho(aspect):
-    """Télécharge l'orthophoto sur la même emprise (haut = nord) et recolore la mer."""
-    width = int(round(config.ORTHO_HEIGHT * aspect))
-    print(f"[ortho] WMS {width}x{config.ORTHO_HEIGHT} sur {config.WMS_LAYER}...")
+def _request_tile(lat_lo, lon_lo, lat_hi, lon_hi, width, height):
+    """Une requête WMS GetMap sur une emprise donnée, avec quelques essais (réseau
+       capricieux ou 429 du serveur IGN)."""
     query = urllib.parse.urlencode({
         "SERVICE": "WMS",
         "VERSION": "1.3.0",
@@ -72,37 +73,85 @@ def fetch_ortho(aspect):
         "LAYERS": config.WMS_LAYER,
         "STYLES": "",
         "CRS": "EPSG:4326",            # axes lat,lon en WMS 1.3.0
-        "BBOX": f"{config.LAT_MIN},{config.LON_MIN},{config.LAT_MAX},{config.LON_MAX}",
+        "BBOX": f"{lat_lo},{lon_lo},{lat_hi},{lon_hi}",
         "WIDTH": width,
-        "HEIGHT": config.ORTHO_HEIGHT,
+        "HEIGHT": height,
         "FORMAT": "image/jpeg",
     })
     url = config.WMS_URL + "?" + query
-    with urllib.request.urlopen(url, timeout=120) as resp:
-        content = resp.read()
-    if content[:2] != b"\xff\xd8":  # pas un JPEG : c'est une erreur du service
-        raise RuntimeError("le WMS n'a pas renvoyé une image : "
-                           + content[:200].decode("utf-8", "replace"))
+    last_err = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(url, timeout=120) as resp:
+                content = resp.read()
+            if content[:2] != b"\xff\xd8":  # pas un JPEG : erreur du service
+                raise RuntimeError("le WMS n'a pas renvoyé une image : "
+                                   + content[:200].decode("utf-8", "replace"))
+            return Image.open(io.BytesIO(content)).convert("RGB")
+        except Exception as err:
+            last_err = err
+            time.sleep(2.0 * (attempt + 1))
+    raise RuntimeError(f"tuile WMS {width}x{height} : échec après plusieurs essais ({last_err})")
+
+
+def _tile_edges(total_px, max_px):
+    """Découpe [0, total_px) en tranches contiguës d'au plus max_px pixels."""
+    n = math.ceil(total_px / max_px)
+    return [round(i * total_px / n) for i in range(n + 1)]
+
+
+def _fetch_image(width, height):
+    """Télécharge l'ortho sur toute l'emprise de la zone (haut = nord), en une seule
+       requête WMS si les dimensions tiennent sous la limite serveur, sinon en
+       assemblant une mosaïque de tuiles (limite dépassée sur une carte "pleine
+       taille" comme dax quand on vise une résolution plus fine que la limite ne
+       permet en une seule requête)."""
+    if width <= config.WMS_MAX_PX and height <= config.WMS_MAX_PX:
+        print(f"[ortho] WMS {width}x{height} sur {config.WMS_LAYER}...")
+        return _request_tile(config.LAT_MIN, config.LON_MIN, config.LAT_MAX, config.LON_MAX,
+                             width, height)
+
+    x_edges = _tile_edges(width, config.WMS_MAX_PX)
+    y_edges = _tile_edges(height, config.WMS_MAX_PX)
+    n_tiles = (len(x_edges) - 1) * (len(y_edges) - 1)
+    print(f"[ortho] WMS {width}x{height} sur {config.WMS_LAYER} "
+          f"(mosaïque {len(x_edges) - 1}x{len(y_edges) - 1} tuiles)...")
+    canvas = Image.new("RGB", (width, height))
+    done = 0
+    for y_lo, y_hi in zip(y_edges[:-1], y_edges[1:]):
+        lat_hi = config.LAT_MAX - y_lo / height * (config.LAT_MAX - config.LAT_MIN)
+        lat_lo = config.LAT_MAX - y_hi / height * (config.LAT_MAX - config.LAT_MIN)
+        for x_lo, x_hi in zip(x_edges[:-1], x_edges[1:]):
+            lon_lo = config.LON_MIN + x_lo / width * (config.LON_MAX - config.LON_MIN)
+            lon_hi = config.LON_MIN + x_hi / width * (config.LON_MAX - config.LON_MIN)
+            tile = _request_tile(lat_lo, lon_lo, lat_hi, lon_hi, x_hi - x_lo, y_hi - y_lo)
+            canvas.paste(tile, (x_lo, y_lo))
+            done += 1
+            print(f"[ortho]   tuile {done}/{n_tiles}")
+    return canvas
+
+
+def fetch_ortho(aspect):
+    """Télécharge l'orthophoto sur la même emprise (haut = nord) et recolore la mer."""
+    width = int(round(config.ORTHO_HEIGHT * aspect))
+    height = config.ORTHO_HEIGHT
+    img = _fetch_image(width, height)
     path = os.path.join(config.OUT_DIR, "ortho.jpg")
 
     # Zone sans mer (montagne) : pas de recoloration de la mer (qui bleuirait la
     # neige) ; on comble seulement le no-data de la BD ORTHO par de la rocaille.
     if not config.RECOLOR_SEA:
-        arr = np.array(Image.open(io.BytesIO(content)).convert("RGB"))
+        arr = np.array(img)
         Image.fromarray(fill_nodata(arr)).save(path, quality=88)
-        print(f"[ortho] {path} écrit ({width}x{config.ORTHO_HEIGHT})")
+        print(f"[ortho] {path} écrit ({width}x{height})")
         return width
-
-    raw = os.path.join(config.OUT_DIR, "_ortho_raw.jpg")
-    with open(raw, "wb") as out:
-        out.write(content)
 
     # La mer de la BD ORTHO pose deux problèmes : au large elle revient en blanc
     # (sans donnée), et l'eau photographiée est une mosaïque de dalles aux teintes
     # différentes, dont les bords en escalier formeraient des "pavés" au rendu.
     # On aplanit donc toute la mer à une couleur unie, en préservant l'écume
     # blanche et la plage (non bleutées) pour garder un trait de côte net.
-    arr = np.array(Image.open(raw).convert("RGB")).astype(np.float32)
+    arr = np.array(img).astype(np.float32)
     r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
     # Le blanc "sans donnée" de la BD ORTHO est l'océan au large, hors couverture :
     # une grande plage blanche qui touche les bords de l'image. Le sable très clair
@@ -132,6 +181,5 @@ def fetch_ortho(aspect):
     print(f"[ortho] mer aplanie ({int(sea.sum())} px) couleur {deep.round().astype(int).tolist()}")
 
     Image.fromarray(out.clip(0, 255).astype(np.uint8)).save(path, quality=88)
-    os.remove(raw)
-    print(f"[ortho] {path} écrit ({width}x{config.ORTHO_HEIGHT})")
+    print(f"[ortho] {path} écrit ({width}x{height})")
     return width

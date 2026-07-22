@@ -20,15 +20,22 @@ Exemple (aerodrome de Dax-Seyresse, boite ~2 km) :
   python3 tools/terrain/crop_zombie_map.py assets/terrain/dax \
       assets/terrain/dax-arene --center-x 0 --center-z 3492 --half 1000
 
+Boite rectangulaire : --half-x/--half-z remplacent --half independamment (E-O / N-S).
+
 Auteur : O. Booklage - Licence GPL v2
 """
 
 import argparse
 import shutil
+import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/ -> paquet terrain
+from terrain import config
+from terrain.ortho import fetch_ortho
 
 
 def read_meta(path):
@@ -49,8 +56,21 @@ def main():
     ap.add_argument("dst", type=Path)
     ap.add_argument("--center-x", type=float, required=True)
     ap.add_argument("--center-z", type=float, required=True)
-    ap.add_argument("--half", type=float, default=1000.0, help="demi-cote de la boite (m)")
+    ap.add_argument("--half", type=float, default=1000.0,
+                     help="demi-cote de la boite (m), carree ; ignore si --half-x/--half-z "
+                          "sont donnes (boite rectangulaire)")
+    ap.add_argument("--half-x", type=float, default=None, help="demi-largeur E-O (m)")
+    ap.add_argument("--half-z", type=float, default=None, help="demi-hauteur N-S (m)")
+    ap.add_argument("--ortho-px", type=int, default=2000,
+                     help="hauteur en pixels de l'ortho HD reemise via WMS (defaut 2000, "
+                          "~1 m/px sur une boite de 2 km ; limite serveur IGN ~5010)")
+    ap.add_argument("--offline-crop", action="store_true",
+                     help="ne pas requeter le WMS : recadre l'ortho basse resolution de "
+                          "la carte source (comportement historique, hors-ligne mais flou "
+                          "de pres une fois au sol)")
     args = ap.parse_args()
+    half_x = args.half_x if args.half_x is not None else args.half
+    half_z = args.half_z if args.half_z is not None else args.half
 
     src, dst = args.src, args.dst
     m = read_meta(src / "terrain.txt")
@@ -71,10 +91,10 @@ def main():
     def row_of(z):
         return (z + halfH) / height * (rows - 1)
 
-    i_lo = max(0, round(col_of(args.center_x - args.half)))
-    i_hi = min(cols - 1, round(col_of(args.center_x + args.half)))
-    j_lo = max(0, round(row_of(args.center_z - args.half)))
-    j_hi = min(rows - 1, round(row_of(args.center_z + args.half)))
+    i_lo = max(0, round(col_of(args.center_x - half_x)))
+    i_hi = min(cols - 1, round(col_of(args.center_x + half_x)))
+    j_lo = max(0, round(row_of(args.center_z - half_z)))
+    j_hi = min(rows - 1, round(row_of(args.center_z + half_z)))
     new_cols, new_rows = i_hi - i_lo + 1, j_hi - j_lo + 1
 
     # Etendue monde reelle de la grille cropee (bornes des colonnes/rangees).
@@ -111,18 +131,34 @@ def main():
     sub = arr[j_lo:j_hi + 1, i_lo:i_hi + 1]
     Image.fromarray(sub, mode="I;16").save(dst / "heightmap.png")
 
-    # --- Ortho (meme etendue monde que la grille cropee) ------------------------
-    def ox_of(x):
-        return (x + halfW) / width * ortho_w
+    # --- Ortho -------------------------------------------------------------------
+    # Par defaut, on ne recadre PAS l'ortho basse resolution de la carte source :
+    # celle-ci partage son budget de pixels WMS (limite serveur IGN ~5010 px) avec
+    # toute l'emprise de la grande carte (des dizaines de km), ce qui donne un sol
+    # flou vu de pres une fois recadre sur une arene de ~2 km. On reemet donc une
+    # requete WMS dediee, centree sur la seule boite de l'arene : le meme budget de
+    # pixels serveur, applique a une emprise bien plus petite, donne une resolution
+    # nettement meilleure (voir --ortho-px).
+    if args.offline_crop:
+        def ox_of(x):
+            return (x + halfW) / width * ortho_w
 
-    def oy_of(z):
-        return (z + halfH) / height * ortho_h
+        def oy_of(z):
+            return (z + halfH) / height * ortho_h
 
-    ox_lo, ox_hi = round(ox_of(x0)), round(ox_of(x1))
-    oy_lo, oy_hi = round(oy_of(z0)), round(oy_of(z1))  # z0=nord -> ligne haute
-    ortho = Image.open(src / "ortho.jpg").convert("RGB")
-    ortho.crop((ox_lo, oy_lo, ox_hi, oy_hi)).save(dst / "ortho.jpg", quality=92)
-    new_ortho_w, new_ortho_h = ox_hi - ox_lo, oy_hi - oy_lo
+        ox_lo, ox_hi = round(ox_of(x0)), round(ox_of(x1))
+        oy_lo, oy_hi = round(oy_of(z0)), round(oy_of(z1))  # z0=nord -> ligne haute
+        ortho = Image.open(src / "ortho.jpg").convert("RGB")
+        ortho.crop((ox_lo, oy_lo, ox_hi, oy_hi)).save(dst / "ortho.jpg", quality=92)
+        new_ortho_w, new_ortho_h = ox_hi - ox_lo, oy_hi - oy_lo
+    else:
+        config.LON_MIN, config.LON_MAX = new_lon_min, new_lon_max
+        config.LAT_MIN, config.LAT_MAX = new_lat_min, new_lat_max
+        config.RECOLOR_SEA = m.get("sea", "0") == "1"
+        config.ORTHO_HEIGHT = args.ortho_px
+        config.OUT_DIR = str(dst)
+        new_ortho_w = fetch_ortho(new_width / new_height)
+        new_ortho_h = args.ortho_px
 
     # --- terrain.txt recadre ----------------------------------------------------
     start_x = m.get("start_x", "0")

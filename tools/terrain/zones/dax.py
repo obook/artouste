@@ -5,6 +5,15 @@ Dax : la ville, l'Adour, l'aérodrome de Seyresse et le musée de l'ALAT
 (Aviation légère de l'Armée de terre) au sud, Saint-Paul-lès-Dax et les
 Thermes au nord. Vallée de l'Adour, lisière de la forêt landaise : terrain
 plat, pas de mer.
+
+ATTENTION : cette entrée décrit l'emprise BRUTE utilisée pour amorcer les
+données (relief + première ortho). La carte livrée dans assets/terrain/dax/
+est ensuite recadrée sur le centre-ville, l'aérodrome, Saint-Paul-lès-Dax et
+les Thermes (voir tools/terrain/crop_zombie_map.py, --center-x 842
+--center-z 1400 --half-x 1800 --half-z 2500) pour un sol net avec un budget
+de pixels WMS raisonnable. Relancer `fetch_terrain.py dax` régénère la
+grande emprise d'origine et écrase ce recadrage : il faudrait ensuite
+rejouer la commande de recadrage ci-dessus.
 """
 
 ZONE = {
@@ -15,7 +24,7 @@ ZONE = {
     # À ajuster visuellement : petites annexes du bâti pavillonnaire.
     "height_min": 3.0,
     "grid": 1024,      # mailles ~14,1 m au lieu de ~28,3 m (défaut 512)
-    "ortho_px": 5000,  # ~5-6 m/px (limite serveur IGN : 5010)
+    "ortho_px": 10000,  # ~2,2 m/px ; mosaique WMS 2x2 (limite serveur IGN : 5010/tuile)
     "title": "Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, thermes)",
     "landmarks": [
         ("Dax", -1.0602, 43.7007),

@@ -44,6 +44,10 @@ SEA_FALLBACK = (43, 65, 70)
 # de longueur (erreur HTTP 414). On découpe donc une rangée en plusieurs morceaux.
 MAX_PTS_PER_REQUEST = 200
 
+# Largeur/hauteur maximale d'une seule requête WMS GetMap (limite serveur IGN
+# ~5010 px). Au-delà, fetch_ortho() découpe l'emprise en tuiles et les assemble.
+WMS_MAX_PX = 5000
+
 # Racine des terrains : chaque zone est rangée dans un sous-dossier portant son nom.
 TERRAIN_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "terrain")
 

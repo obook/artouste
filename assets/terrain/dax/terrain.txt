@@ -1,19 +1,21 @@
-# Terrain Artouste - Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, thermes)
-# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
-# width_m / height_m : dimensions au sol du maillage, en mètres
-cols 1024
-rows 1024
-width_m 14481.7
-height_m 22264.0
+# Terrain Artouste - recadre depuis dax_orig (mode zombie, sous-region)
+# Repere monde identique a la carte source (origin_x/origin_z) : tous les
+# fichiers en coordonnees monde restent valides sans decalage.
+cols 255
+rows 231
+width_m 3595.7
+height_m 5005.6
 elev_min 0.00
 elev_max 108.79
-lon_min -1.16
-lon_max -0.98
-lat_min 43.62
-lat_max 43.82
-ortho_width 3252
-ortho_height 5000
+lon_min -1.081877
+lon_max -1.037185
+lat_min 43.684907
+lat_max 43.729873
+ortho_width 4225
+ortho_height 5882
 sea 0
 start_x -162.8
 start_z 3406.0
 start_heading 0
+origin_x 842.29
+origin_z 1403.74

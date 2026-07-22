@@ -11,8 +11,8 @@ lon_min -1.082405
 lon_max -1.057595
 lat_min 43.679629
 lat_max 43.697615
-ortho_width 448
-ortho_height 449
+ortho_width 1994
+ortho_height 2000
 sea 0
 start_x -162.8
 start_z 3406.0

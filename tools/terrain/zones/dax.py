@@ -8,12 +8,13 @@ plat, pas de mer.
 
 ATTENTION : cette entrée décrit l'emprise BRUTE utilisée pour amorcer les
 données (relief + première ortho). La carte livrée dans assets/terrain/dax/
-est ensuite recadrée sur le centre-ville, l'aérodrome, Saint-Paul-lès-Dax et
-les Thermes (voir tools/terrain/crop_zombie_map.py, --center-x 842
---center-z 1400 --half-x 1800 --half-z 2500) pour un sol net avec un budget
-de pixels WMS raisonnable. Relancer `fetch_terrain.py dax` régénère la
-grande emprise d'origine et écrase ce recadrage : il faudrait ensuite
-rejouer la commande de recadrage ci-dessus.
+est ensuite recadrée sur le centre-ville, l'aérodrome, Saint-Paul-lès-Dax,
+les Thermes, Seyresse et le Golf de Saint-Paul-lès-Dax (voir
+tools/terrain/crop_zombie_map.py, --center-x 149 --center-z 1219
+--half 3050 -- boîte carrée) pour un sol net avec un budget de pixels WMS
+raisonnable. Relancer `fetch_terrain.py dax` régénère la grande emprise
+d'origine et écrase ce recadrage : il faudrait ensuite rejouer la commande
+de recadrage ci-dessus.
 """
 
 ZONE = {

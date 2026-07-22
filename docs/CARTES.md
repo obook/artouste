@@ -9,8 +9,8 @@ chemin des cascades, Pont d'Espagne, cirque de Gavarnie, montagne),
 `assets/terrain/bordeaux/` (Bordeaux et son agglomération : la Garonne, l'aéroport
 de Mérignac, Pessac, Cenon et Lormont), `assets/terrain/dax/` (centre-ville de
 Dax et aérodrome de Seyresse : cathédrale, Pont Vieux, arènes, musée de l'ALAT,
-Saint-Paul-lès-Dax et les Thermes -- recadrée sur la ville pour un sol net,
-voir ci-dessous),
+Saint-Paul-lès-Dax, les Thermes, Seyresse et le Golf de Saint-Paul-lès-Dax --
+recadrée sur la ville pour un sol net, voir ci-dessous),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
 Tourmalet, la station de La Mongie), `assets/terrain/paris/` (Paris intra-muros :
 la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de

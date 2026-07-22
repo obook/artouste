@@ -78,8 +78,13 @@ std::vector<unsigned char> Vegetation::buildWaterMask(
             if (nf == std::string::npos || name.compare(nf, 3, "Lac") != 0) {
                 continue;  /* pas un lac */
             }
+            /* worldAt() renvoie des coordonnées MONDE ; toPixel() attend des
+               coordonnées LOCALES (centrées sur 0, comme halfW/halfH) : conversion
+               nécessaire sur une carte recadrée (originX/originZ non nuls). */
             float lx = 0.0f, lz = 0.0f;
             terrain.worldAt(lon, lat, lx, lz);
+            lx -= terrain.originX();
+            lz -= terrain.originZ();
             int cx = 0, cy = 0;
             toPixel(lx, lz, halfW, halfH, orthoW, orthoH, cx, cy);
 
@@ -212,8 +217,14 @@ std::vector<unsigned char> Vegetation::buildBuildingMask(const std::filesystem::
             float lon = 0.0f, lat = 0.0f;
             bf.read(reinterpret_cast<char*>(&lon), sizeof(lon));
             bf.read(reinterpret_cast<char*>(&lat), sizeof(lat));
+            /* worldAt() renvoie des coordonnées MONDE ; le pavage pixel ci-dessous
+               attend des coordonnées LOCALES (centrées sur 0) : conversion nécessaire
+               sur une carte recadrée (originX/originZ non nuls), sans quoi le masque
+               de bâtiments tombe à côté et des arbres poussent sur les toits. */
             float lx = 0.0f, lz = 0.0f;
             terrain.worldAt(lon, lat, lx, lz);
+            lx -= terrain.originX();
+            lz -= terrain.originZ();
             const float fx = (lx + halfW) / (2.0f * halfW) * static_cast<float>(orthoW - 1);
             const float fy = (lz + halfH) / (2.0f * halfH) * static_cast<float>(orthoH - 1);
             bx.push_back(fx);
@@ -280,8 +291,14 @@ std::vector<Vegetation::Exclusion> Vegetation::loadExclusions(
         if (!(iss >> lon >> lat >> radius) || radius <= 0.0f) {
             continue;
         }
+        /* worldAt() renvoie des coordonnées MONDE ; le semis (VegetationScatter.cpp)
+           compare ces cercles à des coordonnées LOCALES : conversion nécessaire sur
+           une carte recadrée (originX/originZ non nuls), sinon l'exclusion (piste
+           d'aérodrome, etc.) tombe à côté et n'écarte pas les bons arbres. */
         float ex = 0.0f, ez = 0.0f;
         terrain.worldAt(lon, lat, ex, ez);
+        ex -= terrain.originX();
+        ez -= terrain.originZ();
         exclusions.push_back({ex, ez, radius * radius});
     }
     return exclusions;

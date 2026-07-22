@@ -187,8 +187,12 @@ std::vector<float> Vegetation::scatterTrees(
 
             /* Altitude : posé sur le relief. Au-dessus de la limite forestière, le
                couvert se raréfie progressivement (transition forêt -> pelouse) plutôt
-               que de s'arrêter net ; sous le niveau de la mer, rien (terrains côtiers). */
-            const float y = terrain.heightAt(x, z);
+               que de s'arrêter net ; sous le niveau de la mer, rien (terrains côtiers).
+               heightAt() attend des coordonnées MONDE (décalées de originX/originZ sur
+               une carte recadrée), alors que x,z ici sont LOCALES : sans la conversion,
+               heightAt() se croit hors emprise et renvoie 0, plantant les arbres au
+               niveau de la mer au lieu du vrai relief (arbres flottants ou enterrés). */
+            const float y = terrain.heightAt(x + terrain.originX(), z + terrain.originZ());
             if (y > TREELINE_MAX) {
                 continue;
             }
@@ -222,9 +226,15 @@ std::vector<float> Vegetation::scatterTrees(
                d'un arbre à l'autre pour éviter des rangées alignées. */
             const float azimuth = unitOf(seed ^ 0x68bc21ebu) * 6.2831853f;
 
-            instances.push_back(x);
+            /* Position finale envoyée au GPU (a_center du shader) : x,z sont ici en
+               coordonnées LOCALES (centrées sur 0, pour le calcul ci-dessus), mais le
+               shader attend du monde, comme le terrain et les bâtiments (u_model est
+               le même recalage caméra pour tous). Sans le décalage d'origine, tout le
+               semis se retrouve translaté hors du terrain réellement affiché sur une
+               carte recadrée. */
+            instances.push_back(x + terrain.originX());
             instances.push_back(y);
-            instances.push_back(z);
+            instances.push_back(z + terrain.originZ());
             instances.push_back(width);
             instances.push_back(species);
             instances.push_back(azimuth);

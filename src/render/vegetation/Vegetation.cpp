@@ -104,8 +104,12 @@ Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& t
     const float halfW = terrain.halfWidth();
     const float halfH = terrain.halfHeight();
     const bool  clear = terrain.hasStart();
-    const float sx    = clear ? terrain.startX() : 0.0f;
-    const float sz    = clear ? terrain.startZ() : 0.0f;
+    /* startX()/startZ() sont en coordonnées MONDE (décalées de originX/originZ sur
+       une carte recadrée) ; le semis raisonne en coordonnées LOCALES (centrées sur
+       0, comme halfW/halfH), d'où la conversion. Voir la même conversion dans
+       Buildings.cpp. */
+    const float sx = clear ? terrain.startX() - terrain.originX() : 0.0f;
+    const float sz = clear ? terrain.startZ() - terrain.originZ() : 0.0f;
 
     /* Masquage : eau (avec repli sur les lacs sans graine trouvée), bâtiments,
        zones d'exclusion. Voir VegetationMasks.cpp. */

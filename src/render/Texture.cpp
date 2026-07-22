@@ -16,10 +16,28 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <utility>
 
 namespace artouste::render {
+
+namespace {
+
+/* GL_EXT_texture_filter_anisotropic (cœur depuis OpenGL 4.6, mais le profil
+   glad de ce projet est figé en 4.1 core) : jetons numériques identiques dans
+   les deux cas, absents des en-têtes générés. L'extension est prise en charge
+   par la quasi-totalité des GPU de bureau depuis longtemps ; glTexParameterf
+   ignore silencieusement (GL_INVALID_ENUM) un jeton non reconnu sur un
+   pilote qui ne la supporterait vraiment pas, sans planter. */
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+constexpr unsigned int GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
+#endif
+#ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT
+constexpr unsigned int GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
+#endif
+
+}  /* namespace */
 
 Texture::Texture(const std::filesystem::path& path) {
     /* stb_image place l'origine de l'image en haut à gauche, alors qu'OpenGL
@@ -69,6 +87,16 @@ void Texture::upload(const unsigned char* pixels, int width, int height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /* Filtrage anisotrope : sans lui, le mipmap isotrope choisit un niveau
+       d'après le PIRE axe de déformation de l'UV à l'écran, ce qui sur-réduit
+       le sol vu en rasant (piste, hélipad) et le rend pâté par blocs, même si
+       la texture source est fine. Flagrant sur l'ortho du terrain à faible
+       hauteur. Le pilote borne lui-même la valeur (souvent 16x) via
+       GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT ; on la relit pour ne pas dépasser. */
+    GLfloat maxAniso = 1.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(maxAniso, 16.0f));
 
     /* Les pixels sont désormais dans la mémoire du GPU : on libère le CPU. */
     glBindTexture(GL_TEXTURE_2D, 0);

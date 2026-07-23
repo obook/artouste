@@ -1,18 +1,22 @@
-# Tests Catch2 - pour l'instant un simple placeholder qui vérifie que
-# l'infrastructure (Catch2, ctest) est en place. Le vrai test du modèle
-# de vol arrivera au jalon M3.
+# Tests Catch2 du simulateur : vol (arcade, modèle physique, assistance),
+# atterrissage automatique, configuration, tampon audio et mode zombie
+# (combat, découpé par sous-système en plusieurs fichiers ci-dessous).
 
 find_package(Threads REQUIRED)
 
 add_executable(artouste_tests
-    placeholder_tests.cpp
     arcade_flight_tests.cpp
     flight_model_tests.cpp
     flight_assist_tests.cpp
     config_tests.cpp
     ring_buffer_tests.cpp
     landing_autopilot_tests.cpp
-    combat_tests.cpp
+    raycast_tests.cpp
+    weapon_tests.cpp
+    rocket_system_tests.cpp
+    projectile_system_tests.cpp
+    zombie_horde_tests.cpp
+    wave_manager_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp

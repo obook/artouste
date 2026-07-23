@@ -67,6 +67,8 @@ public:
     int run();
 
 private:
+    /* --- Cycle de vie et initialisation -------------------------------------- */
+
     /* Vérifie que le dossier des ressources ("assets") est bien présent avant
        d'ouvrir la fenêtre. En cas d'absence (typiquement un exe lancé depuis
        l'intérieur du zip, sans les ressources à côté), affiche un message natif
@@ -96,6 +98,8 @@ private:
        Échap) : recharge le terrain s'il a changé (sinon repose l'appareil au parking),
        règle l'état de la turbine, et repart d'un état neutre (ni démo, ni pause). */
     void applyMenuSession();
+
+    /* --- Menu de démarrage ---------------------------------------------------- */
 
     /* Une carte proposée au menu : nom du sous-dossier (valeur pour le terrain) et
        libellé lisible affiché à l'utilisateur. Définie et peuplée dans
@@ -133,6 +137,8 @@ private:
        m_hud soit déjà initialisé (contexte ImGui). Définie dans ApplicationMenu.cpp. */
     void renderLoadingScreen(const char* message);
 
+    /* --- Ressources et fenêtre ------------------------------------------------ */
+
     /* Localise le dossier des ressources "assets" (variable d'environnement, puis à
        côté de l'exécutable, puis chemin de compilation). Statique : utilisable avant
        toute initialisation, notamment par le menu de démarrage. Définie dans
@@ -151,6 +157,8 @@ private:
        sur le moniteur principal si la position n'est pas exploitable. */
     GLFWmonitor* monitorForWindow() const;
 
+    /* --- Terrain et cycle jour/nuit -------------------------------------------- */
+
     /* Charge (ou recharge) le terrain nommé : relief, bâtiments et position de
        départ. Réutilisable au runtime, notamment pour basculer sur Arcachon quand
        la démo est lancée alors qu'une autre carte est affichée. */
@@ -166,8 +174,10 @@ private:
        config lors d'un changement de carte en cours de session. */
     void applySunSchedule();
 
-    /* Auxiliaires de la boucle principale : chacun prend en charge une étape, pour
-       que mainLoop reste un enchaînement lisible plutôt qu'un long bloc unique. */
+    /* --- Boucle principale -----------------------------------------------------
+     * Auxiliaires de la boucle principale : chacun prend en charge une étape, pour
+     * que mainLoop reste un enchaînement lisible plutôt qu'un long bloc unique.
+     * ------------------------------------------------------------------------- */
 
     /* Commandes effectives de l'image : commandes du pilote automatique en mode
        démo, sinon commandes du pilote passées par le mode assisté. Met aussi à jour
@@ -202,6 +212,8 @@ private:
     /* Émet un message radio (voix de synthèse Flite + sous-titre) 2 s après que la
        turbine atteint son plein régime. Se réarme quand la turbine redescend. */
     void updateRadioMessage(float turbineFraction, float frameDt);
+
+    /* --- Rendu d'une image ------------------------------------------------------ */
 
     void renderScene(const mat4& base,
                      float rotorAngle,
@@ -263,6 +275,8 @@ private:
        pour l'éclairage, le ciel et la caméra d'orbite solaire. */
     vec3 sunDirection(float t) const;
 
+    /* --- Décalques au sol et lueurs du moteur ----------------------------------- */
+
     /* Hélipads (départ + ceux du terrain) posés à plat au sol, dessinés avant
        l'appareil sans test de profondeur pour éviter le z-fighting au ras du sol.
        Définie dans ApplicationGround.cpp. */
@@ -296,6 +310,8 @@ private:
        à la sortie de la turbine, d'intensité croissante avec le régime). */
     void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
 
+    /* --- HUD -------------------------------------------------------------------- */
+
     /* Remplit les données instrumentales du HUD (altitude, vitesse, cap, régimes...)
        à partir de l'état physique courant. */
     void fillHud(ui::HudData& hud,
@@ -328,6 +344,8 @@ private:
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 
+    /* --- Actions diverses (livrée, reset, démo, atterrissage automatique) ------- */
+
     /* Fait défiler la livrée (partagée par la touche L et le bouton A) : origine ->
        Gendarmerie -> armée de terre -> origine. */
     void cycleLivery();
@@ -345,13 +363,26 @@ private:
        reprend la main). Sans effet en démo (pas de call site pendant la démo). */
     void toggleAutoland();
 
+    /* --- Callbacks statiques GLFW ------------------------------------------------ */
+
     static void resizeCallback(GLFWwindow* window, int width, int height);
     /* Définie dans ApplicationInputKeyboard.cpp. */
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
+    /* ============================================================================
+     * Membres, regroupés par thème : fenêtre, caméra et rendu du monde, combat,
+     * hélicoptère, entrées et physique, audio et radio, temps et soleil, HUD et
+     * vues, menu et configuration, état de session, livrée et rotor, aide à
+     * l'atterrissage.
+     * ============================================================================ */
+
+    /* --- Fenêtre et système ------------------------------------------------------ */
+
     GLFWwindow* m_window = nullptr;
     int m_width = 1280;
     int m_height = 720;
+
+    /* --- Monde : caméra, shaders, maillages et décor ------------------------------ */
 
     render::Camera m_camera;
     std::filesystem::path
@@ -390,27 +421,43 @@ private:
     std::unique_ptr<render::Buildings> m_buildings;   /* bâtiments 3D (BD TOPO extrudée) */
     std::unique_ptr<render::Vegetation> m_vegetation; /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds> m_clouds;         /* nuages en billboards (prototype) */
+    /* --- Mode zombie -------------------------------------------------------------- */
+
     std::unique_ptr<render::SkinnedZombies>
         m_zombiesRender; /* mode zombie : pack skinné animé, chargé une fois */
     std::unique_ptr<render::Projectiles> m_projectilesRender; /* mode zombie : boulettes toxiques */
     std::unique_ptr<render::ExplosionFx>
         m_explosionFx;   /* mode zombie : explosions 3D à l'impact des roquettes */
     CombatMode m_combat; /* mode zombie : horde et état de session */
+    /* --- Hélicoptère ---------------------------------------------------------------- */
+
     std::unique_ptr<render::HelicopterModel> m_helicopter;  /* repli procédural */
     std::unique_ptr<render::LoadedHelicopter> m_loadedHeli; /* modèle FlightGear si présent */
+
+    /* --- Entrées, physique et pilotage automatique ---------------------------------- */
+
     std::unique_ptr<input::InputSystem> m_input;
     physics::FlightModel m_flight;
-    physics::FlightAssist m_assist;    /* mode assisté : confort de pilotage (touche M / LB) */
-    DemoPilot m_demo;                  /* pilote automatique du mode démo (inactif par défaut) */
-    LandingAutopilot m_autoland;       /* atterrissage automatique (touche J / RB) */
+    physics::FlightAssist m_assist; /* mode assisté : confort de pilotage (touche M / LB) */
+    DemoPilot m_demo;               /* pilote automatique du mode démo (inactif par défaut) */
+    LandingAutopilot m_autoland;    /* atterrissage automatique (touche J / RB) */
+
+    /* --- Audio et radio --------------------------------------------------------------- */
+
     std::filesystem::path m_musicPath; /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string m_radioUrl; /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
+
+    /* --- Cycle jour/nuit --------------------------------------------------------------- */
+
     float m_sunTimeScale = 1.0f; /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
     float m_sunBaseSeconds = 0.0f; /* heure locale du PC au lancement (s depuis minuit) */
     bool m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     bool m_demoUserView =
         false; /* en démo : l'utilisateur a repris la main sur la vue (touche C) */
     bool m_demoUserHud = false; /* en démo : l'utilisateur a repris la main sur le HUD (touche H) */
+
+    /* --- HUD et vues -------------------------------------------------------------------- */
+
     ui::Hud m_hud;
     audio::AudioEngine m_audio;
     int m_viewMode = 0; /* 0 poursuite, 1 cockpit, 2 orbite */
@@ -433,6 +480,8 @@ private:
        exponentielle du frameDt, pour un chiffre stable et lisible. */
     float m_fpsSmoothed = 0.0f;
     bool m_nrLedArmed = false; /* LED NR : rotor arrivé en régime (voir fillHud) */
+
+    /* --- Menu et configuration ------------------------------------------------------------ */
 
     /* Choix du menu de démarrage (voir runStartupMenu), prioritaires sur config.txt
        mais pas sur les variables d'environnement. Terrain vide = pas de choix menu ;
@@ -470,6 +519,8 @@ private:
        0 = laisser Vegetation appliquer son défaut. */
     std::size_t m_treeBudget = 0;
 
+    /* --- État de session (menu, pause, plein écran) ---------------------------------------- */
+
     /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend
        la main pour réafficher le menu de démarrage (au lieu de quitter). */
     bool m_returnToMenu = false;
@@ -505,6 +556,9 @@ private:
     bool m_paused = false;
     bool m_confirmReset = false; /* panneau Oui/Non avant un reset (touche X/R) */
     bool m_confirmDemo = false;  /* panneau Oui/Non avant de lancer la démo (réservé) */
+
+    /* --- Livrée et rotor ------------------------------------------------------------------- */
+
     render::Livery m_livery =
         render::Livery::Gendarmerie; /* livrée par défaut (touche L / bouton A) */
     float m_rotorAngle =
@@ -516,7 +570,9 @@ private:
     physics::Turbine::State m_prevTurbineState =
         physics::Turbine::State::Arret; /* pour déclencher le son de démarrage au bon moment */
 
-    /* Aide à l'atterrissage (mode assisté) : état persistant entre les images. */
+    /* --- Aide à l'atterrissage --------------------------------------------------------------
+     * État persistant entre les images (mode assisté).
+     * ------------------------------------------------------------------------------------- */
     float m_scoreTimer = 0.0f;  /* temps restant d'affichage du score (s) */
     float m_lastScoreM = -1.0f; /* dernière distance au posé (m), -1 si aucun */
     bool m_wasOnGround = false; /* état sol de l'image précédente (anti-rebond) */

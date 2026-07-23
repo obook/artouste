@@ -42,7 +42,9 @@ add_executable(artouste
     app/render/ApplicationSun.cpp
     app/render/ApplicationRender.cpp
     app/render/ApplicationRenderEffects.cpp
-    app/ApplicationGround.cpp
+    app/ground/ApplicationGround.cpp
+    app/ground/ApplicationGroundShadow.cpp
+    app/ground/ApplicationGroundHapi.cpp
     app/hud/ApplicationHudInstruments.cpp
     app/hud/ApplicationHudNav.cpp
     app/ApplicationCapture.cpp

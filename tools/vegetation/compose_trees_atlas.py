@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 compose_trees_atlas.py
 Compose l'atlas de sprites d'arbres (assets/vegetation/trees_atlas.png) à partir
@@ -15,6 +14,9 @@ par le shader (ATLAS_COUNT = 3, une colonne par espèce).
 Ordre des espèces (doit coller au choix d'espèce dans render::Vegetation) :
   0 sapin (conifère sombre), 1 feuillu, 2 mélèze / épicéa (conifère clair).
 
+L'assemblage final (collage côte à côte, écriture) vit dans atlas.py, partagé
+avec make_trees_atlas.py (dont les cellules sont procédurales, pas photographiques).
+
 Usage : python3 tools/vegetation/compose_trees_atlas.py
 Sortie : assets/vegetation/trees_atlas.png (768x512, RGBA)
 
@@ -22,9 +24,15 @@ Auteur : O. Booklage
 Licence : GPL v2 (assets sources : FlightGear, GPL v2)
 """
 
-import os
+import sys
+from pathlib import Path
 
 from PIL import Image
+
+from atlas import assemble_atlas
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
 
 CELL_W = 256
 CELL_H = 512
@@ -50,21 +58,14 @@ def fit_cell(src):
 
 
 def main():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    veg = os.path.join(root, "assets", "vegetation")
-    src_dir = os.path.join(veg, "fgdata-trees")
+    veg = assets_dir("vegetation")
+    src_dir = veg / "fgdata-trees"
 
     order = ["conifer_fir.png", "broadleaf.png", "conifer_spruce.png"]  # 0,1,2
-    atlas = Image.new("RGBA", (CELL_W * len(order), CELL_H), (0, 0, 0, 0))
-    for i, name in enumerate(order):
-        path = os.path.join(src_dir, name)
-        cell = fit_cell(Image.open(path).convert("RGBA"))
-        atlas.paste(cell, (i * CELL_W, 0))
+    cells = [fit_cell(Image.open(src_dir / name).convert("RGBA")) for name in order]
 
-    out_path = os.path.join(veg, "trees_atlas.png")
-    atlas.save(out_path)
-    print("[vegetation] atlas composé : {} ({}x{}, {} espèces, sources FlightGear GPL v2)".format(
-        out_path, CELL_W * len(order), CELL_H, len(order)))
+    out_path = veg / "trees_atlas.png"
+    assemble_atlas(cells, out_path, verbe="composé", note="sources FlightGear GPL v2")
 
 
 if __name__ == "__main__":

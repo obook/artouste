@@ -34,18 +34,20 @@ public:
        soumis au GPU (au-delà, le semis est éclairci uniformément) : c'est le levier
        de performance principal. Sans orthophoto ou sans sprite, l'objet reste vide
        (built() faux) et draw() ne fait rien. */
-    Vegetation(const std::filesystem::path& terrainDir, const Terrain& terrain,
-               const std::filesystem::path& spritePath, std::size_t treeBudget);
+    Vegetation(const std::filesystem::path& terrainDir,
+               const Terrain& terrain,
+               const std::filesystem::path& spritePath,
+               std::size_t treeBudget);
     ~Vegetation();
 
-    Vegetation(const Vegetation&)            = delete;
+    Vegetation(const Vegetation&) = delete;
     Vegetation& operator=(const Vegetation&) = delete;
 
     /* Dessine tous les arbres (instancié). La texture est liée sur l'unité 0 ;
        le shader de végétation doit être actif et ses uniformes déjà renseignés. */
     void draw() const;
 
-    [[nodiscard]] bool        built() const noexcept { return m_count > 0; }
+    [[nodiscard]] bool built() const noexcept { return m_count > 0; }
     [[nodiscard]] std::size_t count() const noexcept { return m_count; }
 
 private:
@@ -58,25 +60,44 @@ private:
 
     /* Conversion d'une position monde (x est, z sud) en pixel de l'orthophoto
        (colonne 0 = ouest, rangée 0 = nord). Partagée par le masquage et le semis. */
-    static void toPixel(float x, float z, float halfW, float halfH, int orthoW, int orthoH,
-                        int& ox, int& oy) noexcept;
+    static void toPixel(float x,
+                        float z,
+                        float halfW,
+                        float halfH,
+                        int orthoW,
+                        int orthoH,
+                        int& ox,
+                        int& oy) noexcept;
     /* Couleur normalisée (0..1) du pixel (ox, oy) de l'orthophoto RGB. */
-    static void orthoRGB(const unsigned char* ortho, int orthoW, int ox, int oy,
-                         float& r, float& g, float& b) noexcept;
+    static void orthoRGB(const unsigned char* ortho,
+                         int orthoW,
+                         int ox,
+                         int oy,
+                         float& r,
+                         float& g,
+                         float& b) noexcept;
 
     /* Masque d'eau (flood fill depuis les repères "Lac" de landmarks.txt, puis
        dilaté pour dégager la rive). Les lacs sans graine d'eau trouvée sous leur
        repère sont rangés dans fallbackLakes (dégagés par un disque de secours au
-       semis). Voir VegetationMasks.cpp. */
-    std::vector<unsigned char> buildWaterMask(const std::filesystem::path& terrainDir,
-                                              const Terrain& terrain, const unsigned char* ortho,
-                                              int orthoW, int orthoH, float halfW, float halfH,
-                                              std::vector<std::pair<float, float>>& fallbackLakes) const;
+       semis). Voir VegetationWaterMask.cpp. */
+    std::vector<unsigned char>
+    buildWaterMask(const std::filesystem::path& terrainDir,
+                   const Terrain& terrain,
+                   const unsigned char* ortho,
+                   int orthoW,
+                   int orthoH,
+                   float halfW,
+                   float halfH,
+                   std::vector<std::pair<float, float>>& fallbackLakes) const;
     /* Masque d'emprise des bâtiments (buildings.bin, rastérisé à la résolution de
-       l'orthophoto) : aucun arbre n'y est planté. Voir VegetationMasks.cpp. */
+       l'orthophoto) : aucun arbre n'y est planté. Voir VegetationBuildingMask.cpp. */
     std::vector<unsigned char> buildBuildingMask(const std::filesystem::path& terrainDir,
-                                                 const Terrain& terrain, int orthoW, int orthoH,
-                                                 float halfW, float halfH) const;
+                                                 const Terrain& terrain,
+                                                 int orthoW,
+                                                 int orthoH,
+                                                 float halfW,
+                                                 float halfH) const;
     /* Zones d'exclusion (exclusions.txt, facultatif). Voir VegetationMasks.cpp. */
     std::vector<Exclusion> loadExclusions(const std::filesystem::path& terrainDir,
                                           const Terrain& terrain) const;
@@ -85,25 +106,33 @@ private:
        le nombre d'arbres dépasse TARGET_TREES. Renvoie le tampon d'instances (six
        flottants par arbre : centre, largeur, espèce, azimut). Voir
        VegetationScatter.cpp. */
-    std::vector<float> scatterTrees(const Terrain& terrain, const unsigned char* ortho,
-                                    int orthoW, int orthoH, float halfW, float halfH,
-                                    float spacing, bool clear, float sx, float sz,
-                                    const std::vector<unsigned char>& water,
-                                    const std::vector<unsigned char>& building,
-                                    const std::vector<Exclusion>& exclusions,
-                                    const std::vector<std::pair<float, float>>& fallbackLakes) const;
+    std::vector<float>
+    scatterTrees(const Terrain& terrain,
+                 const unsigned char* ortho,
+                 int orthoW,
+                 int orthoH,
+                 float halfW,
+                 float halfH,
+                 float spacing,
+                 bool clear,
+                 float sx,
+                 float sz,
+                 const std::vector<unsigned char>& water,
+                 const std::vector<unsigned char>& building,
+                 const std::vector<Exclusion>& exclusions,
+                 const std::vector<std::pair<float, float>>& fallbackLakes) const;
 
     /* Téléverse la géométrie de base (billboard en croix) et le tampon d'instances
        dans un VAO/VBO/EBO. */
     void uploadGpuBuffers(const std::vector<float>& instances);
 
-    Texture       m_sprite;
-    unsigned int  m_vao          = 0;
-    unsigned int  m_quadVbo      = 0;
-    unsigned int  m_instanceVbo  = 0;
-    unsigned int  m_ebo          = 0;
-    std::size_t   m_count        = 0;  /* nombre d'arbres semés */
-    std::size_t   m_budget       = 0;  /* plafond d'arbres (voir scatterTrees) */
+    Texture m_sprite;
+    unsigned int m_vao = 0;
+    unsigned int m_quadVbo = 0;
+    unsigned int m_instanceVbo = 0;
+    unsigned int m_ebo = 0;
+    std::size_t m_count = 0;  /* nombre d'arbres semés */
+    std::size_t m_budget = 0; /* plafond d'arbres (voir scatterTrees) */
 };
 
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

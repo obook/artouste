@@ -77,6 +77,7 @@ add_executable(artouste
     render/Camera.cpp
     render/Terrain.cpp
     render/TerrainSetup.cpp
+    render/TerrainQuery.cpp
     render/hapi/Hapi.cpp
     render/Buildings.cpp
     render/vegetation/Vegetation.cpp

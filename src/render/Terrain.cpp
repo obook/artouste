@@ -1,8 +1,9 @@
 /*
  * Terrain.cpp
  * Construit le maillage du terrain à partir de la carte d'altitude et drape
- * l'orthophoto. Les altitudes sont aussi gardées en mémoire pour répondre à
- * heightAt() (contact avec le sol, placement de l'appareil).
+ * l'orthophoto. Les altitudes sont aussi gardées en mémoire, interrogées à
+ * l'exécution par heightAt() (voir TerrainQuery.cpp). Le chargement des
+ * fichiers annexes et l'aplanissement du relief sont dans TerrainSetup.cpp.
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -30,16 +31,30 @@ namespace {
  * Lit le fichier de calage terrain.txt (lignes "clé valeur", # = commentaire)
  * et range les valeurs attendues. Renvoie faux si une clé manque.
  */
-bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float& widthM,
-                  float& heightM, float& elevMin, float& elevMax, bool& drawSea,
-                  bool& hasStart, float& startX, float& startZ, float& startHeadingDeg,
-                  bool& hasGeo, float& lonMin, float& lonMax, float& latMin, float& latMax,
-                  float& originX, float& originZ) {
+bool readMetadata(const std::filesystem::path& path,
+                  int& cols,
+                  int& rows,
+                  float& widthM,
+                  float& heightM,
+                  float& elevMin,
+                  float& elevMax,
+                  bool& drawSea,
+                  bool& hasStart,
+                  float& startX,
+                  float& startZ,
+                  float& startHeadingDeg,
+                  bool& hasGeo,
+                  float& lonMin,
+                  float& lonMax,
+                  float& latMin,
+                  float& latMax,
+                  float& originX,
+                  float& originZ) {
     std::ifstream file(path);
     if (!file) {
         return false;
     }
-    originX = 0.0f;  /* facultatifs : 0 = emprise centrée sur l'origine du monde */
+    originX = 0.0f; /* facultatifs : 0 = emprise centrée sur l'origine du monde */
     originZ = 0.0f;
     bool hasCols = false, hasRows = false, hasW = false, hasH = false, hasMin = false,
          hasMax = false;
@@ -48,7 +63,7 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
     std::string key;
     while (file >> key) {
         if (!key.empty() && key[0] == '#') {
-            std::getline(file, key);  /* on jette le reste de la ligne de commentaire */
+            std::getline(file, key); /* on jette le reste de la ligne de commentaire */
             continue;
         }
         if (key == "cols") {
@@ -63,7 +78,7 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> elevMin, hasMin = true;
         } else if (key == "elev_max") {
             file >> elevMax, hasMax = true;
-        } else if (key == "sea") {  /* 0 = pas de plan de mer (terrain de montagne) */
+        } else if (key == "sea") { /* 0 = pas de plan de mer (terrain de montagne) */
             int v = 1;
             file >> v;
             drawSea = (v != 0);
@@ -71,9 +86,9 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
             file >> startX, hasStartX = true;
         } else if (key == "start_z") {
             file >> startZ, hasStartZ = true;
-        } else if (key == "start_heading") {  /* cap initial (deg boussole), facultatif */
+        } else if (key == "start_heading") { /* cap initial (deg boussole), facultatif */
             file >> startHeadingDeg;
-        } else if (key == "origin_x") {  /* décalage d'origine (carte recadrée), facultatif */
+        } else if (key == "origin_x") { /* décalage d'origine (carte recadrée), facultatif */
             file >> originX;
         } else if (key == "origin_z") {
             file >> originZ;
@@ -86,20 +101,20 @@ bool readMetadata(const std::filesystem::path& path, int& cols, int& rows, float
         } else if (key == "lat_max") {
             file >> latMax, hasLatMax = true;
         } else {
-            std::getline(file, key);  /* clé ignorée : on saute sa valeur */
+            std::getline(file, key); /* clé ignorée : on saute sa valeur */
         }
     }
     hasStart = hasStartX && hasStartZ;
-    hasGeo   = hasLonMin && hasLonMax && hasLatMin && hasLatMax;
+    hasGeo = hasLonMin && hasLonMax && hasLatMin && hasLatMax;
     return hasCols && hasRows && hasW && hasH && hasMin && hasMax;
 }
 
-}  /* namespace */
+} /* namespace */
 
 Terrain::Terrain(const std::filesystem::path& dir) {
-    const std::filesystem::path meta   = dir / "terrain.txt";
+    const std::filesystem::path meta = dir / "terrain.txt";
     const std::filesystem::path height = dir / "heightmap.png";
-    const std::filesystem::path ortho  = dir / "ortho.jpg";
+    const std::filesystem::path ortho = dir / "ortho.jpg";
 
     /* Lieux remarquables, hélipads et balises HAPI du terrain (facultatifs : absent
        = aucun). */
@@ -107,10 +122,27 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     loadPlaces(dir / "helipads.txt", m_helipads, "hélipad(s)");
     loadHapiUnits(dir / "hapi.txt", m_hapiUnits);
 
-    if (!readMetadata(meta, m_cols, m_rows, m_widthM, m_heightM, m_elevMin, m_elevMax,
-                      m_drawSea, m_hasStart, m_startX, m_startZ, m_startHeadingDeg, m_hasGeo,
-                      m_lonMin, m_lonMax, m_latMin, m_latMax, m_originX, m_originZ)) {
-        std::fprintf(stderr, "[Terrain] calage absent (%s), repli sur un sol plat.\n",
+    if (!readMetadata(meta,
+                      m_cols,
+                      m_rows,
+                      m_widthM,
+                      m_heightM,
+                      m_elevMin,
+                      m_elevMax,
+                      m_drawSea,
+                      m_hasStart,
+                      m_startX,
+                      m_startZ,
+                      m_startHeadingDeg,
+                      m_hasGeo,
+                      m_lonMin,
+                      m_lonMax,
+                      m_latMin,
+                      m_latMax,
+                      m_originX,
+                      m_originZ)) {
+        std::fprintf(stderr,
+                     "[Terrain] calage absent (%s), repli sur un sol plat.\n",
                      meta.string().c_str());
         buildFlatFallback();
         return;
@@ -119,10 +151,11 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     /* Lecture de la carte d'altitude en 16 bits, sans retournement vertical :
        on garde la rangée 0 au nord, comme l'a écrite l'outil de préparation. */
     stbi_set_flip_vertically_on_load(0);
-    int             w = 0, h = 0, channels = 0;
+    int w = 0, h = 0, channels = 0;
     unsigned short* pixels = stbi_load_16(height.string().c_str(), &w, &h, &channels, 1);
     if (pixels == nullptr || w != m_cols || h != m_rows) {
-        std::fprintf(stderr, "[Terrain] heightmap illisible ou de taille inattendue (%s).\n",
+        std::fprintf(stderr,
+                     "[Terrain] heightmap illisible ou de taille inattendue (%s).\n",
                      height.string().c_str());
         if (pixels != nullptr) {
             stbi_image_free(pixels);
@@ -152,21 +185,21 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     /* --- Construction du maillage du relief ---------------------------------- */
     const float halfW = 0.5f * m_widthM;
     const float halfH = 0.5f * m_heightM;
-    const float dx    = m_widthM / static_cast<float>(m_cols - 1);   /* pas est-ouest (m) */
-    const float dz    = m_heightM / static_cast<float>(m_rows - 1);  /* pas nord-sud (m) */
+    const float dx = m_widthM / static_cast<float>(m_cols - 1);  /* pas est-ouest (m) */
+    const float dz = m_heightM / static_cast<float>(m_rows - 1); /* pas nord-sud (m) */
 
     primitives::MeshData data;
     data.vertices.reserve(m_heights.size());
-    data.indices.reserve(static_cast<std::size_t>(m_cols - 1) * static_cast<std::size_t>(m_rows - 1)
-                         * 6);
+    data.indices.reserve(static_cast<std::size_t>(m_cols - 1) *
+                         static_cast<std::size_t>(m_rows - 1) * 6);
 
     /* Indice linéaire d'un point (colonne i, rangée j) dans la grille. */
     const auto idx = [cols = m_cols](int i, int j) -> std::size_t {
-        return static_cast<std::size_t>(j) * static_cast<std::size_t>(cols)
-               + static_cast<std::size_t>(i);
+        return static_cast<std::size_t>(j) * static_cast<std::size_t>(cols) +
+               static_cast<std::size_t>(i);
     };
 
-    const vec3 white{1.0f, 1.0f, 1.0f};  /* la couleur vient de la texture */
+    const vec3 white{1.0f, 1.0f, 1.0f}; /* la couleur vient de la texture */
 
     /* Pas du gradient des normales : environ 35 m de part et d'autre, quelle
        que soit la finesse de la grille. Au pas d'une seule maille fine
@@ -178,28 +211,29 @@ Terrain::Terrain(const std::filesystem::path& dir) {
     for (int j = 0; j < m_rows; ++j) {
         for (int i = 0; i < m_cols; ++i) {
             const float x = m_originX - halfW + static_cast<float>(i) * dx;
-            const float z = m_originZ - halfH + static_cast<float>(j) * dz;  /* rangée 0 = nord (Z min) */
+            const float z =
+                m_originZ - halfH + static_cast<float>(j) * dz; /* rangée 0 = nord (Z min) */
             const float y = m_heights[idx(i, j)];
 
             /* Normale par différences finies sur le relief (voisins bornés au bord). */
-            const int   iL = std::max(0, i - step);
-            const int   iR = std::min(m_cols - 1, i + step);
-            const int   jU = std::max(0, j - step);
-            const int   jD = std::min(m_rows - 1, j + step);
+            const int iL = std::max(0, i - step);
+            const int iR = std::min(m_cols - 1, i + step);
+            const int jU = std::max(0, j - step);
+            const int jD = std::min(m_rows - 1, j + step);
             const float hL = m_heights[idx(iL, j)];
             const float hR = m_heights[idx(iR, j)];
             const float hU = m_heights[idx(i, jU)];
             const float hD = m_heights[idx(i, jD)];
-            const float dydx   = (hR - hL) / (static_cast<float>(iR - iL) * dx);
-            const float dydz   = (hD - hU) / (static_cast<float>(jD - jU) * dz);
-            const vec3  normal = glm::normalize(vec3{-dydx, 1.0f, -dydz});
+            const float dydx = (hR - hL) / (static_cast<float>(iR - iL) * dx);
+            const float dydz = (hD - hU) / (static_cast<float>(jD - jU) * dz);
+            const vec3 normal = glm::normalize(vec3{-dydx, 1.0f, -dydz});
 
             Vertex v;
             v.position = vec3{x, y, z};
-            v.normal   = normal;
-            v.color    = white;
-            v.uv       = vec2{static_cast<float>(i) / static_cast<float>(m_cols - 1),
-                            1.0f - static_cast<float>(j) / static_cast<float>(m_rows - 1)};
+            v.normal = normal;
+            v.color = white;
+            v.uv = vec2{static_cast<float>(i) / static_cast<float>(m_cols - 1),
+                        1.0f - static_cast<float>(j) / static_cast<float>(m_rows - 1)};
             data.vertices.push_back(v);
         }
     }
@@ -216,94 +250,18 @@ Terrain::Terrain(const std::filesystem::path& dir) {
 
     m_mesh = Mesh(data.vertices, data.indices);
 
-    m_ortho    = Texture(ortho);
+    m_ortho = Texture(ortho);
     m_textured = m_ortho.valid();
     if (!m_textured) {
-        std::fprintf(stderr, "[Terrain] orthophoto absente (%s), relief sans texture.\n",
+        std::fprintf(stderr,
+                     "[Terrain] orthophoto absente (%s), relief sans texture.\n",
                      ortho.string().c_str());
     } else {
         std::printf("[Terrain] terrain chargé : %.0f x %.0f m, altitude max %.0f m.\n",
-                    static_cast<double>(m_widthM), static_cast<double>(m_heightM),
+                    static_cast<double>(m_widthM),
+                    static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
     }
-}
-
-float Terrain::heightAt(float x, float z) const noexcept {
-    if (m_heights.empty()) {
-        return 0.0f;
-    }
-    const float halfW = 0.5f * m_widthM;
-    const float halfH = 0.5f * m_heightM;
-    /* Coordonnées locales, l'emprise étant centrée sur (m_originX, m_originZ). */
-    const float lx = x - m_originX;
-    const float lz = z - m_originZ;
-    if (lx < -halfW || lx > halfW || lz < -halfH || lz > halfH) {
-        return 0.0f;  /* hors emprise : on est au-dessus de la mer */
-    }
-
-    /* Coordonnées fractionnaires dans la grille (colonne = est, rangée = sud). */
-    const float fx = (lx + halfW) / m_widthM * static_cast<float>(m_cols - 1);
-    const float fz = (lz + halfH) / m_heightM * static_cast<float>(m_rows - 1);
-    const int   i0 = static_cast<int>(fx);
-    const int   j0 = static_cast<int>(fz);
-    const int   i1 = i0 < m_cols - 1 ? i0 + 1 : i0;
-    const int   j1 = j0 < m_rows - 1 ? j0 + 1 : j0;
-    const float tx = fx - static_cast<float>(i0);
-    const float tz = fz - static_cast<float>(j0);
-
-    const auto at = [this](int i, int j) {
-        return m_heights[static_cast<std::size_t>(j) * static_cast<std::size_t>(m_cols)
-                         + static_cast<std::size_t>(i)];
-    };
-
-    /* Même découpe que le maillage rendu : chaque cellule est faite de deux
-     * triangles séparés par la diagonale b-c (voir la construction des indices).
-     * L'interpolation doit suivre ces triangles et non la surface bilinéaire,
-     * sinon l'appareil posé s'enfonce dans le relief partout où la surface
-     * bilinéaire passe sous les triangles (sensible sur les fortes pentes). */
-    const float ha = at(i0, j0);
-    const float hb = at(i1, j0);
-    const float hc = at(i0, j1);
-    const float hd = at(i1, j1);
-    float       h  = 0.0f;
-    if (tx + tz <= 1.0f) {
-        h = ha + tx * (hb - ha) + tz * (hc - ha);  /* triangle a-c-b */
-    } else {
-        h = hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd);  /* triangle b-c-d */
-    }
-
-    /* Plates-formes d'hélisurface : dans leur emprise, le sol porteur ne descend
-       jamais sous le plateau du pad. Un pad perché (sommet du pic du Midi d'Ossau)
-       porte ainsi l'appareil sans déformer le relief alentour. */
-    for (const PadPlatform& pad : m_padPlatforms) {
-        const float dx = x - pad.x;
-        const float dz = z - pad.z;
-        if (dx * dx + dz * dz <= PAD_PLATFORM_RADIUS_M * PAD_PLATFORM_RADIUS_M
-            && pad.top > h) {
-            h = pad.top;
-        }
-    }
-    return h;
-}
-
-const HapiUnit* Terrain::hapiUnitNear(float lon, float lat, float maxDistM) const noexcept {
-    if (!m_hasGeo || m_hapiUnits.empty()) {
-        return nullptr;
-    }
-    float px = 0.0f, pz = 0.0f;
-    worldAt(lon, lat, px, pz);
-    const HapiUnit* best     = nullptr;
-    float           bestDist = maxDistM;
-    for (const HapiUnit& hapi : m_hapiUnits) {
-        float hx = 0.0f, hz = 0.0f;
-        worldAt(hapi.lon, hapi.lat, hx, hz);
-        const float dist = std::sqrt((hx - px) * (hx - px) + (hz - pz) * (hz - pz));
-        if (dist <= bestDist) {
-            best     = &hapi;
-            bestDist = dist;
-        }
-    }
-    return best;
 }
 
 void Terrain::buildPadPlatforms() {
@@ -317,8 +275,8 @@ void Terrain::buildPadPlatforms() {
     if (!m_hasGeo) {
         return;
     }
-    constexpr float TWO_PI  = 6.2831853f;
-    constexpr int   SAMPLES = 16;  /* par anneau : assez serré pour des mailles de ~17 m */
+    constexpr float TWO_PI = 6.2831853f;
+    constexpr int SAMPLES = 16; /* par anneau : assez serré pour des mailles de ~17 m */
     const float halfW = 0.5f * m_widthM;
     const float halfH = 0.5f * m_heightM;
     m_padPlatforms.reserve(m_helipads.size());
@@ -344,4 +302,4 @@ void Terrain::buildPadPlatforms() {
     }
 }
 
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

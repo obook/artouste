@@ -32,8 +32,8 @@ namespace artouste::render {
    dans son dossier. */
 struct Landmark {
     std::string name;
-    float       lon = 0.0f;
-    float       lat = 0.0f;
+    float lon = 0.0f;
+    float lat = 0.0f;
 };
 
 class Terrain {
@@ -52,7 +52,8 @@ public:
     void bindTexture(unsigned int unit = 0) const { m_ortho.bind(unit); }
 
     /* Altitude du sol (m) sous le point (x, z) du repère monde, par
-       interpolation bilinéaire. Renvoie 0 (niveau de la mer) hors de l'emprise. */
+       interpolation bilinéaire. Renvoie 0 (niveau de la mer) hors de l'emprise.
+       Définie dans TerrainQuery.cpp. */
     [[nodiscard]] float heightAt(float x, float z) const noexcept;
 
     [[nodiscard]] float halfWidth() const noexcept { return 0.5f * m_widthM; }
@@ -68,7 +69,7 @@ public:
 
     /* Le calage fournit-il un point de départ propre au terrain (sinon l'appelant
        garde le sien) ? Coordonnées monde en mètres (X est, Z sud). */
-    [[nodiscard]] bool  hasStart() const noexcept { return m_hasStart; }
+    [[nodiscard]] bool hasStart() const noexcept { return m_hasStart; }
     [[nodiscard]] float startX() const noexcept { return m_startX; }
     [[nodiscard]] float startZ() const noexcept { return m_startZ; }
     [[nodiscard]] float startHeadingDeg() const noexcept { return m_startHeadingDeg; }
@@ -110,15 +111,16 @@ public:
     /* Balise HAPI la plus proche de (lon, lat), si elle est à moins de maxDistM ;
        nullptr sinon. Sert à faire correspondre un hélipad à sa balise : une HAPI
        se trouve toujours à proximité immédiate de son pad (quelques mètres, voir
-       le guide DGAC/STAC), jamais ailleurs sur le terrain. */
+       le guide DGAC/STAC), jamais ailleurs sur le terrain. Définie dans
+       TerrainQuery.cpp. */
     [[nodiscard]] const HapiUnit* hapiUnitNear(float lon, float lat, float maxDistM) const noexcept;
 
 private:
     void buildFlatFallback();
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
-    void loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
-                    const char* label);
+    void
+    loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out, const char* label);
     /* Charge un fichier de balises HAPI "lon lat azimut_deg pente_pct nom" (un par
        ligne) dans out. Fichier absent : out reste vide. */
     void loadHapiUnits(const std::filesystem::path& path, std::vector<HapiUnit>& out);
@@ -132,49 +134,49 @@ private:
        (colf, rowf), à la hauteur interpolée en ce point. */
     void flattenAround(float colf, float rowf, float radiusM);
 
-    Mesh    m_mesh;
+    Mesh m_mesh;
     Texture m_ortho;
-    bool    m_textured = false;
+    bool m_textured = false;
 
     /* Carte d'altitude conservée côté CPU pour interroger la hauteur du sol.
        Rangée 0 = nord (latitude max), colonne 0 = ouest (longitude min). */
     std::vector<float> m_heights;
-    int                m_cols    = 0;
-    int                m_rows    = 0;
-    float              m_widthM  = 0.0f;  /* dimension est-ouest au sol (m) */
-    float              m_heightM = 0.0f;  /* dimension nord-sud au sol (m) */
+    int m_cols = 0;
+    int m_rows = 0;
+    float m_widthM = 0.0f;  /* dimension est-ouest au sol (m) */
+    float m_heightM = 0.0f; /* dimension nord-sud au sol (m) */
     /* Décalage de l'origine du terrain en coordonnées monde (m) : par défaut 0,
        l'emprise est centrée sur l'origine du monde. Non nul pour une carte
-       RECADREE (sous-région d'un terrain plus grand) : la grille reste centrée
+       RECADRÉE (sous-région d'un terrain plus grand) : la grille reste centrée
        sur (m_originX, m_originZ) au lieu de (0,0), si bien que tous les fichiers
        en coordonnées monde (spawns, bâtiments, hélipads...) restent valides sans
        décalage. Voir terrain.txt "origin_x"/"origin_z". */
-    float              m_originX = 0.0f;
-    float              m_originZ = 0.0f;
-    float              m_elevMin = 0.0f;
-    float              m_elevMax = 0.0f;
-    bool               m_drawSea = true;   /* dessiner le plan de mer (bord de mer) */
-    bool               m_hasStart = false; /* le calage fournit un point de départ */
-    float              m_startX = 0.0f;    /* point de départ : est (m) */
-    float              m_startZ = 0.0f;    /* point de départ : sud (m) */
-    float              m_startHeadingDeg = 90.0f;  /* cap initial (boussole) ; 90 = est (identité) */
-    bool               m_hasGeo = false;   /* le calage fournit les bornes lon/lat */
-    float              m_lonMin = 0.0f;
-    float              m_lonMax = 0.0f;
-    float              m_latMin = 0.0f;
-    float              m_latMax = 0.0f;
+    float m_originX = 0.0f;
+    float m_originZ = 0.0f;
+    float m_elevMin = 0.0f;
+    float m_elevMax = 0.0f;
+    bool m_drawSea = true;           /* dessiner le plan de mer (bord de mer) */
+    bool m_hasStart = false;         /* le calage fournit un point de départ */
+    float m_startX = 0.0f;           /* point de départ : est (m) */
+    float m_startZ = 0.0f;           /* point de départ : sud (m) */
+    float m_startHeadingDeg = 90.0f; /* cap initial (boussole) ; 90 = est (identité) */
+    bool m_hasGeo = false;           /* le calage fournit les bornes lon/lat */
+    float m_lonMin = 0.0f;
+    float m_lonMax = 0.0f;
+    float m_latMin = 0.0f;
+    float m_latMax = 0.0f;
 
-    std::vector<Landmark>  m_landmarks;  /* lieux remarquables propres au terrain */
-    std::vector<Landmark>  m_helipads;   /* hélipads propres au terrain (hors départ) */
-    std::vector<HapiUnit>  m_hapiUnits;  /* balises HAPI propres au terrain */
+    std::vector<Landmark> m_landmarks; /* lieux remarquables propres au terrain */
+    std::vector<Landmark> m_helipads;  /* hélipads propres au terrain (hors départ) */
+    std::vector<HapiUnit> m_hapiUnits; /* balises HAPI propres au terrain */
 
     /* Plate-forme porteuse d'un hélipad : centre monde et hauteur du plateau. */
     struct PadPlatform {
-        float x   = 0.0f;
-        float z   = 0.0f;
+        float x = 0.0f;
+        float z = 0.0f;
         float top = 0.0f;
     };
     std::vector<PadPlatform> m_padPlatforms;
 };
 
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

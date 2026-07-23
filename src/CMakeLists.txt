@@ -62,6 +62,8 @@ add_executable(artouste
     audio/AudioEngineControl.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp
+    input/GamepadAxes.cpp
+    input/GamepadButtons.cpp
     input/InputSystem.cpp
     physics/RigidBody.cpp
     physics/FlightModel.cpp

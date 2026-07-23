@@ -38,7 +38,8 @@ add_executable(artouste
     app/scene/ApplicationScene.cpp
     app/loop/ApplicationLoop.cpp
     app/loop/ApplicationRotorRadio.cpp
-    app/ApplicationInput.cpp
+    app/input/ApplicationInputKeyboard.cpp
+    app/input/ApplicationInputButtons.cpp
     app/render/ApplicationSun.cpp
     app/render/ApplicationRender.cpp
     app/render/ApplicationRenderEffects.cpp

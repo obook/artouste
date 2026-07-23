@@ -144,7 +144,8 @@ private:
 
     /* Boutons et croix de la manette (hors commandes de vol) : vue, turbine, HUD,
        pause, reset, livrée, ainsi que les réponses Oui/Non des panneaux de
-       confirmation. Neutralisés pendant la démo. */
+       confirmation. Neutralisés pendant la démo. Définie dans
+       ApplicationInputButtons.cpp. */
     void handleActionButtons();
 
     /* Place la caméra selon la vue courante (poursuite, cockpit ou orbite) et gère
@@ -271,6 +272,7 @@ private:
     void toggleAutoland();
 
     static void resizeCallback(GLFWwindow* window, int width, int height);
+    /* Définie dans ApplicationInputKeyboard.cpp. */
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     GLFWwindow* m_window = nullptr;

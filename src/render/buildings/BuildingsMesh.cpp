@@ -1,8 +1,10 @@
 /*
- * Buildings.cpp
+ * BuildingsMesh.cpp
  * Lit buildings.bin (emprises BD TOPO + hauteur) et extrude chaque bâtiment en
  * un volume simple : murs verticaux (un quad par côté) et toit plat. Tout est
- * fusionné en un maillage unique, calé sur le relief.
+ * fusionné en un maillage unique, calé sur le relief, découpé en tuiles
+ * spatiales pour le culling. Le culling et le dessin sont dans
+ * BuildingsDraw.cpp.
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -10,7 +12,6 @@
  */
 
 #include "render/Buildings.hpp"
-
 #include "render/Terrain.hpp"
 #include "util/Math.hpp"
 
@@ -20,7 +21,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <fstream>
 #include <utility>
 #include <vector>
@@ -31,7 +31,7 @@ namespace {
 
 /* Couleurs régionales (côte basque et Landes) : murs clairs, toitures en tuile.
    Une légère variation par bâtiment évite l'aspect uniforme d'une ville monochrome. */
-const vec3 WALL_COLOR{0.86f, 0.84f, 0.80f};  /* enduit clair */
+const vec3 WALL_COLOR{0.86f, 0.84f, 0.80f}; /* enduit clair */
 
 /* Taille réelle (mètres) de la tuile de façade (assets/textures/facade.png,
    voir tools/facade/generer_facade.py -- mêmes valeurs des deux côtés) : les UV
@@ -47,12 +47,12 @@ constexpr float FACADE_TILE_H_M = 6.0f;
    plus lourd dans le tirage (3 entrées sur 6, soit ~50 %). Une teinte est choisie
    par bâtiment, de façon stable (voir pickRoof). */
 const vec3 ROOF_PALETTE[] = {
-    {0.62f, 0.32f, 0.24f},  /* tuile terre cuite (dominante) */
-    {0.62f, 0.32f, 0.24f},  /*   -- pesée 3 fois sur 6      */
+    {0.62f, 0.32f, 0.24f}, /* tuile terre cuite (dominante) */
+    {0.62f, 0.32f, 0.24f}, /*   -- pesée 3 fois sur 6      */
     {0.62f, 0.32f, 0.24f},
-    {0.70f, 0.38f, 0.27f},  /* tuile plus chaude / neuve */
-    {0.48f, 0.26f, 0.21f},  /* tuile patinée, plus sombre */
-    {0.44f, 0.42f, 0.44f},  /* ardoise grise */
+    {0.70f, 0.38f, 0.27f}, /* tuile plus chaude / neuve */
+    {0.48f, 0.26f, 0.21f}, /* tuile patinée, plus sombre */
+    {0.44f, 0.42f, 0.44f}, /* ardoise grise */
 };
 
 /* Bâtiments au ras de l'eau : la BD TOPO inclut les cabanes ostréicoles bâties sur
@@ -66,15 +66,15 @@ const vec3 ROOF_PALETTE[] = {
    ciblent l'eau sans toucher les villes côtières basses.
    WATER_ALT_M : un bâtiment plus haut que ça n'est jamais sur l'eau (ville en hauteur).
    WATER_RED / WATER_BLUE_BIAS : signature couleur de l'eau (canaux normalisés 0..1). */
-constexpr float WATER_ALT_M      = 4.0f;
-constexpr float WATER_RED        = 0.30f;
-constexpr float WATER_BLUE_BIAS  = 0.08f;
+constexpr float WATER_ALT_M = 4.0f;
+constexpr float WATER_RED = 0.30f;
+constexpr float WATER_BLUE_BIAS = 0.08f;
 
 /* Petit générateur pseudo-aléatoire déterministe (sans état global) : à partir
    d'un entier, renvoie un facteur dans [1-amp, 1+amp] pour nuancer une couleur. */
 float jitter(std::uint32_t seed, float amp) {
-    seed = seed * 1664525u + 1013904223u;            /* LCG classique */
-    const float unit = static_cast<float>(seed >> 8) / 16777216.0f;  /* [0,1) */
+    seed = seed * 1664525u + 1013904223u;                           /* LCG classique */
+    const float unit = static_cast<float>(seed >> 8) / 16777216.0f; /* [0,1) */
     return 1.0f + (unit * 2.0f - 1.0f) * amp;
 }
 
@@ -83,14 +83,18 @@ float jitter(std::uint32_t seed, float amp) {
    l'autre) et décorrélé du jitter de luminosité (on brasse l'indice par un autre
    hash), pour que teinte et nuance ne varient pas de concert. */
 const vec3& pickRoof(std::uint32_t seed) {
-    seed ^= 0x9e3779b9u;                        /* décorrèle du hash de jitter */
-    seed  = seed * 2654435761u + 2246822519u;   /* mélange */
+    seed ^= 0x9e3779b9u;                     /* décorrèle du hash de jitter */
+    seed = seed * 2654435761u + 2246822519u; /* mélange */
     const std::size_t n = sizeof(ROOF_PALETTE) / sizeof(ROOF_PALETTE[0]);
     return ROOF_PALETTE[(seed >> 16) % n];
 }
 
-void pushTriangle(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
-                  const vec3& a, const vec3& b, const vec3& c, const vec3& normal,
+void pushTriangle(std::vector<Vertex>& verts,
+                  std::vector<unsigned int>& idx,
+                  const vec3& a,
+                  const vec3& b,
+                  const vec3& c,
+                  const vec3& normal,
                   const vec3& color) {
     const auto base = static_cast<unsigned int>(verts.size());
     verts.push_back(Vertex{a, normal, color, {0.0f, 0.0f}});
@@ -106,9 +110,16 @@ void pushTriangle(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
    la hauteur depuis le sol du bâtiment (0 à sa hauteur / FACADE_TILE_H_M). La
    texture de façade (voir building.frag) se répète ainsi à échelle constante
    quelle que soit la taille du bâtiment. */
-void pushWallQuad(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
-                  const vec3& bi, const vec3& bj, const vec3& tj, const vec3& ti,
-                  const vec3& normal, const vec3& color, float u1, float vTop) {
+void pushWallQuad(std::vector<Vertex>& verts,
+                  std::vector<unsigned int>& idx,
+                  const vec3& bi,
+                  const vec3& bj,
+                  const vec3& tj,
+                  const vec3& ti,
+                  const vec3& normal,
+                  const vec3& color,
+                  float u1,
+                  float vTop) {
     const auto base = static_cast<unsigned int>(verts.size());
     verts.push_back(Vertex{bi, normal, color, {0.0f, 0.0f}});
     verts.push_back(Vertex{bj, normal, color, {u1, 0.0f}});
@@ -122,13 +133,13 @@ void pushWallQuad(std::vector<Vertex>& verts, std::vector<unsigned int>& idx,
     idx.push_back(base + 3);
 }
 
-}  /* namespace */
+} /* namespace */
 
 Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     const std::filesystem::path path = dir / "buildings.bin";
-    std::ifstream               in(path, std::ios::binary);
+    std::ifstream in(path, std::ios::binary);
     if (!in) {
-        return;  /* pas de bâtiments pour ce terrain : maillage vide */
+        return; /* pas de bâtiments pour ce terrain : maillage vide */
     }
 
     char magic[4] = {0, 0, 0, 0};
@@ -136,9 +147,10 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     std::uint32_t version = 0, count = 0;
     in.read(reinterpret_cast<char*>(&version), sizeof(version));
     in.read(reinterpret_cast<char*>(&count), sizeof(count));
-    if (!in || magic[0] != 'A' || magic[1] != 'B' || magic[2] != 'L' || magic[3] != 'D'
-        || version != 1u) {
-        std::fprintf(stderr, "[Buildings] %s : en-tête invalide, bâtiments ignorés.\n",
+    if (!in || magic[0] != 'A' || magic[1] != 'B' || magic[2] != 'L' || magic[3] != 'D' ||
+        version != 1u) {
+        std::fprintf(stderr,
+                     "[Buildings] %s : en-tête invalide, bâtiments ignorés.\n",
                      path.string().c_str());
         return;
     }
@@ -155,7 +167,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         terrain.worldAt(pad.lon, pad.lat, px, pz);
         padCenters.emplace_back(px, pz);
     }
-    constexpr float PAD_CLEAR_M2 = 15.0f * 15.0f;  /* rayon dégagé autour d'un pad, au carré */
+    constexpr float PAD_CLEAR_M2 = 15.0f * 15.0f; /* rayon dégagé autour d'un pad, au carré */
 
     /* La géométrie n'est plus accumulée dans un tampon unique : chaque bâtiment est
        rangé dans une tuile spatiale (voir plus bas), puis les tuiles sont concaténées
@@ -169,16 +181,16 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     /* Orthophoto chargée côté CPU (uniquement pour le filtre eau) : on y lit la
        couleur du sol sous chaque bâtiment. Demi-dimensions du terrain pour convertir
        une position monde en coordonnées de pixel (origine au centre du bloc). */
-    int            orthoW = 0, orthoH = 0, orthoCh = 0;
-    unsigned char* ortho  = nullptr;
+    int orthoW = 0, orthoH = 0, orthoCh = 0;
+    unsigned char* ortho = nullptr;
     if (filterWater) {
         const std::filesystem::path orthoPath = dir / "ortho.jpg";
-        stbi_set_flip_vertically_on_load(0);  /* rangée 0 = nord, comme le relief */
+        stbi_set_flip_vertically_on_load(0); /* rangée 0 = nord, comme le relief */
         ortho = stbi_load(orthoPath.string().c_str(), &orthoW, &orthoH, &orthoCh, 3);
     }
     const float halfW = terrain.halfWidth();
     const float halfH = terrain.halfHeight();
-    const float origX = terrain.originX();  /* centre de l'emprise (0 sauf carte recadrée) */
+    const float origX = terrain.originX(); /* centre de l'emprise (0 sauf carte recadrée) */
     const float origZ = terrain.originZ();
 
     /* Grille de tuiles pour le culling au rendu : chaque bâtiment est rangé dans la
@@ -187,32 +199,32 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
        compromis à l'échelle d'une ville. Chaque tuile accumule sa propre géométrie et
        sa boîte englobante (monde) ; le tout est concaténé après la boucle. */
     constexpr float TILE_M = 2500.0f;
-    const int       cols   = std::max(1, static_cast<int>((2.0f * halfW) / TILE_M) + 1);
-    const int       rows   = std::max(1, static_cast<int>((2.0f * halfH) / TILE_M) + 1);
+    const int cols = std::max(1, static_cast<int>((2.0f * halfW) / TILE_M) + 1);
+    const int rows = std::max(1, static_cast<int>((2.0f * halfH) / TILE_M) + 1);
     struct TileBuild {
-        std::vector<Vertex>       v;
+        std::vector<Vertex> v;
         std::vector<unsigned int> i;
-        vec3                      mn{1e30f, 1e30f, 1e30f};
-        vec3                      mx{-1e30f, -1e30f, -1e30f};
+        vec3 mn{1e30f, 1e30f, 1e30f};
+        vec3 mx{-1e30f, -1e30f, -1e30f};
     };
     std::vector<TileBuild> tiles(static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows));
 
-    std::vector<float> px, pz;  /* emprise en coordonnées monde (réutilisé par bâtiment) */
-    std::size_t        skippedWater = 0;  /* bâtiments écartés car bâtis sur l'eau */
+    std::vector<float> px, pz;    /* emprise en coordonnées monde (réutilisé par bâtiment) */
+    std::size_t skippedWater = 0; /* bâtiments écartés car bâtis sur l'eau */
     for (std::uint32_t b = 0; b < count; ++b) {
-        float         height = 0.0f;
-        std::uint16_t npts   = 0;
+        float height = 0.0f;
+        std::uint16_t npts = 0;
         in.read(reinterpret_cast<char*>(&height), sizeof(height));
         in.read(reinterpret_cast<char*>(&npts), sizeof(npts));
         if (!in || npts < 3) {
-            break;  /* fichier tronqué ou bâtiment dégénéré : on s'arrête */
+            break; /* fichier tronqué ou bâtiment dégénéré : on s'arrête */
         }
 
         px.clear();
         pz.clear();
-        float base   = 1e9f;   /* altitude du sol la plus basse sous l'emprise */
-        float cx     = 0.0f;
-        float cz     = 0.0f;
+        float base = 1e9f; /* altitude du sol la plus basse sous l'emprise */
+        float cx = 0.0f;
+        float cz = 0.0f;
         for (std::uint16_t k = 0; k < npts; ++k) {
             float lon = 0.0f, lat = 0.0f;
             in.read(reinterpret_cast<char*>(&lon), sizeof(lon));
@@ -241,12 +253,16 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
            l'ortho (voir WATER_ALT_M / WATER_RED / WATER_BLUE_BIAS). On la teste au
            centre de l'emprise et on l'écarte pour ne pas la faire flotter sur le bassin. */
         if (filterWater && ortho != nullptr && base <= WATER_ALT_M) {
-            const float u  = (cx - origX + halfW) / (2.0f * halfW);   /* 0 = ouest, 1 = est */
-            const float v  = (cz - origZ + halfH) / (2.0f * halfH);   /* 0 = nord,  1 = sud */
-            const int   ox = std::clamp(static_cast<int>(u * static_cast<float>(orthoW - 1)), 0, orthoW - 1);
-            const int   oy = std::clamp(static_cast<int>(v * static_cast<float>(orthoH - 1)), 0, orthoH - 1);
-            const unsigned char* p = ortho + (static_cast<std::size_t>(oy) * static_cast<std::size_t>(orthoW)
-                                              + static_cast<std::size_t>(ox)) * 3;
+            const float u = (cx - origX + halfW) / (2.0f * halfW); /* 0 = ouest, 1 = est */
+            const float v = (cz - origZ + halfH) / (2.0f * halfH); /* 0 = nord,  1 = sud */
+            const int ox =
+                std::clamp(static_cast<int>(u * static_cast<float>(orthoW - 1)), 0, orthoW - 1);
+            const int oy =
+                std::clamp(static_cast<int>(v * static_cast<float>(orthoH - 1)), 0, orthoH - 1);
+            const unsigned char* p =
+                ortho + (static_cast<std::size_t>(oy) * static_cast<std::size_t>(orthoW) +
+                         static_cast<std::size_t>(ox)) *
+                            3;
             const float r = p[0] / 255.0f;
             const float bl = p[2] / 255.0f;
             if (r <= WATER_RED && (bl - r) >= WATER_BLUE_BIAS) {
@@ -264,8 +280,8 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         const auto inFootprint = [&](float X, float Z) {
             bool inside = false;
             for (std::size_t i = 0, j = n - 1; i < n; j = i++) {
-                if (((pz[i] > Z) != (pz[j] > Z))
-                    && (X < (px[j] - px[i]) * (Z - pz[i]) / (pz[j] - pz[i]) + px[i])) {
+                if (((pz[i] > Z) != (pz[j] > Z)) &&
+                    (X < (px[j] - px[i]) * (Z - pz[i]) / (pz[j] - pz[i]) + px[i])) {
                     inside = !inside;
                 }
             }
@@ -301,10 +317,10 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
 
         /* Tuile de ce bâtiment (d'après son centre) et mise à jour de sa boîte
            englobante monde (emprise au sol, du sol au sommet). */
-        const int  col = std::clamp(static_cast<int>((cx - origX + halfW) / TILE_M), 0, cols - 1);
-        const int  row = std::clamp(static_cast<int>((cz - origZ + halfH) / TILE_M), 0, rows - 1);
-        TileBuild& tb  = tiles[static_cast<std::size_t>(row) * static_cast<std::size_t>(cols)
-                              + static_cast<std::size_t>(col)];
+        const int col = std::clamp(static_cast<int>((cx - origX + halfW) / TILE_M), 0, cols - 1);
+        const int row = std::clamp(static_cast<int>((cz - origZ + halfH) / TILE_M), 0, rows - 1);
+        TileBuild& tb = tiles[static_cast<std::size_t>(row) * static_cast<std::size_t>(cols) +
+                              static_cast<std::size_t>(col)];
         for (std::size_t k = 0; k < n; ++k) {
             tb.mn.x = std::min(tb.mn.x, px[k]);
             tb.mx.x = std::max(tb.mx.x, px[k]);
@@ -314,20 +330,20 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         tb.mn.y = std::min(tb.mn.y, base);
         tb.mx.y = std::max(tb.mx.y, top);
 
-        const float rj   = jitter(b, 0.12f);
+        const float rj = jitter(b, 0.12f);
         /* Seed décorrélée de celle du toit (voir pickRoof) : mur et toit ne doivent
            pas varier de concert. */
-        const float wj   = jitter(b * 2654435761u + 1u, 0.08f);
-        const vec3  wall = WALL_COLOR * wj;
-        const vec3  roof = pickRoof(b) * rj;  /* teinte panachée, nuancée en luminosité */
+        const float wj = jitter(b * 2654435761u + 1u, 0.08f);
+        const vec3 wall = WALL_COLOR * wj;
+        const vec3 roof = pickRoof(b) * rj; /* teinte panachée, nuancée en luminosité */
 
         /* Murs : un quad vertical par côté de l'emprise, texturé en façade (UV réels,
            voir pushWallQuad et FACADE_TILE_*). */
         const float vTop = height / FACADE_TILE_H_M;
         for (std::size_t i = 0; i < n; ++i) {
-            const std::size_t j  = (i + 1) % n;
-            const float       ex = px[j] - px[i];
-            const float       ez = pz[j] - pz[i];
+            const std::size_t j = (i + 1) % n;
+            const float ex = px[j] - px[i];
+            const float ez = pz[j] - pz[i];
             /* Normale horizontale perpendiculaire au côté, orientée vers
                l'extérieur (à l'opposé du centre de l'emprise). */
             float nx = ez, nz = -ex;
@@ -343,8 +359,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             const vec3 tj{px[j], top, pz[j]};
             const vec3 ti{px[i], top, pz[i]};
             const float sideLen = std::sqrt(ex * ex + ez * ez);
-            pushWallQuad(tb.v, tb.i, bi, bj, tj, ti, normal, wall,
-                        sideLen / FACADE_TILE_W_M, vTop);
+            pushWallQuad(tb.v, tb.i, bi, bj, tj, ti, normal, wall, sideLen / FACADE_TILE_W_M, vTop);
         }
 
         /* Toit plat : éventail de triangles depuis le premier sommet (correct pour
@@ -375,7 +390,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
        plage d'indices [firstIndex, +indexCount) et sa boîte englobante, pour ne
        dessiner au rendu que les tuiles visibles (voir draw). L'ordre des tuiles n'a
        pas d'importance ; seules les plages comptent. */
-    std::vector<Vertex>       verts;
+    std::vector<Vertex> verts;
     std::vector<unsigned int> idx;
     verts.reserve(static_cast<std::size_t>(count) * 25);
     idx.reserve(static_cast<std::size_t>(count) * 45);
@@ -384,7 +399,7 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             continue;
         }
         const auto vertexBase = static_cast<unsigned int>(verts.size());
-        const int  firstIndex = static_cast<int>(idx.size());
+        const int firstIndex = static_cast<int>(idx.size());
         verts.insert(verts.end(), t.v.begin(), t.v.end());
         for (const unsigned int ix : t.i) {
             idx.push_back(ix + vertexBase);
@@ -393,87 +408,10 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     }
 
     m_mesh = Mesh(verts, idx);
-    std::printf("[Buildings] %zu bâtiments extrudés (%zu sommets, %zu tuiles).\n", m_count,
-                verts.size(), m_tiles.size());
+    std::printf("[Buildings] %zu bâtiments extrudés (%zu sommets, %zu tuiles).\n",
+                m_count,
+                verts.size(),
+                m_tiles.size());
 }
 
-/* Extrait les 6 plans du frustum (méthode Gribb-Hartmann) d'une matrice monde -> clip.
-   Chaque plan (a,b,c,d) : un point (x,y,z) est du bon côté si a*x+b*y+c*z+d >= 0. Pas
-   de normalisation : seul le signe importe pour le test boîte/frustum. */
-namespace {
-
-void extractFrustum(const mat4& m, vec4 planes[6]) {
-    /* GLM est en colonnes majeures : m[col][row]. Les "lignes" de la matrice sont
-       donc (m[0][r], m[1][r], m[2][r], m[3][r]). */
-    const vec4 r0{m[0][0], m[1][0], m[2][0], m[3][0]};
-    const vec4 r1{m[0][1], m[1][1], m[2][1], m[3][1]};
-    const vec4 r2{m[0][2], m[1][2], m[2][2], m[3][2]};
-    const vec4 r3{m[0][3], m[1][3], m[2][3], m[3][3]};
-    planes[0] = r3 + r0;  /* gauche  */
-    planes[1] = r3 - r0;  /* droite  */
-    planes[2] = r3 + r1;  /* bas     */
-    planes[3] = r3 - r1;  /* haut    */
-    planes[4] = r3 + r2;  /* proche  */
-    planes[5] = r3 - r2;  /* lointain*/
-}
-
-/* Vrai si la boîte [mn, mx] est entièrement du mauvais côté d'au moins un plan (donc
-   hors du frustum). On teste le "sommet positif" de la boîte pour chaque plan : le coin
-   le plus avancé dans le sens de la normale. S'il est déjà dehors, toute la boîte l'est. */
-bool boxOutsideFrustum(const vec4 planes[6], const vec3& mn, const vec3& mx) {
-    for (int p = 0; p < 6; ++p) {
-        const vec4& pl = planes[p];
-        const float vx = (pl.x >= 0.0f) ? mx.x : mn.x;
-        const float vy = (pl.y >= 0.0f) ? mx.y : mn.y;
-        const float vz = (pl.z >= 0.0f) ? mx.z : mn.z;
-        if (pl.x * vx + pl.y * vy + pl.z * vz + pl.w < 0.0f) {
-            return true;
-        }
-    }
-    return false;
-}
-
-}  /* namespace */
-
-void Buildings::draw(const mat4& worldViewProj, const vec3& camWorldPos) const {
-    if (m_tiles.empty() || m_mesh.empty()) {
-        return;
-    }
-
-    /* Diagnostic : ARTOUSTE_NO_CULL dessine tout le maillage d'un coup (culling
-       désactivé), pour mesurer le gain du culling par tuiles. */
-    static const bool noCull = std::getenv("ARTOUSTE_NO_CULL") != nullptr;
-    if (noCull) {
-        m_mesh.draw();
-        return;
-    }
-
-    /* Distance de culling : au-delà, un bâtiment est entièrement noyé dans la brume
-       (u_fogEnd du shader de bâtiments), donc invisible. Doit rester alignée sur FOG_END
-       (app/AppConstants.hpp) ; on ne dessine pas les tuiles dont le point le plus proche
-       dépasse cette distance. */
-    constexpr float FAR_CULL_M  = 22000.0f;
-    constexpr float FAR_CULL_M2 = FAR_CULL_M * FAR_CULL_M;
-
-    vec4 planes[6];
-    extractFrustum(worldViewProj, planes);
-
-    for (const Tile& t : m_tiles) {
-        /* Hors champ ? */
-        if (boxOutsideFrustum(planes, t.mn, t.mx)) {
-            continue;
-        }
-        /* Point de la boîte le plus proche de la caméra : si déjà au-delà de la brume,
-           toute la tuile l'est. */
-        const float cx = std::max(t.mn.x, std::min(camWorldPos.x, t.mx.x));
-        const float cy = std::max(t.mn.y, std::min(camWorldPos.y, t.mx.y));
-        const float cz = std::max(t.mn.z, std::min(camWorldPos.z, t.mx.z));
-        const float dx = cx - camWorldPos.x, dy = cy - camWorldPos.y, dz = cz - camWorldPos.z;
-        if (dx * dx + dy * dy + dz * dz > FAR_CULL_M2) {
-            continue;
-        }
-        m_mesh.drawRange(t.firstIndex, t.indexCount);
-    }
-}
-
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

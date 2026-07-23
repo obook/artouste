@@ -84,7 +84,8 @@ add_executable(artouste
     render/TerrainSetup.cpp
     render/TerrainQuery.cpp
     render/hapi/Hapi.cpp
-    render/Buildings.cpp
+    render/buildings/BuildingsMesh.cpp
+    render/buildings/BuildingsDraw.cpp
     render/vegetation/Vegetation.cpp
     render/vegetation/VegetationMasks.cpp
     render/vegetation/VegetationScatter.cpp

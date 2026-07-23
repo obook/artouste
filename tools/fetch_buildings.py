@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 fetch_buildings.py
 Télécharge les emprises de bâtiments (avec leur hauteur réelle) sur l'emprise
@@ -47,8 +46,8 @@ import json
 # On réutilise la description des zones (bornes, dossier de sortie) du paquet
 # terrain : une seule source de vérité pour l'emprise géographique.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from terrain.zones import ZONES, DEFAULT_ZONE  # noqa: E402
-from terrain.config import TERRAIN_ROOT  # noqa: E402
+from terrain.zones import ZONES, DEFAULT_ZONE
+from terrain.config import TERRAIN_ROOT
 
 # --- Service WFS BD TOPO -----------------------------------------------------
 WFS_URL = "https://data.geopf.fr/wfs/ows"

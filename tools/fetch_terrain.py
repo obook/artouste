@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 fetch_terrain.py
 Télécharge les données d'un terrain réel d'Artouste depuis la Géoplateforme IGN.

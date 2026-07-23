@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 generer_facade.py
 Génère la texture de façade tuilable des bâtiments : mur enduit clair, percé de
@@ -17,9 +16,14 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
+import sys
+from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common import imaging
+from common.paths import assets_dir
 
 # Doit correspondre à FACADE_TILE_W_M / FACADE_TILE_H_M dans Buildings.cpp.
 TILE_W_M = 12.0   # largeur réelle de la tuile (3 travées de 4 m)
@@ -40,19 +44,12 @@ GLASS_COLORS = [
 ]  # une teinte par travée : casse la répétition mécanique du carrelage
 
 
-def noise(sigma, blur=0.0):
-    img = Image.effect_noise((WIDTH, HEIGHT), sigma).convert("L")
-    if blur > 0.0:
-        img = img.filter(ImageFilter.GaussianBlur(blur))
-    return img
-
-
 def wall_base():
     """Fond enduit clair, avec un grain fin de plâtre (indépendant par pixel,
        donc tuilable sans couture par construction : pas de corrélation spatiale
        à casser au bord)."""
     base = Image.new("RGB", (WIDTH, HEIGHT), WALL_COLOR)
-    grain = noise(18).point(lambda p: 128 + (p - 128) // 3)
+    grain = imaging.noise(WIDTH, HEIGHT, 18).point(lambda p: 128 + (p - 128) // 3)
     grain_rgb = Image.merge("RGB", (grain, grain, grain))
     return ImageChops.overlay(base, grain_rgb)
 
@@ -91,13 +88,13 @@ def main():
     for col in range(1, BAYS):
         x = col * bay_w
         pilaster = Image.new("L", (WIDTH, HEIGHT), 0)
-        ImageDraw.Draw(pilaster).line([x, 0, x, HEIGHT], fill=40, width=max(2, int(PX_PER_M * 0.05)))
+        ImageDraw.Draw(pilaster).line(
+            [x, 0, x, HEIGHT], fill=40, width=max(2, int(PX_PER_M * 0.05)))
         shade = Image.new("RGB", (WIDTH, HEIGHT), (0, 0, 0))
         img = Image.composite(shade, img, pilaster.point(lambda p: int(p * 0.35)))
 
-    racine = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-    sortie = os.path.join(racine, "assets", "textures", "facade.png")
-    os.makedirs(os.path.dirname(sortie), exist_ok=True)
+    sortie = assets_dir("textures", "facade.png")
+    sortie.parent.mkdir(parents=True, exist_ok=True)
     img.save(sortie)
     print(f"[facade] {sortie} écrit ({WIDTH}x{HEIGHT}, tuile {TILE_W_M:g}x{TILE_H_M:g} m)")
 

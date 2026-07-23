@@ -13,25 +13,22 @@ Licence : GPL v2
 """
 
 import sys
+from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common import imaging
+
 SIZE = 2048  # côté de l'image, en pixels
-
-
-def noise(sigma, blur=0.0):
-    img = Image.effect_noise((SIZE, SIZE), sigma).convert("L")
-    if blur > 0.0:
-        img = img.filter(ImageFilter.GaussianBlur(blur))
-    return img
 
 
 def concrete():
     """Dalle de béton : gris moyen, grain à deux échelles, plus un assombrissement
     vers le bord (salissure)."""
     base = Image.new("RGB", (SIZE, SIZE), (146, 147, 150))
-    fine = noise(34, 1.0)
-    coarse = noise(60, 9.0)
+    fine = imaging.noise(SIZE, SIZE, 34, 1.0)
+    coarse = imaging.noise(SIZE, SIZE, 60, 9.0)
     grain = ImageChops.multiply(fine, coarse).point(lambda p: 110 + p // 3)
     grain_rgb = Image.merge("RGB", (grain, grain, grain))
     img = Image.blend(base, grain_rgb, 0.45)
@@ -43,11 +40,13 @@ def worn_alpha(base_alpha):
     d'éraflures et de grandes plages où la peinture s'est effacée (le béton
     réapparaît par endroits), pour un marquage vieilli plutôt que neuf."""
     # Grain fin : petites éraflures, peinture presque intacte en général.
-    fine = noise(70, 2.0).point(lambda p: base_alpha if p > 64 else base_alpha - 70 + p)
+    fine = imaging.noise(SIZE, SIZE, 70, 2.0).point(
+        lambda p: base_alpha if p > 64 else base_alpha - 70 + p)
     # Grandes plages d'usure : flou modéré (pour garder du contraste) et seuil haut,
     # la peinture reste pleine par grandes zones et s'efface franchement dans les
     # creux (jusqu'au béton nu), pour une usure bien visible mais pas totale.
-    coarse = noise(80, 6.0).point(lambda p: 255 if p > 135 else int(p * 255 / 135))
+    coarse = imaging.noise(SIZE, SIZE, 80, 6.0).point(
+        lambda p: 255 if p > 135 else int(p * 255 / 135))
     return ImageChops.multiply(fine, coarse)
 
 

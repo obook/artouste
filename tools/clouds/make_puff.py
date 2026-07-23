@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 make_puff.py
 Génère une bouffée de nuage pour les nuages en billboards (prototype).
@@ -17,10 +16,14 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
+import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageFilter
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
 
 N = 256
 
@@ -56,10 +59,8 @@ def main():
     img = np.dstack([rgb, (a * 255).astype(np.uint8)[..., None]])
     out = Image.fromarray(img, "RGBA").filter(ImageFilter.GaussianBlur(1.2))
 
-    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__)))), "assets", "clouds")
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "puff.png")
+    out_path = assets_dir("clouds", "puff.png")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out.save(out_path)
     print("[clouds] bouffée écrite : {} ({}x{})".format(out_path, N, N))
 

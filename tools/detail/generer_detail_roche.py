@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 generer_detail_roche.py
 Génère la texture de détail rocheuse du terrain : un bruit multi-octaves
@@ -15,11 +14,14 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
 
 TAILLE = 512          # côté du PNG (pixels)
 ANISOTROPIE = 1.5     # étirement des fréquences : strates allongées
@@ -55,9 +57,8 @@ def main():
     image = relief * 0.5 + 0.5 - creux * PROFONDEUR_FAILLE
     image = (image - image.min()) / (image.max() - image.min())
 
-    racine = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-    sortie = os.path.join(racine, "assets", "textures", "detail-roche.png")
-    os.makedirs(os.path.dirname(sortie), exist_ok=True)
+    sortie = assets_dir("textures", "detail-roche.png")
+    sortie.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray((image * 255.0).astype(np.uint8), "L").save(sortie)
     print(f"[detail] {sortie} écrit ({TAILLE}x{TAILLE}, graine {graine})")
 

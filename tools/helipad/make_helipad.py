@@ -18,19 +18,17 @@ Licence : GPL v2
 """
 
 import math
-import os
+import sys
+from pathlib import Path
 
 import addon_utils
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
+
 RADIUS = 7.0   # rayon du disque, en mètres (comme la version procédurale)
 SEGMENTS = 96  # finesse du bord
-
-
-def project_root():
-    """Racine du dépôt, déduite de l'emplacement de ce script (tools/helipad/)."""
-    here = os.path.dirname(os.path.abspath(__file__))
-    return os.path.normpath(os.path.join(here, "..", ".."))
 
 
 def clear_scene():
@@ -80,11 +78,10 @@ def make_material(texture_path):
 
 
 def main():
-    root = project_root()
-    out_dir = os.path.join(root, "assets", "models", "helipad")
-    os.makedirs(out_dir, exist_ok=True)
-    texture_path = os.path.join(out_dir, "helipad.png")
-    out_ac = os.path.join(out_dir, "helipad.ac")
+    out_dir = assets_dir("models", "helipad")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    texture_path = str(out_dir / "helipad.png")
+    out_ac = str(out_dir / "helipad.ac")
 
     addon_utils.enable("io_scene_ac3d", default_set=True, persistent=True)
 

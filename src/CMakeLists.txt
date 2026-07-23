@@ -104,6 +104,9 @@ add_executable(artouste
     render/LoadedHelicopterInstruments.cpp
     render/LoadedHelicopterDraw.cpp
     ui/Hud.cpp
+    ui/hud/HudSetup.cpp
+    ui/hud/HudCorners.cpp
+    ui/hud/HudAlerts.cpp
     ui/hud/HudSuperOverlay.cpp
     ui/hud/HudPadGuidance.cpp
     ui/hud/HudLabelsMinimap.cpp

@@ -46,6 +46,8 @@ add_executable(artouste
     app/input/ApplicationInputButtons.cpp
     app/render/ApplicationSun.cpp
     app/render/ApplicationRender.cpp
+    app/render/ApplicationRenderWorld.cpp
+    app/render/ApplicationRenderActors.cpp
     app/render/ApplicationRenderEffects.cpp
     app/ground/ApplicationGround.cpp
     app/ground/ApplicationGroundShadow.cpp

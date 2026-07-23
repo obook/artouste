@@ -213,6 +213,46 @@ private:
                      float turbineFraction = 0.0f,
                      float timeSeconds = 0.0f);
 
+    /* Grandeurs communes à toutes les étapes de renderScene, calculées une fois
+       (position/matrices relatives à la caméra, brume) et passées aux
+       sous-méthodes ci-dessous. Voir renderScene pour leur calcul. */
+    struct RenderContext {
+        vec3 lightDir;
+        mat4 proj;
+        mat4 view;
+        mat4 toRel;     /* translation -m_renderOrigin, appliquée aux modèles */
+        vec3 camPosRel; /* position caméra, relative à m_renderOrigin */
+        vec3 fogColor;  /* couleur de brume, assombrie la nuit */
+    };
+
+    /* Ciel en dégradé et plan de mer. Définie dans ApplicationRenderWorld.cpp. */
+    void renderSkyAndSea(const RenderContext& ctx, float timeSeconds);
+
+    /* Terrain texturé (ou repli à couleurs de sommets) et bâtiments 3D extrudés.
+       Définie dans ApplicationRenderWorld.cpp. */
+    void renderTerrainAndBuildings(const RenderContext& ctx);
+
+    /* Végétation en billboards et nuages. Définie dans
+       ApplicationRenderWorld.cpp. */
+    void renderVegetationAndClouds(const RenderContext& ctx);
+
+    /* Mode zombie : personnages skinnés, boulettes toxiques et explosions 3D
+       des roquettes. Ne dessine rien hors combat. Définie dans
+       ApplicationRenderActors.cpp. */
+    void renderCombatEntities(const RenderContext& ctx, float timeSeconds);
+
+    /* Hélicoptère : modèle FlightGear texturé s'il est chargé (avec ses
+       instruments de cockpit dérivés de 'base'), sinon version procédurale.
+       Définie dans ApplicationRenderActors.cpp. */
+    void renderHelicopter(const RenderContext& ctx,
+                          const mat4& base,
+                          float rotorAngle,
+                          float rudder,
+                          float cyclicLong,
+                          float cyclicLat,
+                          float collective,
+                          float rotorFraction);
+
     /* Heure du simulateur à l'instant t (s depuis le lancement), exprimée en
        secondes depuis minuit [0, 86400[. Part de l'heure locale du PC au lancement
        puis avance en temps réel (mode local) ou accéléré (mode accéléré). */

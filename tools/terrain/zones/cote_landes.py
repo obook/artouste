@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 cote-landes
 Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud

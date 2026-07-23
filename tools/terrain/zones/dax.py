@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 dax
 Dax : la ville, l'Adour, l'aérodrome de Seyresse et le musée de l'ALAT

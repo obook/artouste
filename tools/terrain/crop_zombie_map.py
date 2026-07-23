@@ -35,22 +35,17 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/ -> paquet terrain
 from terrain import config
+from terrain.grid import Grid
+from terrain.meta import read_meta
 from terrain.ortho import fetch_ortho
 
-
-def read_meta(path):
-    meta = {}
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split(None, 1)
-        if len(parts) == 2:
-            meta[parts[0]] = parts[1].strip()
-    return meta
+# Fichiers annexes en coordonnées monde ou lon/lat : copiés tels quels, sans
+# modification (voir le repère monde partagé, ci-dessus).
+FICHIERS_ANNEXES = ["zombies.txt", "buildings.bin", "helipads.txt", "exclusions.txt",
+                    "hapi.txt", "landmarks.txt"]
 
 
-def main():
+def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", type=Path)
     ap.add_argument("dst", type=Path)
@@ -68,103 +63,67 @@ def main():
                      help="ne pas requêter le WMS : recadre l'ortho basse résolution de "
                           "la carte source (comportement historique, hors ligne mais flou "
                           "de près une fois au sol)")
-    args = ap.parse_args()
+    return ap.parse_args()
+
+
+def crop_bounds(grid, args):
+    """Indices de grille [i_lo, i_hi] x [j_lo, j_hi] couvrant la boîte centrée
+       sur (center_x, center_z), bornés à la grille source."""
     half_x = args.half_x if args.half_x is not None else args.half
     half_z = args.half_z if args.half_z is not None else args.half
+    i_lo = max(0, round(grid.col_of(args.center_x - half_x)))
+    i_hi = min(grid.cols - 1, round(grid.col_of(args.center_x + half_x)))
+    j_lo = max(0, round(grid.row_of(args.center_z - half_z)))
+    j_hi = min(grid.rows - 1, round(grid.row_of(args.center_z + half_z)))
+    return i_lo, i_hi, j_lo, j_hi
 
-    src, dst = args.src, args.dst
-    m = read_meta(src / "terrain.txt")
-    cols, rows = int(m["cols"]), int(m["rows"])
-    width, height = float(m["width_m"]), float(m["height_m"])
-    elev_min, elev_max = float(m["elev_min"]), float(m["elev_max"])
-    lon_min, lon_max = float(m["lon_min"]), float(m["lon_max"])
-    lat_min, lat_max = float(m["lat_min"]), float(m["lat_max"])
-    ortho_w, ortho_h = int(m["ortho_width"]), int(m["ortho_height"])
 
-    halfW, halfH = 0.5 * width, 0.5 * height
-    dx, dz = width / (cols - 1), height / (rows - 1)
-
-    # --- Plage de colonnes/rangées de la grille couvrant la boîte ---------------
-    def col_of(x):
-        return (x + halfW) / width * (cols - 1)
-
-    def row_of(z):
-        return (z + halfH) / height * (rows - 1)
-
-    i_lo = max(0, round(col_of(args.center_x - half_x)))
-    i_hi = min(cols - 1, round(col_of(args.center_x + half_x)))
-    j_lo = max(0, round(row_of(args.center_z - half_z)))
-    j_hi = min(rows - 1, round(row_of(args.center_z + half_z)))
-    new_cols, new_rows = i_hi - i_lo + 1, j_hi - j_lo + 1
-
-    # Étendue monde réelle de la grille recadrée (bornes des colonnes/rangées).
-    def x_at(i):
-        return -halfW + i * dx
-
-    def z_at(j):
-        return -halfH + j * dz
-
-    x0, x1 = x_at(i_lo), x_at(i_hi)
-    z0, z1 = z_at(j_lo), z_at(j_hi)
-    new_width = x1 - x0
-    new_height = z1 - z0
-    origin_x = 0.5 * (x0 + x1)  # centre de la boîte en coord MONDE
-    origin_z = 0.5 * (z0 + z1)
-
-    # --- Nouvelles bornes lon/lat (mêmes formules que render::Terrain) ----------
-    def lon_of(x):
-        return lon_min + (x / width + 0.5) * (lon_max - lon_min)
-
-    def lat_of(z):
-        return lat_max - (z / height + 0.5) * (lat_max - lat_min)
-
-    new_lon_min, new_lon_max = lon_of(x0), lon_of(x1)
-    new_lat_max, new_lat_min = lat_of(z0), lat_of(z1)  # z0=nord -> lat max
-
-    dst.mkdir(parents=True, exist_ok=True)
-
-    # --- Heightmap 16 bits ------------------------------------------------------
+def crop_heightmap(src, dst, i_lo, i_hi, j_lo, j_hi):
+    """Recadre heightmap.png (16 bits) sur les indices de grille donnés."""
     hm = Image.open(src / "heightmap.png")
-    arr = np.array(hm)  # (rows, cols), uint16
+    arr = np.array(hm)
     if arr.dtype != np.uint16:
         arr = arr.astype(np.uint16)
     sub = arr[j_lo:j_hi + 1, i_lo:i_hi + 1]
     Image.fromarray(sub, mode="I;16").save(dst / "heightmap.png")
 
-    # --- Ortho -------------------------------------------------------------------
-    # Par défaut, on ne recadre PAS l'ortho basse résolution de la carte source :
-    # celle-ci partage son budget de pixels WMS (limite serveur IGN ~5010 px) avec
-    # toute l'emprise de la grande carte (des dizaines de km), ce qui donne un sol
-    # flou vu de près une fois recadré sur une arène de ~2 km. On réémet donc une
-    # requête WMS dédiée, centrée sur la seule boîte de l'arène : le même budget de
-    # pixels serveur, appliqué à une emprise bien plus petite, donne une résolution
-    # nettement meilleure (voir --ortho-px).
+
+def produce_ortho(args, grid, src, dst, m, x0, x1, z0, z1,
+                   new_lon_min, new_lon_max, new_lat_min, new_lat_max,
+                   new_width, new_height, ortho_w, ortho_h):
+    """Produit ortho.jpg recadrée. Par défaut, on ne recadre PAS l'ortho basse
+       résolution de la carte source : celle-ci partage son budget de pixels
+       WMS (limite serveur IGN ~5010 px) avec toute l'emprise de la grande
+       carte (des dizaines de km), ce qui donne un sol flou vu de près une
+       fois recadré sur une arène de ~2 km. On réémet donc une requête WMS
+       dédiée, centrée sur la seule boîte de l'arène : le même budget de
+       pixels serveur, appliqué à une emprise bien plus petite, donne une
+       résolution nettement meilleure (voir --ortho-px). --offline-crop
+       revient au comportement historique (crop hors ligne, sans requête).
+       Renvoie (new_ortho_w, new_ortho_h)."""
     if args.offline_crop:
-        def ox_of(x):
-            return (x + halfW) / width * ortho_w
-
-        def oy_of(z):
-            return (z + halfH) / height * ortho_h
-
-        ox_lo, ox_hi = round(ox_of(x0)), round(ox_of(x1))
-        oy_lo, oy_hi = round(oy_of(z0)), round(oy_of(z1))  # z0=nord -> ligne haute
+        ox_lo = round((x0 + grid.half_w) / grid.width_m * ortho_w)
+        ox_hi = round((x1 + grid.half_w) / grid.width_m * ortho_w)
+        oy_lo = round((z0 + grid.half_h) / grid.height_m * ortho_h)
+        oy_hi = round((z1 + grid.half_h) / grid.height_m * ortho_h)
         ortho = Image.open(src / "ortho.jpg").convert("RGB")
         ortho.crop((ox_lo, oy_lo, ox_hi, oy_hi)).save(dst / "ortho.jpg", quality=92)
-        new_ortho_w, new_ortho_h = ox_hi - ox_lo, oy_hi - oy_lo
-    else:
-        config.LON_MIN, config.LON_MAX = new_lon_min, new_lon_max
-        config.LAT_MIN, config.LAT_MAX = new_lat_min, new_lat_max
-        config.RECOLOR_SEA = m.get("sea", "0") == "1"
-        config.ORTHO_HEIGHT = args.ortho_px
-        config.OUT_DIR = str(dst)
-        new_ortho_w = fetch_ortho(new_width / new_height)
-        new_ortho_h = args.ortho_px
+        return ox_hi - ox_lo, oy_hi - oy_lo
 
-    # --- terrain.txt recadré -----------------------------------------------------
-    start_x = m.get("start_x", "0")
-    start_z = m.get("start_z", "0")
-    start_heading = m.get("start_heading", "0")
-    sea = m.get("sea", "0")
+    config.LON_MIN, config.LON_MAX = new_lon_min, new_lon_max
+    config.LAT_MIN, config.LAT_MAX = new_lat_min, new_lat_max
+    config.RECOLOR_SEA = m.get("sea", "0") == "1"
+    config.ORTHO_HEIGHT = args.ortho_px
+    config.OUT_DIR = str(dst)
+    return fetch_ortho(new_width / new_height), args.ortho_px
+
+
+def write_cropped_meta(dst, src, m, new_cols, new_rows, elev_min, elev_max,
+                        new_lon_min, new_lon_max, new_lat_min, new_lat_max,
+                        new_width, new_height, new_ortho_w, new_ortho_h,
+                        origin_x, origin_z):
+    """Écrit le terrain.txt recadré (même repère monde que la carte source,
+       via origin_x/origin_z : voir le docstring du module)."""
     lines = [
         f"# Terrain Artouste - recadré depuis {src.name} (mode zombie, sous-région)",
         "# Repère monde identique à la carte source (origin_x/origin_z) : tous les",
@@ -181,21 +140,62 @@ def main():
         f"lat_max {new_lat_max:.6f}",
         f"ortho_width {new_ortho_w}",
         f"ortho_height {new_ortho_h}",
-        f"sea {sea}",
-        f"start_x {start_x}",
-        f"start_z {start_z}",
-        f"start_heading {start_heading}",
+        f"sea {m.get('sea', '0')}",
+        f"start_x {m.get('start_x', '0')}",
+        f"start_z {m.get('start_z', '0')}",
+        f"start_heading {m.get('start_heading', '0')}",
         f"origin_x {origin_x:.2f}",
         f"origin_z {origin_z:.2f}",
     ]
     (dst / "terrain.txt").write_text("\n".join(lines) + "\n")
 
-    # --- Fichiers annexes copiés tels quels (coordonnées monde / lon-lat) -------
-    for aux in ["zombies.txt", "buildings.bin", "helipads.txt", "exclusions.txt",
-                "hapi.txt", "landmarks.txt"]:
+
+def copy_aux_files(src, dst):
+    """Copie tels quels les fichiers annexes en coordonnées monde ou lon/lat
+       (voir FICHIERS_ANNEXES), s'ils existent sur la carte source."""
+    for aux in FICHIERS_ANNEXES:
         p = src / aux
         if p.exists():
             shutil.copy2(p, dst / aux)
+
+
+def main():
+    args = parse_args()
+    src, dst = args.src, args.dst
+    m = read_meta(src / "terrain.txt")
+    grid = Grid(int(m["cols"]), int(m["rows"]), float(m["width_m"]), float(m["height_m"]),
+                float(m["lon_min"]), float(m["lon_max"]), float(m["lat_min"]), float(m["lat_max"]))
+    elev_min, elev_max = float(m["elev_min"]), float(m["elev_max"])
+    ortho_w, ortho_h = int(m["ortho_width"]), int(m["ortho_height"])
+
+    i_lo, i_hi, j_lo, j_hi = crop_bounds(grid, args)
+    new_cols, new_rows = i_hi - i_lo + 1, j_hi - j_lo + 1
+
+    # Étendue monde réelle de la grille recadrée (bornes des colonnes/rangées).
+    x0, x1 = grid.x_at(i_lo), grid.x_at(i_hi)
+    z0, z1 = grid.z_at(j_lo), grid.z_at(j_hi)
+    new_width = x1 - x0
+    new_height = z1 - z0
+    origin_x = 0.5 * (x0 + x1)  # centre de la boîte en coord MONDE
+    origin_z = 0.5 * (z0 + z1)
+
+    # Nouvelles bornes lon/lat (mêmes formules que render::Terrain).
+    new_lon_min, new_lon_max = grid.lon_of(x0), grid.lon_of(x1)
+    new_lat_max, new_lat_min = grid.lat_of(z0), grid.lat_of(z1)  # z0=nord -> lat max
+
+    dst.mkdir(parents=True, exist_ok=True)
+
+    crop_heightmap(src, dst, i_lo, i_hi, j_lo, j_hi)
+    new_ortho_w, new_ortho_h = produce_ortho(
+        args, grid, src, dst, m, x0, x1, z0, z1,
+        new_lon_min, new_lon_max, new_lat_min, new_lat_max,
+        new_width, new_height, ortho_w, ortho_h)
+
+    write_cropped_meta(dst, src, m, new_cols, new_rows, elev_min, elev_max,
+                        new_lon_min, new_lon_max, new_lat_min, new_lat_max,
+                        new_width, new_height, new_ortho_w, new_ortho_h,
+                        origin_x, origin_z)
+    copy_aux_files(src, dst)
 
     print(f"[crop] {src.name} -> {dst.name}")
     print(f"  grille {new_cols}x{new_rows} ({new_width:.0f}x{new_height:.0f} m), "

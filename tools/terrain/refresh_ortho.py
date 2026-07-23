@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 refresh_ortho.py
 Réémet uniquement l'orthophoto d'une zone déjà générée par fetch_terrain.py, à une
@@ -22,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from terrain import config
+from terrain.meta import read_meta, update_keys
 from terrain.ortho import fetch_ortho
 
 
@@ -35,27 +35,12 @@ def main():
         config.ORTHO_HEIGHT = int(sys.argv[2])
 
     terrain_txt = Path(config.OUT_DIR) / "terrain.txt"
-    meta = {}
-    for line in terrain_txt.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        key, _, value = line.partition(" ")
-        meta[key] = value.strip()
+    meta = read_meta(terrain_txt)
     width_m, height_m = float(meta["width_m"]), float(meta["height_m"])
 
     new_width = fetch_ortho(width_m / height_m)
 
-    lines = terrain_txt.read_text().splitlines()
-    out = []
-    for line in lines:
-        if line.startswith("ortho_width "):
-            out.append(f"ortho_width {new_width}")
-        elif line.startswith("ortho_height "):
-            out.append(f"ortho_height {config.ORTHO_HEIGHT}")
-        else:
-            out.append(line)
-    terrain_txt.write_text("\n".join(out) + "\n")
+    update_keys(terrain_txt, {"ortho_width": new_width, "ortho_height": config.ORTHO_HEIGHT})
     print(f"[ok] {zone} : ortho {new_width}x{config.ORTHO_HEIGHT} écrite, terrain.txt mis à jour")
 
 

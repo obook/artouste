@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 bordeaux
 Bordeaux et son agglomération : la Garonne et le port de la Lune au centre,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 arcachon
 Bassin d'Arcachon et son arrière-pays : de la côte atlantique et du Cap Ferret

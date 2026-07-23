@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 bigorre
 Pic du Midi de Bigorre (Hautes-Pyrénées) : l'observatoire (~2877 m) et son

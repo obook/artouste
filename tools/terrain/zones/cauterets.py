@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 cauterets
 Cauterets - Gavarnie (Hautes-Pyrénées) : de la vallée de Cauterets et son

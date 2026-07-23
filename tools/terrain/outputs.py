@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 outputs.py
 Écriture des fichiers de sortie lus par le moteur : le calage du terrain

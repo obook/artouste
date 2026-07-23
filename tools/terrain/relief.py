@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 relief.py
 Téléchargement du relief depuis l'API altimétrie de l'IGN (RGE ALTI),

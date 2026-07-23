@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ossau
 Vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau, ~2884 m) : le lieu-titre

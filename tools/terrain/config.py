@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 config.py
 Réglages partagés du téléchargeur de terrain : services IGN, paramètres de grille

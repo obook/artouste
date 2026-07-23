@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ortho.py
 Téléchargement de l'orthophoto (BD ORTHO) sur l'emprise de la zone via le service
@@ -131,26 +130,13 @@ def _fetch_image(width, height):
     return canvas
 
 
-def fetch_ortho(aspect):
-    """Télécharge l'orthophoto sur la même emprise (haut = nord) et recolore la mer."""
-    width = int(round(config.ORTHO_HEIGHT * aspect))
-    height = config.ORTHO_HEIGHT
-    img = _fetch_image(width, height)
-    path = os.path.join(config.OUT_DIR, "ortho.jpg")
-
-    # Zone sans mer (montagne) : pas de recoloration de la mer (qui bleuirait la
-    # neige) ; on comble seulement le no-data de la BD ORTHO par de la rocaille.
-    if not config.RECOLOR_SEA:
-        arr = np.array(img)
-        Image.fromarray(fill_nodata(arr)).save(path, quality=88)
-        print(f"[ortho] {path} écrit ({width}x{height})")
-        return width
-
-    # La mer de la BD ORTHO pose deux problèmes : au large elle revient en blanc
-    # (sans donnée), et l'eau photographiée est une mosaïque de dalles aux teintes
-    # différentes, dont les bords en escalier formeraient des "pavés" au rendu.
-    # On aplanit donc toute la mer à une couleur unie, en préservant l'écume
-    # blanche et la plage (non bleutées) pour garder un trait de côte net.
+def flatten_sea(img):
+    """Aplanit la mer à une couleur unie, en préservant l'écume blanche et la
+       plage (non bleutées) pour garder un trait de côte net. La mer de la BD
+       ORTHO pose deux problèmes : au large elle revient en blanc (sans
+       donnée), et l'eau photographiée est une mosaïque de dalles aux teintes
+       différentes, dont les bords en escalier formeraient des "pavés" au
+       rendu. Renvoie l'image (RGB, uint8) aplanie."""
     arr = np.array(img).astype(np.float32)
     r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
     # Le blanc "sans donnée" de la BD ORTHO est l'océan au large, hors couverture :
@@ -179,7 +165,24 @@ def fetch_ortho(aspect):
     alpha = alpha[:, :, None]
     out = out * (1.0 - alpha) + deep * alpha
     print(f"[ortho] mer aplanie ({int(sea.sum())} px) couleur {deep.round().astype(int).tolist()}")
+    return out.clip(0, 255).astype(np.uint8)
 
-    Image.fromarray(out.clip(0, 255).astype(np.uint8)).save(path, quality=88)
+
+def fetch_ortho(aspect):
+    """Télécharge l'orthophoto sur la même emprise (haut = nord) et recolore la mer."""
+    width = int(round(config.ORTHO_HEIGHT * aspect))
+    height = config.ORTHO_HEIGHT
+    img = _fetch_image(width, height)
+    path = os.path.join(config.OUT_DIR, "ortho.jpg")
+
+    # Zone sans mer (montagne) : pas de recoloration de la mer (qui bleuirait la
+    # neige) ; on comble seulement le no-data de la BD ORTHO par de la rocaille.
+    if not config.RECOLOR_SEA:
+        arr = np.array(img)
+        Image.fromarray(fill_nodata(arr)).save(path, quality=88)
+        print(f"[ortho] {path} écrit ({width}x{height})")
+        return width
+
+    Image.fromarray(flatten_sea(img)).save(path, quality=88)
     print(f"[ortho] {path} écrit ({width}x{height})")
     return width

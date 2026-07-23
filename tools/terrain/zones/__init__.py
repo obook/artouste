@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 zones
 Description des terrains réels disponibles. Chaque zone décrit une emprise

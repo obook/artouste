@@ -53,6 +53,7 @@ add_executable(artouste
     app/hud/ApplicationHudNav.cpp
     app/ApplicationCapture.cpp
     app/menu/ApplicationMenu.cpp
+    app/menu/ApplicationMenuMaps.cpp
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
     app/DemoPilot.cpp

@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 struct GLFWwindow;
 struct GLFWmonitor;
@@ -83,6 +84,25 @@ private:
        Échap) : recharge le terrain s'il a changé (sinon repose l'appareil au parking),
        règle l'état de la turbine, et repart d'un état neutre (ni démo, ni pause). */
     void applyMenuSession();
+
+    /* Une carte proposée au menu : nom du sous-dossier (valeur pour le terrain) et
+       libellé lisible affiché à l'utilisateur. Définie et peuplée dans
+       ApplicationMenuMaps.cpp, consommée par runStartupMenu (ApplicationMenu.cpp). */
+    struct MapEntry {
+        std::string dir;   /* nom du sous-dossier de assets/terrain (= nom du terrain) */
+        std::string title; /* libellé lisible, tiré de la première ligne de terrain.txt */
+        bool zombieCapable = false; /* présence de zombies.txt : mode zombie proposé */
+        /* Présence de zombie_only.txt : carte dédiée au mode zombie (ex. dax-arene),
+           sans autre usage -- lancer normalement (Démarrer/Entrée/A) suffit à
+           démarrer le combat, pas besoin du bouton "Mode Zombie" ni de Z/LB. */
+        bool zombieOnly = false;
+    };
+
+    /* Recense les cartes : chaque sous-dossier de assets/terrain contenant un
+       terrain.txt, trié par nom pour un ordre stable (la première est le choix par
+       défaut), sauf les cartes dédiées au mode zombie qui passent systématiquement
+       en dernier. Définie dans ApplicationMenuMaps.cpp. */
+    static std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets);
 
     /* Menu de démarrage affiché dans la fenêtre (ImGui) : choix de la carte et du
        démarrage immédiat de la turbine, à la place de l'ancien launch.bat (bloqué par

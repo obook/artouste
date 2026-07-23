@@ -25,17 +25,20 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
+import sys
+from pathlib import Path
 
 import addon_utils
 import bmesh
 import bpy
 import numpy as np
 
-RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODELS = os.path.join(RACINE, "assets", "models", "Alouette-II", "Models")
-ALOUETTE = os.path.join(MODELS, "alouette.ac")
-TEX = os.path.join(MODELS, "texture.png")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
+
+MODELS = assets_dir("models", "Alouette-II", "Models")
+ALOUETTE = str(MODELS / "alouette.ac")
+TEX = str(MODELS / "texture.png")
 SEUIL_X = 2.8  # au-delà en X (vers la queue), c'est la D-hoop ; en deçà, le tube avant
 
 
@@ -47,7 +50,7 @@ def texture_unie(nom, couleur):
     img.colorspace_settings.name = "Non-Color"
     r, g, b = (c / 255.0 for c in couleur)
     img.pixels[:] = np.tile([r, g, b, 1.0], 8 * 8)
-    img.filepath_raw = os.path.join(MODELS, nom)
+    img.filepath_raw = str(MODELS / nom)
     img.file_format = "PNG"
     img.save()
     print("[tailguard] écrit", nom)
@@ -83,7 +86,8 @@ def piece_arceau():
         if not o.name.startswith("structure"):
             continue
         vs = np.array([list(v.co) for v in o.data.vertices])
-        if vs[:, 0].max() > 4.0 and (vs[:, 2].max() - vs[:, 2].min()) < 0.1 and vs[:, 1].min() < -0.5:
+        plat = (vs[:, 2].max() - vs[:, 2].min()) < 0.1
+        if vs[:, 0].max() > 4.0 and plat and vs[:, 1].min() < -0.5:
             return o
     raise RuntimeError("pièce de l'arceau introuvable")
 
@@ -113,7 +117,7 @@ def main():
         if o.type == "MESH" and o is not hoop:
             bpy.data.objects.remove(o, do_unlink=True)
     bpy.ops.object.select_all(action="SELECT")
-    bpy.ops.export_scene.export_ac3d(filepath=os.path.join(MODELS, "tailguard.ac"))
+    bpy.ops.export_scene.export_ac3d(filepath=str(MODELS / "tailguard.ac"))
     print("[tailguard] écrit tailguard.ac")
 
     # alouette.ac : le fuselage SANS la D-hoop (texture préservée).

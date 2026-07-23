@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
-# Génère les décalques (textes blancs sur fond transparent) appliqués en 3D sur
-# les flancs de la livrée Gendarmerie : le mot "GENDARMERIE" et l'immatriculation
-# "F-BRHP". Chaque décalque est un PNG RGBA posé ensuite sur un quad texturé.
+"""
+make_decals.py
+Génère les décalques (textes blancs sur fond transparent) appliqués en 3D sur
+les flancs des livrées : immatriculations et mentions "GENDARMERIE",
+"PROTECTION CIVILE". Chaque décalque est un PNG RGBA posé ensuite sur un quad
+texturé.
+
+Usage : python3 tools/livree/make_decals.py
+Sortie : assets/models/Alouette-II/Models/decal-*.png
+
+Auteur : O. Booklage
+Licence : GPL v2
+"""
+
 import os
+
 from PIL import Image, ImageDraw, ImageFont
 
 OUT = "assets/models/Alouette-II/Models"
@@ -27,16 +39,21 @@ def make_text(text, w, h, font_px, dst, tracking=0):
     print("décalque écrit ->", dst, img.size)
 
 
-# "GENDARMERIE" : lettres serrées et larges, comme sur la cellule réelle.
-make_text("GENDARMERIE", 1024, 160, 130, "decal-gendarmerie.png", tracking=6)
-# Immatriculation de l'appareil de "Peau d'Âne".
-make_text("F-BRHP", 640, 200, 150, "decal-fbrhp.png", tracking=4)
-# Code d'appareil de la livrée armée de terre (ALAT), sur la poutre de queue.
-make_text("341-HN", 640, 200, 150, "decal-341hn.png", tracking=4)
-# Livrée Protection civile : le texte des flancs et l'immatriculation de l'appareil.
-make_text("PROTECTION CIVILE", 1400, 150, 110, "decal-protectioncivile.png", tracking=4)
-make_text("F-AYEM", 640, 200, 150, "decal-fayem.png", tracking=4)
+def main():
+    # "GENDARMERIE" : lettres serrées et larges, comme sur la cellule réelle.
+    make_text("GENDARMERIE", 1024, 160, 130, "decal-gendarmerie.png", tracking=6)
+    # Immatriculation de l'appareil de "Peau d'Âne".
+    make_text("F-BRHP", 640, 200, 150, "decal-fbrhp.png", tracking=4)
+    # Code d'appareil de la livrée armée de terre (ALAT), sur la poutre de queue.
+    make_text("341-HN", 640, 200, 150, "decal-341hn.png", tracking=4)
+    # Livrée Protection civile : le texte des flancs et l'immatriculation de l'appareil.
+    make_text("PROTECTION CIVILE", 1400, 150, 110, "decal-protectioncivile.png", tracking=4)
+    make_text("F-AYEM", 640, 200, 150, "decal-fayem.png", tracking=4)
 
-# Liseré blanc plein : un petit rectangle opaque, étiré ensuite en fine bande.
-Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT, "decal-stripe.png"))
-print("décalque écrit -> decal-stripe.png (16, 16)")
+    # Liseré blanc plein : un petit rectangle opaque, étiré ensuite en fine bande.
+    Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT, "decal-stripe.png"))
+    print("décalque écrit -> decal-stripe.png (16, 16)")
+
+
+if __name__ == "__main__":
+    main()

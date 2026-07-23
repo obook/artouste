@@ -1,48 +1,37 @@
 #!/usr/bin/env python3
-# Génère une livrée armée de terre (ALAT, Aviation légère de l'armée de terre) à
-# partir de l'atlas d'origine de l'Alouette II. On repeint en vert olive (vert
-# armée) uniquement les pixels neutres (le "métal" gris) et l'accent orange de la
-# poutre, en laissant intacts les marquages saturés (cocardes tricolores).
-# L'image d'origine n'est jamais modifiée : on écrit un fichier séparé. C'est le
-# pendant olive de make_gendarmerie.py, dont seule la couleur cible change.
+"""
+make_armeedeterre.py
+Génère une livrée armée de terre (ALAT, Aviation légère de l'armée de terre) à
+partir de l'atlas d'origine de l'Alouette II. On repeint en vert armée (olive
+drab, proche RAL 6014) #4b4e35 (RGB 75, 78, 53) uniquement les pixels neutres
+(le "métal" gris) et l'accent orange de la poutre, en laissant intacts les
+marquages saturés (cocardes tricolores). Voir retint.py pour le principe
+(partagé avec make_gendarmerie.py, make_blanche.py,
+make_protectioncivile.py) : c'est le pendant olive de make_gendarmerie.py, dont
+seule la couleur cible change. L'image d'origine n'est jamais modifiée : on
+écrit un fichier séparé.
+
+Usage : python3 tools/livree/make_armeedeterre.py [src] [dst]
+Sortie par défaut : assets/models/Alouette-II/Models/texture-armeedeterre.png
+
+Auteur : O. Booklage
+Licence : GPL v2
+"""
+
 import sys
-from PIL import Image
-import numpy as np
 
-src = sys.argv[1] if len(sys.argv) > 1 else "assets/models/Alouette-II/Models/texture.png"
-dst = sys.argv[2] if len(sys.argv) > 2 else "assets/models/Alouette-II/Models/texture-armeedeterre.png"
+from retint import retint
 
-img = np.asarray(Image.open(src).convert("RGB")).astype(np.float32) / 255.0
-r, g, b = img[..., 0], img[..., 1], img[..., 2]
+SRC_DEFAUT = "assets/models/Alouette-II/Models/texture.png"
+DST_DEFAUT = "assets/models/Alouette-II/Models/texture-armeedeterre.png"
+CIBLE = (0x4b, 0x4e, 0x35)
 
-mx = np.maximum(np.maximum(r, g), b)
-mn = np.minimum(np.minimum(r, g), b)
-sat = np.where(mx > 1e-4, (mx - mn) / np.maximum(mx, 1e-4), 0.0)
-lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-# Masque des pixels à repeindre :
-#  - le "métal" gris, faiblement saturé ;
-#  - l'accent orange de la poutre (un appareil de l'armée de terre est tout olive).
-# On distingue l'orange du rouge de la cocarde : l'orange a un vert nettement
-# supérieur au bleu (r > g > b), alors que le rouge de la cocarde a g proche de b.
-neutral = sat < 0.18
-orange  = (sat >= 0.18) & (r > g) & (g - b > 0.12) & (r - b > 0.25)
-neutral = neutral | orange
+def main():
+    src = sys.argv[1] if len(sys.argv) > 1 else SRC_DEFAUT
+    dst = sys.argv[2] if len(sys.argv) > 2 else DST_DEFAUT
+    retint(src, dst, CIBLE)
 
-# Vert armée (olive drab), proche RAL 6014 : #4b4e35 (RGB 75, 78, 53), un vert
-# olive foncé et mat. On teinte chaque pixel neutre par cette couleur en conservant
-# l'ombrage d'origine : la teinte moyenne des pixels repeints tombe exactement sur
-# la cible, les creux deviennent plus sombres et les hautes lumières un peu plus
-# claires, sans changer de nuance.
-TARGET = np.array([0x4b, 0x4e, 0x35], dtype=np.float32) / 255.0
-meanL = float(lum[neutral].mean())
-gain = lum / meanL  # 1.0 pour un pixel de luminance moyenne -> couleur cible exacte
 
-out = img.copy()
-out[..., 0] = np.where(neutral, TARGET[0] * gain, r)
-out[..., 1] = np.where(neutral, TARGET[1] * gain, g)
-out[..., 2] = np.where(neutral, TARGET[2] * gain, b)
-
-out = np.clip(out, 0.0, 1.0)
-Image.fromarray((out * 255).astype("uint8")).save(dst)
-print(f"livrée écrite -> {dst}  ({neutral.mean()*100:.0f}% des pixels repeints)")
+if __name__ == "__main__":
+    main()

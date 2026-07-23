@@ -23,14 +23,17 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
+import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MR = os.path.join(RACINE, "assets", "models", "Alouette-II", "Models", "Externals", "MainRotor")
-SRC_PNG = os.path.join(MR, "mainrotor.png")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
+
+MR = assets_dir("models", "Alouette-II", "Models", "Externals", "MainRotor")
+SRC_PNG = str(MR / "mainrotor.png")
 
 # Gris foncé uni visé pour tout le corps du rotor (moyeu + pales). Valeur absolue,
 # en 0..255. Un aplat uni reste fidèle au rendu voulu (rotor d'une seule couleur) et

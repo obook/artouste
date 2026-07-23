@@ -1,50 +1,41 @@
 #!/usr/bin/env python3
-# Génère une livrée Protection civile (Sécurité civile) à partir de l'atlas
-# d'origine de l'Alouette II. On repeint en rouge vif uniquement les pixels
-# neutres (le "métal" gris) et l'accent orange de la poutre, en laissant intacts
-# les marquages saturés (cocardes tricolores). L'image d'origine n'est jamais
-# modifiée : on écrit un fichier séparé. C'est le pendant rouge de
-# make_gendarmerie.py, dont seule la couleur cible change.
+"""
+make_protectioncivile.py
+Génère une livrée Protection civile (Sécurité civile) à partir de l'atlas
+d'origine de l'Alouette II. On repeint en rouge Protection civile officiel
+#611716 (RGB 97, 23, 22, un rouge sombre et saturé) uniquement les pixels
+neutres (le "métal" gris) et l'accent orange de la poutre, en laissant intacts
+les marquages saturés (cocardes tricolores). Voir retint.py pour le principe
+(partagé avec make_gendarmerie.py, make_armeedeterre.py, make_blanche.py) :
+c'est le pendant rouge de make_gendarmerie.py, dont seule la couleur cible
+change -- avec en plus un gain d'ombrage plafonné à (0.45, 1.30) : sans borne
+haute, les reflets brillants du métal saturent le canal rouge à 1.0 pendant que
+vert et bleu continuent de monter, ce qui délave le rouge vers le rose ; le
+plancher à 0.45 garde les creux d'un rouge sombre plutôt que noir. L'image
+d'origine n'est jamais modifiée : on écrit un fichier séparé.
+
+Usage : python3 tools/livree/make_protectioncivile.py [src] [dst]
+Sortie par défaut : assets/models/Alouette-II/Models/texture-protectioncivile.png
+
+Auteur : O. Booklage
+Licence : GPL v2
+"""
+
 import sys
-from PIL import Image
-import numpy as np
 
-src = sys.argv[1] if len(sys.argv) > 1 else "assets/models/Alouette-II/Models/texture.png"
-dst = sys.argv[2] if len(sys.argv) > 2 else "assets/models/Alouette-II/Models/texture-protectioncivile.png"
+from retint import retint
 
-img = np.asarray(Image.open(src).convert("RGB")).astype(np.float32) / 255.0
-r, g, b = img[..., 0], img[..., 1], img[..., 2]
+SRC_DEFAUT = "assets/models/Alouette-II/Models/texture.png"
+DST_DEFAUT = "assets/models/Alouette-II/Models/texture-protectioncivile.png"
+CIBLE = (0x61, 0x17, 0x16)
+GAIN_CLIP = (0.45, 1.30)
 
-mx = np.maximum(np.maximum(r, g), b)
-mn = np.minimum(np.minimum(r, g), b)
-sat = np.where(mx > 1e-4, (mx - mn) / np.maximum(mx, 1e-4), 0.0)
-lum = 0.299 * r + 0.587 * g + 0.114 * b
 
-# Masque des pixels à repeindre :
-#  - le "métal" gris, faiblement saturé ;
-#  - l'accent orange de la poutre (un appareil de la Protection civile est tout rouge).
-# On distingue l'orange du rouge de la cocarde : l'orange a un vert nettement
-# supérieur au bleu (r > g > b), alors que le rouge de la cocarde a g proche de b.
-neutral = sat < 0.18
-orange  = (sat >= 0.18) & (r > g) & (g - b > 0.12) & (r - b > 0.25)
-neutral = neutral | orange
+def main():
+    src = sys.argv[1] if len(sys.argv) > 1 else SRC_DEFAUT
+    dst = sys.argv[2] if len(sys.argv) > 2 else DST_DEFAUT
+    retint(src, dst, CIBLE, gain_clip=GAIN_CLIP)
 
-# Rouge Protection civile officiel : #611716 (RGB 97, 23, 22), un rouge sombre et
-# saturé. On teinte chaque pixel neutre par cette couleur en conservant l'ombrage
-# d'origine : la teinte moyenne des pixels repeints tombe sur la cible.
-TARGET = np.array([0x61, 0x17, 0x16], dtype=np.float32) / 255.0
-meanL = float(lum[neutral].mean())
-# Gain d'ombrage plafonné : sans borne haute, les reflets brillants du métal
-# saturent le canal rouge à 1.0 pendant que vert et bleu continuent de monter, ce
-# qui délave le rouge vers le rose. On bride donc le gain à 1.30 (et un plancher à
-# 0.45 pour que les creux restent un rouge sombre plutôt que noir).
-gain = np.clip(lum / meanL, 0.45, 1.30)
 
-out = img.copy()
-out[..., 0] = np.where(neutral, TARGET[0] * gain, r)
-out[..., 1] = np.where(neutral, TARGET[1] * gain, g)
-out[..., 2] = np.where(neutral, TARGET[2] * gain, b)
-
-out = np.clip(out, 0.0, 1.0)
-Image.fromarray((out * 255).astype("uint8")).save(dst)
-print(f"livrée écrite -> {dst}  ({neutral.mean()*100:.0f}% des pixels repeints)")
+if __name__ == "__main__":
+    main()

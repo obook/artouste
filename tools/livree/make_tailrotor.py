@@ -13,29 +13,30 @@ Produit deux textures :
   - tailrotor.png             : pales métal nu (livrée d'origine) ;
   - tailrotor-gendarmerie.png : pales jaunes à zébrures rouges (Gendarmerie).
 
+La rastérisation des triangles (peindre_triangles) est générique et vit dans
+raster.py, réutilisable par d'autres pièces peintes depuis Blender.
+
 Usage : blender --background --python tools/livree/make_tailrotor.py
 
 Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import os
+import sys
+from pathlib import Path
 
 import addon_utils
 import bpy
 import numpy as np
 
-RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-TR = os.path.join(RACINE, "assets", "models", "Alouette-II", "Models", "Externals", "TailRotor")
-BLADE_AC = os.path.join(TR, "blade.ac")
-SRC_PNG = os.path.join(TR, "tailrotor.png")
+from raster import peindre_triangles
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # tools/
+from common.paths import assets_dir
 
-def srgb_vers_lineaire(c):
-    """Convertit une couleur sRGB (composantes 0..1) en linéaire (espace des
-       pixels Blender). Nécessaire pour écrire la bonne teinte dans l'image."""
-    c = np.asarray(c, dtype=np.float64)
-    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+TR = assets_dir("models", "Alouette-II", "Models", "Externals", "TailRotor")
+BLADE_AC = str(TR / "blade.ac")
+SRC_PNG = str(TR / "tailrotor.png")
 
 
 def importer_triangles():
@@ -80,54 +81,14 @@ def zebre(t):
     return jaune
 
 
-def peindre_pale(px, tris, couleur_fn):
-    """Rastérise chaque triangle de la pale dans le tableau de pixels px (H,W,4,
-       linéaire, rangé bas-en-haut comme Blender). La couleur de chaque pixel est
-       donnée par couleur_fn(envergure_normalisée)."""
-    h, w, _ = px.shape
-    spans = [s for tri in tris for (_, _, s) in tri]
-    smin, smax = min(spans), max(spans)
-    etendue = (smax - smin) if smax > smin else 1.0
-
-    for tri in tris:
-        # Coordonnées pixel (u -> x, v -> y depuis le bas, comme Blender).
-        pts = [(u * w, v * h, s) for (u, v, s) in tri]
-        (x0, y0, s0), (x1, y1, s1), (x2, y2, s2) = pts
-        minx = max(0, int(np.floor(min(x0, x1, x2))))
-        maxx = min(w - 1, int(np.ceil(max(x0, x1, x2))))
-        miny = max(0, int(np.floor(min(y0, y1, y2))))
-        maxy = min(h - 1, int(np.ceil(max(y0, y1, y2))))
-        if maxx < minx or maxy < miny:
-            continue
-        ys, xs = np.mgrid[miny:maxy + 1, minx:maxx + 1]
-        cx = xs + 0.5
-        cy = ys + 0.5
-        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
-        if abs(denom) < 1e-9:
-            continue
-        a = ((y1 - y2) * (cx - x2) + (x2 - x1) * (cy - y2)) / denom
-        b = ((y2 - y0) * (cx - x2) + (x0 - x2) * (cy - y2)) / denom
-        c = 1.0 - a - b
-        dedans = (a >= 0) & (b >= 0) & (c >= 0)
-        if not dedans.any():
-            continue
-        span = a * s0 + b * s1 + c * s2
-        tnorm = (span - smin) / etendue
-        # On colorie pixel par pixel les points intérieurs au triangle.
-        rr, cc = np.nonzero(dedans)
-        for k in range(rr.size):
-            t = float(tnorm[rr[k], cc[k]])
-            px[ys[rr[k], cc[k]], xs[rr[k], cc[k]], :3] = srgb_vers_lineaire(couleur_fn(t))
-            px[ys[rr[k], cc[k]], xs[rr[k], cc[k]], 3] = 1.0
-
-
 def generer(tris, couleur_fn, sortie_png):
-    """Charge la texture source, peint la pale, enregistre vers sortie_png."""
+    """Charge la texture source, peint la pale (rastérisation générique de
+       raster.py, t = envergure normalisée), enregistre vers sortie_png."""
     img = bpy.data.images.load(SRC_PNG)
     img.colorspace_settings.name = "sRGB"
     w, h = img.size
     px = np.array(img.pixels[:], dtype=np.float64).reshape(h, w, 4)
-    peindre_pale(px, tris, couleur_fn)
+    peindre_triangles(px, tris, couleur_fn)
     img.pixels[:] = px.ravel()
     img.filepath_raw = sortie_png
     img.file_format = "PNG"
@@ -142,7 +103,7 @@ def main():
     # 1) Pales métal -> écrase tailrotor.png (livrée d'origine).
     generer(tris, metal, SRC_PNG)
     # 2) Pales zébrées -> tailrotor-gendarmerie.png (Gendarmerie).
-    generer(tris, zebre, os.path.join(TR, "tailrotor-gendarmerie.png"))
+    generer(tris, zebre, str(TR / "tailrotor-gendarmerie.png"))
 
 
 if __name__ == "__main__":

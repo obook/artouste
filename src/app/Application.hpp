@@ -76,6 +76,18 @@ private:
     bool initWindow();
     bool initGL();
     void initScene();
+
+    /* Charge les shaders, les maillages procéduraux (disque, sphère, hélipad,
+       jupe) et les modèles associés (zombies, projectiles, explosions,
+       hélipad texturé), plus les textures de détail. Appelée par initScene.
+       Définie dans ApplicationSceneShaders.cpp. */
+    void initSceneShaders();
+
+    /* Lit la configuration et les variables d'environnement ARTOUSTE_* (démo,
+       arbres, terrain, turbine, radio), charge le terrain choisi et démarre
+       la démo/le combat demandés. Appelée par initScene. Définie dans
+       ApplicationSceneConfig.cpp. */
+    void initSceneConfig();
     /* Boucle de vol. Renvoie true si l'utilisateur a demandé le retour au menu (touche
        Échap), false s'il a fermé la fenêtre (on quitte alors l'application). */
     bool mainLoop();

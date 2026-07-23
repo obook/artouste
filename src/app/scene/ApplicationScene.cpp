@@ -1,9 +1,11 @@
 /*
  * ApplicationScene.cpp
- * Mise en place de la scène : chargement des shaders, des maillages procéduraux,
- * du terrain réel, des bâtiments et du modèle 3D de l'appareil, puis lecture de
- * la configuration (terrain, démo, démarrage immédiat). La localisation du
- * dossier des ressources vit dans ApplicationAssets.cpp.
+ * Mise en place de la scène : initScene enchaîne le chargement des shaders et
+ * maillages procéduraux (ApplicationSceneShaders.cpp) puis la lecture de la
+ * configuration et le chargement du terrain (ApplicationSceneConfig.cpp). Ce
+ * fichier garde aussi loadTerrain et applySunSchedule, réutilisés au runtime
+ * (changement de carte, démo). La localisation du dossier des ressources vit
+ * dans ApplicationAssets.cpp.
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -11,36 +13,17 @@
  */
 
 #include "app/Application.hpp"
-
-#include "app/AppConstants.hpp"
-#include "app/Config.hpp"
-#include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
-#include "render/Vegetation.hpp"
 #include "render/Clouds.hpp"
-#include "render/combat/ExplosionFx.hpp"
-#include "render/combat/SkinnedZombies.hpp"
-#include "render/combat/Projectiles.hpp"
-#include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
-#include "render/Mesh.hpp"
-#include "render/Model.hpp"
-#include "render/ModelLoader.hpp"
-#include "render/Primitives.hpp"
-#include "render/Shader.hpp"
-#include "render/Skybox.hpp"
 #include "render/Terrain.hpp"
-#include "render/Texture.hpp"
-#include "util/Math.hpp"
+#include "render/Vegetation.hpp"
 
-#include <algorithm>
 #include <cstdio>
-#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <random>
 #include <string>
-#include <vector>
 
 namespace artouste::app {
 
@@ -51,315 +34,24 @@ namespace {
  * Tiré au hasard à chaque lancement, pour que la pale ne soit pas figée pile dans
  * l'axe (plus naturel). Petit, pour rester loin de la sortie d'échappement.
  */
-constexpr float ROTOR_PARK_JITTER = 0.26f;  /* ~15 degrés */
+constexpr float ROTOR_PARK_JITTER = 0.26f; /* ~15 degrés */
 
-/*
- * Capacité du tampon d'instances du mode zombie (nombre maximal de zombies
- * dessinés simultanément, voir render::SkinnedZombies). Dimensionnée large
- * pour les manches tardives (gestionnaire de vagues) ; le point de spawn
- * initial n'en utilise qu'une poignée (zombies.txt).
- */
-constexpr std::size_t ZOMBIE_CAPACITY = 300;
-
-/*
- * Nombre de groupes de phase de marche (rendu skinné) : l'animation est posée à
- * autant d'instants déphasés, chaque zombie étant rattaché à un groupe, pour une
- * marche désynchronisée à coût maîtrisé (voir render::SkinnedZombies). Six suffit
- * à casser l'effet "tous au même pas" sans multiplier les dessins.
- */
-constexpr int ZOMBIE_PHASE_GROUPS = 6;
-
-/*
- * Capacité du tampon d'instances des boulettes toxiques (voir
- * app::ProjectileSystem::MAX_PROJECTILES, même valeur -- inutile de réserver
- * plus côté GPU que ce que la logique de jeu peut produire à la fois).
- */
-constexpr std::size_t PROJECTILE_CAPACITY = 64;
-
-}  /* namespace */
+} /* namespace */
 
 void Application::initScene() {
     /* Décalage de parking du rotor, tiré au hasard à chaque lancement : la pale ne
      * se range pas pile dans l'axe, ce qui est plus naturel. On y place aussi l'angle
      * de départ du rotor, pour qu'il soit déjà à cette position au lancement. */
-    std::mt19937                          rng(std::random_device{}());
+    std::mt19937 rng(std::random_device{}());
     std::uniform_real_distribution<float> jitter(-ROTOR_PARK_JITTER, ROTOR_PARK_JITTER);
     m_parkOffset = jitter(rng);
     m_rotorAngle = m_parkOffset;
 
-    const std::filesystem::path assets = resolveAssetDir();
-    m_assetsDir = assets;  /* mémorisé pour pouvoir recharger un terrain au runtime (démo) */
-    m_musicPath = assets / "music" / "demo.mp3";  /* musique jouée pendant la démo (optionnelle) */
-    m_shader = std::make_unique<render::Shader>(assets / "shaders" / "basic.vert",
-                                                assets / "shaders" / "basic.frag");
-    m_modelShader = std::make_unique<render::Shader>(assets / "shaders" / "model.vert",
-                                                     assets / "shaders" / "model.frag");
-    m_terrainShader = std::make_unique<render::Shader>(assets / "shaders" / "terrain.vert",
-                                                       assets / "shaders" / "terrain.frag");
-    m_seaShader   = std::make_unique<render::Shader>(assets / "shaders" / "sea.vert",
-                                                     assets / "shaders" / "sea.frag");
-    m_skyShader   = std::make_unique<render::Shader>(assets / "shaders" / "sky.vert",
-                                                     assets / "shaders" / "sky.frag");
-    m_flatShader  = std::make_unique<render::Shader>(assets / "shaders" / "flat.vert",
-                                                     assets / "shaders" / "flat.frag");
-    m_shadowShader = std::make_unique<render::Shader>(assets / "shaders" / "shadow.vert",
-                                                      assets / "shaders" / "shadow.frag");
-    m_buildingShader = std::make_unique<render::Shader>(assets / "shaders" / "building.vert",
-                                                        assets / "shaders" / "building.frag");
-    m_vegetationShader = std::make_unique<render::Shader>(assets / "shaders" / "vegetation.vert",
-                                                          assets / "shaders" / "vegetation.frag");
-    m_cloudShader = std::make_unique<render::Shader>(assets / "shaders" / "clouds.vert",
-                                                     assets / "shaders" / "clouds.frag");
-    m_zombieShader = std::make_unique<render::Shader>(assets / "shaders" / "zombie_skinned.vert",
-                                                      assets / "shaders" / "zombie_skinned.frag");
-    m_projectileShader = std::make_unique<render::Shader>(assets / "shaders" / "projectile.vert",
-                                                          assets / "shaders" / "projectile.frag");
-    m_explosionShader = std::make_unique<render::Shader>(assets / "shaders" / "explosion.vert",
-                                                         assets / "shaders" / "explosion.frag");
-    m_sky         = std::make_unique<render::Skybox>();
+    m_assetsDir = resolveAssetDir(); /* mémorisé pour recharger un terrain au runtime (démo) */
+    m_musicPath = m_assetsDir / "music" / "demo.mp3"; /* musique de la démo (optionnelle) */
 
-    /* Mode zombie : pack de personnages skinnés (marche + bras animés) chargé une
-       seule fois (indépendant de la carte), voir CREDITS.md pour l'attribution.
-       Absent : m_zombiesRender reste nul, aucun zombie ne sera dessiné (CombatMode
-       peut malgré tout s'activer sur les cartes compatibles, sans effet visuel). */
-    const std::filesystem::path zombieModel = assets / "models" / "zombie" / "zombies_animated.glb";
-    if (std::filesystem::exists(zombieModel)) {
-        m_zombiesRender =
-            std::make_unique<render::SkinnedZombies>(zombieModel, ZOMBIE_CAPACITY, ZOMBIE_PHASE_GROUPS);
-    }
-    /* Boulettes toxiques : billboard procédural, pas de modèle à charger. */
-    m_projectilesRender = std::make_unique<render::Projectiles>(PROJECTILE_CAPACITY);
-
-    /* Explosions 3D des roquettes : modèle animé chargé une fois. Rayon monde
-       proche de la zone létale (RocketSystem::EXPLOSION_RADIUS_M = 3 m). Absent :
-       m_explosionFx->built() reste faux, aucune explosion 3D dessinée. */
-    const std::filesystem::path explosionModel = assets / "models" / "zombie" / "explosion.glb";
-    if (std::filesystem::exists(explosionModel)) {
-        /* Rayon monde 3,5 m (proche de la zone létale). Le clip (12 images figées
-           enchainees, 3,0 s au total -- voir le diagnostic [ExplosionModel] au
-           chargement) n'affiche nativement que 4 images/s : saccadé si on ne
-           montre qu'une tranche de 1,2 s (RocketSystem::EXPLOSION_DURATION_S,
-           la vie réelle de l'explosion) a vitesse native, comme avant (5 images
-           vues sur 12). Départ d'anim a 0,3 s (saute juste la toute première
-           image, encore informe) puis lecture accélérée x2,25 pour atteindre la
-           fin du clip (3,0 s) en 1,2 s de vie réelle : les ~11 images restantes
-           défilent dans le même temps de vie, sensiblement moins saccadé, sans
-           toucher au fichier ni a ses images (photos de feu réalistes). */
-        m_explosionFx = std::make_unique<render::ExplosionFx>(explosionModel, 3.5f, 0.3f, 1.2f, 2.25f);
-    }
-
-    const auto discData = render::primitives::softDisc(6.0f, 48);
-    m_shadowDisc        = std::make_unique<render::Mesh>(discData.vertices, discData.indices);
-
-    /* Petite sphère unité, réutilisée (mise à l'échelle au dessin) pour le flash du
-       strombo et la lueur de la tuyère. Le shader plat ne lit que la position. */
-    const auto sphereData = render::primitives::sphere(1.0f, 12, 16, vec3{1.0f, 1.0f, 1.0f});
-    m_glowSphere          = std::make_unique<render::Mesh>(sphereData.vertices, sphereData.indices);
-
-    /* Hélipad de la zone de départ : disque béton foncé, anneau et grand H blancs
-       (marquage d'hélistation civile, sans croix). Centré sur l'origine ; placé au
-       départ à l'affichage. Repli seulement : la version texturée le remplace si elle
-       est présente. */
-    const auto padData = render::primitives::helipad(7.0f, 48, vec3{0.45f, 0.45f, 0.47f},
-                                                     vec3{0.92f, 0.92f, 0.90f},
-                                                     vec3{0.95f, 0.95f, 0.93f});
-    m_helipad          = std::make_unique<render::Mesh>(padData.vertices, padData.indices);
-
-    /* Jupe des hélisurfaces : paroi cylindrique sous le disque, pour les pads
-       perchés dont le plateau surplombe le relief (sommet du pic du Midi
-       d'Ossau). Gris béton dégradé vers l'ombre ; la partie enterrée est
-       simplement cachée par le test de profondeur. */
-    const auto skirtData = render::primitives::tube(6.9f, 10.0f, 48, vec3{0.52f, 0.52f, 0.54f},
-                                                    vec3{0.26f, 0.26f, 0.28f});
-    m_padSkirt           = std::make_unique<render::Mesh>(skirtData.vertices, skirtData.indices);
-
-    /* Hélipad texturé fabriqué avec Blender (voir tools/helipad). S'il est présent,
-       il remplace la version procédurale ci-dessus ; sinon on garde celle-ci. */
-    const std::filesystem::path helipadModel = assets / "models" / "helipad" / "helipad.ac";
-    if (std::filesystem::exists(helipadModel)) {
-        render::Model pad = render::ModelLoader::load(helipadModel, {}, {});
-        if (!pad.empty()) {
-            m_helipadModel = std::make_unique<render::Model>(std::move(pad));
-        }
-    }
-
-    /* Grain rocheux du terrain : texture de détail tuilable mélangée à l'ortho
-       de près par terrain.frag (voir u_detail). Absente : le shader reçoit une
-       unité vide, mais le fichier fait partie du dépôt. */
-    const std::filesystem::path detailPath = assets / "textures" / "detail-roche.png";
-    if (std::filesystem::exists(detailPath)) {
-        m_terrainDetail = std::make_unique<render::Texture>(detailPath);
-    }
-
-    /* Façade tuilée des bâtiments (fenêtres), voir u_facade dans building.frag.
-       Absente : le shader reçoit une unité vide, les murs restent en couleur unie. */
-    const std::filesystem::path facadePath = assets / "textures" / "facade.png";
-    if (std::filesystem::exists(facadePath)) {
-        m_buildingFacade = std::make_unique<render::Texture>(facadePath);
-    }
-
-    /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */
-    const vec3 up{0.0f, 1.0f, 0.0f};
-    const std::vector<render::Vertex> seaVerts = {
-        {{-SEA_HALF, SEA_LEVEL, -SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
-        {{SEA_HALF, SEA_LEVEL, -SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
-        {{SEA_HALF, SEA_LEVEL, SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
-        {{-SEA_HALF, SEA_LEVEL, SEA_HALF}, up, SEA_COLOR, {0.0f, 0.0f}},
-    };
-    const std::vector<unsigned int> seaIdx = {0, 1, 2, 0, 2, 3};
-    m_sea = std::make_unique<render::Mesh>(seaVerts, seaIdx);
-
-    /*
-     * Terrain réel (relief IGN + orthophoto drapée). Le terrain à charger est un
-     * sous-dossier de assets/terrain/ (par exemple "ossau" ou "cote-landes"),
-     * choisi par la clé "terrain" du fichier de configuration. La variable
-     * d'environnement ARTOUSTE_TERRAIN, si elle est définie, a la priorité (pratique
-     * pour tester une autre map sans toucher au fichier).
-     */
-    /* Configuration déjà chargée au lancement (run(), avant l'ouverture de la fenêtre
-       pour le MSAA). On la réutilise ici plutôt que de relire le fichier. */
-    const app::Config& config = m_config;
-
-    /* Mode démo automatique : clé "demo" de la configuration, surchargée par la
-       variable d'environnement ARTOUSTE_DEMO (prioritaire). */
-    bool demoEnabled = config.demo;
-    if (const char* env = std::getenv("ARTOUSTE_DEMO"); env != nullptr && env[0] != '\0') {
-        demoEnabled = (env[0] != '0');
-    }
-
-    /* Végétation : clé "arbres" de la configuration, forcée à faux par la variable
-       d'environnement ARTOUSTE_NO_TREES (prioritaire). Retenue dans un membre car
-       c'est loadTerrain (appelé ici puis à chaque changement de carte) qui sème. */
-    m_treesEnabled = config.trees;
-    if (std::getenv("ARTOUSTE_NO_TREES") != nullptr) {
-        m_treesEnabled = false;
-    }
-
-    /* Budget d'arbres : clé "tree_max" de la config, surchargée par la variable
-       d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
-       loadTerrain. C'est le principal levier de performance (poste de rendu le plus
-       coûteux sur GPU intégré). */
-    m_treeBudget = static_cast<std::size_t>(std::max(0, config.treeBudget));
-    if (const char* env = std::getenv("ARTOUSTE_TREE_MAX"); env != nullptr && env[0] != '\0') {
-        const long v = std::strtol(env, nullptr, 10);
-        if (v > 0) {
-            m_treeBudget = static_cast<std::size_t>(v);
-        }
-    }
-
-    std::string        terrainName = config.terrain;
-    if (!m_menuTerrain.empty()) {  /* choix du menu de démarrage, au-dessus de la config */
-        terrainName = m_menuTerrain;
-    }
-    if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
-        terrainName = env;  /* variable d'environnement : priorité maximale */
-    }
-    /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon). */
-    if ((demoEnabled || m_menuDemo) && terrainName != "arcachon") {
-        std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
-        terrainName = "arcachon";
-    }
-    renderLoadingScreen("Chargement du terrain...");
-    loadTerrain(terrainName);
-
-    /* Démarrage immédiat (gain de temps en test) : turbine et rotor d'emblée au
-       régime, au lieu de la séquence de démarrage (~1 min). Activé par la clé
-       `turbine_demarree` de la config, ou la variable d'environnement
-       ARTOUSTE_TURBINE_DEMARREE (prioritaire). */
-    bool turbineRunning = config.turbineRunning;
-    if (m_menuTurbine >= 0) {  /* choix du menu de démarrage, au-dessus de la config */
-        turbineRunning = (m_menuTurbine == 1);
-    }
-    if (const char* env = std::getenv("ARTOUSTE_TURBINE_DEMARREE"); env != nullptr && env[0] != '\0') {
-        turbineRunning = (env[0] != '0');  /* variable d'environnement : priorité maximale */
-    }
-    /* En mode démo, c'est la démo qui pilote la turbine (démarrage rapide) : on
-       ignore donc le démarrage immédiat éventuel. */
-    if (turbineRunning && !demoEnabled && !m_menuDemo) {
-        m_flight.turbine().forceRunning();
-        std::printf("[scène] démarrage immédiat : turbine et rotor au régime.\n");
-    }
-
-    m_helicopter = std::make_unique<render::HelicopterModel>();
-    m_input      = std::make_unique<input::InputSystem>(m_window);
-    m_hud.init(m_window);
-    m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
-    /* Mode zombie : dossier des sons ponctuels, séparé des sons de l'hélicoptère
-       (voir AudioEngine::initCombatSounds). Fichiers absents pour l'instant :
-       silencieux, sans erreur -- à fournir ultérieurement dans
-       assets/sounds/combat/ (gunfire.wav, zombie_hit.wav, zombie_death.wav,
-       toxic_throw.wav, toxic_impact.wav, wave_start.wav). */
-    m_audio.initCombatSounds(assets / "sounds" / "combat");
-
-    /* Flux radio internet : URL de la clé "radio_url" de la config, surchargée par
-       la variable d'environnement ARTOUSTE_RADIO_URL (prioritaire). Vide = pas de
-       radio. On mémorise l'URL sans démarrer le flux : la radio est coupée au
-       lancement, c'est la touche K qui l'allume ou la coupe. */
-    m_radioUrl = config.radioUrl;
-    if (const char* env = std::getenv("ARTOUSTE_RADIO_URL"); env != nullptr && env[0] != '\0') {
-        m_radioUrl = env;
-    }
-
-    /*
-     * On utilise le vrai modèle FlightGear s'il est présent : le sous-ensemble
-     * nécessaire est versionné dans le dépôt (le paquet FlightGear complet, lui,
-     * reste local). Sinon on conserve l'hélicoptère dessiné par le code.
-     */
-    const std::filesystem::path modelsDir = assets / "models" / "Alouette-II" / "Models";
-    if (std::filesystem::exists(modelsDir / "alouette.ac")) {
-        renderLoadingScreen("Chargement de l'hélicoptère...");
-        auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
-        if (loaded->loaded()) {
-            m_loadedHeli = std::move(loaded);
-            /* Livrée par défaut (Gendarmerie) appliquée d'emblée. */
-            m_loadedHeli->setLivery(m_livery);
-            std::printf("[scène] modèle FlightGear chargé.\n");
-        } else {
-            std::printf("[scène] échec du chargement du modèle, repli procédural.\n");
-        }
-    } else {
-        std::printf("[scène] modèle absent, repli procédural.\n");
-    }
-
-    if (m_height > 0) {
-        m_camera.setAspect(static_cast<float>(m_width) / static_cast<float>(m_height));
-    }
-
-    /* Mode démo demandé au lancement : on démarre la démonstration tout de suite. Lancée
-       depuis le menu (bouton "Démo"), en sortir ramènera au menu (m_demoFromMenu). */
-    if (demoEnabled || m_menuDemo) {
-        std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
-        m_demoFromMenu = m_menuDemo;
-        startDemo();
-    }
-
-    /* Mode zombie demandé au menu (bouton "Mode Zombie", visible seulement sur les
-       cartes compatibles, voir ApplicationMenu.cpp) : démarre la session de combat sur
-       le terrain qui vient d'être chargé. Sans effet si la carte n'a pas de
-       zombies.txt (CombatMode::active() reste faux). */
-    if (m_menuCombat) {
-        m_combat.start(assets / "terrain" / m_terrainName,
-                       [this](float x, float z) { return m_terrain->heightAt(x, z); });
-        if (m_combat.active()) {
-            /* Vue bloquée en cockpit pendant tout le combat (voir ApplicationInput.cpp,
-               qui empêche d'en sortir) : c'est la vue la plus immersive pour viser au
-               canon fixe, et elle évite les vues externes qui ne serviraient à rien
-               dans une arène confinée. */
-            m_viewMode = 1;
-            /* Turbine et rotor déjà au régime, quel que soit le choix du menu :
-               on entre directement dans le combat, pas de séquence de démarrage
-               (~1 min) à subir face à la horde. */
-            m_flight.turbine().forceRunning();
-        }
-    } else {
-        m_combat.stop();
-    }
-
-    /* Cycle jour/nuit : après m_combat.start()/stop() ci-dessus, pour que la
-       nuit figée d'une arène dédiée (voir applySunSchedule) puisse s'appliquer
-       ou, en repartant sur une carte normale, soit bien réévaluée depuis la
-       config plutôt que de garder le réglage de la carte précédente. */
-    applySunSchedule();
+    initSceneShaders();
+    initSceneConfig();
 }
 
 void Application::loadTerrain(const std::string& name) {
@@ -378,8 +70,7 @@ void Application::loadTerrain(const std::string& name) {
        calculé dans initScene. Atlas de sprites partagé entre terrains. */
     if (m_treesEnabled) {
         m_vegetation = std::make_unique<render::Vegetation>(
-            terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png",
-            m_treeBudget);
+            terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png", m_treeBudget);
     } else {
         m_vegetation.reset();
     }
@@ -404,30 +95,30 @@ void Application::loadTerrain(const std::string& name) {
         float START_Z = m_terrain->hasStart() ? m_terrain->startZ() : -3119.6f;
         const float hintX = START_X;
         const float hintZ = START_Z;
-        float bestD2 = -1.0f;  /* sentinelle : aucun hélipad encore retenu */
+        float bestD2 = -1.0f; /* sentinelle : aucun hélipad encore retenu */
         m_homeStation.clear();
         for (const render::Landmark& pad : m_terrain->helipads()) {
             float px = 0.0f, pz = 0.0f;
             m_terrain->worldAt(pad.lon, pad.lat, px, pz);
             const float d2 = (px - hintX) * (px - hintX) + (pz - hintZ) * (pz - hintZ);
             if (bestD2 < 0.0f || d2 < bestD2) {
-                bestD2        = d2;
-                START_X       = px;
-                START_Z       = pz;
-                m_homeStation = pad.name;  /* station d'origine = hélipad de départ */
+                bestD2 = d2;
+                START_X = px;
+                START_Z = pz;
+                m_homeStation = pad.name; /* station d'origine = hélipad de départ */
             }
         }
-        const float ground  = m_terrain->heightAt(START_X, START_Z);
-        m_startPos          = vec3{START_X, ground, START_Z};
+        const float ground = m_terrain->heightAt(START_X, START_Z);
+        m_startPos = vec3{START_X, ground, START_Z};
         /* L'appareil se gare mât rotor centré sur le H : son origine (que la
            physique place) est donc reculée de ROTOR_FORWARD_OFFSET le long de l'axe
            de départ, donné par le cap initial de la carte (clé start_heading de
            terrain.txt ; 90 = est par défaut, l'orientation identité). */
         const float capRad = glm::radians(m_terrain->startHeadingDeg());
-        const vec3  avant{std::sin(capRad), 0.0f, -std::cos(capRad)};
+        const vec3 avant{std::sin(capRad), 0.0f, -std::cos(capRad)};
         const float parkX = START_X - avant.x * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
         const float parkZ = START_Z - avant.z * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
-        m_parkPos         = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
+        m_parkPos = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
         m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     }
 }
@@ -443,19 +134,20 @@ void Application::applySunSchedule() {
     m_sunTimeScale = m_config.sunTimeScale;
     if (m_sunTimeScale == 1.0f) {
         const std::time_t now = std::time(nullptr);
-        std::tm           local{};
+        std::tm local{};
 #if defined(_WIN32)
         localtime_s(&local, &now);
 #else
         localtime_r(&now, &local);
 #endif
-        m_sunBaseSeconds = static_cast<float>(local.tm_hour) * 3600.0f
-                         + static_cast<float>(local.tm_min) * 60.0f
-                         + static_cast<float>(local.tm_sec);
+        m_sunBaseSeconds = static_cast<float>(local.tm_hour) * 3600.0f +
+                           static_cast<float>(local.tm_min) * 60.0f +
+                           static_cast<float>(local.tm_sec);
         std::printf("[scène] cycle jour/nuit : temps réel, heure locale au lancement %02d:%02d.\n",
-                    local.tm_hour, local.tm_min);
+                    local.tm_hour,
+                    local.tm_min);
     } else {
-        constexpr float NOON = 12.0f * 3600.0f;  /* midi */
+        constexpr float NOON = 12.0f * 3600.0f; /* midi */
         m_sunBaseSeconds = NOON;
         if (m_sunTimeScale == 0.0f) {
             std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
@@ -478,8 +170,8 @@ void Application::applySunSchedule() {
         std::filesystem::exists(m_assetsDir / "terrain" / m_terrainName / "zombie_only.txt")) {
         constexpr float NIGHT_HOUR_S = 19.0f * 3600.0f;
         m_sunBaseSeconds = NIGHT_HOUR_S;
-        m_sunTimeScale   = 0.0f;
+        m_sunTimeScale = 0.0f;
     }
 }
 
-}  /* namespace artouste::app */
+} /* namespace artouste::app */

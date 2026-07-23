@@ -66,10 +66,13 @@ ZONE = {
         ("Île Saint-Louis", 2.3565, 48.8514),
     ],
     # Héliport de Paris - Issy-les-Moulineaux (le seul héliport de l'agglomération
-    # parisienne) et un hôpital doté d'une aire de poser connue. Coordonnées
-    # relevées au géocodeur IGN et sur OpenStreetMap ; à affiner si besoin.
+    # parisienne) et les hôpitaux intra-muros dotés d'une hélistation connue.
+    # Coordonnées relevées au géocodeur IGN et sur OpenStreetMap ; à affiner si
+    # besoin.
     "helipads": [
         ("Héliport de Paris (Issy-les-Moulineaux)", 2.2705, 48.8305),
         ("Hôpital européen Georges-Pompidou", 2.2748, 48.8397),
+        ("Hôpital Lariboisière", 2.3531, 48.8829),
+        ("Hôpital de la Pitié-Salpêtrière", 2.3653, 48.8371),
     ],
 }

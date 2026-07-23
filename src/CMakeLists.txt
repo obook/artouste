@@ -88,7 +88,8 @@ add_executable(artouste
     render/vegetation/Vegetation.cpp
     render/vegetation/VegetationMasks.cpp
     render/vegetation/VegetationScatter.cpp
-    render/SkinnedModel.cpp
+    render/SkinnedModelLoad.cpp
+    render/SkinnedModelAnim.cpp
     render/ExplosionModel.cpp
     render/combat/SkinnedZombies.cpp
     render/combat/ExplosionFx.cpp

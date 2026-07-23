@@ -47,10 +47,10 @@ public:
     /* Un sommet skinné : jusqu'à quatre os influents (indices dans la liste
        d'os de SA variante) et leurs poids (normalisés, somme ~1). */
     struct SkinnedVertex {
-        vec3  position{0.0f};
-        vec3  normal{0.0f, 1.0f, 0.0f};
-        vec2  uv{0.0f, 0.0f};
-        int   joints[4]  = {0, 0, 0, 0};
+        vec3 position{0.0f};
+        vec3 normal{0.0f, 1.0f, 0.0f};
+        vec2 uv{0.0f, 0.0f};
+        int joints[4] = {0, 0, 0, 0};
         float weights[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     };
 
@@ -58,30 +58,34 @@ public:
        squelette propres. */
     struct MeshData {
         std::vector<SkinnedVertex> vertices;
-        std::vector<unsigned int>  indices;
-        std::vector<int>           boneNode;    /* index du noeud dans m_nodes, par os */
-        std::vector<mat4>          boneOffset;  /* matrice de bind inverse, par os */
-        mat4                       localFix{1.0f};  /* recentrage + cm->m propre à la variante */
+        std::vector<unsigned int> indices;
+        std::vector<int> boneNode;    /* index du noeud dans m_nodes, par os */
+        std::vector<mat4> boneOffset; /* matrice de bind inverse, par os */
+        mat4 localFix{1.0f};          /* recentrage + cm->m propre à la variante */
     };
 
+    /* Charge le modèle depuis un glTF/.glb via Assimp. Définie dans
+       SkinnedModelLoad.cpp. */
     explicit SkinnedModel(const std::filesystem::path& path);
 
-    [[nodiscard]] bool            built() const noexcept { return m_built; }
-    [[nodiscard]] std::size_t     meshCount() const noexcept { return m_meshes.size(); }
+    [[nodiscard]] bool built() const noexcept { return m_built; }
+    [[nodiscard]] std::size_t meshCount() const noexcept { return m_meshes.size(); }
     [[nodiscard]] const MeshData& mesh(std::size_t i) const { return m_meshes[i]; }
-    [[nodiscard]] const Texture*  texture() const noexcept { return m_texture.get(); }
-    [[nodiscard]] float           durationS() const noexcept { return m_durationS; }
+    [[nodiscard]] const Texture* texture() const noexcept { return m_texture.get(); }
+    [[nodiscard]] float durationS() const noexcept { return m_durationS; }
 
     /* Pose tout le squelette à l'instant t (secondes, bouclé sur durationS) :
        renvoie la matrice globale (repère du modèle) de chaque noeud, dans
-       l'ordre de m_nodes (un parent précède toujours ses enfants). */
+       l'ordre de m_nodes (un parent précède toujours ses enfants). Définie
+       dans SkinnedModelAnim.cpp. */
     [[nodiscard]] std::vector<mat4> poseAtTime(float t) const;
 
     /* Matrices d'os finales d'une variante à partir des poses de poseAtTime :
        out[b] = localFix * globalInverse * globalNoeud(os_b) * offset_b. Prêtes
        telles quelles pour l'uniforme u_bones (la correction localFix est déjà
        intégrée, le shader n'a donc qu'à appliquer le skinning puis la matrice
-       d'instance). Taille = nombre d'os de la variante (<= MAX_BONES). */
+       d'instance). Taille = nombre d'os de la variante (<= MAX_BONES). Définie
+       dans SkinnedModelAnim.cpp. */
     [[nodiscard]] std::vector<mat4> boneMatrices(std::size_t meshIndex,
                                                  const std::vector<mat4>& globals) const;
 
@@ -90,7 +94,7 @@ public:
        dans le cycle). Nul a t=0 (localFix y recentre) ; ailleurs, le rendu le
        retranche pour épingler le zombie sur sa position logique et supprimer le
        glissement. Interpolé depuis une petite table précalculée ; t est bouclé
-       comme dans poseAtTime. */
+       comme dans poseAtTime. Définie dans SkinnedModelAnim.cpp. */
     [[nodiscard]] vec2 rootDriftXZ(std::size_t meshIndex, float t) const;
 
 private:
@@ -99,8 +103,8 @@ private:
        éventuel (-1 si le noeud n'est pas animé). */
     struct Node {
         mat4 localDefault{1.0f};
-        int  parent  = -1;
-        int  channel = -1;
+        int parent = -1;
+        int channel = -1;
     };
 
     /* Canal d'animation d'un noeud : trois pistes de clés (translation,
@@ -114,16 +118,16 @@ private:
     /* Nombre d'échantillons de la table de dérive (root motion) par variante. */
     static constexpr int CENTER_SAMPLES = 32;
 
-    std::vector<Node>        m_nodes;
-    std::vector<Channel>     m_channels;
-    std::vector<MeshData>    m_meshes;
+    std::vector<Node> m_nodes;
+    std::vector<Channel> m_channels;
+    std::vector<MeshData> m_meshes;
     /* Décalage (X,Z final) du centre par variante, échantillonné sur l'animation
        (CENTER_SAMPLES points, dernier = premier pour boucler proprement). */
     std::vector<std::vector<vec2>> m_centerTable;
     std::unique_ptr<Texture> m_texture;
-    mat4                     m_globalInverse{1.0f};
-    float                    m_durationS = 0.0f;
-    bool                     m_built     = false;
+    mat4 m_globalInverse{1.0f};
+    float m_durationS = 0.0f;
+    bool m_built = false;
 };
 
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

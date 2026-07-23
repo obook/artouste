@@ -139,7 +139,8 @@ private:
 
     /* Commandes effectives de l'image : commandes du pilote automatique en mode
        démo, sinon commandes du pilote passées par le mode assisté. Met aussi à jour
-       la vue et le HUD quand la démo les impose. */
+       la vue et le HUD quand la démo les impose. Définie dans
+       ApplicationControls.cpp. */
     physics::Controls computeControls(const physics::Controls& rawInput, float frameDt, float t);
 
     /* Boutons et croix de la manette (hors commandes de vol) : vue, turbine, HUD,
@@ -149,11 +150,12 @@ private:
     void handleActionButtons();
 
     /* Place la caméra selon la vue courante (poursuite, cockpit ou orbite) et gère
-       le cut net au changement de vue. */
+       le cut net au changement de vue. Définie dans ApplicationCameraAudio.cpp. */
     void updateCamera(const mat4& base, const vec3& renderPos, float yaw, float t, float frameDt);
 
     /* Module les boucles sonores (rotor, turbine, vent), déclenche le son de
-       démarrage et calcule l'effet Doppler de la vue orbite. */
+       démarrage et calcule l'effet Doppler de la vue orbite. Définie dans
+       ApplicationCameraAudio.cpp. */
     void updateAudio(const physics::RigidBody& body,
                      const physics::Controls& controls,
                      float airspeed,

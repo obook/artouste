@@ -233,10 +233,18 @@ private:
                  float t,
                  float frameDt);
 
+    /* Aide à l'atterrissage : réticule de centrage sur le pad le plus proche et
+       score au posé (voir hud.padGuidance). Appelée par fillHud. Définie dans
+       ApplicationHudLanding.cpp. */
+    void updateLandingAid(ui::HudData& hud,
+                          const physics::RigidBody& body,
+                          const vec3& forward,
+                          float frameDt);
+
     /* Cherche l'hélipad le plus proche de heliPos (parmi m_terrain->helipads() et le
        pad de départ m_startPos), dans le rayon PAD_SEARCH_RADIUS_M. Remplit poseMonde
        avec la position monde du pad retenu et renvoie son nom (ou nullptr si aucun pad
-       n'est dans le rayon). */
+       n'est dans le rayon). Définie dans ApplicationHudLanding.cpp. */
     const char* padPlusProche(const vec3& heliPos, vec3& poseMonde) const noexcept;
 
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la

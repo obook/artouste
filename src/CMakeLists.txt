@@ -46,6 +46,7 @@ add_executable(artouste
     app/ground/ApplicationGroundShadow.cpp
     app/ground/ApplicationGroundHapi.cpp
     app/hud/ApplicationHudInstruments.cpp
+    app/hud/ApplicationHudLanding.cpp
     app/hud/ApplicationHudNav.cpp
     app/ApplicationCapture.cpp
     app/menu/ApplicationMenu.cpp

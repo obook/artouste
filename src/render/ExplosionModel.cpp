@@ -83,7 +83,7 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
         return;
     }
 
-    /* --- Arbre des noeuds (parent avant enfants) + maillages par noeud ------- */
+    /* --- Arbre des nœuds (parent avant enfants) + maillages par nœud --------- */
     std::unordered_map<std::string, int>          nodeByName;
     std::vector<std::pair<int, const aiMesh*>>    meshNodePairs;
     struct Pending {
@@ -108,7 +108,7 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
         }
     }
 
-    /* --- Animation (une prise, ici de l'échelle par noeud) ------------------- */
+    /* --- Animation (une prise, ici de l'échelle par nœud) -------------------- */
     if (scene->mNumAnimations > 0) {
         const aiAnimation* anim = scene->mAnimations[0];
         const double       tps  = anim->mTicksPerSecond > 1e-6 ? anim->mTicksPerSecond : 25.0;
@@ -141,7 +141,7 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
         }
     }
 
-    /* --- Maillages : géométrie statique + noeud porteur --------------------- */
+    /* --- Maillages : géométrie statique + nœud porteur ----------------------- */
     std::vector<std::vector<Vertex>> partVerts;  /* copies CPU, pour la bbox de localFix */
     std::vector<int>                 partNode;
     for (const auto& mn : meshNodePairs) {
@@ -176,10 +176,10 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
         partNode.push_back(mn.first);
     }
 
-    /* --- localFix : normalise l'explosion a un rayon unité ------------------
+    /* --- localFix : normalise l'explosion à un rayon unité ------------------
      * On échantillonne l'animation et on prend l'étendue maximale des maillages
-     * posés (transformation globale de leur noeud, qui inclut l'échelle du
-     * flipbook). localFix recentre et met a l'échelle pour que le plus grand
+     * posés (transformation globale de leur nœud, qui inclut l'échelle du
+     * flipbook). localFix recentre et met à l'échelle pour que le plus grand
      * demi-côté vaille 1 ; le renderer applique ensuite le rayon monde voulu. */
     if (!m_parts.empty()) {
         vec3        gmin{std::numeric_limits<float>::max()};
@@ -216,7 +216,7 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
 
     m_built = !m_parts.empty();
     if (m_built) {
-        std::printf("[ExplosionModel] %s : %zu images, %zu noeuds, %.2f s.\n",
+        std::printf("[ExplosionModel] %s : %zu images, %zu nœuds, %.2f s.\n",
                     path.filename().string().c_str(), m_parts.size(), m_nodes.size(),
                     static_cast<double>(m_durationS));
     } else {

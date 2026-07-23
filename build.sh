@@ -2,21 +2,24 @@
 #
 # build.sh -- Compilation du simulateur Artouste sous Linux.
 #
-# Enchaine configuration CMake, compilation parallele, tests et, en option,
-# packaging CPack. Reprend les commandes documentees dans le README mais sous
-# forme d'un seul point d'entree, avec quelques options pratiques.
+# Enchaîne configuration CMake, compilation parallèle, tests et, en option,
+# packaging CPack. Reprend les commandes documentées dans le README mais sous
+# forme d'un seul point d'entrée, avec quelques options pratiques.
 #
 # Usage :
 #   ./build.sh                  Configure et compile en Release.
-#   ./build.sh -t Debug         Choisit le type de build (defaut : Release).
-#   ./build.sh -c               Nettoie d'abord le repertoire de build.
-#   ./build.sh -T               Lance les tests apres compilation (ctest).
+#   ./build.sh -t Debug         Choisit le type de build (défaut : Release).
+#   ./build.sh -c               Nettoie d'abord le répertoire de build.
+#   ./build.sh -T               Lance les tests après compilation (ctest).
 #   ./build.sh -p               Produit l'archive de distribution (cpack).
 #   ./build.sh -d               Compile la notice PDF (docs/notice.tex).
-#   ./build.sh -r               Lance le simulateur apres compilation.
-#   ./build.sh -j 4             Limite le nombre de taches paralleles.
-#   ./build.sh -y               Installe les dependances manquantes sans demander.
+#   ./build.sh -r               Lance le simulateur après compilation.
+#   ./build.sh -j 4             Limite le nombre de tâches parallèles.
+#   ./build.sh -y               Installe les dépendances manquantes sans demander.
 #   ./build.sh -h               Affiche cette aide.
+#
+# Auteur : O. Booklage
+# Licence : GPL v2
 
 set -euo pipefail
 
@@ -312,19 +315,19 @@ if [ "$DO_TESTS" -eq 1 ]; then
     ctest --test-dir "$BUILD_DIR" --output-on-failure
 fi
 
-# Notice PDF : regeneree avant le packaging pour que l'archive embarque une
-# version a jour. Le PDF est versionne (la CI de release ne compile pas le
-# LaTeX) : apres une modif de docs/notice.tex, lance ./build.sh -d puis commite
-# le PDF regenere.
+# Notice PDF : régénérée avant le packaging pour que l'archive embarque une
+# version à jour. Le PDF est versionné (la CI de release ne compile pas le
+# LaTeX) : après une modif de docs/notice.tex, lance ./build.sh -d puis commite
+# le PDF régénéré.
 if [ "$DO_DOCS" -eq 1 ]; then
     echo ">> Notice PDF (docs/notice.tex)"
     if command -v lualatex >/dev/null 2>&1; then
-        # Chaine de version affichee dans la notice : derniere release (tag v*,
-        # sans le prefixe v) suivie du numero de commit en decimal, c'est-a-dire
-        # le nombre total de commits (compteur sequentiel), ex. 0.8.0.231. Sans
-        # git ni tag, on ecrit une valeur neutre. docs/version.tex n'est pas
-        # versionne : il est regenere a chaque ./build.sh -d. Le || true evite que
-        # set -e n'interrompe le script quand git echoue (hors depot, sans tag).
+        # Chaîne de version affichée dans la notice : dernière release (tag v*,
+        # sans le préfixe v) suivie du numéro de commit en décimal, c'est-à-dire
+        # le nombre total de commits (compteur séquentiel), ex. 0.8.0.231. Sans
+        # git ni tag, on écrit une valeur neutre. docs/version.tex n'est pas
+        # versionné : il est régénéré à chaque ./build.sh -d. Le || true évite que
+        # set -e n'interrompe le script quand git échoue (hors dépôt, sans tag).
         rel="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null | sed 's/^v//' || true)"
         commit="$(git rev-list --count HEAD 2>/dev/null || true)"
         if [ -n "$rel" ] && [ -n "$commit" ]; then
@@ -335,8 +338,8 @@ if [ "$DO_DOCS" -eq 1 ]; then
         printf '%s\n' "\\newcommand{\\noticeversion}{${version}}" > docs/version.tex
         echo "   Version : $version"
 
-        # Double passe pour stabiliser la mise en page, puis menage des fichiers
-        # intermediaires. La sortie va dans un log, affiche seulement en cas d'echec.
+        # Double passe pour stabiliser la mise en page, puis ménage des fichiers
+        # intermédiaires. La sortie va dans un log, affichée seulement en cas d'échec.
         doc_log="docs/notice.build.log"
         if ( cd docs \
                 && lualatex -interaction=nonstopmode -halt-on-error notice.tex \

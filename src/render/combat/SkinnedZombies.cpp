@@ -103,7 +103,7 @@ SkinnedZombies::SkinnedZombies(const std::filesystem::path& modelPath, std::size
         glEnableVertexAttribArray(9);
         glVertexAttribPointer(9, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(sizeof(mat4)));
         glVertexAttribDivisor(9, 1);
-        /* Graine de couleur (location 10) : juste apres le flash. */
+        /* Graine de couleur (location 10) : juste après le flash. */
         glEnableVertexAttribArray(10);
         glVertexAttribPointer(10, 1, GL_FLOAT, GL_FALSE, stride,
                               reinterpret_cast<void*>(sizeof(mat4) + sizeof(float)));
@@ -171,7 +171,7 @@ void SkinnedZombies::updateInstances(const std::vector<mat4>& transforms,
         const float* src = glm::value_ptr(transforms[i]);
         dst.insert(dst.end(), src, src + 16);
         dst.push_back(hitFlashes[i]);
-        /* Graine de couleur stable par zombie, tirée du meme "kind" : décale la
+        /* Graine de couleur stable par zombie, tirée du même "kind" : décale la
            teinte de la tenue pour varier la horde (voir zombie_skinned.frag). */
         dst.push_back(static_cast<float>((kind * 2654435761u) % 1000u) / 1000.0f);
     }

@@ -69,13 +69,13 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     const bool muzzleFlash = m_combat.active() && m_combat.muzzleFlashActive();
     /* Roquettes en vol (mode zombie) : peuvent survivre plus longtemps que le
        flash de bouche, donc prises en compte à part dans la condition de
-       dessin. Les explosions au sol, elles, sont désormais un modele 3D animé
+       dessin. Les explosions au sol, elles, sont désormais un modèle 3D animé
        dessiné dans la passe principale (voir ApplicationRender.cpp), plus des
        lueurs ici. */
     const std::vector<RocketSystem::RocketView> rockets =
         m_combat.active() ? m_combat.rockets() : std::vector<RocketSystem::RocketView>{};
-    /* Explosions au sol : le corps de la boule de feu est le modele 3D animé
-       (ApplicationRender.cpp), mais on ajoute ICI un flash lumineux TRES BREF a
+    /* Explosions au sol : le corps de la boule de feu est le modèle 3D animé
+       (ApplicationRender.cpp), mais on ajoute ICI un flash lumineux TRÈS BREF à
        l'impact (début de vie de l'explosion), pour un coup d'éclat immédiat,
        synchrone avec la mort du zombie, sans attendre que l'animation se
        développe. */
@@ -201,7 +201,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     }
 
     /* --- Flash d'impact des roquettes ------------------------------------------
-     * Coup d'éclat lumineux tres bref au tout début de chaque explosion (les
+     * Coup d'éclat lumineux très bref au tout début de chaque explosion (les
      * ~25 premiers % de sa vie), pour un impact franc et immédiat, synchrone
      * avec la mort du zombie -- le corps 3D de la boule de feu (passe principale)
      * prend le relais. Blanc-jaune qui enfle un peu et s'éteint vite. */

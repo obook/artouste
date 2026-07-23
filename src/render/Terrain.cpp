@@ -325,9 +325,9 @@ void Terrain::buildPadPlatforms() {
     for (const Landmark& pad : m_helipads) {
         float x = 0.0f, z = 0.0f;
         worldAt(pad.lon, pad.lat, x, z);
-        /* worldAt() renvoie des coordonnees MONDE ; l'emprise [-halfW,halfW] est
-           locale (centree sur m_originX/m_originZ) : sans la soustraction, un pad
-           hors du centre de la carte (recadree) est cru hors emprise et n'obtient
+        /* worldAt() renvoie des coordonnées MONDE ; l'emprise [-halfW,halfW] est
+           locale (centrée sur m_originX/m_originZ) : sans la soustraction, un pad
+           hors du centre de la carte (recadrée) est cru hors emprise et n'obtient
            jamais sa plate-forme anti-enfoncement. */
         if (std::fabs(x - m_originX) > halfW || std::fabs(z - m_originZ) > halfH) {
             continue;

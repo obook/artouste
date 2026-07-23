@@ -2,8 +2,8 @@
 
 /*
  * explosion.frag
- * Feu émissif : on renvoie la couleur de la texture, destinée a etre AJOUTEE a
- * la scene (mélange additif réglé par ExplosionFx). Les zones sombres de la
+ * Feu émissif : on renvoie la couleur de la texture, destinée à être AJOUTÉE à
+ * la scène (mélange additif réglé par ExplosionFx). Les zones sombres de la
  * texture n'ajoutent presque rien, les flammes vives éclaircissent. Un léger
  * gain rend la boule de feu plus punchy.
  *

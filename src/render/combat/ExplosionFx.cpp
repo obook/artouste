@@ -30,7 +30,7 @@ void ExplosionFx::draw(Shader& shader, const mat4& toRel, const std::vector<Inst
     }
 
     /* Mélange additif (feu émissif) : les zones sombres de la texture n'ajoutent
-       rien, les zones vives éclaircissent la scene. On lit la profondeur (occlusion
+       rien, les zones vives éclaircissent la scène. On lit la profondeur (occlusion
        par le relief/l'appareil) sans l'écrire (les explosions ne masquent rien). */
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -38,26 +38,26 @@ void ExplosionFx::draw(Shader& shader, const mat4& toRel, const std::vector<Inst
 
     for (const Instance& ex : explosions) {
         const float p = clamp(ex.progress, 0.0f, 1.0f);
-        /* Temps d'animation, démarré ou la boule de feu est deja formée
-           (animStartS) : franc des l'impact, pas de construction en retard.
-           animSpeed accélère la lecture interne du clip par rapport a la vie
-           réelle de l'explosion (playSpanS), pour un flipbook natif a bas
+        /* Temps d'animation, démarré où la boule de feu est déjà formée
+           (animStartS) : franc dès l'impact, pas de construction en retard.
+           animSpeed accélère la lecture interne du clip par rapport à la vie
+           réelle de l'explosion (playSpanS), pour un flipbook natif à bas
            cadencement (voir ExplosionFx.hpp). */
         const float             t       = m_animStartS + p * m_playSpanS * m_animSpeed;
         const std::vector<mat4> globals = m_model.poseAtTime(t);
 
-        /* Croissance continue tres légere et enveloppe de fondu : apparition
-           quasi immédiate (la boule est deja grosse), extinction seulement en
-           toute fin (l'animation du pack se dissipe déja d'elle-meme ; le fondu
-           n'évite que la coupure nette des dernieres images encore actives). */
+        /* Croissance continue très légère et enveloppe de fondu : apparition
+           quasi immédiate (la boule est déjà grosse), extinction seulement en
+           toute fin (l'animation du pack se dissipe déjà d'elle-même ; le fondu
+           n'évite que la coupure nette des dernières images encore actives). */
         const float growth  = 0.95f + 0.15f * p;
         const float fadeIn  = glm::smoothstep(0.0f, 0.04f, p);
         const float fadeOut = 1.0f - glm::smoothstep(0.80f, 1.0f, p);
         shader.setFloat("u_fade", fadeIn * fadeOut);
 
         /* Placement commun : recalage caméra, position d'impact, rayon monde,
-           puis normalisation du modele (localFix). La transformation animée du
-           noeud de chaque image s'ajoute ensuite (échelle du flipbook). */
+           puis normalisation du modèle (localFix). La transformation animée du
+           nœud de chaque image s'ajoute ensuite (échelle du flipbook). */
         const mat4 base = toRel * glm::translate(mat4(1.0f), ex.center) *
                           glm::scale(mat4(1.0f), vec3{m_worldRadius * growth}) * m_model.localFix();
 

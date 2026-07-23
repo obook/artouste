@@ -52,7 +52,7 @@ constexpr float EXPLOSION_DURATION_S = 1.2f;
 
 /* Durée de vie d'une trace de brûlure au sol (s) : s'estompe progressivement. */
 constexpr float SCORCH_DURATION_S = 300.0f;  /* 5 minutes */
-/* Filet de sécurité : au-dela, on retire la plus ancienne trace. Un tir
+/* Filet de sécurité : au-delà, on retire la plus ancienne trace. Un tir
    quasi continu pendant les 5 minutes de vie d'une trace produirait bien plus
    d'impacts que ce plafond (des centaines) ; dans ce cas les plus anciennes
    disparaissent avant terme plutôt que de multiplier les décalques à l'écran. */

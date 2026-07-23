@@ -139,7 +139,7 @@ void Application::fillHud(ui::HudData& hud, const physics::RigidBody& body, cons
     hud.autoland      = m_autoland.active();
     hud.vrsIntensity  = m_flight.vrsIntensity();  /* alerte vortex (bandeau HUD) */
 
-    /* Alerte taux de descente (facon GPWS) : descente rapide pres du sol. Enveloppe
+    /* Alerte taux de descente (façon GPWS) : descente rapide près du sol. Enveloppe
        progressive (physics::gpwsSinkLimitMs) : plus on est bas, plus le taux de
        descente toléré est faible. Au-dessus de GPWS_MAX_AGL, aucune alerte (descente
        rapide normale en altitude). Coupée pendant la croisière de la démo (points de

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 generer_facade.py
-Genere la texture de facade tuilable des batiments : mur enduit clair, percé de
-fenetres sur deux étages et trois travées, avec un grain de plâtre discret.
+Génère la texture de façade tuilable des bâtiments : mur enduit clair, percé de
+fenêtres sur deux étages et trois travées, avec un grain de plâtre discret.
 Échantillonnée par building.frag (u_facade) en répétition (GL_REPEAT), sur une
 tuile réelle de TILE_W_M x TILE_H_M mètres (mêmes valeurs que
 FACADE_TILE_W_M / FACADE_TILE_H_M dans src/render/Buildings.cpp) : Buildings.cpp

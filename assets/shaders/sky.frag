@@ -14,8 +14,8 @@ out vec4 frag_color;
 
 uniform mat4 u_invViewProj;
 uniform vec3 u_sunDir;
-uniform vec3 u_moonDir;  // direction vers la lune (opposée au soleil)
-uniform float u_time;    // horloge d'animation (s), pour le scintillement des étoiles
+uniform vec3 u_moonDir;  /* direction vers la lune (opposée au soleil) */
+uniform float u_time;    /* horloge d'animation (s), pour le scintillement des étoiles */
 
 void main()
 {
@@ -27,15 +27,15 @@ void main()
 	vec4 world = u_invViewProj * vec4(v_ndc, 1.0, 1.0);
 	vec3 dir = normalize(world.xyz / world.w);
 
-	//cycle jour nuit
-	float isDay = smoothstep(-0.15, 0.15, u_sunDir.y); 
+	/* Cycle jour/nuit. */
+	float isDay = smoothstep(-0.15, 0.15, u_sunDir.y);
 
 	vec3 dayZenith = vec3(0.12, 0.35, 0.75);
 	vec3 dayHorizon = vec3(0.70, 0.85, 0.95);
 	vec3 duskHorizon = vec3(1.00, 0.45, 0.15);
 	vec3 nightZenith = vec3(0.01, 0.02, 0.05);
 	vec3 nightHorizon= vec3(0.05, 0.06, 0.10);
-	//horiwon dynamique passe a orange vers le couche de soleil
+	/* Horizon dynamique : vire à l'orange au voisinage du coucher/lever de soleil. */
 	vec3 currentHorizon = mix(nightHorizon, mix(duskHorizon, dayHorizon, clamp(u_sunDir.y * 3.0, 0.0, 1.0)), isDay);
 	vec3 currentZenith = mix(nightZenith, dayZenith, isDay);
 	vec3 color;
@@ -43,45 +43,45 @@ void main()
 
 	if (dir.y >= 0.0)
 	{
-		//ciel
+		/* Ciel. */
 		color = mix(currentHorizon, currentZenith, verticalFade);
 	} else
 	{
-		// sous la map : on utilise la couleur de l'horizon de la période actuelle
-		// pour que la transition soit naturelle entre le ciel et le dessous.
+		/* Sous la carte : on utilise la couleur de l'horizon de la période actuelle
+		   pour que la transition soit naturelle entre le ciel et le dessous. */
 		vec3 abyssBottom = mix(vec3(0.01, 0.01, 0.02), vec3(0.05, 0.05, 0.06), isDay);
 		color = mix(currentHorizon, abyssBottom, verticalFade);
 	}
 
-	// soleil plus halo
+	/* Soleil et halo. */
 	float sunAlign = max(0.0, dot(dir, u_sunDir));
-	
-	//halo
+
+	/* Halo. */
 	float sunGlow = pow(sunAlign, 16.0) * 0.4 + pow(sunAlign, 64.0) * 0.5;
 	float sunCore = pow(sunAlign, 2048.0) * 2.5;
 
-	//scouleur depend de couche de soleil ou pas
+	/* Couleur du soleil : dépend de sa hauteur (rougeoyant bas sur l'horizon). */
 	vec3 sunColor = mix(vec3(1.0, 0.25, 0.05), vec3(1.0, 0.9, 0.8), clamp(u_sunDir.y * 5.0, 0.0, 1.0));
 	float glowMask = smoothstep(-0.25, 0.05, dir.y);
 	float coreMask = smoothstep(-0.02, 0.05, dir.y);
 	color += sunColor * sunGlow * glowMask * isDay;
 	color += vec3(1.0) * sunCore * coreMask * isDay;
 
-	// lune : disque doux a l'oppose du soleil, visible la nuit seulement
+	/* Lune : disque doux à l'opposé du soleil, visible la nuit seulement. */
 	float moonAlign = max(0.0, dot(dir, u_moonDir));
-	float moonGlow = pow(moonAlign, 128.0) * 0.12;     // halo discret
-	float moonCore = pow(moonAlign, 4096.0) * 1.5;     // disque a ~70% de la taille apparente du soleil
-	float night = 1.0 - isDay;                         // 1 la nuit, 0 le jour
-	float moonUp = smoothstep(-0.02, 0.08, u_moonDir.y); // lune au-dessus de l'horizon
-	float moonMask = smoothstep(-0.02, 0.05, dir.y);     // rayon de vue au-dessus de l'horizon
-	vec3 moonColor = vec3(0.85, 0.88, 0.98);           // blanc legerement bleute
+	float moonGlow = pow(moonAlign, 128.0) * 0.12;       /* halo discret */
+	float moonCore = pow(moonAlign, 4096.0) * 1.5;       /* disque à ~70 % de la taille apparente du soleil */
+	float night = 1.0 - isDay;                           /* 1 la nuit, 0 le jour */
+	float moonUp = smoothstep(-0.02, 0.08, u_moonDir.y); /* lune au-dessus de l'horizon */
+	float moonMask = smoothstep(-0.02, 0.05, dir.y);     /* rayon de vue au-dessus de l'horizon */
+	vec3 moonColor = vec3(0.85, 0.88, 0.98);             /* blanc légèrement bleuté */
 	color += moonColor * (moonGlow + moonCore) * moonMask * night * moonUp;
 
-	// etoiles : champ procedural (pas de texture), une "etoile" par cellule d'une
-	// grille 3D imaginaire dont dir est quantifie -- pas parfaitement uniforme sur
-	// la sphere (grille cubique), mais invisible a l'oeil pour de simples points.
-	// Visibles seulement la nuit (night) et au-dessus de l'horizon (fondu progressif,
-	// comme la lune) pour ne pas cribler l'horizon encore eclairci par le crepuscule.
+	/* Étoiles : champ procédural (pas de texture), une "étoile" par cellule d'une
+	   grille 3D imaginaire dont dir est quantifié -- pas parfaitement uniforme sur
+	   la sphère (grille cubique), mais invisible à l'oeil pour de simples points.
+	   Visibles seulement la nuit (night) et au-dessus de l'horizon (fondu progressif,
+	   comme la lune) pour ne pas cribler l'horizon encore éclairci par le crépuscule. */
 	vec3 starCell = floor(dir * 400.0);
 	vec3 hp = fract(starCell * 0.3183099 + vec3(0.10, 0.20, 0.30)) * 17.0;
 	float starHash = fract(hp.x * hp.y * hp.z * (hp.x + hp.y + hp.z));
@@ -89,16 +89,16 @@ void main()
 	vec3 bp = fract((starCell + 7.0) * 0.3183099 + vec3(0.10, 0.20, 0.30)) * 17.0;
 	float starBright = fract(bp.x * bp.y * bp.z * (bp.x + bp.y + bp.z));
 	float starMask = smoothstep(0.0, 0.25, dir.y);
-	// Scintillement : dephasage et vitesse propres a chaque etoile (tirés de ses
-	// propres hash, starHash/starBright, déjà calculés) pour qu'elles ne clignotent
-	// pas toutes ensemble. Fondu 0.55-1.0 : jamais totalement éteintes.
+	/* Scintillement : déphasage et vitesse propres à chaque étoile (tirés de ses
+	   propres hash, starHash/starBright, déjà calculés) pour qu'elles ne clignotent
+	   pas toutes ensemble. Fondu 0.55-1.0 : jamais totalement éteintes. */
 	float twinklePhase = starBright * 6.28318;
 	float twinkleSpeed = mix(0.6, 2.2, fract(starHash * 13.0));
 	float twinkle = mix(0.55, 1.0, 0.5 + 0.5 * sin(u_time * twinkleSpeed + twinklePhase));
 	float stars = starPresence * mix(0.4, 1.0, starBright) * twinkle * starMask * night;
 	color += vec3(stars);
 
-	//Tone mapping
+	/* Tone mapping. */
 	color = vec3(1.0) - exp(-color * 1.3);
 
 	frag_color = vec4(color, 1.0);

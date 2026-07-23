@@ -76,11 +76,11 @@ struct HudData {
     const char* turbine       = "";     /* libellé d'état de la turbine */
     bool        assist        = false;  /* mode assisté actif : affiche un repère */
     bool        autoland      = false;  /* atterrissage automatique engagé : affiche un repère */
-    float       vrsIntensity  = 0.0f;   /* vortex ring state, 0..1 : au-dela d'un seuil,
+    float       vrsIntensity  = 0.0f;   /* vortex ring state, 0..1 : au-delà d'un seuil,
                                            un bandeau d'alerte clignotant s'affiche (l'appareil
                                            d'époque n'a pas d'avertisseur : c'est une aide du
                                            simulateur, hors cockpit) */
-    bool        sinkRateAlert = false;  /* taux de descente eleve pres du sol (facon GPWS) :
+    bool        sinkRateAlert = false;  /* taux de descente élevé près du sol (façon GPWS) :
                                            bandeau "TAUX DE DESCENTE" clignotant et LED rouge
                                            du cadran V/S. Aide du simulateur, calculée dans
                                            fillHud (descente rapide + AGL faible) */
@@ -122,7 +122,7 @@ struct HudData {
     float                 mapHeliV   = 0.0f;
     float                 mapHeadingDeg = 0.0f;  /* cap, pour orienter le marqueur */
 
-    /* Message radio reçu : sous-titre centré en bas, affiché tant que la chaine n'est
+    /* Message radio reçu : sous-titre centré en bas, affiché tant que la chaîne n'est
        pas vide. Le pointeur appartient à l'appelant (durée de vie gérée côté app). */
     const char*           radioMessage = "";
 

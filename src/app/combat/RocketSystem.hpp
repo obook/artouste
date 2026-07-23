@@ -69,7 +69,7 @@ public:
     };
     [[nodiscard]] std::vector<RocketView> rockets() const;
 
-    /* Explosion au sol en cours, pour le rendu (modele 3D animé, voir
+    /* Explosion au sol en cours, pour le rendu (modèle 3D animé, voir
        render::ExplosionFx) : point d'impact et progression 0..1 dans
        l'animation. */
     struct ExplosionView {

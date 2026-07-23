@@ -243,9 +243,9 @@ void Application::renderScene(const mat4& base, float rotorAngle, float rotorFra
 
 
     /*
-     * Explosions 3D des roquettes : modèle animé émissif joué a chaque impact
+     * Explosions 3D des roquettes : modèle animé émissif joué à chaque impact
      * (voir render::ExplosionFx). Rendu additif dans la passe principale (profondeur
-     * lue, pas écrite) pour s'occulter correctement derriere le relief et l'appareil.
+     * lue, pas écrite) pour s'occulter correctement derrière le relief et l'appareil.
      */
     if (m_combat.active() && m_explosionFx && m_explosionFx->built()) {
         const auto blasts = m_combat.explosions();

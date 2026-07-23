@@ -124,7 +124,7 @@ inline constexpr float ASSIST_SMOOTH_TAU      = 0.18f;  /* s : lissage des input
 inline constexpr float ASSIST_RECENTER_TAU    = 1.2f;   /* s : rappel doux du cyclique au neutre sans input */
 inline constexpr float ASSIST_COLLECTIVE_RATE = 0.5f;   /* 1/s : variation max du collectif */
 inline constexpr float ASSIST_TRANSITION_RATE = 2.0f;   /* 1/s : vitesse de bascule entre les modes (~0,5 s) */
-inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deca, cyclique considéré relâché (rappel au neutre) */
+inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deçà, cyclique considéré relâché (rappel au neutre) */
 
 /* --- Effets avancés ----------------------------------------------------------- */
 /* Dégradation de la puissance avec l'altitude (densité de l'air). La densité

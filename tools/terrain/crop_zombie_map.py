@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
 crop_zombie_map.py
-Recadre un terrain Artouste existant (grand, type IGN) en une sous-region legere
+Recadre un terrain Artouste existant (grand, type IGN) en une sous-région légère
 autour d'une zone de jeu, pour le mode zombie : on n'a pas besoin de charger toute
-la carte de dax pour un combat confine a l'aerodrome.
+la carte de Dax pour un combat confiné à l'aérodrome.
 
-Le terrain recadre garde EXACTEMENT le meme repere monde grace au decalage
-d'origine (cles origin_x / origin_z de terrain.txt, lues par render::Terrain) :
-tous les fichiers en coordonnees monde (zombies.txt, buildings.bin, helipads.txt,
+Le terrain recadré garde EXACTEMENT le même repère monde grâce au décalage
+d'origine (clés origin_x / origin_z de terrain.txt, lues par render::Terrain) :
+tous les fichiers en coordonnées monde (zombies.txt, buildings.bin, helipads.txt,
 exclusions.txt, hapi.txt, landmarks.txt) restent donc valides SANS modification.
 
-Ce qui est reellement allege : heightmap.png et ortho.jpg sont crops a la boite,
-et terrain.txt est recalcule. L'ortho (le gros du cout de chargement) passe de
-3252x5000 a ~450x450.
+Ce qui est réellement allégé : heightmap.png et ortho.jpg sont recadrés à la
+boîte, et terrain.txt est recalculé. L'ortho (le gros du coût de chargement)
+passe de 3252x5000 à ~450x450.
 
 Usage : python3 tools/terrain/crop_zombie_map.py <src_dir> <dst_dir> \
             --center-x X --center-z Z --half H
-Exemple (aerodrome de Dax-Seyresse, boite ~2 km) :
+Exemple (aérodrome de Dax-Seyresse, boîte ~2 km) :
   python3 tools/terrain/crop_zombie_map.py assets/terrain/dax \
       assets/terrain/dax-arene --center-x 0 --center-z 3492 --half 1000
 
-Boite rectangulaire : --half-x/--half-z remplacent --half independamment (E-O / N-S).
+Boîte rectangulaire : --half-x/--half-z remplacent --half indépendamment (E-O / N-S).
 
 Auteur : O. Booklage - Licence GPL v2
 """
@@ -57,17 +57,17 @@ def main():
     ap.add_argument("--center-x", type=float, required=True)
     ap.add_argument("--center-z", type=float, required=True)
     ap.add_argument("--half", type=float, default=1000.0,
-                     help="demi-cote de la boite (m), carree ; ignore si --half-x/--half-z "
-                          "sont donnes (boite rectangulaire)")
+                     help="demi-côté de la boîte (m), carrée ; ignoré si --half-x/--half-z "
+                          "sont donnés (boîte rectangulaire)")
     ap.add_argument("--half-x", type=float, default=None, help="demi-largeur E-O (m)")
     ap.add_argument("--half-z", type=float, default=None, help="demi-hauteur N-S (m)")
     ap.add_argument("--ortho-px", type=int, default=2000,
-                     help="hauteur en pixels de l'ortho HD reemise via WMS (defaut 2000, "
-                          "~1 m/px sur une boite de 2 km ; limite serveur IGN ~5010)")
+                     help="hauteur en pixels de l'ortho HD réémise via WMS (défaut 2000, "
+                          "~1 m/px sur une boîte de 2 km ; limite serveur IGN ~5010)")
     ap.add_argument("--offline-crop", action="store_true",
-                     help="ne pas requeter le WMS : recadre l'ortho basse resolution de "
-                          "la carte source (comportement historique, hors-ligne mais flou "
-                          "de pres une fois au sol)")
+                     help="ne pas requêter le WMS : recadre l'ortho basse résolution de "
+                          "la carte source (comportement historique, hors ligne mais flou "
+                          "de près une fois au sol)")
     args = ap.parse_args()
     half_x = args.half_x if args.half_x is not None else args.half
     half_z = args.half_z if args.half_z is not None else args.half
@@ -84,7 +84,7 @@ def main():
     halfW, halfH = 0.5 * width, 0.5 * height
     dx, dz = width / (cols - 1), height / (rows - 1)
 
-    # --- Plage de colonnes/rangees de la grille couvrant la boite ---------------
+    # --- Plage de colonnes/rangées de la grille couvrant la boîte ---------------
     def col_of(x):
         return (x + halfW) / width * (cols - 1)
 
@@ -97,7 +97,7 @@ def main():
     j_hi = min(rows - 1, round(row_of(args.center_z + half_z)))
     new_cols, new_rows = i_hi - i_lo + 1, j_hi - j_lo + 1
 
-    # Etendue monde reelle de la grille cropee (bornes des colonnes/rangees).
+    # Étendue monde réelle de la grille recadrée (bornes des colonnes/rangées).
     def x_at(i):
         return -halfW + i * dx
 
@@ -108,10 +108,10 @@ def main():
     z0, z1 = z_at(j_lo), z_at(j_hi)
     new_width = x1 - x0
     new_height = z1 - z0
-    origin_x = 0.5 * (x0 + x1)  # centre de la boite en coord MONDE
+    origin_x = 0.5 * (x0 + x1)  # centre de la boîte en coord MONDE
     origin_z = 0.5 * (z0 + z1)
 
-    # --- Nouvelles bornes lon/lat (memes formules que render::Terrain) ----------
+    # --- Nouvelles bornes lon/lat (mêmes formules que render::Terrain) ----------
     def lon_of(x):
         return lon_min + (x / width + 0.5) * (lon_max - lon_min)
 
@@ -132,12 +132,12 @@ def main():
     Image.fromarray(sub, mode="I;16").save(dst / "heightmap.png")
 
     # --- Ortho -------------------------------------------------------------------
-    # Par defaut, on ne recadre PAS l'ortho basse resolution de la carte source :
+    # Par défaut, on ne recadre PAS l'ortho basse résolution de la carte source :
     # celle-ci partage son budget de pixels WMS (limite serveur IGN ~5010 px) avec
     # toute l'emprise de la grande carte (des dizaines de km), ce qui donne un sol
-    # flou vu de pres une fois recadre sur une arene de ~2 km. On reemet donc une
-    # requete WMS dediee, centree sur la seule boite de l'arene : le meme budget de
-    # pixels serveur, applique a une emprise bien plus petite, donne une resolution
+    # flou vu de près une fois recadré sur une arène de ~2 km. On réémet donc une
+    # requête WMS dédiée, centrée sur la seule boîte de l'arène : le même budget de
+    # pixels serveur, appliqué à une emprise bien plus petite, donne une résolution
     # nettement meilleure (voir --ortho-px).
     if args.offline_crop:
         def ox_of(x):
@@ -160,15 +160,15 @@ def main():
         new_ortho_w = fetch_ortho(new_width / new_height)
         new_ortho_h = args.ortho_px
 
-    # --- terrain.txt recadre ----------------------------------------------------
+    # --- terrain.txt recadré -----------------------------------------------------
     start_x = m.get("start_x", "0")
     start_z = m.get("start_z", "0")
     start_heading = m.get("start_heading", "0")
     sea = m.get("sea", "0")
     lines = [
-        f"# Terrain Artouste - recadre depuis {src.name} (mode zombie, sous-region)",
-        "# Repere monde identique a la carte source (origin_x/origin_z) : tous les",
-        "# fichiers en coordonnees monde restent valides sans decalage.",
+        f"# Terrain Artouste - recadré depuis {src.name} (mode zombie, sous-région)",
+        "# Repère monde identique à la carte source (origin_x/origin_z) : tous les",
+        "# fichiers en coordonnées monde restent valides sans décalage.",
         f"cols {new_cols}",
         f"rows {new_rows}",
         f"width_m {new_width:.1f}",
@@ -190,7 +190,7 @@ def main():
     ]
     (dst / "terrain.txt").write_text("\n".join(lines) + "\n")
 
-    # --- Fichiers annexes copies tels quels (coordonnees monde / lon-lat) --------
+    # --- Fichiers annexes copiés tels quels (coordonnées monde / lon-lat) -------
     for aux in ["zombies.txt", "buildings.bin", "helipads.txt", "exclusions.txt",
                 "hapi.txt", "landmarks.txt"]:
         p = src / aux

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 refresh_ortho.py
-Reemet uniquement l'orthophoto d'une zone deja generee par fetch_terrain.py, a une
-resolution eventuellement differente (typiquement plus fine), sans retelecharger le
-relief (API altimetrie IGN, couteuse) ni retoucher heightmap.png, buildings.bin ou
-les autres fichiers. Met a jour ortho_width / ortho_height dans terrain.txt.
+Réémet uniquement l'orthophoto d'une zone déjà générée par fetch_terrain.py, à une
+résolution éventuellement différente (typiquement plus fine), sans retélécharger le
+relief (API altimétrie IGN, coûteuse) ni retoucher heightmap.png, buildings.bin ou
+les autres fichiers. Met à jour ortho_width / ortho_height dans terrain.txt.
 
 Usage : tools/.venv/bin/python tools/terrain/refresh_ortho.py <zone> [ortho_px]
-Exemple (mosaique WMS pour une ortho deux fois plus fine sur dax) :
+Exemple (mosaïque WMS pour une ortho deux fois plus fine sur Dax) :
   tools/.venv/bin/python tools/terrain/refresh_ortho.py dax 10000
 
 Sans ortho_px, reprend la valeur "ortho_px" de la zone (voir terrain/zones/).
@@ -56,7 +56,7 @@ def main():
         else:
             out.append(line)
     terrain_txt.write_text("\n".join(out) + "\n")
-    print(f"[ok] {zone} : ortho {new_width}x{config.ORTHO_HEIGHT} ecrite, terrain.txt mis a jour")
+    print(f"[ok] {zone} : ortho {new_width}x{config.ORTHO_HEIGHT} écrite, terrain.txt mis à jour")
 
 
 if __name__ == "__main__":

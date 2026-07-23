@@ -1,18 +1,18 @@
 /*
  * ExplosionModel.hpp
- * Explosion 3D animée par NOEUDS (pas de squelette), chargée depuis un glTF/.glb
- * via Assimp. Le pack utilisé est une séquence facon "flipbook 3D" : une
+ * Explosion 3D animée par NŒUDS (pas de squelette), chargée depuis un glTF/.glb
+ * via Assimp. Le pack utilisé est une séquence façon "flipbook 3D" : une
  * douzaine de maillages (les images successives de la boule de feu), chacun
- * porté par un noeud dont l'ECHELLE est animée (il grossit puis s'efface a tour
- * de role). On réutilise la même mécanique d'animation de noeuds que
+ * porté par un nœud dont l'ÉCHELLE est animée (il grossit puis s'efface à tour
+ * de rôle). On réutilise la même mécanique d'animation de nœuds que
  * render::SkinnedModel (poseAtTime), mais sans os ni skinning : chaque maillage
- * est simplement dessiné avec la transformation globale animée de son noeud.
+ * est simplement dessiné avec la transformation globale animée de son nœud.
  *
- * Le modele expose :
- *   - la liste des maillages (géométrie statique + index du noeud porteur) ;
- *   - poseAtTime(t) : matrice globale de chaque noeud a l'instant t ;
- *   - une correction localFix normalisant l'explosion a un rayon unité (le
- *     renderer la met ensuite a l'échelle voulue et la place au point d'impact).
+ * Le modèle expose :
+ *   - la liste des maillages (géométrie statique + index du nœud porteur) ;
+ *   - poseAtTime(t) : matrice globale de chaque nœud à l'instant t ;
+ *   - une correction localFix normalisant l'explosion à un rayon unité (le
+ *     renderer la met ensuite à l'échelle voulue et la place au point d'impact).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -35,10 +35,10 @@ namespace artouste::render {
 
 class ExplosionModel {
 public:
-    /* Un maillage (une image de l'explosion) et le noeud qui l'anime. */
+    /* Un maillage (une image de l'explosion) et le nœud qui l'anime. */
     struct MeshPart {
         Mesh mesh;
-        int  node = 0;  /* index dans m_nodes du noeud porteur */
+        int  node = 0;  /* index dans m_nodes du nœud porteur */
     };
 
     explicit ExplosionModel(const std::filesystem::path& path);
@@ -50,8 +50,8 @@ public:
     [[nodiscard]] const mat4&     localFix() const noexcept { return m_localFix; }
     [[nodiscard]] float           durationS() const noexcept { return m_durationS; }
 
-    /* Matrice globale (repere du modele) de chaque noeud a l'instant t
-       (secondes, borne a [0, durationS]). Ordre de m_nodes : un parent precede
+    /* Matrice globale (repère du modèle) de chaque nœud à l'instant t
+       (secondes, bornée à [0, durationS]). Ordre de m_nodes : un parent précède
        toujours ses enfants. */
     [[nodiscard]] std::vector<mat4> poseAtTime(float t) const;
 

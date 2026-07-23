@@ -17,25 +17,25 @@
 
 set -euo pipefail
 
-# Budget d'arbres soumis au GPU (defaut du simulateur : 1600000).
-# 500000 est un bon compromis sur tablette ; descendez a 300000 si besoin.
+# Budget d'arbres soumis au GPU (défaut du simulateur : 1600000).
+# 500000 est un bon compromis sur tablette ; descendez à 300000 si besoin.
 export ARTOUSTE_TREE_MAX="${ARTOUSTE_TREE_MAX:-500000}"
 
-# Anti-crenelage : 4 (defaut), 2 (allege), 0 (aucun). 2 est peu visible en 1080p.
+# Anti-crénelage : 4 (défaut), 2 (allégé), 0 (aucun). 2 est peu visible en 1080p.
 export ARTOUSTE_MSAA="${ARTOUSTE_MSAA:-2}"
 
 # Journal de cadence sur la sortie d'erreur (une ligne par seconde). Commentez
 # cette ligne pour un lancement silencieux.
 export ARTOUSTE_FPS_LOG="${ARTOUSTE_FPS_LOG:-1}"
 
-# Repertoire du script, pour trouver le binaire quel que soit le dossier courant.
+# Répertoire du script, pour trouver le binaire quel que soit le dossier courant.
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN="$DIR/build/bin/artouste"
 
 if [[ ! -x "$BIN" ]]; then
-    echo "artouste n'est pas compile ($BIN introuvable). Lancez d'abord ./build.sh." >&2
+    echo "artouste n'est pas compilé ($BIN introuvable). Lancez d'abord ./build.sh." >&2
     exit 1
 fi
 
-echo "Lancement allege : arbres <= $ARTOUSTE_TREE_MAX, MSAA $ARTOUSTE_MSAA." >&2
+echo "Lancement allégé : arbres <= $ARTOUSTE_TREE_MAX, MSAA $ARTOUSTE_MSAA." >&2
 exec "$BIN" "$@"

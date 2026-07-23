@@ -252,8 +252,8 @@ bool Application::runStartupMenu() {
         for (std::size_t i = 0; i < cartes.size(); ++i) {
             /* Le nom de dossier technique (ex. "dax-arene") n'a pas sa place devant une
                arène dédiée au mode zombie (ex. "Happy DeathHour") : titre seul, sans
-               prefixe, pour ces cartes-là. Les autres gardent le prefixe (utile pour
-               retrouver le dossier a faire correspondre a la clé "terrain" de
+               préfixe, pour ces cartes-là. Les autres gardent le préfixe (utile pour
+               retrouver le dossier à faire correspondre à la clé "terrain" de
                config.txt). */
             const std::string libelle =
                 cartes[i].zombieOnly ? cartes[i].title : (cartes[i].dir + "  -  " + cartes[i].title);

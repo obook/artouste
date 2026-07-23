@@ -2,6 +2,14 @@
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
+rem NOTE : ce fichier est volontairement sans accents (ASCII pur). cmd.exe lit
+rem les .bat/.cmd selon la page de code OEM active, qui varie d'un poste
+rem Windows a l'autre ; un accent mal interprete casse parfois l'affichage
+rem ou, pire, la premiere ligne (@echo off) si le fichier est enregistre avec
+rem un BOM UTF-8 (proscrit ici pour cette raison). Le chcp 65001 ci-dessus
+rem stabilise l'affichage des messages du script lui-meme, mais ne dispense
+rem pas d'ecrire ce fichier sans accents.
+rem
 rem build.bat -- Compilation du simulateur Artouste sous Windows.
 rem
 rem Equivalent de build.sh : configure CMake puis compile. libcurl est une

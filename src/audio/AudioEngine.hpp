@@ -28,7 +28,7 @@ public:
     AudioEngine();
     ~AudioEngine();
 
-    AudioEngine(const AudioEngine&)            = delete;
+    AudioEngine(const AudioEngine&) = delete;
     AudioEngine& operator=(const AudioEngine&) = delete;
 
     /* Initialise le périphérique et charge les boucles depuis soundsDir.
@@ -48,8 +48,12 @@ public:
      * caméra ; 'closingSpeed' est la vitesse de rapprochement caméra<->appareil
      * (m/s, positive si la caméra se rapproche), pour l'effet Doppler. Au repos,
      * tout est silencieux ; au démarrage, la turbine siffle avant le rotor. */
-    void update(float collective, float airspeed, float turbineFraction, float rotorFraction,
-                View view, float closingSpeed);
+    void update(float collective,
+                float airspeed,
+                float turbineFraction,
+                float rotorFraction,
+                View view,
+                float closingSpeed);
 
     /* Suspend les boucles sonores (pause du jeu) ou les reprend. Idempotent :
      * n'agit qu'au changement d'état. */
@@ -92,7 +96,8 @@ public:
     /* Flux radio internet branché sur le moteur audio. URL vide ou libcurl absente :
      * no-op silencieux. startRadio (re)démarre le flux, stopRadio le coupe,
      * toggleRadio bascule (touche K), pollRadio finalise l'init du son une fois le
-     * tampon amorcé (à appeler chaque image), radioPlaying indique si un flux tourne. */
+     * tampon amorcé (à appeler chaque image), radioPlaying indique si un flux tourne.
+     * Définies dans AudioEngineRadio.cpp. */
     void startRadio(const std::string& url);
     void stopRadio();
     void toggleRadio(const std::string& url);
@@ -101,17 +106,20 @@ public:
 
     /* Crossfade radio/hélico : adjustRadioMix décale la balance de delta (vers la
      * radio si delta > 0, vers l'hélico si delta < 0), borné dans [0, 1]. radioMix
-     * renvoie la part de la radio (0 = tout hélico, 1 = tout radio). */
+     * renvoie la part de la radio (0 = tout hélico, 1 = tout radio).
+     * Définies dans AudioEngineRadio.cpp. */
     void adjustRadioMix(float delta);
     [[nodiscard]] float radioMix() const;
 
     /* Joue un message radio : 'text' (anglais) est synthétisé par Flite puis passé
      * dans un effet "radio". Aucun fichier audio. À accompagner d'un sous-titre côté
-     * HUD. No-op silencieux si le périphérique audio ou le TTS est absent. */
+     * HUD. No-op silencieux si le périphérique audio ou le TTS est absent.
+     * Définie dans AudioEngineRadio.cpp. */
     void playRadioMessage(const std::string& text);
 
     /* Vrai tant qu'un message radio est en cours de lecture. Sert à attendre la fin
-     * de l'autorisation de la tour avant d'engager le rotor. */
+     * de l'autorisation de la tour avant d'engager le rotor.
+     * Définie dans AudioEngineRadio.cpp. */
     [[nodiscard]] bool radioMessagePlaying() const;
 
     [[nodiscard]] bool ready() const noexcept;
@@ -119,7 +127,7 @@ public:
 private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;
-    RadioStream           m_radio;  /* lecteur du flux radio (pImpl autonome, sans miniaudio dans l'en-tête) */
+    RadioStream m_radio; /* lecteur du flux radio (pImpl autonome, sans miniaudio dans l'en-tête) */
 };
 
-}  /* namespace artouste::audio */
+} /* namespace artouste::audio */

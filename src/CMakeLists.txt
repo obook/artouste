@@ -60,6 +60,7 @@ add_executable(artouste
     app/combat/ProjectileSystem.cpp
     app/combat/WaveManager.cpp
     audio/AudioEngineControl.cpp
+    audio/AudioEngineRadio.cpp
     input/Keyboard.cpp
     input/Gamepad.cpp
     input/GamepadAxes.cpp

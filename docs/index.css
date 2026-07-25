@@ -135,8 +135,6 @@ a:focus-visible, button:focus-visible {
 .btn-primary:hover { background: var(--amber-hi); color: var(--ink); transform: translateY(-2px); }
 .btn-ghost { border: 1px solid var(--rule); color: var(--alu); }
 .btn-ghost:hover { border-color: var(--amber); color: var(--alu); transform: translateY(-2px); }
-.btn-notice { background: var(--petrol); border: 1px solid var(--rule); color: #fff; }
-.btn-notice:hover { background: var(--petrol-2); border-color: var(--amber); color: #fff; transform: translateY(-2px); }
 
 /* Signature : plaque constructeur rivetée */
 .plate {

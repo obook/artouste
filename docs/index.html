@@ -36,334 +36,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="theme-color" content="#15232b">
-  <style>
-    :root {
-      --petrol:    #15232b;   /* gunmetal pétrole, fond principal */
-      --petrol-2:  #1b2d37;   /* surfaces relevées */
-      --plate:     #21333d;   /* métal de la plaque constructeur */
-      --rule:      #2d3f4a;   /* filets fins */
-      --alu:       #d4d9dc;   /* aluminium, titres */
-      --text:      #c2ccd2;   /* corps de texte */
-      --muted:     #8395a0;   /* texte secondaire */
-      --amber:     #f4a032;   /* ambre instrument, accent */
-      --amber-hi:  #ffc56b;   /* ambre clair */
-      --ink:       #0c151a;   /* texte sur fond ambre */
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--petrol);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-    }
-    a { color: var(--amber); text-decoration: none; }
-    a:hover { color: var(--amber-hi); }
-    img { max-width: 100%; }
-
-    /* Famille mono = identité "plaque / manuel de vol" */
-    .mono {
-      font-family: "SFMono-Regular", "JetBrains Mono", "Cascadia Code", Consolas,
-        "Liberation Mono", Menlo, monospace;
-    }
-    .eyebrow {
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
-      text-transform: uppercase; letter-spacing: 0.32em; font-size: 0.72rem;
-      color: var(--amber); margin: 0 0 14px;
-    }
-
-    /* Accessibilité : focus clavier visible */
-    a:focus-visible, button:focus-visible {
-      outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 3px;
-    }
-
-    /* Navigation */
-    .nav {
-      position: sticky; top: 0; z-index: 20;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px;
-      background: rgba(21, 35, 43, 0.82);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--rule);
-    }
-    .brand {
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
-      color: var(--alu); font-size: 0.95rem;
-    }
-    .brand b { color: var(--amber); font-weight: 700; }
-    .navlinks { display: flex; flex-wrap: wrap; gap: 22px; }
-    .navlinks a {
-      color: var(--muted); font-size: 0.82rem; letter-spacing: 0.06em;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-    }
-    .navlinks a:hover { color: var(--alu); }
-
-    /* Bouton menu (mobile) : masqué sur grand écran, révélé sous 760px */
-    .nav-toggle {
-      display: none; width: 42px; height: 42px; padding: 0;
-      background: transparent; border: 1px solid var(--rule); border-radius: 5px;
-      color: var(--alu); cursor: pointer; place-items: center;
-      transition: border-color 0.14s ease, color 0.14s ease;
-    }
-    .nav-toggle:hover { border-color: var(--amber); color: var(--amber); }
-    .nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after {
-      content: ""; display: block; width: 18px; height: 2px;
-      background: currentColor; border-radius: 2px;
-    }
-    .nav-toggle-bars { position: relative; transition: background 0.18s ease; }
-    .nav-toggle-bars::before, .nav-toggle-bars::after {
-      position: absolute; left: 0; transition: transform 0.18s ease;
-    }
-    .nav-toggle-bars::before { top: -6px; }
-    .nav-toggle-bars::after  { top:  6px; }
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bars { background: transparent; }
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before { transform: translateY(6px) rotate(45deg); }
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after  { transform: translateY(-6px) rotate(-45deg); }
-
-    /* Hero */
-    .hero {
-      position: relative;
-      border-bottom: 1px solid var(--rule);
-      background:
-        linear-gradient(105deg, rgba(13,21,26,0.95) 0%, rgba(13,21,26,0.78) 46%, rgba(13,21,26,0.42) 100%),
-        url("screenshots/hero.png") center right / cover no-repeat;
-    }
-    .hero-grid {
-      max-width: 1120px; margin: 0 auto; padding: 96px 28px 88px;
-      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center;
-    }
-    .hero h1 {
-      font-size: clamp(3rem, 9vw, 6rem); line-height: 0.96; margin: 0 0 18px;
-      letter-spacing: -0.02em; font-weight: 800; color: #fff;
-    }
-    .hero h1 .reg {
-      display: block; margin-top: 12px;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      font-size: clamp(0.8rem, 1.6vw, 1rem); letter-spacing: 0.34em; font-weight: 500;
-      color: var(--amber);
-    }
-    .tagline { font-size: clamp(1.02rem, 1.6vw, 1.2rem); color: var(--text); max-width: 30em; }
-    .cta-row { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
-    .btn {
-      display: inline-block; padding: 13px 24px; border-radius: 4px;
-      font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em;
-      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-    }
-    .btn-primary { background: var(--amber); color: var(--ink); }
-    .btn-primary:hover { background: var(--amber-hi); color: var(--ink); transform: translateY(-2px); }
-    .btn-ghost { border: 1px solid var(--rule); color: var(--alu); }
-    .btn-ghost:hover { border-color: var(--amber); color: var(--alu); transform: translateY(-2px); }
-
-    /* Signature : plaque constructeur rivetée */
-    .plate {
-      position: relative;
-      /* Transparente : on laisse bien transparaître l'hélico en vol du fond. */
-      background: linear-gradient(160deg, rgba(39,58,69,0.58) 0%, rgba(33,51,61,0.58) 55%, rgba(26,42,51,0.58) 100%);
-      backdrop-filter: blur(3px);
-      border: 1px solid #3a4d59; border-radius: 7px;
-      padding: 26px 28px 24px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px rgba(0,0,0,0.45);
-    }
-    /* Rivets aux quatre coins */
-    .plate::before, .plate::after,
-    .plate .rivets::before, .plate .rivets::after {
-      content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #5b6e79, #16242c);
-      box-shadow: inset 0 0 1px rgba(0,0,0,0.6);
-    }
-    .plate::before { top: 10px; left: 10px; }
-    .plate::after { top: 10px; right: 10px; }
-    .plate .rivets::before { bottom: 10px; left: 10px; }
-    .plate .rivets::after { bottom: 10px; right: 10px; }
-    .plate .plate-title {
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.72rem;
-      color: var(--amber); margin: 0 0 16px; padding-bottom: 12px;
-      border-bottom: 1px solid var(--rule); text-align: center;
-    }
-    .plate dl { margin: 0; }
-    .plate-row {
-      display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; align-items: baseline;
-      padding: 7px 0; border-bottom: 1px dotted var(--rule);
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; font-size: 0.84rem;
-    }
-    .plate-row:last-child { border-bottom: 0; }
-    .plate-row dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; }
-    .plate-row dd { margin: 0; color: var(--alu); }
-    .plate-row dd b { color: var(--amber-hi); font-weight: 600; }
-
-    /* Sections */
-    section { max-width: 1120px; margin: 0 auto; padding: 84px 28px; }
-    .sec-head { margin-bottom: 36px; }
-    .sec-head h2 { font-size: clamp(1.7rem, 3.4vw, 2.3rem); margin: 0; color: var(--alu); letter-spacing: -0.01em; }
-    .lead { color: var(--muted); max-width: 46em; font-size: 1.04rem; }
-
-    /* Caractéristiques */
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(266px, 1fr)); gap: 16px; }
-    .card {
-      background: var(--petrol-2); border: 1px solid var(--rule);
-      border-radius: 8px; padding: 24px;
-      transition: transform 0.14s ease, border-color 0.14s ease;
-    }
-    .card:hover { transform: translateY(-3px); border-color: #3c4f5b; }
-    .klabel {
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--amber); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-    }
-    .key {
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      font-size: 0.74rem; color: var(--ink); background: var(--amber);
-      border-radius: 3px; padding: 1px 8px; letter-spacing: 0;
-    }
-    .card h3 { margin: 0 0 8px; font-size: 1.12rem; color: var(--alu); }
-    .card p { margin: 0; color: var(--muted); font-size: 0.96rem; }
-
-    /* Galerie : chaque capture est un bouton cliquable qui ouvre la modale */
-    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
-    .shot {
-      position: relative; display: block; width: 100%; padding: 0; margin: 0;
-      text-align: left; cursor: pointer; color: inherit; font: inherit;
-      background: var(--petrol-2); border: 1px solid var(--rule); border-radius: 8px;
-      overflow: hidden; transition: transform 0.14s ease, border-color 0.14s ease;
-    }
-    .shot:hover { transform: translateY(-3px); border-color: #3c4f5b; }
-    .shot img { display: block; width: 100%; height: auto; }
-    .shot .cap {
-      display: block; padding: 12px 16px; color: var(--muted); font-size: 0.86rem;
-      border-top: 1px solid var(--rule);
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
-    }
-    /* Indice "agrandir" en coin, révélé au survol ou au focus */
-    .shot::after {
-      content: "+"; position: absolute; top: 10px; right: 10px;
-      width: 28px; height: 28px; display: grid; place-items: center;
-      background: rgba(12,21,26,0.72); color: var(--amber);
-      border: 1px solid var(--rule); border-radius: 50%;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
-      font-size: 1.2rem; line-height: 1; opacity: 0; transition: opacity 0.14s ease;
-    }
-    .shot:hover::after, .shot:focus-visible::after { opacity: 1; }
-
-    /* Modale d'image agrandie */
-    .lightbox {
-      position: fixed; inset: 0; z-index: 50;
-      display: flex; align-items: center; justify-content: center; flex-direction: column;
-      gap: 14px; padding: 28px; background: rgba(8, 12, 15, 0.93);
-      animation: fade 0.18s ease;
-    }
-    .lightbox[hidden] { display: none; }
-    .lightbox img {
-      max-width: 92vw; max-height: 82vh; display: block;
-      border: 1px solid var(--rule); border-radius: 6px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-    }
-    .lightbox .lb-cap {
-      color: var(--alu); font-size: 0.9rem; text-align: center;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.02em;
-    }
-    .lb-close {
-      position: absolute; top: 16px; right: 22px;
-      background: none; border: 0; color: var(--alu); cursor: pointer;
-      font-size: 2.2rem; line-height: 1; padding: 4px 12px;
-    }
-    .lb-close:hover { color: var(--amber); }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-
-    /* Téléchargement */
-    .dl {
-      background:
-        radial-gradient(120% 140% at 50% 0%, rgba(244,160,50,0.07), transparent 60%),
-        var(--petrol-2);
-      border: 1px solid var(--rule); border-radius: 12px; padding: 48px 32px; text-align: center;
-    }
-    .dl h2 { margin: 0 0 14px; font-size: clamp(1.6rem, 3.2vw, 2.1rem); color: var(--alu); }
-    .dl .lead { margin: 0 auto 28px; }
-    .dl .platforms {
-      margin-top: 18px; color: var(--muted); font-size: 0.82rem;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.04em;
-    }
-    .dl .cta-row { justify-content: center; }
-
-    /* Pied de page */
-    footer { border-top: 1px solid var(--rule); }
-    footer .inner {
-      max-width: 1120px; margin: 0 auto; padding: 28px;
-      display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
-      color: var(--muted); font-size: 0.82rem;
-      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.03em;
-    }
-
-    /* Reveal discret à l'arrivée */
-    .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s ease forwards; }
-    .reveal.d1 { animation-delay: 0.08s; }
-    .reveal.d2 { animation-delay: 0.18s; }
-    @keyframes rise { to { opacity: 1; transform: none; } }
-
-    /* Responsive */
-
-    /* Hero en colonne unique : la photo passe en fond vertical, le voile
-       devient plus dense pour garder le titre lisible par-dessus l'image. */
-    @media (max-width: 860px) {
-      .hero {
-        background:
-          linear-gradient(180deg, rgba(13,21,26,0.74) 0%, rgba(13,21,26,0.84) 58%, rgba(13,21,26,0.93) 100%),
-          url("screenshots/hero.png") center 28% / cover no-repeat;
-      }
-      .hero-grid { grid-template-columns: 1fr; gap: 34px; padding: 64px 24px 56px; }
-    }
-
-    /* Sous 760px : le menu inline laisse place à un panneau déroulant. */
-    @media (max-width: 760px) {
-      .nav { flex-wrap: wrap; padding: 12px 20px; }
-      .nav-toggle { display: grid; }
-      .navlinks {
-        display: none; flex-basis: 100%; flex-direction: column;
-        gap: 0; margin-top: 12px;
-        border-top: 1px solid var(--rule);
-      }
-      .navlinks.open { display: flex; }
-      .navlinks a {
-        padding: 13px 4px; font-size: 0.92rem;
-        border-bottom: 1px solid var(--rule);
-      }
-      .navlinks a:last-child { border-bottom: 0; }
-    }
-
-    /* Tablette étroite et grand téléphone : on resserre les rythmes verticaux. */
-    @media (max-width: 600px) {
-      section { padding: 58px 20px; }
-      .hero-grid { padding: 52px 20px 46px; }
-      .sec-head { margin-bottom: 26px; }
-      .grid, .gallery { gap: 12px; }
-      .card { padding: 20px; }
-      .plate { padding: 22px 20px 20px; }
-      .plate-row { grid-template-columns: 8.5em 1fr; }
-      .dl { padding: 36px 22px; border-radius: 10px; }
-      footer .inner { padding: 24px 20px; gap: 8px; }
-    }
-
-    /* Petit téléphone : les boutons d'action prennent toute la largeur,
-       cibles tactiles confortables et alignement propre. */
-    @media (max-width: 460px) {
-      .cta-row { flex-direction: column; align-items: stretch; }
-      .dl .cta-row { align-items: stretch; }
-      .btn { text-align: center; padding: 14px 22px; }
-      .gallery { grid-template-columns: 1fr; }
-    }
-
-    /* Respect du mouvement réduit */
-    @media (prefers-reduced-motion: reduce) {
-      * { scroll-behavior: auto; }
-      .reveal { opacity: 1; transform: none; animation: none; }
-      .btn:hover, .card:hover, .shot:hover { transform: none; }
-      .nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after { transition: none; }
-      .lightbox { animation: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
@@ -377,7 +50,6 @@
       <a href="#apropos">À propos</a>
       <a href="#caracteristiques">Caractéristiques</a>
       <a href="#galerie">Galerie</a>
-      <a href="#telecharger">Télécharger pour PC Windows ou Linux</a>
       <a href="https://github.com/obook/artouste">Code source</a>
     </nav>
   </header>
@@ -390,7 +62,7 @@
         <p class="tagline">Pilotez en 3D cet hélicoptère légendaire sans servo-commandes :
           sa turbine Turboméca, son rotor tripale et son caractère exigeant sont restitués.</p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases">Télécharger la dernière version pour PC Windows ou Linux</a>
+          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest">Télécharger<br>Windows ou Linux</a>
           <a class="btn btn-ghost" href="https://github.com/obook/artouste">Voir le code source</a>
         </div>
       </div>
@@ -560,20 +232,6 @@
     </div>
   </section>
 
-  <section id="telecharger">
-    <div class="dl">
-      <p class="eyebrow">Télécharger</p>
-      <h2>Binaires et code source</h2>
-      <p class="lead">Les versions publiées fournissent des binaires pour Linux et
-        Windows. Le code source complet est disponible sur le dépôt, sous licence GPL v2.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/obook/artouste/releases">Versions et binaires</a>
-        <a class="btn btn-ghost" href="https://github.com/obook/artouste">Dépôt GitHub</a>
-      </div>
-      <p class="platforms">Compilation : C++20 &middot; CMake &middot; OpenGL 3.3 &middot; voir le README pour les dépendances</p>
-    </div>
-  </section>
-
   <section id="english" lang="en">
     <div class="sec-head">
       <p class="eyebrow">English</p>
@@ -599,8 +257,8 @@
       Runs on Linux and Windows. GPL v2 license.
     </p>
     <div class="cta-row">
+      <a class="btn btn-ghost" href="https://github.com/obook/artouste/releases/latest">Download<br>Windows or Linux</a>
       <a class="btn btn-ghost" href="https://github.com/obook/artouste">Source code on GitHub</a>
-      <a class="btn btn-ghost" href="https://github.com/obook/artouste/releases">Download releases</a>
     </div>
   </section>
 
@@ -619,71 +277,7 @@
     <p class="lb-cap" id="lbCap"></p>
   </div>
 
-  <script>
-    /* Menu mobile : panneau déroulant accessible (clavier et lecteur d'écran). */
-    (function () {
-      var toggle = document.getElementById('navToggle');
-      var menu = document.getElementById('navmenu');
-      if (!toggle || !menu) { return; }
-
-      function setOuvert(ouvert) {
-        toggle.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
-        toggle.setAttribute('aria-label', ouvert ? 'Fermer le menu' : 'Ouvrir le menu');
-        menu.classList.toggle('open', ouvert);
-      }
-      toggle.addEventListener('click', function () {
-        setOuvert(toggle.getAttribute('aria-expanded') !== 'true');
-      });
-      /* Une fois un lien choisi, on referme le panneau. */
-      menu.addEventListener('click', function (e) {
-        if (e.target.tagName === 'A') { setOuvert(false); }
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
-          setOuvert(false); toggle.focus();
-        }
-      });
-      /* Retour en grand écran : on repart d'un état propre. */
-      window.matchMedia('(min-width: 761px)').addEventListener('change', function (mq) {
-        if (mq.matches) { setOuvert(false); }
-      });
-    })();
-
-    (function () {
-      var lb = document.getElementById('lightbox');
-      var lbImg = document.getElementById('lbImg');
-      var lbCap = document.getElementById('lbCap');
-      var lbClose = document.getElementById('lbClose');
-      var lastFocus = null;
-
-      function ouvrir(shot) {
-        lastFocus = shot;
-        var img = shot.querySelector('img');
-        lbImg.src = shot.getAttribute('data-full');
-        lbImg.alt = img ? img.alt : '';
-        lbCap.textContent = shot.getAttribute('data-cap') || '';
-        lb.hidden = false;
-        document.body.style.overflow = 'hidden';
-        lbClose.focus();
-      }
-      function fermer() {
-        lb.hidden = true;
-        lbImg.src = '';
-        document.body.style.overflow = '';
-        if (lastFocus) { lastFocus.focus(); }
-      }
-
-      var shots = document.querySelectorAll('.shot');
-      for (var i = 0; i < shots.length; i++) {
-        shots[i].addEventListener('click', function () { ouvrir(this); });
-      }
-      lbClose.addEventListener('click', fermer);
-      lb.addEventListener('click', function (e) { if (e.target === lb) { fermer(); } });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !lb.hidden) { fermer(); }
-      });
-    })();
-  </script>
+  <script src="index.js"></script>
 
 </body>
 </html>

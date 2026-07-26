@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "render/Bc7.hpp"
 #include "render/Mesh.hpp"
 #include "render/Texture.hpp"
 #include "render/hapi/Hapi.hpp"
@@ -39,8 +40,13 @@ struct Landmark {
 class Terrain {
 public:
     /* Charge le terrain depuis un dossier contenant terrain.txt, heightmap.png
-       et ortho.jpg. En cas d'absence, construit un damier plat de repli. */
-    explicit Terrain(const std::filesystem::path& dir);
+       et ortho.jpg. En cas d'absence, construit un damier plat de repli.
+
+       Le rappel de progression n'est utilisé qu'au tout premier chargement
+       d'une carte, quand l'orthophoto doit être compressée avant sa mise en
+       cache (voir TextureCache.hpp) : c'est la seule étape assez longue pour
+       mériter d'être montrée. Il peut renvoyer faux pour annuler. */
+    explicit Terrain(const std::filesystem::path& dir, bc7::Progression progression = {});
 
     void draw() const { m_mesh.draw(); }
 
@@ -146,6 +152,9 @@ private:
     Mesh m_mesh;
     Texture m_ortho;
     bool m_textured = false;
+    /* Rappel de progression de la préparation de l'orthophoto, transmis au
+       cache. Vide en dehors du premier chargement d'une carte. */
+    bc7::Progression m_progression;
 
     /* Carte d'altitude conservée côté CPU pour interroger la hauteur du sol.
        Rangée 0 = nord (latitude max), colonne 0 = ouest (longitude min). */

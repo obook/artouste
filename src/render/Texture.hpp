@@ -14,12 +14,20 @@
 #include <cstddef>
 #include <filesystem>
 
+#include "render/Dds.hpp"
+
 namespace artouste::render {
 
 class Texture {
 public:
     Texture() = default;
     explicit Texture(const std::filesystem::path& path);
+
+    /* Construit la texture à partir de blocs BC7 déjà compressés, mipmaps
+       compris (voir TextureCache.hpp). Quatre fois moins de mémoire vidéo que
+       le RGBA8 pour une perte visuelle indiscernable, sans le coût de
+       compression : les blocs sont envoyés tels quels. */
+    explicit Texture(const dds::Image& blocsBc7);
 
     /* Décode une image (PNG/JPG) depuis un tampon mémoire au lieu d'un fichier :
        sert aux textures embarquées dans un modèle glTF/.glb (voir
@@ -51,6 +59,10 @@ private:
     /* Envoie des pixels RGBA déjà décodés vers le GPU (commun aux deux
        constructeurs, fichier ou mémoire). */
     void upload(const unsigned char* pixels, int width, int height);
+
+    /* Réglages communs à tous les chemins : répétition, filtrage trilinéaire
+       et anisotrope. Appelée texture liée. */
+    void reglerFiltrage();
 
     unsigned int m_id     = 0;
     int          m_width  = 0;

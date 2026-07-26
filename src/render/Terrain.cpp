@@ -12,6 +12,8 @@
 
 #include "render/Terrain.hpp"
 
+#include "render/TextureCache.hpp"
+
 #include "render/Primitives.hpp"
 
 #include <stb_image.h>
@@ -20,6 +22,7 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <utility>
 #include <sstream>
 #include <string>
 
@@ -111,7 +114,8 @@ bool readMetadata(const std::filesystem::path& path,
 
 } /* namespace */
 
-Terrain::Terrain(const std::filesystem::path& dir) {
+Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
+    : m_progression(std::move(progression)) {
     const std::filesystem::path meta = dir / "terrain.txt";
     const std::filesystem::path height = dir / "heightmap.png";
     const std::filesystem::path ortho = dir / "ortho.jpg";
@@ -250,7 +254,11 @@ Terrain::Terrain(const std::filesystem::path& dir) {
 
     m_mesh = Mesh(data.vertices, data.indices);
 
-    m_ortho = Texture(ortho);
+    /* Seule texture compressée du moteur : c'est la plus grosse de loin (des
+       dizaines de mégapixels sur une carte fine), elle est opaque, et son
+       budget mémoire est ce qui plafonne la finesse au sol qu'on peut se
+       permettre par carte. */
+    m_ortho = cache::chargerOrthophoto(ortho, m_progression);
     m_textured = m_ortho.valid();
     if (!m_textured) {
         std::fprintf(stderr,

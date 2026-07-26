@@ -107,6 +107,7 @@ add_executable(artouste
     render/HelicopterModel.cpp
     render/Skybox.cpp
     render/Texture.cpp
+    render/TextureCache.cpp
     render/Model.cpp
     render/ModelLoader.cpp
     render/LoadedHelicopter.cpp

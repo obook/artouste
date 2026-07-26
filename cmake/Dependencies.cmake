@@ -97,6 +97,19 @@ target_include_directories(glad SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/third_party/gl
 target_link_libraries(glad PUBLIC ${CMAKE_DL_LIBS})
 
 # ---------------------------------------------------------------------------
+# bc7enc - compresseur de blocs BC7, de Richard Geldreich (MIT ou domaine
+# public). Sert à précompresser l'orthophoto du terrain hors du pilote
+# graphique : celui du pilote met 54 s sur une carte fine, le nôtre écrit un
+# cache une fois pour toutes. Deux fichiers seulement, sans dépendance hors
+# bibliothèque standard, versionnés ici comme glad plutôt que récupérés par
+# FetchContent : le dépôt amont embarque un ispc.exe de 39 Mo dont nous
+# n'avons aucun usage. Source : github.com/richgel999/bc7enc_rdo, commit
+# dbe416d28a5530b4e8cc45b14bf034dc6b96bbde.
+# ---------------------------------------------------------------------------
+add_library(bc7enc STATIC ${CMAKE_SOURCE_DIR}/third_party/bc7enc/src/bc7enc.cpp)
+target_include_directories(bc7enc SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/third_party/bc7enc/include)
+
+# ---------------------------------------------------------------------------
 # stb_image - header-only, on en fait une INTERFACE
 # ---------------------------------------------------------------------------
 FetchContent_Declare(stb

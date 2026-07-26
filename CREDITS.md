@@ -2,6 +2,16 @@
 
 Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
 
+## Code tiers versionné
+
+- **bc7enc** (<https://github.com/richgel999/bc7enc_rdo>) par Richard Geldreich,
+  Jr., sous licence MIT ou domaine public au choix. Fichiers :
+  `third_party/bc7enc/`, commit `dbe416d28a5530b4e8cc45b14bf034dc6b96bbde`.
+  Compresseur de blocs BC7 : le moteur s'en sert pour précompresser
+  l'orthophoto du terrain dans un cache local, au lieu de laisser le pilote
+  graphique le faire à chaque lancement. L'auteur demande l'attribution sans
+  l'exiger.
+
 ## Modèle 3D
 
 - **Zombies animés (mode zombie)** : "Polyart Zombies with Animations Free Pack"

@@ -81,6 +81,8 @@ add_executable(artouste
     physics/Raycast.cpp
     physics/Turbine.cpp
     render/Shader.cpp
+    render/Dds.cpp
+    render/Bc7.cpp
     render/Mesh.cpp
     render/Primitives.cpp
     render/Camera.cpp
@@ -143,6 +145,7 @@ target_link_libraries(artouste
         OpenGL::GL
         assimp::assimp
         stb_image
+        bc7enc
         imgui
         miniaudio
         Threads::Threads

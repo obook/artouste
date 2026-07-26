@@ -17,6 +17,7 @@ add_executable(artouste_tests
     projectile_system_tests.cpp
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
+    texture_cache_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
@@ -31,6 +32,8 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/physics/FlightAssist.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/Dds.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/Bc7.cpp
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).
@@ -40,6 +43,7 @@ target_link_libraries(artouste_tests
     PRIVATE
         artouste_warnings
         glm::glm
+        bc7enc
         Catch2::Catch2WithMain
         Threads::Threads
 )

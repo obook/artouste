@@ -36,6 +36,32 @@
 })();
 
 /* --------------------------------------------------------------------------
+   Vidéo : la façade (affiche + bouton) laisse place au lecteur YouTube au
+   premier clic seulement. Tant qu'on n'a pas cliqué, la page n'émet aucune
+   requête vers YouTube, donc aucun cookie tiers n'est déposé. Sans
+   JavaScript, la façade reste un lien ordinaire vers la vidéo.
+   -------------------------------------------------------------------------- */
+(function () {
+  var facade = document.getElementById('videoFacade');
+  if (!facade) { return; }
+
+  facade.addEventListener('click', function (e) {
+    var embed = facade.getAttribute('data-embed');
+    if (!embed) { return; }  /* pas d'URL de lecteur : on suit le lien normal */
+    e.preventDefault();
+    var lecteur = document.createElement('iframe');
+    lecteur.src = embed;
+    lecteur.title = 'Vidéo de présentation d\'Artouste';
+    lecteur.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; ' +
+                    'gyroscope; picture-in-picture; web-share';
+    lecteur.referrerPolicy = 'strict-origin-when-cross-origin';
+    lecteur.allowFullscreen = true;
+    facade.replaceWith(lecteur);
+    lecteur.focus();
+  });
+})();
+
+/* --------------------------------------------------------------------------
    Galerie : modale (lightbox) affichant une capture en grand.
    -------------------------------------------------------------------------- */
 (function () {

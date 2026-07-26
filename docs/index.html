@@ -49,6 +49,7 @@
     <nav class="navlinks" id="navmenu">
       <a href="#apropos">À propos</a>
       <a href="#caracteristiques">Caractéristiques</a>
+      <a href="#video">Vidéo</a>
       <a href="#galerie">Galerie</a>
       <a href="https://github.com/obook/artouste">Code source</a>
     </nav>
@@ -187,6 +188,28 @@
           RADIO dans le HUD.</p>
       </div>
     </div>
+  </section>
+
+  <section id="video">
+    <div class="sec-head">
+      <p class="eyebrow">Vidéo</p>
+      <h2>En vidéo</h2>
+    </div>
+    <!-- Façade de lecture : tant que le visiteur n'a pas cliqué, la page
+         n'émet aucune requête vers YouTube (donc aucun cookie tiers). Le
+         lien reste un vrai lien : sans JavaScript, il ouvre la vidéo sur
+         YouTube ; avec, index.js le remplace par le lecteur intégré. -->
+    <div class="video-frame">
+      <a class="video-facade" id="videoFacade"
+         href="https://www.youtube.com/watch?v=0HPjRku-RzE"
+         data-embed="https://www.youtube-nocookie.com/embed/0HPjRku-RzE?autoplay=1&amp;rel=0"
+         aria-label="Lire la vidéo de présentation d'Artouste">
+        <img src="video-poster.jpg" width="1280" height="720" loading="lazy"
+             alt="Alouette II en vol au-dessus des Pyrénées, image d'ouverture de la vidéo de présentation">
+        <span class="video-play" aria-hidden="true"></span>
+      </a>
+    </div>
+    <p class="video-cap">Vidéo de présentation &middot; hébergée sur YouTube</p>
   </section>
 
   <section id="galerie">

@@ -145,6 +145,9 @@ bool Application::initWindow() {
         samples = std::atoi(env);
     }
     glfwWindowHint(GLFW_SAMPLES, samples);
+    /* Sans ça, GLFW minimise automatiquement la fenêtre plein écran dès qu'elle perd le
+       focus (ex. activer une fenêtre sur un autre écran en configuration multi-moniteur). */
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
     m_window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, nullptr, nullptr);
     if (m_window == nullptr) {

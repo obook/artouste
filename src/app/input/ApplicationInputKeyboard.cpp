@@ -24,6 +24,13 @@ void Application::keyCallback(
     }
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
 
+    /* F bascule le plein écran quel que soit l'état (menu, démo, vol) : traitée avant
+       tout court-circuit ci-dessous pour rester active partout. */
+    if (app != nullptr && key == GLFW_KEY_F) {
+        app->toggleFullscreen();
+        return;
+    }
+
     /* Menu de démarrage affiché : il gère lui-même ses entrées (clavier + manette) et la
        scène peut ne pas être prête. On ignore donc ici toutes les touches de vol. */
     if (app != nullptr && app->m_inMenu) {
@@ -32,10 +39,10 @@ void Application::keyCallback(
 
     /* Pendant la démo : seules quelques touches agissent, sans couper la démo. Échap en
        sort ; si la démo a été lancée depuis le menu, on y retourne (sinon on rend la main
-       en vol libre). F bascule le plein écran. P met en pause (et reprend) : la démo se
-       fige sur place puis repart. K et +/- pilotent la radio, H le HUD, C la vue ; pour
-       H et C l'utilisateur reprend la main (la démo cesse alors de les imposer). Tout le
-       reste est ignoré pour ne pas perturber la chorégraphie. */
+       en vol libre). P met en pause (et reprend) : la démo se fige sur place puis repart.
+       K et +/- pilotent la radio, H le HUD, C la vue ; pour H et C l'utilisateur reprend
+       la main (la démo cesse alors de les imposer). Tout le reste est ignoré pour ne pas
+       perturber la chorégraphie. */
     if (app != nullptr && app->m_demo.active()) {
         switch (key) {
             case GLFW_KEY_ESCAPE: /* quitte la démo : retour au menu si elle en venait */
@@ -43,9 +50,6 @@ void Application::keyCallback(
                 if (app->m_demoFromMenu) {
                     app->m_returnToMenu = true;
                 }
-                break;
-            case GLFW_KEY_F: /* bascule plein écran / fenêtré (actif aussi pendant la démo) */
-                app->toggleFullscreen();
                 break;
             case GLFW_KEY_P: /* pause/reprise sans couper la démo (vol et démo figés) */
                 app->m_paused = !app->m_paused;

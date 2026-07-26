@@ -19,7 +19,11 @@ de recadrage ci-dessus.
 ZONE = {
     "bbox": (-1.16, -0.98, 43.62, 43.82),
     "recolor_sea": False,
-    "start": (-1.0692, 43.6884),  # aérodrome de Dax-Seyresse, devant le musée de l'ALAT
+    # Pad est de l'aérodrome de Dax-Seyresse. Ce point sert d'indice au moteur,
+    # qui retient ensuite l'hélipad de "helipads" le plus proche (voir
+    # ApplicationScene.cpp) : il doit donc rester plus près du pad est que du
+    # pad ouest, distant de 212 m.
+    "start": (-1.068430, 43.688117),
     "start_heading": 0,           # face au nord : vers Dax et l'Adour
     # À ajuster visuellement : petites annexes du bâti pavillonnaire.
     "height_min": 3.0,
@@ -59,9 +63,18 @@ ZONE = {
         ("Lac de Christus", -1.0688, 43.7289),
         ("Golf de Saint-Paul-lès-Dax", -1.0947, 43.7341),
     ],
-    # Coordonnées relevées sur OpenStreetMap (docs/HELIPADS.tsv).
+    # Les deux hélipads de l'aérodrome (carré sombre à bordure blanche, H au
+    # centre, balises de périmètre) sont visibles sur l'orthophoto fine de
+    # dax-arene (0,25 m/px). Position relevée sur cette ortho puis recoupée avec
+    # le nœud OpenStreetMap correspondant : concordance à 0,6 m au pire.
+    # L'ancienne entrée unique (-1.0692, 43.6884) était une approximation posée
+    # dans l'herbe, à 70 m du pad est et 168 m du pad ouest.
+    # Le reste des nœuds "helipad" d'OSM sur ce site (une centaine) sont les
+    # emplacements de stationnement du parking, pas des aires de poser.
     "helipads": [
-        ("Aérodrome de Dax-Seyresse / musée de l'ALAT", -1.0692, 43.6884),
+        ("Aérodrome de Dax-Seyresse (pad est)", -1.068430, 43.688117),
+        ("Aérodrome de Dax-Seyresse (pad ouest)", -1.070968, 43.687601),
+        # Relevé sur OpenStreetMap (docs/HELIPADS.tsv), non revérifié sur l'ortho.
         ("Centre hospitalier de Dax", -1.0416, 43.7112),
     ],
     # Piste et abords de l'aérodrome : herbe verte dans l'ortho, sinon boisée
@@ -74,8 +87,9 @@ ZONE = {
     # 70° : aligné sur la piste bitumée 07/25 de Dax-Seyresse (aérodrome
     # école de l'ALAT), approche vers l'est (QFU 07). Pente 6 % : valeur
     # usuelle pour une hélistation, faute de relevé d'obstacles réel.
-    # Position et calage provisoires, à affiner sur place (méthode IGN/OSM).
+    # Posée sur le pad est, celui du départ. Position désormais relevée sur
+    # l'ortho fine et recoupée avec OSM (voir "helipads"), plus approximative.
     "hapi": [
-        ("Aérodrome de Dax-Seyresse", -1.0692, 43.6884, 70, 6),
+        ("Aérodrome de Dax-Seyresse (pad est)", -1.068430, 43.688117, 70, 6),
     ],
 }

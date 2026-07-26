@@ -1,4 +1,5 @@
 # Helipads - Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, thermes) (un par ligne : lon lat nom)
 # Positions approximatives, à affiner sur place.
--1.0692 43.6884 Aérodrome de Dax-Seyresse / musée de l'ALAT
+-1.06843 43.688117 Aérodrome de Dax-Seyresse (pad est)
+-1.070968 43.687601 Aérodrome de Dax-Seyresse (pad ouest)
 -1.0416 43.7112 Centre hospitalier de Dax

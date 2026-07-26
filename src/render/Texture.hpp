@@ -41,12 +41,20 @@ public:
     [[nodiscard]] bool         valid() const noexcept { return m_id != 0; }
     [[nodiscard]] unsigned int id() const noexcept { return m_id; }
 
+    /* Dimensions en pixels de l'image envoyée au GPU. Terrain s'en sert pour
+       connaître la finesse réelle de l'orthophoto (mètres par pixel), dont
+       dépend le dosage du grain de détail (voir terrain.frag). */
+    [[nodiscard]] int width() const noexcept { return m_width; }
+    [[nodiscard]] int height() const noexcept { return m_height; }
+
 private:
     /* Envoie des pixels RGBA déjà décodés vers le GPU (commun aux deux
        constructeurs, fichier ou mémoire). */
     void upload(const unsigned char* pixels, int width, int height);
 
-    unsigned int m_id = 0;
+    unsigned int m_id     = 0;
+    int          m_width  = 0;
+    int          m_height = 0;
 };
 
 }  /* namespace artouste::render */

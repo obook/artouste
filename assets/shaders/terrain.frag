@@ -26,6 +26,7 @@ uniform vec3      u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float     u_fogStart;   /* distance où la brume commence (m) */
 uniform float     u_fogEnd;     /* distance où tout est noyé dans la brume (m) */
 uniform vec2      u_originXZ;   /* origine de rendu : reconstitue le monde absolu */
+uniform float     u_orthoMPP;   /* finesse de l'orthophoto (m au sol par pixel) */
 
 void main() {
     vec3 ortho = texture(u_texture, v_uv).rgb;
@@ -47,7 +48,17 @@ void main() {
     float detail = 0.6 * texture(u_detail, monde / 1.5).r
                  + 0.4 * texture(u_detail, monde / 11.0).r;
     float pente  = smoothstep(0.08, 0.30, 1.0 - n.y);
-    float force  = mix(0.15, 1.0, pente) * (1.0 - smoothstep(300.0, 1200.0, dist));
+    /* Plancher du grain sur le PLAT : il n'existe que pour casser l'aplat d'une
+       orthophoto grossière, qui n'a aucun détail propre à montrer de près. Dès
+       que l'ortho descend sous ~1 m/px (dax-arene, dax, capbreton), elle a son
+       vrai grain et le motif de synthèse ne compense plus rien : il pose au
+       contraire un tissage régulier de 1,5 m, très visible sur une surface
+       uniforme comme une plage vue de 30 m. On l'efface donc progressivement.
+       Le grain reste plein sur les fortes pentes, où il sert toujours, et sur
+       les cartes larges restées grossières. u_orthoMPP vaut 0 si l'uniforme
+       n'est pas fourni, ce qui éteint le plancher : repli sans danger. */
+    float plancher = 0.15 * smoothstep(0.8, 2.5, u_orthoMPP);
+    float force  = mix(plancher, 1.0, pente) * (1.0 - smoothstep(300.0, 1200.0, dist));
     vec3  albedo = ortho * mix(1.0, 0.60 + 0.80 * detail, force);
 
     /* Demi-Lambert : la lumière sculpte le relief sans plonger les versants à

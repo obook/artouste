@@ -63,6 +63,15 @@ public:
     [[nodiscard]] float originZ() const noexcept { return m_originZ; }
     [[nodiscard]] float maxElevation() const noexcept { return m_elevMax; }
 
+    /* Finesse réelle de l'orthophoto, en mètres au sol par pixel de texture.
+       Mesurée sur la texture chargée plutôt que lue dans terrain.txt, pour
+       rester juste même si le fichier de calage ment. Renvoie 0 si aucune
+       orthophoto n'est chargée. terrain.frag s'en sert pour ne plus ajouter de
+       grain de synthèse là où la photo a déjà le sien. */
+    [[nodiscard]] float orthoMetersPerPixel() const noexcept {
+        return (m_ortho.height() > 0) ? m_heightM / static_cast<float>(m_ortho.height()) : 0.0f;
+    }
+
     /* Faut-il dessiner le plan de mer ? Faux pour un terrain de montagne (sans mer),
        où un plan bleu sous le relief serait incongru. Vrai par défaut (bord de mer). */
     [[nodiscard]] bool drawsSea() const noexcept { return m_drawSea; }

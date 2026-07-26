@@ -74,6 +74,9 @@ Texture::Texture(const unsigned char* data, std::size_t size) {
 }
 
 void Texture::upload(const unsigned char* pixels, int width, int height) {
+    m_width  = width;
+    m_height = height;
+
     /* On crée l'objet texture OpenGL puis on lui transfère les pixels. */
     glGenTextures(1, &m_id);
     glBindTexture(GL_TEXTURE_2D, m_id);
@@ -111,7 +114,10 @@ Texture::~Texture() {
 
 /* Déplacement : on prend l'identifiant de l'autre texture et on le remet à 0
    chez elle, pour qu'une seule des deux possède la ressource GPU. */
-Texture::Texture(Texture&& other) noexcept : m_id(std::exchange(other.m_id, 0)) {}
+Texture::Texture(Texture&& other) noexcept
+    : m_id(std::exchange(other.m_id, 0)),
+      m_width(std::exchange(other.m_width, 0)),
+      m_height(std::exchange(other.m_height, 0)) {}
 
 /* Affectation par déplacement : on libère d'abord notre éventuelle texture,
    puis on récupère celle de l'autre. */
@@ -120,7 +126,9 @@ Texture& Texture::operator=(Texture&& other) noexcept {
         if (m_id != 0) {
             glDeleteTextures(1, &m_id);
         }
-        m_id = std::exchange(other.m_id, 0);
+        m_id     = std::exchange(other.m_id, 0);
+        m_width  = std::exchange(other.m_width, 0);
+        m_height = std::exchange(other.m_height, 0);
     }
     return *this;
 }

@@ -83,6 +83,7 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_terrainShader->setInt("u_texture", 0);
         m_terrainShader->setInt("u_detail", 1);
         m_terrainShader->setVec2("u_originXZ", vec2{m_renderOrigin.x, m_renderOrigin.z});
+        m_terrainShader->setFloat("u_orthoMPP", m_terrain->orthoMetersPerPixel());
         if (m_terrainDetail) {
             m_terrainDetail->bind(1);
         }

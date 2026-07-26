@@ -198,8 +198,18 @@ cd build && cpack
 ```
 
 Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
-`.zip` sous Windows) contenant le binaire autonome et toutes les ressources
-(shaders, modèle 3D, sons, terrain, textures), prête à distribuer.
+`.zip` sous Windows) contenant le binaire autonome, les ressources (shaders,
+modèle 3D, sons, textures) et les trois cartes livrées, prête à distribuer.
+
+Les cartes optionnelles se conditionnent à part, un zip chacune :
+
+```bash
+cmake --build build --target cartes
+```
+
+Produit un `build/carte-<nom>.zip` par carte non livrée, à joindre à la
+release. La liste est établie à la configuration : après avoir ajouté une carte
+dans `assets/terrain/`, relancez `cmake` avant de reconstruire cette cible.
 
 ## Modèle 3D, sons et textures
 
@@ -211,12 +221,43 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 
 ## Cartes (terrains)
 
-Sept cartes sont fournies (Ossau, côte landaise, bassin d'Arcachon, Cauterets,
-Bordeaux, Dax, Pic du Midi de Bigorre), à choisir dans `assets/config.txt` (clé `terrain`) ou via la
-variable d'environnement `ARTOUSTE_TERRAIN`. Les terrains et bâtiments 3D sont
-générés hors-ligne depuis les données IGN (Licence Ouverte Etalab 2.0). Détails,
-configuration complète et régénération : [docs/CARTES.md](docs/CARTES.md) ;
-étude du pipeline de terrain : [docs/TERRAIN.md](docs/TERRAIN.md).
+**Trois cartes sont livrées avec le jeu** : Ossau (montagne), côte landaise
+(bord de mer) et Happy DeathHour (arène du mode zombie). À choisir dans
+`assets/config.txt` (clé `terrain`), au menu de démarrage, ou via la variable
+d'environnement `ARTOUSTE_TERRAIN`.
+
+**Les autres sont proposées en téléchargement séparé**, sur la page des
+releases : Capbreton, Dax, Bordeaux, Paris, bassin d'Arcachon, Cauterets et Pic
+du Midi de Bigorre. Une orthophoto fine pèse lourd, et embarquer les neuf
+cartes ferait passer le téléchargement de 45 à 152 Mo pour des terrains que
+tout le monde ne survolera pas.
+
+Pour en ajouter une, dézippez `carte-<nom>.zip` dans le dossier
+`assets/terrain/` du jeu :
+
+```bash
+cd assets/terrain && unzip ~/Téléchargements/carte-capbreton.zip
+```
+
+La carte apparaît au menu au lancement suivant, sans rien configurer : le jeu
+recense les cartes en parcourant ce dossier.
+
+Les terrains et bâtiments 3D sont générés hors-ligne depuis les données IGN
+(Licence Ouverte Etalab 2.0). Détails, configuration complète et régénération :
+[docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de terrain :
+[docs/TERRAIN.md](docs/TERRAIN.md).
+
+### Première ouverture d'une carte
+
+L'orthophoto est livrée en JPEG, que la carte graphique ne sait pas lire
+directement. Au premier chargement d'une carte, le jeu la convertit en texture
+compressée et range le résultat dans le cache de votre compte
+(`~/.cache/artouste/` sous Linux, `%LOCALAPPDATA%\artouste\` sous Windows).
+Comptez une trentaine de secondes sur une carte fine, avec une barre de
+progression ; les lancements suivants sont immédiats.
+
+Ce cache est jetable : le supprimer ne fait perdre que ce temps de préparation.
+Il se refait tout seul si une carte est remplacée.
 
 ## Contributions
 

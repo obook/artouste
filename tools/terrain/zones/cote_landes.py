@@ -1,12 +1,24 @@
 """
 cote-landes
-Côte basco-landaise, de Bayonne / Anglet (embouchure de l'Adour) au sud
-jusqu'à Vieux-Boucau-les-Bains au nord. Bord de mer : l'océan à l'ouest est
+Côte landaise, de Labenne au sud jusqu'à Vieux-Boucau-les-Bains au nord, avec
+Capbreton, Hossegor et son lac au centre. Bord de mer : l'océan à l'ouest est
 hors couverture BD ORTHO (blanc) et se fait aplanir en mer unie.
+
+L'emprise couvrait au départ toute la côte basco-landaise, jusqu'à Bayonne et
+Biarritz au sud-ouest. Deux défauts se cumulaient. D'abord la côte est
+diagonale, du sud-ouest au nord-est : le rectangle qui contenait à la fois le
+Rocher de la Vierge et Vieux-Boucau était énorme et rempli d'océan, 73 % de
+l'orthophoto. Ensuite ortho_px fixe la HAUTEUR en pixels, donc la finesse au
+sol ne dépendait que de l'étendue nord-sud, alors de 38,7 km. Résultat :
+7,7 m/px, la carte la plus grossière du jeu après arcachon.
+
+En abandonnant le bloc basque, au sud de Labenne, l'étendue nord-sud tombe à
+27,8 km sans perdre un seul hélipad. Biarritz et le Rocher de la Vierge
+mériteraient leur propre carte serrée plutôt que de dégrader celle-ci.
 """
 
 ZONE = {
-    "bbox": (-1.62, -1.30, 43.46, 43.81),
+    "bbox": (-1.50, -1.30, 43.55, 43.80),
     "recolor_sea": True,
     # Calé sur l'hélipad de Capbreton (voir "helipads" ci-dessous) : l'ancien
     # indice "arrière-plage plate vers Hossegor / Capbreton" tombait au ras de
@@ -15,14 +27,17 @@ ZONE = {
     # à l'autre. On vise donc directement les coordonnées exactes du pad.
     "start": (-1.4457112839188175, 43.65393627677582),  # Capbreton
     "start_heading": 0,       # face au nord : la côte file vers Vieux-Boucau
-    "grid": 1024,      # maille ~25-38 m au lieu de ~50-76 m (relief plus lisse)
-    "ortho_px": 5000,  # ortho ~7,8 m/px au lieu de ~19 (limite serveur IGN : 5010)
-    "title": "côte basco-landaise (Bayonne -> Vieux-Boucau)",
+    "grid": 1024,      # maille ~16x27 m sur la nouvelle emprise
+    "ortho_px": 8000,  # ortho ~3,5 m/px au lieu de ~7,8 ; mosaique WMS 1x2
+    # La carte livrée dans assets/terrain/cote-landes/ a été obtenue en
+    # recadrant l'ancienne (crop_zombie_map.py) plutôt qu'en régénérant, pour
+    # éviter de repasser par l'API altimétrie, point par point et très lente.
+    # Son relief garde donc la maille de l'ancienne emprise, 640x732 mailles
+    # d'environ 25x38 m. Une régénération complète par fetch_terrain.py
+    # appliquerait le grid ci-dessus et affinerait aussi le relief : c'est un
+    # progrès, pas une régression, mais terrain.txt en sortirait différent.
+    "title": "côte landaise (Labenne -> Vieux-Boucau)",
     "landmarks": [
-        ("Bayonne", -1.4750, 43.4933),
-        ("Anglet", -1.5150, 43.4850),
-        ("Boucau", -1.4862, 43.5237),  # mairie/église
-        ("Tarnos", -1.4606, 43.5408),
         ("Ondres", -1.4479, 43.5612),  # mairie/église
         ("Labenne", -1.4260, 43.5947),  # mairie/église
         ("Capbreton", -1.4310, 43.6420),
@@ -30,9 +45,6 @@ ZONE = {
         ("Seignosse", -1.3739, 43.6897),  # mairie
         ("Vieux-Boucau", -1.4010, 43.7880),
         # Lieux ajoutés (coordonnées IGN, îles et lacs recoupés OpenStreetMap).
-        ("Biarritz", -1.5570, 43.4824),  # mairie
-        ("Rocher de la Vierge", -1.5703, 43.4841),
-        ("Aéroport de Biarritz", -1.5233, 43.4687),
         ("Soustons", -1.3284, 43.7539),  # mairie
         ("Lac d'Hossegor", -1.4287, 43.6722),
         ("Étang de Soustons", -1.3292, 43.7703),
@@ -40,11 +52,9 @@ ZONE = {
         ("St-Vincent-de-Tyrosse", -1.3055, 43.6667),
         ("Bénesse-Maremne", -1.3594, 43.6342),  # mairie
         ("Marais d'Orx", -1.3972, 43.6007),
-        ("Saint-Martin-de-Seignanx", -1.3863, 43.5447),  # mairie
     ],
     # Coordonnées relevées sur Google Maps.
     "helipads": [
-        ("Hôpital de Bayonne", -1.4800367078111412, 43.48262235303451),
         ("Labenne plage", -1.4726675619926326, 43.599308117206505),
         ("Capbreton", -1.4457112839188175, 43.65393627677582),
         ("Hossegor", -1.4438385382046726, 43.661316497891036),

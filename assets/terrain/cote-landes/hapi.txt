@@ -1,4 +1,4 @@
-# Balises HAPI - côte basco-landaise (Bayonne -> Vieux-Boucau) (un par ligne : lon lat azimut_deg pente_pct nom)
+# Balises HAPI - côte landaise (Labenne -> Vieux-Boucau) (un par ligne : lon lat azimut_deg pente_pct nom)
 # azimut_deg : cap d'approche suivi par le pilote (0 = nord).
 # pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).
 # Position et calage provisoires, à affiner sur place.

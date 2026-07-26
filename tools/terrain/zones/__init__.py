@@ -27,6 +27,7 @@ Licence : GPL v2
 from .arcachon import ZONE as _ARCACHON
 from .bigorre import ZONE as _BIGORRE
 from .bordeaux import ZONE as _BORDEAUX
+from .capbreton import ZONE as _CAPBRETON
 from .cauterets import ZONE as _CAUTERETS
 from .cote_landes import ZONE as _COTE_LANDES
 from .dax import ZONE as _DAX
@@ -36,6 +37,7 @@ from .paris import ZONE as _PARIS
 ZONES = {
     "ossau": _OSSAU,
     "cote-landes": _COTE_LANDES,
+    "capbreton": _CAPBRETON,
     "arcachon": _ARCACHON,
     "cauterets": _CAUTERETS,
     "bigorre": _BIGORRE,

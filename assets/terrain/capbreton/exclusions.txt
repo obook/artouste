@@ -1,0 +1,3 @@
+# Zones d'exclusion de végétation - Capbreton, Hossegor et le lac marin (un cercle par ligne : lon lat rayon_m)
+# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
+-1.4488 43.6552 200   # Estacade de Capbreton

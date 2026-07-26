@@ -179,10 +179,10 @@ def fetch_ortho(aspect):
     # neige) ; on comble seulement le no-data de la BD ORTHO par de la rocaille.
     if not config.RECOLOR_SEA:
         arr = np.array(img)
-        Image.fromarray(fill_nodata(arr)).save(path, quality=88)
+        Image.fromarray(fill_nodata(arr)).save(path, quality=config.ORTHO_JPEG_QUALITY)
         print(f"[ortho] {path} écrit ({width}x{height})")
         return width
 
-    Image.fromarray(flatten_sea(img)).save(path, quality=88)
+    Image.fromarray(flatten_sea(img)).save(path, quality=config.ORTHO_JPEG_QUALITY)
     print(f"[ortho] {path} écrit ({width}x{height})")
     return width

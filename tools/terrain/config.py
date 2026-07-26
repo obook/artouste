@@ -47,6 +47,12 @@ MAX_PTS_PER_REQUEST = 200
 # ~5010 px). Au-delà, fetch_ortho() découpe l'emprise en tuiles et les assemble.
 WMS_MAX_PX = 5000
 
+# Qualité JPEG de l'orthophoto écrite sur disque. À résolution fine (une carte
+# recadrée proche du natif BD ORTHO, 0,20 m/px), 88 faisait baver la compression
+# sur les marquages peints au sol, très contrastés : le blanc de la piste
+# ressortait cotonneux. 93 les garde nets pour un fichier à peine plus gros.
+ORTHO_JPEG_QUALITY = 93
+
 # Racine des terrains : chaque zone est rangée dans un sous-dossier portant son nom.
 TERRAIN_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "terrain")
 
@@ -65,6 +71,25 @@ ZONE_HELIPADS = []
 ZONE_EXCLUSIONS = []
 ZONE_HAPI = []
 OUT_DIR = ""
+
+
+def terrain_dir(name):
+    """Dossier d'une carte sur disque, qu'elle soit déclarée dans zones/ ou
+       seulement recadrée depuis une autre (voir crop_zombie_map.py)."""
+    return os.path.join(TERRAIN_ROOT, name)
+
+
+def select_cropped_map(name, meta):
+    """Fixe les réglages globaux pour une carte RECADRÉE, qui n'a pas d'entrée
+       dans zones/ : son emprise n'est pas la bbox d'une zone mais la boîte du
+       recadrage, et elle se lit dans son propre terrain.txt (meta). On ne
+       renseigne que ce dont l'orthophoto a besoin (emprise, mer, sortie) ; le
+       relief et les fichiers annexes ne sont pas concernés."""
+    global LON_MIN, LON_MAX, LAT_MIN, LAT_MAX, RECOLOR_SEA, OUT_DIR
+    LON_MIN, LON_MAX = float(meta["lon_min"]), float(meta["lon_max"])
+    LAT_MIN, LAT_MAX = float(meta["lat_min"]), float(meta["lat_max"])
+    RECOLOR_SEA = meta.get("sea", "0") == "1"
+    OUT_DIR = terrain_dir(name)
 
 
 def select_zone(name):

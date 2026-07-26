@@ -13,6 +13,8 @@
  */
 
 #include "app/Application.hpp"
+
+#include <GLFW/glfw3.h>
 #include "render/Buildings.hpp"
 #include "render/Clouds.hpp"
 #include "render/LoadedHelicopter.hpp"
@@ -58,7 +60,17 @@ void Application::loadTerrain(const std::string& name) {
     m_terrainName = name;
     std::printf("[scène] terrain : %s\n", name.c_str());
     const std::filesystem::path terrainDir = m_assetsDir / "terrain" / name;
-    m_terrain = std::make_unique<render::Terrain>(terrainDir);
+
+    /* Au tout premier chargement d'une carte, son orthophoto doit être
+       compressée avant d'être mise en cache : une trentaine de secondes sur une
+       carte fine, pendant lesquelles il faut montrer autre chose qu'une fenêtre
+       figée. Les lancements suivants relisent le cache et n'appellent jamais ce
+       rappel. Renvoyer faux annule la préparation : on le fait si l'utilisateur
+       ferme la fenêtre, plutôt que de le retenir jusqu'au bout. */
+    m_terrain = std::make_unique<render::Terrain>(terrainDir, [this](float fraction) {
+        renderLoadingScreen("Préparation de la carte, une seule fois...", fraction);
+        return glfwWindowShouldClose(m_window) == 0;
+    });
 
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) : rien n'est dessiné. */

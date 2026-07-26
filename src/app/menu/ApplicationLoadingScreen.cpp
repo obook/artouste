@@ -14,15 +14,43 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
+
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include "render/Texture.hpp"
 #include "ui/HudWidgets.hpp"
 
 namespace artouste::app {
 
-void Application::renderLoadingScreen(const char* message) {
+namespace {
+
+/* Dessine l'image en "cover" : elle couvre tout le cadre en gardant ses
+   proportions, quitte à déborder sur un côté. Le contraire ("contain")
+   laisserait des bandes noires, moins soignées pour un écran d'attente. */
+void dessinerFondCouvrant(unsigned int texture, float fbw, float fbh, float aspectImage) {
+    const float aspectCadre = fbw / fbh;
+    float       l = fbw, h = fbh;
+    if (aspectImage > aspectCadre) {
+        l = fbh * aspectImage;  /* image plus large : on déborde à gauche et à droite */
+    } else {
+        h = fbw / aspectImage;  /* image plus haute : on déborde en haut et en bas */
+    }
+    const ImVec2 debut{0.5f * (fbw - l), 0.5f * (fbh - h)};
+    ImGui::GetBackgroundDrawList()->AddImage(static_cast<ImTextureID>(texture), debut,
+                                            ImVec2{debut.x + l, debut.y + h},
+                                            /* l'image est retournée par stb_image au
+                                               chargement (origine OpenGL en bas) : on
+                                               inverse donc V pour la remettre à
+                                               l'endroit. */
+                                            ImVec2{0.0f, 1.0f}, ImVec2{1.0f, 0.0f});
+}
+
+}  /* namespace */
+
+void Application::renderLoadingScreen(const char* message, float progression) {
     /* Même schéma que la boucle du menu (fenêtre ImGui centrée, sans décor) : on ne
        dessine qu'une seule image, mais on force son affichage par un swap buffer
        avant de rendre la main à l'appelant, qui va enchaîner sur un chargement
@@ -48,6 +76,21 @@ void Application::renderLoadingScreen(const char* message) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    /* Affiche du jeu en fond. Chargée au premier écran d'attente et gardée
+       ensuite : elle resservira à chaque changement de carte, et la charger au
+       démarrage retarderait justement le moment où l'on peut afficher quelque
+       chose. Absente, on garde le fond neutre. */
+    if (!m_loadingImage) {
+        m_loadingImage =
+            std::make_unique<render::Texture>(m_assetsDir / "textures" / "chargement.jpg");
+    }
+    if (m_loadingImage->valid() && m_loadingImage->height() > 0) {
+        dessinerFondCouvrant(m_loadingImage->id(), static_cast<float>(fbw),
+                             static_cast<float>(fbh),
+                             static_cast<float>(m_loadingImage->width()) /
+                                 static_cast<float>(m_loadingImage->height()));
+    }
+
     /* Taille calculée explicitement (plutôt que ImGuiWindowFlags_AlwaysAutoResize) :
        cette fenêtre est réutilisée d'un appel à l'autre avec des messages de longueur
        différente ("Chargement...", "Chargement du terrain...", ...), et comme chaque
@@ -55,17 +98,39 @@ void Application::renderLoadingScreen(const char* message) {
        taille avec un cadre de retard -- tronquerait le texte le temps d'un appel. */
     const ImVec2 pad(ui::hud_widgets::sc(24.0f), ui::hud_widgets::sc(16.0f));
     const ImVec2 textSize = ImGui::CalcTextSize(message);
-    const ImVec2 winSize(textSize.x + pad.x * 2.0f, textSize.y + pad.y * 2.0f);
+    /* La barre est plus large que le message et s'ajoute sous lui : la fenêtre
+       grandit dans les deux sens quand une progression est fournie. */
+    const bool   avecBarre  = (progression >= 0.0f);
+    const float  largeBarre = ui::hud_widgets::sc(320.0f);
+    const float  hautBarre  = ui::hud_widgets::sc(14.0f);
+    /* L'écart entre le message et la barre est celui d'ImGui, pas notre marge :
+       le prendre à part laissait un vide sous la barre. */
+    const float  ecart = ImGui::GetStyle().ItemSpacing.y;
+    const ImVec2 winSize(std::max(textSize.x, avecBarre ? largeBarre : 0.0f) + pad.x * 2.0f,
+                         textSize.y + (avecBarre ? ecart + hautBarre : 0.0f) + pad.y * 2.0f);
     const ImVec2 centre(ImGui::GetIO().DisplaySize.x * 0.5f,
                         ImGui::GetIO().DisplaySize.y * 0.5f);
     ImGui::SetNextWindowPos(centre, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(winSize, ImGuiCond_Always);
+    /* Panneau translucide : l'affiche reste lisible derrière, et le message se
+       détache quand même. Opaque, il faisait tache au milieu de l'image. */
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.03f, 0.06f, 0.08f, 0.72f));
     ImGui::Begin("##chargement", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
                      ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNav);
     ImGui::TextUnformatted(message);
+    if (avecBarre) {
+        /* Barre ambre sur fond sombre, les couleurs d'instrument du projet.
+           Sans texte surimprimé : le pourcentage n'apprend rien de plus que la
+           longueur de la barre et ajoute du bruit. */
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.96f, 0.63f, 0.20f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.05f, 0.08f, 0.10f, 0.85f));
+        ImGui::ProgressBar(std::min(1.0f, progression), ImVec2(largeBarre, hautBarre), "");
+        ImGui::PopStyleColor(2);
+    }
     ImGui::End();
+    ImGui::PopStyleColor();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

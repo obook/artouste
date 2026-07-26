@@ -135,7 +135,10 @@ private:
        image du menu pendant 3-4 s, sans retour visuel. Appelle glfwPollEvents()
        pour éviter que l'OS ne marque la fenêtre "ne répond pas". Nécessite que
        m_hud soit déjà initialisé (contexte ImGui). Définie dans ApplicationMenu.cpp. */
-    void renderLoadingScreen(const char* message);
+    /* Écran d'attente affiché avant un chargement bloquant. progression < 0
+       n'affiche que le message ; entre 0 et 1, une barre s'y ajoute (voir la
+       préparation de l'orthophoto dans TextureCache.hpp). */
+    void renderLoadingScreen(const char* message, float progression = -1.0f);
 
     /* --- Ressources et fenêtre ------------------------------------------------ */
 
@@ -414,6 +417,7 @@ private:
     std::unique_ptr<render::Mesh> m_helipad;       /* marque au sol, repli procédural */
     std::unique_ptr<render::Model> m_helipadModel; /* hélipad texturé (modèle Blender) */
     std::unique_ptr<render::Mesh> m_padSkirt;      /* jupe sous le disque (pad perché) */
+    std::unique_ptr<render::Texture> m_loadingImage;  /* fond de l'écran d'attente */
     std::unique_ptr<render::Texture> m_terrainDetail; /* grain rocheux du terrain (unité 1) */
     std::unique_ptr<render::Texture> m_buildingFacade; /* façade tuilée des bâtiments (unité 0) */
     std::unique_ptr<render::Mesh> m_sea;               /* grand plan d'océan à l'horizon */

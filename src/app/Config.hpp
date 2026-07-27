@@ -67,6 +67,28 @@ struct Config {
        le désactive. La variable d'environnement ARTOUSTE_MSAA, si définie, a la
        priorité. */
     int msaa = 4;
+
+    /* Côté, en pixels, de la fenêtre de tuiles fines entretenue autour de
+       l'appareil sur les cartes qui livrent un jeu de tuiles (voir
+       render/tuiles/Fenetre.hpp). 8192 (défaut) occupe 89 Mo de mémoire vidéo,
+       quelle que soit l'emprise de la carte, et couvre 2 km de terrain à
+       0,25 m/px. 4096 divise cette mémoire par quatre, au prix d'un rayon de
+       détail deux fois plus court : c'est le réglage d'une machine à faible
+       mémoire vidéo. 0 renonce au détail fin. La variable d'environnement
+       ARTOUSTE_TUILES_FENETRE, si définie, a la priorité. */
+    int detailWindowPx = 8192;
+
+    /* Budget de sommets du relief : nombre maximum de points de la carte
+       d'altitude effectivement DESSINÉS. Au-delà, le maillage n'en retient
+       qu'un sur deux, sur trois... Les altitudes restent lues en entier pour
+       poser l'appareil, porter les hélisurfaces et la collision : une carte au
+       relief fin améliore donc le vol même sur une machine qui ne peut pas tout
+       dessiner. Doubler la finesse du maillage quadruple le nombre de
+       triangles, c'est le second levier de performance après les arbres.
+       1200000 (défaut) correspond au maillage des cartes actuelles ; descendre
+       vers 300000 sur une machine modeste. 0 dessine tout. La variable
+       d'environnement ARTOUSTE_RELIEF_SOMMETS, si définie, a la priorité. */
+    int reliefVertexBudget = 1'200'000;
 };
 
 /* Lit la configuration depuis le fichier donné. Fichier absent ou clé inconnue :

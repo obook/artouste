@@ -14,12 +14,15 @@
 # terrain : sous-dossier de assets/terrain/ à charger au lancement.
 # Terrains disponibles :
 #   ossau        vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
-#   cote-landes  côte basco-landaise (Bayonne -> Vieux-Boucau), bord de mer
+#   cote-landes  côte landaise (Labenne -> Vieux-Boucau), bord de mer
+#   capbreton    Capbreton, Hossegor et le lac marin, bord de mer
 #   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 #   cauterets    Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie), montagne
+#   bigorre      Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie), montagne
 #   bordeaux     Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac), terre intérieure
-#   dax          Dax (Adour, aérodrome de Seyresse et musée de l'ALAT, Thermes), terre intérieure
+#   dax          Dax (Adour, arènes, aérodrome de Seyresse et musée de l'ALAT), terre intérieure
 #   paris        Paris intra-muros (tour Eiffel, Notre-Dame, Montmartre), terre intérieure
+#   dax-arene    Happy DeathHour, arène du mode zombie (lancement direct en combat)
 # La variable d'environnement ARTOUSTE_TERRAIN, si définie, a la priorité.
 terrain ossau
 
@@ -77,3 +80,28 @@ tree_max 1600000
 # 2 allège la bande passante mémoire (différence peu visible en 1080p) ; 0 le désactive
 # (le plus rapide). La variable d'environnement ARTOUSTE_MSAA, si définie, a la priorité.
 msaa 4
+
+# relief_sommets_max : nombre maximum de points de la carte d'altitude
+# effectivement DESSINÉS. Au-delà, le maillage n'en retient qu'un sur deux, sur
+# trois... Les altitudes restent lues en entier pour poser l'appareil, porter les
+# hélisurfaces et la collision : une carte au relief fin améliore donc le vol
+# même sur une machine qui ne peut pas tout dessiner.
+#   1200000 = maillage des cartes actuelles (défaut)
+#   300000  = machine modeste ou tablette
+#   0       = tout dessiner (une carte en grille 2048 fait alors 4,2 millions de
+#             sommets et 8,4 millions de triangles par image)
+# La variable d'environnement ARTOUSTE_RELIEF_SOMMETS, si définie, a la priorité.
+relief_sommets_max 1200000
+
+# tuiles_fenetre_px : côté, en pixels, de la fenêtre d'orthophoto fine entretenue
+# autour de l'appareil sur les cartes qui livrent un jeu de tuiles (dossier
+# "tuiles", voir docs/CARTES.md). Le sol proche y passe de plusieurs mètres par
+# pixel à moins d'un mètre, pour une occupation de mémoire vidéo constante, quelle
+# que soit la taille de la carte.
+#   8192 = 89 Mo de mémoire vidéo, détail jusqu'à 2,7 km (défaut)
+#   4096 = 22 Mo, détail jusqu'à 1,2 km (machine à faible mémoire vidéo)
+#   0    = pas de détail fin (l'orthophoto d'ensemble seule, comme avant)
+# Sans effet sur une carte sans tuiles. La variable d'environnement
+# ARTOUSTE_TUILES_FENETRE, si définie, a la priorité ; ARTOUSTE_TUILES désigne un
+# dossier de tuiles hors du jeu (un sous-dossier par carte).
+tuiles_fenetre_px 8192

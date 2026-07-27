@@ -69,6 +69,27 @@ void Application::initSceneConfig() {
         }
     }
 
+    /* Fenêtre de tuiles fines : clé "tuiles_fenetre_px", surchargée par
+       ARTOUSTE_TUILES_FENETRE. Passée à Terrain par loadTerrain. C'est le second
+       levier de mémoire vidéo après les arbres, et le seul qui plafonne le coût
+       d'une carte fine quelle que soit son emprise. */
+    m_detailWindowPx = std::max(0, config.detailWindowPx);
+    if (const char* env = std::getenv("ARTOUSTE_TUILES_FENETRE");
+        env != nullptr && env[0] != '\0') {
+        const long v = std::strtol(env, nullptr, 10);
+        if (v >= 0) {
+            m_detailWindowPx = static_cast<int>(v);
+        }
+    }
+
+    /* Budget de sommets du relief : clé "relief_sommets_max", surchargée par
+       ARTOUSTE_RELIEF_SOMMETS. Passé à Terrain par loadTerrain. */
+    m_reliefVertexBudget = std::max(0, config.reliefVertexBudget);
+    if (const char* env = std::getenv("ARTOUSTE_RELIEF_SOMMETS");
+        env != nullptr && env[0] != '\0') {
+        m_reliefVertexBudget = static_cast<int>(std::max(0L, std::strtol(env, nullptr, 10)));
+    }
+
     std::string terrainName = config.terrain;
     if (!m_menuTerrain.empty()) { /* choix du menu de démarrage, au-dessus de la config */
         terrainName = m_menuTerrain;

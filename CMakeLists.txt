@@ -100,8 +100,8 @@ install(TARGETS artouste RUNTIME DESTINATION .)
 
 # Cartes livrées avec le jeu. Les autres sont proposées en paquets zip à
 # dézipper dans assets/terrain/ (cible "cartes" ci-dessous) : les orthophotos
-# fines pèsent lourd, et embarquer les neuf cartes ferait passer la release de
-# 45 à 152 Mo pour des terrains que tout le monde ne survolera pas. Le moteur
+# fines pèsent lourd, et embarquer les dix cartes ferait passer la release de
+# 45 à environ 130 Mo pour des terrains que tout le monde ne survolera pas. Le moteur
 # recense les cartes en parcourant assets/terrain/ (ApplicationMenuMaps.cpp),
 # une carte ajoutée après coup apparaît donc au menu sans rien reconfigurer.
 set(ARTOUSTE_CARTES_LIVREES ossau cote-landes dax-arene)
@@ -137,6 +137,43 @@ foreach(carte IN LISTS ARTOUSTE_TERRAINS)
             VERBATIM)
     endif()
 endforeach()
+
+# Paquets des tuiles de détail : "cmake --build build --target tuiles" écrit un
+# tuiles-<nom>.zip par carte qui en a un jeu, à joindre à la release. Le zip
+# contient le dossier de la carte, à dézipper soit dans assets/terrain/<nom>/ (le
+# jeu y cherche un sous-dossier "tuiles"), soit dans le dossier désigné par
+# ARTOUSTE_TUILES, pratique quand le disque système est à l'étroit.
+#
+# Les tuiles ne sont pas versionnées : une carte fine en pèse près d'un
+# gigaoctet, c'est de la donnée dérivée régénérable (tools/terrain/fetch_tuiles.py)
+# et sans commune mesure avec le dépôt. On indique donc où elles ont été
+# produites :
+#   cmake -S . -B build -DARTOUSTE_TUILES_DIR=/media/disque/tuiles
+set(ARTOUSTE_TUILES_DIR "" CACHE PATH
+    "Dossier des jeux de tuiles de détail (un sous-dossier par carte)")
+add_custom_target(tuiles COMMENT "Paquets des tuiles de détail")
+if(ARTOUSTE_TUILES_DIR AND IS_DIRECTORY ${ARTOUSTE_TUILES_DIR})
+    file(GLOB ARTOUSTE_JEUX_TUILES RELATIVE ${ARTOUSTE_TUILES_DIR}
+         ${ARTOUSTE_TUILES_DIR}/*)
+    foreach(jeu IN LISTS ARTOUSTE_JEUX_TUILES)
+        # Un index.txt atteste d'un jeu de tuiles exploitable : un dossier laissé
+        # à moitié rempli par une génération interrompue n'en a pas.
+        if(IS_DIRECTORY ${ARTOUSTE_TUILES_DIR}/${jeu} AND
+           EXISTS ${ARTOUSTE_TUILES_DIR}/${jeu}/index.txt)
+            add_custom_command(TARGET tuiles POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E tar cf
+                        ${CMAKE_BINARY_DIR}/tuiles-${jeu}.zip --format=zip -- ${jeu}
+                WORKING_DIRECTORY ${ARTOUSTE_TUILES_DIR}
+                COMMENT "tuiles-${jeu}.zip"
+                VERBATIM)
+        endif()
+    endforeach()
+else()
+    add_custom_command(TARGET tuiles POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo
+                "Aucun jeu de tuiles : passer -DARTOUSTE_TUILES_DIR=<dossier> a cmake."
+        VERBATIM)
+endif()
 
 # Plus de script de lancement : le choix de la carte et du démarrage turbine se fait
 # désormais dans un menu intégré à l'exécutable (voir src/app/ApplicationMenu.cpp). On

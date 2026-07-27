@@ -58,6 +58,8 @@ add_executable(artouste
     app/ApplicationCapture.cpp
     app/menu/ApplicationMenu.cpp
     app/menu/ApplicationMenuMaps.cpp
+    app/menu/ApplicationMenuCartes.cpp
+    app/cartes/FabriqueTuiles.cpp
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
     app/DemoPilot.cpp
@@ -89,6 +91,8 @@ add_executable(artouste
     render/Terrain.cpp
     render/TerrainSetup.cpp
     render/TerrainQuery.cpp
+    render/tuiles/Pyramide.cpp
+    render/tuiles/Fenetre.cpp
     render/hapi/Hapi.cpp
     render/buildings/BuildingsMesh.cpp
     render/buildings/BuildingsDraw.cpp
@@ -201,6 +205,28 @@ if(ARTOUSTE_BUILD_TOOLS)
     add_executable(model_probe tools/model_probe.cpp)
     target_link_libraries(model_probe PRIVATE artouste_warnings assimp::assimp glm::glm)
     set_target_properties(model_probe PROPERTIES
+        CXX_STANDARD          20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS        OFF
+    )
+
+    # Découpage d'une orthophoto en tuiles BC7 (jeu de détail d'une carte). Ne
+    # touche pas à OpenGL : compression et conteneur DDS sont du calcul pur, ce
+    # qui laisse l'outil utilisable sur une machine sans carte graphique.
+    add_executable(orthotuiles
+        tools/orthotuiles.cpp
+        render/Bc7.cpp
+        render/Dds.cpp
+        render/tuiles/Pyramide.cpp
+    )
+    target_include_directories(orthotuiles PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(orthotuiles PRIVATE
+        artouste_warnings
+        stb_image
+        bc7enc
+        Threads::Threads
+    )
+    set_target_properties(orthotuiles PROPERTIES
         CXX_STANDARD          20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS        OFF

@@ -15,6 +15,7 @@
 #include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
+#include "app/cartes/FabriqueTuiles.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
 #include "physics/FlightAssist.hpp"
@@ -131,6 +132,19 @@ private:
         std::uintmax_t        octetsSocle     = 0;
         std::uintmax_t        octetsBatiments = 0;
         std::uintmax_t        octetsTuiles    = 0;
+        /* Finesse du jeu de tuiles en place, en mètres par pixel (0 s'il n'y en a
+           pas), et ce que des tuiles peuvent apporter à cette carte. Comparer les
+           deux est la SEULE façon de savoir si ces mégaoctets servent à quelque
+           chose : le moteur écarte au chargement un jeu qui n'est pas plus fin
+           que l'orthophoto d'ensemble. */
+        float           finesseTuiles = 0.0f;
+        cartes::Interet interet;
+        /* Fabrication interrompue : le dossier porte un index complet mais n'a
+           reçu qu'une partie de ses tuiles. Sans ces trois champs, l'écran
+           annoncerait un jeu entier là où il n'y a qu'un coin de carte. */
+        bool tuilesInachevees = false;
+        int  tuilesPresentes  = 0;  /* fichiers de tuiles réellement sur le disque */
+        int  tuilesAttendues  = 0;  /* colonnes x rangées annoncées par l'index */
         /* Options effectives de la carte. Chacune est accompagnée de son drapeau
            "défini" : faux tant que la carte ne tranche pas elle-même, auquel cas
            la valeur vient de la configuration générale. On n'écrit dans le

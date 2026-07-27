@@ -20,7 +20,9 @@ add_executable(artouste_tests
     wave_manager_tests.cpp
     texture_cache_tests.cpp
     ortho_tiles_tests.cpp
+    fabrique_tuiles_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/FabriqueTuiles.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/Weapon.cpp
@@ -46,6 +48,7 @@ target_link_libraries(artouste_tests
     PRIVATE
         artouste_warnings
         glm::glm
+        stb_image
         bc7enc
         Catch2::Catch2WithMain
         Threads::Threads

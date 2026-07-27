@@ -78,9 +78,53 @@ struct Estimation {
    la finesse demandée n'a pas de sens. */
 [[nodiscard]] Estimation estimer(const std::filesystem::path& dossierCarte, float mParPixel);
 
+/* Bornes de la finesse des tuiles, en mètres par pixel. La plus fine est celle de
+   la source : la BD ORTHO de l'IGN est à 20 cm, en demander davantage ne ferait
+   qu'agrandir les mêmes pixels. La plus grossière est le compromis des cartes
+   d'ensemble, dont l'orthophoto tourne autour de 3 à 5 m/px : plus fin leur
+   coûterait des gigaoctets pour du terrain qu'on ne fait que survoler. */
+inline constexpr float FINESSE_LA_PLUS_FINE      = 0.20f;
+inline constexpr float FINESSE_LA_PLUS_GROSSIERE = 0.75f;
+
+/* Gain visé sur l'orthophoto d'ensemble, et gain en deçà duquel la fabrication
+   ne vaut pas d'être proposée. Trois fois plus fin se voit d'emblée au ras du
+   sol ; moitié plus fin ne se distingue pas, et le moteur écarte de toute façon
+   un jeu de tuiles qui n'est pas plus fin que l'orthophoto (voir
+   render::Terrain::ouvrirDetail). */
+inline constexpr float GAIN_VISE    = 3.0f;
+inline constexpr float GAIN_MINIMUM = 1.5f;
+
+/* Ce que des tuiles apporteraient à cette carte. La finesse ne peut pas être la
+   même partout : une carte de montagne de 18 km porte une orthophoto à 3,6 m/px,
+   qu'un jeu de tuiles à 0,75 m/px rend cinq fois plus nette, tandis qu'une petite
+   carte d'aérodrome en porte déjà une à 0,85 m/px, sur laquelle les mêmes tuiles
+   ne changeraient rien de visible. */
+struct Interet {
+    float ortho = 0.0f;    /* finesse de l'orthophoto d'ensemble, m/px */
+    float visee = 0.0f;    /* finesse à demander aux tuiles, m/px */
+    bool  vaut  = false;   /* faux : rien de visible à gagner, ne pas proposer */
+};
+
+/* Mesure cet intérêt d'après le terrain.txt de la carte. Un calage muet sur son
+   orthophoto laisse la finesse au compromis d'usage, et la fabrication proposée :
+   on ne refuse pas une carte qu'on n'a pas su mesurer. */
+[[nodiscard]] Interet interet(const std::filesystem::path& dossierCarte);
+
 /* Vrai si le jeu a été compilé avec de quoi aller chercher les données (libcurl).
    Sans elle, l'écran doit le dire au lieu de proposer un bouton sans effet. */
 [[nodiscard]] bool reseauDisponible();
+
+/* Marqueur posé dans le dossier de sortie pendant toute la fabrication, et retiré
+   à la seule condition qu'elle aille jusqu'au bout. L'index, lui, est écrit dès la
+   première tuile : sans ce témoin, un jeu interrompu ne se distingue pas d'un jeu
+   complet, et l'écran des cartes annonce des tuiles qui ne couvrent qu'un coin de
+   la carte. Il survit à un arrêt demandé comme à une coupure de courant. */
+inline constexpr const char* NOM_MARQUEUR_INACHEVE = "fabrication_inachevee.txt";
+
+/* Ce dossier de tuiles porte-t-il la trace d'une fabrication interrompue ? Faux
+   pour un dossier vide ou absent, et pour les jeux produits par les scripts de
+   l'auteur, qui n'ont jamais posé ce marqueur. */
+[[nodiscard]] bool fabricationInachevee(const std::filesystem::path& dossierTuiles);
 
 class Fabrique {
 public:

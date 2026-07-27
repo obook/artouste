@@ -59,7 +59,8 @@ namespace {
 /* Taille cumulée d'un dossier, sous-dossiers compris. Un jeu de tuiles compte
    des milliers de fichiers : on ne la recalcule donc qu'à l'ouverture de
    l'écran et sur demande, jamais à chaque image. */
-[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier) {
+[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier,
+                                           int* tuiles = nullptr) {
     std::error_code ec;
     if (!std::filesystem::is_directory(dossier, ec)) {
         return 0;
@@ -69,6 +70,11 @@ namespace {
          std::filesystem::recursive_directory_iterator(dossier, ec)) {
         if (entree.is_regular_file(ec)) {
             total += entree.file_size(ec);
+            /* Les tuiles sont comptées au passage : la marche est déjà faite, et
+               les compter à part rouvrirait des milliers de fichiers. */
+            if (tuiles != nullptr && entree.path().extension() == ".dds") {
+                ++*tuiles;
+            }
         }
     }
     return total;
@@ -110,7 +116,20 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
         etat.dossier          = dossier;
         etat.octetsBatiments  = tailleFichier(dossier / "buildings.bin");
         etat.dossierTuiles    = render::tuiles::cheminJeuDeTuiles(dossier, racineTuiles());
-        etat.octetsTuiles     = tailleDossier(etat.dossierTuiles);
+        etat.octetsTuiles     = tailleDossier(etat.dossierTuiles, &etat.tuilesPresentes);
+        /* Finesse du jeu en place : celle de son niveau le plus fin, les niveaux
+           revenant classés du plus large au plus fin. Ne lit que les index, pas
+           les tuiles. */
+        if (!etat.dossierTuiles.empty()) {
+            const auto niveaux = render::tuiles::ouvrirNiveaux(etat.dossierTuiles);
+            if (!niveaux.empty()) {
+                etat.finesseTuiles   = niveaux.back().calage().mParPixel;
+                etat.tuilesAttendues = niveaux.back().calage().colonnes *
+                                       niveaux.back().calage().rangees;
+            }
+            etat.tuilesInachevees = fab::fabricationInachevee(etat.dossierTuiles);
+        }
+        etat.interet = fab::interet(dossier);
         /* Le socle, c'est tout ce que porte le dossier de la carte, moins les
            bâtiments comptés à part et moins les tuiles si elles y sont rangées. */
         const std::uintmax_t brut = tailleDossier(dossier);
@@ -173,11 +192,22 @@ void Application::runGestionnaireCartes() {
     int         images     = 0;
 
     /* Fabrication des tuiles : elle tourne dans son propre fil, l'écran ne fait
-       que la suivre. finesse est la finesse visée ; 0,75 m/px est le compromis
-       retenu pour une carte entière (voir docs/CARTES.md). */
+       que la suivre. La finesse visée n'est PAS la même pour toutes les cartes :
+       elle se déduit de l'orthophoto d'ensemble de chacune (fab::interet), faute
+       de quoi une petite carte déjà fine se verrait proposer des tuiles qui ne
+       changeraient rien à ce qu'on voit. */
     fab::Fabrique   fabrique;
     fab::Estimation estimation;
-    float           finesse = 0.75f;
+
+    /* Des tuiles ne comptent que si elles sont plus fines que l'orthophoto
+       d'ensemble : le moteur écarte les autres au chargement, et la carte reste
+       en LR malgré les mégaoctets posés sur le disque. Une carte dont on n'a pas
+       su mesurer l'orthophoto garde le bénéfice du doute. */
+    const auto tuilesEfficaces = [](const EtatCarte& c) {
+        return c.octetsTuiles > 0 &&
+               (c.interet.ortho <= 0.0f || c.finesseTuiles <= 0.0f ||
+                c.interet.ortho >= c.finesseTuiles * fab::GAIN_MINIMUM);
+    };
 
     /* Les deux actions lourdes sont écrites une seule fois : le clavier et les
        boutons de souris passent par elles, sans quoi les deux chemins finiraient
@@ -193,8 +223,16 @@ void Application::runGestionnaireCartes() {
         const std::filesystem::path racine = racineTuiles();
         return racine.empty() ? c.dossier / "tuiles" : racine / c.dir;
     };
-    const auto lancerFabrication = [&fabrique, &finesse, &destinationTuiles](EtatCarte& c) {
-        fabrique.lancer(c.dossier, destinationTuiles(c), finesse);
+    /* Finesse à demander : celle du jeu déjà entamé s'il y en a un, sinon celle que
+       vise la carte. Reprendre à une autre finesse réécrirait l'index et laisserait
+       deux grilles incompatibles dans le même dossier. */
+    const auto finesseAFabriquer = [](const EtatCarte& c) {
+        return (c.tuilesInachevees && c.finesseTuiles > 0.0f) ? c.finesseTuiles
+                                                              : c.interet.visee;
+    };
+    const auto lancerFabrication = [&fabrique, &destinationTuiles,
+                                    &finesseAFabriquer](EtatCarte& c) {
+        fabrique.lancer(c.dossier, destinationTuiles(c), finesseAFabriquer(c));
     };
     /* N'écrit que les réglages explicitement pris pour cette carte : les autres
        restent absents du fichier et continuent donc de suivre la configuration
@@ -327,9 +365,12 @@ void Application::runGestionnaireCartes() {
                 fini = true;
             }
             /* Entrée : fabriquer les tuiles de la carte choisie. On ouvre
-               l'annonce, jamais le téléchargement directement. */
-            if (frontValider && fab::reseauDisponible()) {
-                estimation = fab::estimer(courante.dossier, finesse);
+               l'annonce, jamais le téléchargement directement. Une carte qui n'a
+               rien à y gagner ne s'ouvre pas : ce serait proposer d'occuper le
+               disque pour une image identique. */
+            if (frontValider && fab::reseauDisponible() &&
+                (courante.interet.vaut || courante.tuilesInachevees)) {
+                estimation = fab::estimer(courante.dossier, finesseAFabriquer(courante));
                 aFabriquer = static_cast<int>(selection);
             }
             if (frontSupprimer && courante.octetsTuiles > 0) {
@@ -425,8 +466,8 @@ void Application::runGestionnaireCartes() {
             ImGui::TableSetupColumn("Carte");
             ImGui::TableSetupColumn("État");
             ImGui::TableSetupColumn("Socle");
-            ImGui::TableSetupColumn("Bâtiments");
             ImGui::TableSetupColumn("Tuiles");
+            ImGui::TableSetupColumn("Bâtiments");
             ImGui::TableSetupColumn("Arbres");
             ImGui::TableHeadersRow();
 
@@ -442,17 +483,33 @@ void Application::runGestionnaireCartes() {
                 ImGui::TextUnformatted(c.dir.c_str());
 
                 ImGui::TableNextColumn();
-                /* LR ou HR : le seul vocabulaire que voit l'utilisateur. */
-                if (c.octetsTuiles > 0 && c.tuiles) {
-                    ImGui::TextUnformatted("HR");
-                } else if (c.octetsTuiles > 0) {
-                    ImGui::TextDisabled("HR (éteintes)");
-                } else {
+                /* LR ou HR : le seul vocabulaire que voit l'utilisateur. Des
+                   tuiles que le moteur écarte ne font pas une carte HR, si
+                   lourdes soient-elles : la ligne dirait le contraire de ce que
+                   montre le vol. */
+                if (!tuilesEfficaces(c)) {
                     ImGui::TextDisabled("LR");
+                } else if (c.tuilesInachevees) {
+                    ImGui::TextDisabled("HR (partiel)");
+                } else if (c.tuiles) {
+                    ImGui::TextUnformatted("HR");
+                } else {
+                    ImGui::TextDisabled("HR (éteintes)");
                 }
 
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(formaterOctets(c.octetsSocle).c_str());
+
+                ImGui::TableNextColumn();
+                /* Une croix, et non le tiret des cartes simplement dépourvues de
+                   tuiles : celle-ci n'en aura jamais, son orthophoto étant déjà à
+                   la finesse de la source. Le tiret laisserait croire qu'il suffit
+                   de les télécharger. */
+                if (c.octetsTuiles == 0 && !c.interet.vaut) {
+                    ImGui::TextUnformatted("x");
+                } else {
+                    ImGui::TextUnformatted(formaterOctets(c.octetsTuiles).c_str());
+                }
 
                 ImGui::TableNextColumn();
                 if (c.octetsBatiments == 0) {
@@ -463,9 +520,6 @@ void Application::runGestionnaireCartes() {
                     ImGui::TextDisabled("%s (éteints)",
                                         formaterOctets(c.octetsBatiments).c_str());
                 }
-
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(formaterOctets(c.octetsTuiles).c_str());
 
                 ImGui::TableNextColumn();
                 /* Les arbres n'occupent aucun disque : leur colonne ne montre
@@ -486,11 +540,24 @@ void Application::runGestionnaireCartes() {
            du même instant. */
         const fab::Avancement av = fabrique.avancement();
         const EtatCarte&      c  = cartes[selection];
+
+        /* Hauteur figée, pour la même raison que la largeur l'est plus haut : tout
+           ce qui suit change de nombre de lignes d'une carte à l'autre et d'un
+           état à l'autre, et la fenêtre, centrée à l'écran, se déplaçait donc
+           verticalement à chaque flèche. On réserve une fois pour toutes la place
+           du cas le plus haut, l'annonce avant fabrication. Ce qui déborderait
+           malgré tout reste atteignable : la zone défile. */
+        const float reserve = 8.0f * ImGui::GetTextLineHeightWithSpacing() +
+                              2.0f * ImGui::GetFrameHeightWithSpacing();
+        ImGui::BeginChild("zone", ImVec2(0.0f, reserve));
+
         ImGui::TextWrapped("%s -- %s", c.dir.c_str(), c.titre.c_str());
         /* Pendant une fabrication et tant que son compte rendu est affiché,
-           l'inventaire date d'avant : taire cette ligne plutôt qu'annoncer
-           "pas de tuiles" juste au-dessus d'un "terminé, 2371 tuiles". */
-        if (!fabrique.enCours() && !av.termine) {
+           l'inventaire date d'avant : taire ces lignes plutôt qu'annoncer
+           "pas de tuiles" juste au-dessus d'un "terminé, 2371 tuiles". Elles se
+           taisent aussi devant l'annonce de fabrication : à ce moment-là l'écran
+           doit dire ce que l'action va coûter, pas ce que la carte contient. */
+        if (!fabrique.enCours() && !av.termine && aFabriquer != static_cast<int>(selection)) {
             /* Ce qui n'a pas été réglé pour cette carte suit la configuration
                générale : le dire, sinon rien ne distingue un choix pris ici d'une
                valeur héritée, et on ne saurait pas ce qu'un changement général
@@ -512,8 +579,56 @@ void Application::runGestionnaireCartes() {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
                 ImGui::TextWrapped("Tuiles : %s", c.dossierTuiles.string().c_str());
                 ImGui::PopStyleColor();
-            } else {
+            } else if (c.interet.vaut) {
                 ImGui::TextDisabled("Pas de tuiles de détail : le sol reste flou au ras du sol.");
+            } else {
+                ImGui::TextDisabled("Pas de tuiles de détail : l'orthophoto d'ensemble suffit "
+                                    "ici.");
+            }
+
+            /* Le seul chiffre qui décide de la netteté du sol est le RAPPORT
+               entre la finesse des tuiles et celle de l'orthophoto d'ensemble.
+               Sans lui, on peut télécharger un gigaoctet de tuiles qui ne
+               changent rien à l'image, ce qu'aucune taille en mégaoctets ne
+               laisse deviner. Le moteur écarte d'ailleurs au chargement un jeu
+               qui n'est pas plus fin (voir render::Terrain::ouvrirDetail). */
+            /* Fabrication interrompue : c'est la première chose à dire, avant
+               toute comparaison de finesse. Les tuiles présentes ne couvrent
+               qu'une part de la carte, et la relance reprendra où elle en est. */
+            if (c.tuilesInachevees) {
+                ImGui::TextWrapped("Fabrication interrompue : %d tuiles écrites sur %d. "
+                                   "Relancer reprendra où elle s'est arrêtée.",
+                                   c.tuilesPresentes, c.tuilesAttendues);
+            }
+            if (c.interet.ortho > 0.0f && c.finesseTuiles > 0.0f) {
+                const float gain = c.interet.ortho / c.finesseTuiles;
+                if (tuilesEfficaces(c)) {
+                    ImGui::TextDisabled("Orthophoto %.2f m/px, tuiles %.2f m/px : %.1f fois plus "
+                                        "net au ras du sol.",
+                                        static_cast<double>(c.interet.ortho),
+                                        static_cast<double>(c.finesseTuiles),
+                                        static_cast<double>(gain));
+                } else {
+                    /* En clair, et non en gris : cette ligne explique pourquoi le
+                       bouton de fabrication reste éteint. Grisée parmi les autres
+                       lignes grises, elle passerait inaperçue et l'écran donnerait
+                       l'impression de ne rien faire. */
+                    ImGui::TextWrapped("Orthophoto %.2f m/px, tuiles %.2f m/px : pas plus fines, "
+                                       "le moteur les ignore. À refaire ou à supprimer.",
+                                       static_cast<double>(c.interet.ortho),
+                                       static_cast<double>(c.finesseTuiles));
+                }
+            } else if (c.interet.ortho > 0.0f && !c.interet.vaut) {
+                ImGui::TextWrapped("Rien à fabriquer ici : l'orthophoto est déjà à %.2f m/px, la "
+                                   "finesse de la source. Des tuiles ne rendraient pas le sol "
+                                   "plus net.",
+                                   static_cast<double>(c.interet.ortho));
+            } else if (c.interet.ortho > 0.0f) {
+                ImGui::TextDisabled("Orthophoto %.2f m/px ; des tuiles à %.2f m/px la rendraient "
+                                    "%.1f fois plus nette.",
+                                    static_cast<double>(c.interet.ortho),
+                                    static_cast<double>(c.interet.visee),
+                                    static_cast<double>(c.interet.ortho / c.interet.visee));
             }
         }
 
@@ -543,10 +658,10 @@ void Application::runGestionnaireCartes() {
             /* Débit et durée restante seulement une fois mesurés : tant qu'aucun
                bloc n'est revenu, on ne sait rien et on ne prétend rien. */
             if (av.octetsParSeconde > 0.0) {
-                ImGui::TextDisabled("%.1f Mo/s mesurés, environ %.0f minutes restantes",
+                ImGui::TextDisabled("Débit IGN : %.1f Mo/s, environ %.0f minutes restantes",
                                     av.octetsParSeconde / 1e6, av.secondesRestantes / 60.0);
             } else if (!av.termine) {
-                ImGui::TextDisabled("Débit pas encore mesuré : premier bloc en cours.");
+                ImGui::TextDisabled("Débit IGN : pas encore mesuré, premier bloc en cours.");
             }
             if (fabrique.enCours()) {
                 if (ImGui::Button("Arrêter (Échap)", ImVec2(ui::hud_widgets::sc(160.0f), 0.0f))) {
@@ -563,14 +678,23 @@ void Application::runGestionnaireCartes() {
         } else if (aFabriquer == static_cast<int>(selection)) {
             /* Annonce AVANT d'agir : place occupée, volume à télécharger, durée
                probable. Personne ne doit découvrir après coup qu'il vient de
-               lancer deux gigaoctets. */
-            ImGui::TextUnformatted(estimation.detail.c_str());
+               lancer deux gigaoctets. La phrase passe à la ligne : la largeur de
+               la fenêtre est figée, et ce qui la dépasse serait coupé sans que
+               rien ne le signale. */
+            ImGui::TextWrapped("%s", estimation.detail.c_str());
+            /* Sur une reprise, ces chiffres décrivent le jeu ENTIER : dire ce qui
+               est déjà là évite de croire qu'on va tout retélécharger. */
+            if (c.tuilesInachevees) {
+                ImGui::TextWrapped("Reprise : %d tuiles déjà écrites (%s), seules les manquantes "
+                                   "seront téléchargées.",
+                                   c.tuilesPresentes, formaterOctets(c.octetsTuiles).c_str());
+            }
 
             /* Où cela va-t-il atterrir, et que restera-t-il sur CE disque ? Sans
                ces deux lignes, on peut remplir son disque système sans l'avoir
                voulu, en croyant écrire sur le disque des tuiles. */
             const std::filesystem::path cible = destinationTuiles(cartes[selection]);
-            ImGui::Text("Destination : %s", cible.string().c_str());
+            ImGui::TextWrapped("Destination : %s", cible.string().c_str());
             std::error_code ecPlace;
             /* Le dossier n'existe pas encore : on interroge son parent le plus
                proche qui existe, sinon space() échouerait. */
@@ -638,9 +762,14 @@ void Application::runGestionnaireCartes() {
                 ecrireOptions(choisie);
             }
             ImGui::SameLine();
+            /* Sans tuiles sur le disque, le bouton ne dit pas "oui" : ce réglage
+               n'allume rien, et l'afficher armé laisserait croire que la carte est
+               tuilée alors qu'il n'y a rien à allumer. */
             ImGui::BeginDisabled(choisie.octetsTuiles == 0);
-            if (ImGui::Button(choisie.tuiles ? "Tuiles : oui" : "Tuiles : non",
-                              ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
+            const char* etiquetteTuiles = (choisie.octetsTuiles == 0) ? "Tuiles : aucune"
+                                          : choisie.tuiles            ? "Tuiles : oui"
+                                                                      : "Tuiles : non";
+            if (ImGui::Button(etiquetteTuiles, ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
                 choisie.tuiles        = !choisie.tuiles;
                 choisie.tuilesDefinie = true;
                 ecrireOptions(choisie);
@@ -655,10 +784,15 @@ void Application::runGestionnaireCartes() {
             ImGui::EndDisabled();
 
             /* Seconde rangée : ce qui touche au disque, et la sortie. */
-            ImGui::BeginDisabled(!fab::reseauDisponible());
-            if (ImGui::Button("Fabriquer les tuiles",
+            /* Un jeu entamé se reprend, même sur une carte qui n'aurait rien à
+               gagner à en recevoir un neuf : le laisser à moitié écrit serait le
+               pire des états. */
+            ImGui::BeginDisabled(!fab::reseauDisponible() ||
+                                 (!choisie.interet.vaut && !choisie.tuilesInachevees));
+            if (ImGui::Button(choisie.tuilesInachevees ? "Reprendre la fabrication"
+                                                       : "Fabriquer les tuiles",
                               ImVec2(ui::hud_widgets::sc(200.0f), 0.0f))) {
-                estimation = fab::estimer(choisie.dossier, finesse);
+                estimation = fab::estimer(choisie.dossier, finesseAFabriquer(choisie));
                 aFabriquer = static_cast<int>(selection);
             }
             ImGui::EndDisabled();
@@ -677,6 +811,7 @@ void Application::runGestionnaireCartes() {
                 ImGui::TextDisabled("Compilé sans libcurl : la fabrication est indisponible.");
             }
         }
+        ImGui::EndChild();
 
         ImGui::Separator();
         ImGui::TextDisabled("Flèches : choisir   Entrée : fabriquer les tuiles   "

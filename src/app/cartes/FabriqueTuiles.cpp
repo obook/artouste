@@ -47,6 +47,11 @@ struct CalageCarte {
     float originX  = 0.0f;
     float originZ  = 0.0f;
     float lonMin = 0.0f, lonMax = 0.0f, latMin = 0.0f, latMax = 0.0f;
+    /* Hauteur en pixels de l'orthophoto d'ensemble. C'est la seule des deux
+       dimensions qui compte : la finesse au sol est l'étendue nord-sud divisée
+       par elle, comme la mesure Terrain::orthoMetersPerPixel. Zéro si le fichier
+       ne la donne pas, ce qui n'invalide pas le calage. */
+    int   orthoHauteur = 0;
     bool  valide = false;
 };
 
@@ -80,6 +85,8 @@ struct CalageCarte {
             in >> c.latMin, aGeo2 = true;
         } else if (cle == "lat_max") {
             in >> c.latMax, aGeo3 = true;
+        } else if (cle == "ortho_height") {
+            in >> c.orthoHauteur;
         } else {
             std::getline(in, cle);
         }
@@ -157,11 +164,10 @@ std::size_t ecrireDansTampon(char* donnees, std::size_t taille, std::size_t nb, 
     return sortie.size() > 2 && sortie[0] == 0xFF && sortie[1] == 0xD8;
 }
 
-#endif /* ARTOUSTE_HAS_CURL */
-
 /* Part de pixels sans donnée (blanc pur) dans une tuile : au-delà, on n'écrit
    pas la tuile et le moteur garde l'orthophoto d'ensemble, recousue à la
-   préparation de la carte. Même règle que l'outil de découpage. */
+   préparation de la carte. Même règle que l'outil de découpage. Sans réseau, il
+   n'y a pas de tuile à peser : la fonction reste avec celles qu'elle sert. */
 [[nodiscard]] float partBlanche(const std::vector<unsigned char>& tuile) {
     std::size_t       blancs = 0;
     const std::size_t pixels = tuile.size() / 4;
@@ -173,6 +179,8 @@ std::size_t ecrireDansTampon(char* donnees, std::size_t taille, std::size_t nb, 
     return (pixels == 0) ? 0.0f : static_cast<float>(blancs) / static_cast<float>(pixels);
 }
 
+#endif /* ARTOUSTE_HAS_CURL */
+
 }  /* namespace */
 
 bool reseauDisponible() {
@@ -181,6 +189,30 @@ bool reseauDisponible() {
 #else
     return false;
 #endif
+}
+
+bool fabricationInachevee(const std::filesystem::path& dossierTuiles) {
+    if (dossierTuiles.empty()) {
+        return false;
+    }
+    std::error_code ec;
+    return std::filesystem::exists(dossierTuiles / NOM_MARQUEUR_INACHEVE, ec);
+}
+
+Interet interet(const std::filesystem::path& dossierCarte) {
+    Interet i;
+    const CalageCarte carte = lireCalage(dossierCarte);
+    if (!carte.valide || carte.orthoHauteur <= 0) {
+        i.visee = FINESSE_LA_PLUS_GROSSIERE;
+        i.vaut  = true;
+        return i;
+    }
+    i.ortho = carte.hauteurM / static_cast<float>(carte.orthoHauteur);
+    i.visee = std::clamp(i.ortho / GAIN_VISE, FINESSE_LA_PLUS_FINE, FINESSE_LA_PLUS_GROSSIERE);
+    /* Une carte dont l'orthophoto est déjà à la finesse de la source ne peut rien
+       gagner : c'est le cas des petites cartes découpées dans une image fine. */
+    i.vaut = i.ortho >= i.visee * GAIN_MINIMUM;
+    return i;
 }
 
 Estimation estimer(const std::filesystem::path& dossierCarte, float mParPixel) {
@@ -210,8 +242,8 @@ Estimation estimer(const std::filesystem::path& dossierCarte, float mParPixel) {
     const double minutesLent   = static_cast<double>(est.octetsReseau) / (1e6 * 60.0);
     char         phrase[384];
     std::snprintf(phrase, sizeof(phrase),
-                  "%d x %d tuiles a %.2f m/px : %s sur le disque, environ %s a telecharger, "
-                  "en %d blocs. Duree probable entre %.0f et %.0f minutes selon la ligne.",
+                  "%d x %d tuiles à %.2f m/px : %s sur le disque, environ %s à télécharger, "
+                  "en %d blocs. Durée probable entre %.0f et %.0f minutes selon la ligne.",
                   g.colonnes, g.rangees, static_cast<double>(mParPixel),
                   formaterOctets(est.octetsDisque).c_str(),
                   formaterOctets(est.octetsReseau).c_str(), est.blocs,
@@ -301,6 +333,18 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
     if (!pyramide.ecrireIndex()) {
         finir(true, "Impossible d'écrire l'index dans " + dossierSortie.string());
         return;
+    }
+
+    /* Témoin d'inachèvement, posé avec l'index et retiré au tout dernier moment.
+       C'est lui, et non l'index, qui dit à l'écran des cartes que le jeu est
+       partiel : l'index décrit la grille VOULUE, pas celle qui est sur le disque. */
+    {
+        std::ofstream marqueur(dossierSortie / NOM_MARQUEUR_INACHEVE, std::ios::trunc);
+        marqueur << "# Fabrication en cours ou interrompue.\n";
+        marqueur << "# Ce fichier disparaît quand le jeu de tuiles est complet.\n";
+        marqueur << "# Relancer la fabrication reprend où elle s'est arrêtée.\n";
+        marqueur << "m_par_pixel " << mParPixel << "\n";
+        marqueur << "tuiles_attendues " << calage.colonnes * calage.rangees << "\n";
     }
 
     const int blocsX = (calage.colonnes + TUILES_PAR_BLOC - 1) / TUILES_PAR_BLOC;
@@ -440,6 +484,10 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
     } else if (m_arret.load()) {
         finir(false, "Arrêté. Ce qui est écrit est conservé : relancer reprendra où on en est.");
     } else {
+        /* Seul chemin qui retire le témoin : la grille a été parcourue en entier,
+           sans arrêt ni erreur. */
+        std::error_code ec;
+        std::filesystem::remove(dossierSortie / NOM_MARQUEUR_INACHEVE, ec);
         finir(false, "Terminé : " + std::to_string(tuilesEcrites) + " tuiles, " +
                          formaterOctets(octetsEcrits) + " sur le disque.");
     }

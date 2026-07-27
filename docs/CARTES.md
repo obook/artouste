@@ -234,9 +234,9 @@ Une ligne par carte, six colonnes :
 |---------|----------------|
 | Carte | le sous-dossier de `assets/terrain/` |
 | État | LR, la carte livrée, sol flou au ras du sol ; HR, la même avec ses tuiles, sol net ; `HR (éteintes)` si elles sont là mais désactivées ; `HR (partiel)` si la fabrication a été interrompue |
-| Socle | relief, orthophoto d'ensemble, lieux, hélisurfaces |
+| Socle | tout ce que pèse la carte hors tuiles : relief, orthophoto d'ensemble, lieux, hélisurfaces et bâtiments |
 | Tuiles | ce que pèse le jeu de tuiles de détail ; `-` si la carte n'en a pas encore, `x` si elle n'a rien à en attendre |
-| Bâtiments | `buildings.bin`, ou `aucun` |
+| Bâtiments | oui ou non, un réglage et non un poids : les éteindre ne rend aucun octet ; `aucun` si la carte n'a pas de `buildings.bin` |
 | Arbres | oui ou non : un réglage, jamais une taille, les arbres n'occupant aucun disque |
 
 Sous la table, la carte choisie est détaillée : ce qu'elle hérite de la

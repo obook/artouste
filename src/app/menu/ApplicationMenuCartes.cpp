@@ -15,9 +15,9 @@
  *
  * Les arbres et les bâtiments se cochent ici aussi, et par carte : les arbres
  * comptent en montagne, les bâtiments en ville, rarement les deux au même
- * endroit. Ils ne se ressemblent pourtant qu'en apparence, et l'écran le dit :
- * les bâtiments sont de la DONNÉE dont on récupère la place, les arbres ne sont
- * qu'un coût d'images par seconde. Le choix est écrit dans le options.txt de la
+ * endroit. Tous deux s'affichent en oui ou non, et non en mégaoctets : les
+ * éteindre ne rend pas un octet, seul le retrait de la carte le fait. Leur poids
+ * est donc compté dans le socle. Le choix est écrit dans le options.txt de la
  * carte, que le moteur relit au chargement (voir ApplicationScene.cpp).
  *
  * Auteur : O. Booklage
@@ -176,13 +176,15 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
         }
         etat.interet = fab::interet(dossier);
         /* Le socle, c'est tout ce que porte le dossier de la carte, moins les
-           bâtiments comptés à part et moins les tuiles si elles y sont rangées. */
+           seules tuiles quand elles y sont rangées. Les bâtiments y sont compris :
+           l'écran ne sait pas les supprimer à part, et les sortir du compte
+           laissait des mégaoctets invisibles sur une ligne dont c'est le sujet. */
         const std::uintmax_t brut = tailleDossier(dossier);
         const std::uintmax_t tuilesDedans =
             (etat.dossierTuiles.empty() || etat.dossierTuiles.parent_path() != dossier)
                 ? 0
                 : etat.octetsTuiles;
-        etat.octetsSocle = brut - std::min(brut, etat.octetsBatiments + tuilesDedans);
+        etat.octetsSocle = brut - std::min(brut, tuilesDedans);
 
         /* Options effectives : celles de la carte si elle en a, sinon la
            configuration générale. On lit m_config et non m_treesEnabled : ce
@@ -471,9 +473,11 @@ void Application::runGestionnaireCartes() {
                          ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize |
                          ImGuiWindowFlags_NoSavedSettings);
 
+        /* Socle et tuiles, et rien d'autre : les bâtiments sont désormais compris
+           dans le socle, les ajouter les compterait deux fois. */
         std::uintmax_t total = 0;
         for (const EtatCarte& c : cartes) {
-            total += c.octetsSocle + c.octetsBatiments + c.octetsTuiles;
+            total += c.octetsSocle + c.octetsTuiles;
         }
         ImGui::Text("Cartes installées : %s au total", formaterOctets(total).c_str());
 
@@ -557,13 +561,17 @@ void Application::runGestionnaireCartes() {
                 }
 
                 ImGui::TableNextColumn();
+                /* Un état, comme les arbres, et non un poids : l'écran ne sait pas
+                   supprimer un buildings.bin, les éteindre ne rend donc pas un
+                   octet. Afficher leurs mégaoctets laissait croire le contraire.
+                   Ils sont comptés dans le socle, qui est bien ce qu'on récupère
+                   en retirant la carte. */
                 if (c.octetsBatiments == 0) {
                     ImGui::TextDisabled("aucun");
                 } else if (c.batiments) {
-                    ImGui::TextUnformatted(formaterOctets(c.octetsBatiments).c_str());
+                    ImGui::TextUnformatted("oui");
                 } else {
-                    ImGui::TextDisabled("%s (éteints)",
-                                        formaterOctets(c.octetsBatiments).c_str());
+                    ImGui::TextDisabled("non");
                 }
 
                 ImGui::TableNextColumn();

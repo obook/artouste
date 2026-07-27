@@ -277,11 +277,17 @@ voitures. Rien ne change en altitude, et rien ne se perd si vous les supprimez.
 | État | Ce que c'est | Poids | Le sol vu de près |
 |------|--------------|-------|-------------------|
 | **LR** | la carte telle qu'elle est livrée | 5 à 20 Mo | flou |
-| **HR** | la même, plus ses tuiles de détail | 0,1 à 2 Go | net |
+| **HR** | la même, plus ses tuiles de détail | 0,8 à 37 Go | net |
 
 Une carte reste annoncée LR tant que ses tuiles n'apportent rien de visible,
 même si elles occupent le disque : c'est le rapport entre leur finesse et celle
 de la photo d'ensemble qui compte, jamais leur poids.
+
+**Les tuiles ne se téléchargent qu'auprès de l'IGN**, depuis cet écran : aucune
+release n'en porte, et il n'existe pas de zip à récupérer. Elles sont fabriquées
+sur votre machine à partir de la BD ORTHO (Licence Ouverte Etalab 2.0), à
+0,25 m/px, ce qui demande d'une dizaine de minutes sur une petite carte à
+quelques heures sur une grande.
 
 Rien ne part sans annonce : avant de télécharger, l'écran donne la place occupée,
 le volume à recevoir, la durée probable et ce qui restera sur le disque visé. Il

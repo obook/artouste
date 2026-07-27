@@ -183,8 +183,14 @@ espagnole, hors couverture de la BD ORTHO : sur Ossau, 88 des 2209 tuiles n'ont
 pas été écrites pour cette raison (2121 sur disque), et le moteur y garde
 l'orthophoto d'ensemble.
 
-Un jeu de tuiles n'est pas versionné (donnée dérivée, régénérable, sans commune
-mesure avec le dépôt). Pour l'empaqueter en vue d'une release :
+Un jeu de tuiles n'est ni versionné ni publié : c'est de la donnée dérivée,
+régénérable, sans commune mesure avec le dépôt. **Aucune release ne porte de
+tuiles**, elles ne s'obtiennent que de l'IGN, par le gestionnaire de cartes du
+jeu (décision du 28/07/2026, voir `docs/DISTRIBUTION.md`). À 0,25 m/px une seule
+carte dépasse de toute façon le plafond de 2 Go d'un fichier de release.
+
+Reste une cible d'empaquetage, pour son seul usage local : recopier un jeu d'une
+machine à l'autre, ou l'archiver avant de refaire les tuiles à une autre finesse.
 
 ```bash
 cmake -S . -B build -DARTOUSTE_TUILES_DIR=/media/disque/tuiles

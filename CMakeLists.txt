@@ -139,15 +139,20 @@ foreach(carte IN LISTS ARTOUSTE_TERRAINS)
 endforeach()
 
 # Paquets des tuiles de détail : "cmake --build build --target tuiles" écrit un
-# tuiles-<nom>.zip par carte qui en a un jeu, à joindre à la release. Le zip
-# contient le dossier de la carte, à dézipper soit dans assets/terrain/<nom>/ (le
-# jeu y cherche un sous-dossier "tuiles"), soit dans le dossier désigné par
-# ARTOUSTE_TUILES, pratique quand le disque système est à l'étroit.
+# tuiles-<nom>.zip par carte qui en a un jeu. Le zip contient le dossier de la
+# carte, à dézipper soit dans assets/terrain/<nom>/ (le jeu y cherche un
+# sous-dossier "tuiles"), soit dans le dossier désigné par ARTOUSTE_TUILES.
 #
-# Les tuiles ne sont pas versionnées : une carte fine en pèse près d'un
-# gigaoctet, c'est de la donnée dérivée régénérable (tools/terrain/fetch_tuiles.py)
-# et sans commune mesure avec le dépôt. On indique donc où elles ont été
-# produites :
+# Ces paquets ne vont PAS à la release : depuis le 28/07/2026 les tuiles ne
+# s'obtiennent que de l'IGN, par le gestionnaire de cartes du jeu (voir
+# docs/DISTRIBUTION.md). À 0,25 m/px une carte pèse de 1 à 37 Go, bien au-delà du
+# plafond de 2 Go d'un fichier de release, et le zip ne gagne presque rien sur du
+# BC7. La cible reste pour l'usage local : recopier un jeu d'une machine à
+# l'autre, ou l'archiver avant de refaire les tuiles autrement.
+#
+# Les tuiles ne sont pas versionnées non plus : c'est de la donnée dérivée
+# régénérable (tools/terrain/fetch_tuiles.py), sans commune mesure avec le dépôt.
+# On indique donc où elles ont été produites :
 #   cmake -S . -B build -DARTOUSTE_TUILES_DIR=/media/disque/tuiles
 set(ARTOUSTE_TUILES_DIR "" CACHE PATH
     "Dossier des jeux de tuiles de détail (un sous-dossier par carte)")

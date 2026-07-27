@@ -269,11 +269,28 @@ Deux points techniques à trancher à l'écriture :
 | `artouste-Linux-x86_64.tar.gz` | ~50 Mo | jeu, trois cartes, outil de cartes |
 | `artouste-Windows-AMD64.zip` | ~50 Mo | idem |
 | `carte-<nom>.zip` x7 | 5 à 22 Mo | socles des cartes existantes |
-| `tuiles-ossau.zip` | 655 Mo | vitrine : la carte phare, prête à l'emploi |
 
-Tout le reste se fabrique. Les zips de socles restent parce qu'ils sont légers et
-qu'ils portent le travail d'auteur (lieux, pads, bâtiments) qu'une fabrication
-locale ne saurait pas reproduire.
+**Aucun zip de tuiles, décision du 28/07/2026.** Elles ne s'obtiennent que par
+l'IGN, depuis le gestionnaire de cartes du jeu. Trois raisons :
+
+- à 0,25 m/px, aucune carte ne tient sous le plafond de 2 Go d'un fichier de
+  release. Ossau pèse 6,9 Go, la côte landaise 9,6, le bassin d'Arcachon 37. Il
+  faudrait les découper en morceaux ;
+- les tuiles sont déjà compressées en BC7 : le zip ne fait que les emballer, il
+  ne gagne presque rien ;
+- la fabrique est dans les deux binaires publiés, libcurl étant installée par
+  `apt` sur Linux et par vcpkg en statique sur Windows. Le joueur n'a rien à
+  installer.
+
+Ce qui se perd, et qu'il faut assumer : plus de chemin hors ligne, plus de
+vitrine prête à l'emploi, et la charge se déplace sur la Géoplateforme, chaque
+joueur téléchargeant ses 150 Mo à 2,7 Go. C'est l'usage prévu de ce service et la
+Licence Ouverte l'autorise. Pour qui n'a pas de connexion, il reste la copie d'un
+dossier de tuiles d'une machine à l'autre, que `tuiles_dossier` ou
+`ARTOUSTE_TUILES` savent désigner.
+
+Les zips de socles, eux, restent : ils sont légers et portent le travail d'auteur
+(lieux, pads, bâtiments) qu'une fabrication locale ne saurait pas reproduire.
 
 ## Étapes proposées
 

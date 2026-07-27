@@ -144,6 +144,59 @@ Dear ImGui : interface HUD en overlay OpenGL, très utilisé dans les simulateur
 IGN Géoportail
 Pour les textures de sol sur la France, l'IGN propose des flux WMTS gratuits (orthophotos, cartes IGN) accessibles via une clé API gratuite. La couverture Pyrénées est excellente.
 
+### Fabriquer une carte neuve depuis le jeu
+
+> Contexte, juillet 2026 : le gestionnaire de cartes du menu sait déjà fabriquer
+> les TUILES d'une carte existante, en allant chercher la BD ORTHO à 0,25 m/px et
+> en compressant en BC7 sur place. Il a besoin du `terrain.txt` de cette carte
+> pour calculer sa grille : il améliore une carte, il n'en crée pas. Le socle
+> (relief, orthophoto d'ensemble, calage) vient toujours des scripts Python de
+> l'auteur. C'est ce chaînon qui manque, et c'est l'étape 4c de
+> `docs/DISTRIBUTION.md`.
+
+Une carte se définit par presque rien : un nom, une emprise, une finesse de
+relief, une finesse d'ortho, un point de départ. Quatre morceaux à écrire pour
+que le jeu sache la produire.
+
+- [ ] **Relief par raster.** La Géoplateforme sert les altitudes en
+  `image/x-bil;bits=32`, couche `ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES`, soit un
+  tableau brut de flottants : quelques requêtes au lieu des milliers que fait
+  l'API JSON point par point. Même chemin libcurl que les tuiles, et pas même un
+  décodeur d'image à brancher.
+
+- [ ] **`heightmap.bin` lu par le moteur, prérequis.** Le moteur lit aujourd'hui
+  `heightmap.png` en 16 bits (`stbi_load_16`), or stb_image_write ne produit que
+  du 8 bits : un outil C++ ne peut pas écrire ce fichier. Lire un simple tableau
+  d'altitudes lève l'obstacle, deux heures de travail.
+
+- [ ] **Orthophoto d'ensemble.** Même service WMS que les tuiles, à finesse
+  grossière, assemblée par blocs : `demanderBloc` existe déjà, il ne manque que
+  l'écriture du JPEG.
+
+- [ ] **Calage et écran.** Le `terrain.txt` est un pur calcul depuis l'emprise :
+  largeur et hauteur en mètres, altitudes extrêmes lues dans le raster, taille de
+  l'ortho, point de départ. Un panneau "Nouvelle carte" dans le gestionnaire, avec
+  la même règle d'annonce que le reste : place occupée, volume à recevoir, durée.
+
+Une carte ainsi fabriquée naîtra **nue** : ni lieux remarquables, ni hélisurfaces,
+ni balise HAPI, ni bâtiments. Ce sont des données de repérage humain, vérifiées
+une à une, et l'extrusion de la BD TOPO est un autre pipeline. Elle n'aura que son
+point de départ.
+
+- [ ] **Catalogue `assets/zones.txt`**, une ligne par zone (nom, emprise,
+  finesses, titre). Il évite de saisir des coordonnées : le joueur choisit dans
+  une liste, l'auteur enrichit le catalogue sans faire de release. Sans lui, la
+  fabrication reste réservée à qui sait lire une emprise en degrés décimaux.
+
+Estimation d'auteur, un à deux jours : une demi-journée pour le relief, deux
+heures pour `heightmap.bin`, deux ou trois heures pour l'ortho, une demi-journée
+pour le calage et l'écran, quelques heures d'essais réels sur une petite zone.
+
+Le vrai risque n'est pas technique mais de civilité : une carte de montagne
+demande déjà des centaines de requêtes pour ses tuiles, et le relief s'y ajoute.
+L'outil doit s'espacer, réessayer proprement sur un refus 429, et ne jamais
+paralléliser à outrance. Le service est public et gratuit.
+
 ### Sources de terrain possibles
 
 Liste des sources envisageables pour produire de nouveaux terrains (relief +

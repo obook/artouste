@@ -15,6 +15,15 @@
 #include <stb_image.h>
 
 #ifdef ARTOUSTE_HAS_CURL
+/* windows.h, que curl entraîne derrière lui, définit des macros min et max qui
+   avalent les appels à std::min et std::max : MSVC refusait ce fichier entier sur
+   un "illegal token on right side of ::". NOMINMAX les supprime, et
+   WIN32_LEAN_AND_MEAN évite au passage la moitié de l'en-tête. Sans effet
+   ailleurs, ces deux définitions ne servant qu'à windows.h. */
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <curl/curl.h>
 #endif
 

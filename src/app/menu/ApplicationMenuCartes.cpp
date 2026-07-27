@@ -103,6 +103,34 @@ namespace {
     return tampon;
 }
 
+/* Débit lisible. Le même vocabulaire que les tailles, mais la marche du
+   mégaoctet est trop haute pour un débit : une ligne à 205 Ko/s s'affichait
+   "0,2 Mo/s", où la moitié des chiffres utiles ont disparu. On descend donc en
+   kilooctets sous le mégaoctet, et on garde une décimale au-dessus. */
+[[nodiscard]] std::string formaterDebit(double octetsParSeconde) {
+    char tampon[32];
+    if (octetsParSeconde >= 1e6) {
+        std::snprintf(tampon, sizeof(tampon), "%.1f Mo/s", octetsParSeconde / 1e6);
+    } else {
+        std::snprintf(tampon, sizeof(tampon), "%.0f Ko/s", octetsParSeconde / 1e3);
+    }
+    return tampon;
+}
+
+/* Durée restante lisible : en heures dès qu'elle dépasse l'heure et demie, comme
+   l'annonce d'avant lancement. "112 minutes" se compte mal. */
+[[nodiscard]] std::string formaterDuree(double secondes) {
+    char         tampon[32];
+    const double minutes = secondes / 60.0;
+    if (minutes >= 90.0) {
+        std::snprintf(tampon, sizeof(tampon), "%.0f h %02.0f", std::floor(minutes / 60.0),
+                      minutes - 60.0 * std::floor(minutes / 60.0));
+    } else {
+        std::snprintf(tampon, sizeof(tampon), "%.0f minutes", minutes);
+    }
+    return tampon;
+}
+
 }  /* namespace */
 
 std::vector<Application::EtatCarte>
@@ -659,8 +687,9 @@ void Application::runGestionnaireCartes() {
             /* Débit et durée restante seulement une fois mesurés : tant qu'aucun
                bloc n'est revenu, on ne sait rien et on ne prétend rien. */
             if (av.octetsParSeconde > 0.0) {
-                ImGui::TextDisabled("Débit IGN : %.1f Mo/s, environ %.0f minutes restantes",
-                                    av.octetsParSeconde / 1e6, av.secondesRestantes / 60.0);
+                ImGui::TextDisabled("Débit IGN : %s, encore %s",
+                                    formaterDebit(av.octetsParSeconde).c_str(),
+                                    formaterDuree(av.secondesRestantes).c_str());
             } else if (!av.termine) {
                 ImGui::TextDisabled("Débit IGN : pas encore mesuré, premier bloc en cours.");
             }

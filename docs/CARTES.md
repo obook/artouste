@@ -121,6 +121,15 @@ remarquables, hélipads). Voir [TERRAIN.md](TERRAIN.md) pour les détails du pip
 
 ## Tuiles de détail (orthophoto fine)
 
+Une carte est livrée avec une photo aérienne d'ensemble. Elle suffit en vol haut
+et devient floue dès qu'on descend. Les tuiles sont la même photo en beaucoup
+plus fin, découpée en carrés que le jeu charge au fil du vol. Une fois
+installées, le sol redevient net au ras du sol. Elles ne changent rien d'autre :
+ni relief, ni bâtiments, ni contenu de la carte.
+
+Une carte sans tuiles est dite LR, une carte avec ses tuiles HR : c'est tout le
+vocabulaire du gestionnaire de cartes, décrit plus bas.
+
 L'orthophoto d'une carte est une seule texture : sa taille en mémoire vidéo
 suit l'emprise du terrain, et c'est ce budget qui plafonne la finesse au sol.
 Sur le bassin d'Arcachon, 35 x 49 km, l'ortho livrée est à 9,8 m/px : vu de
@@ -184,20 +193,133 @@ cmake --build build --target tuiles     # écrit build/tuiles-<carte>.zip
 
 ### Où le jeu cherche les tuiles
 
-Dans cet ordre :
+Dans cet ordre, chaque racine étant essayée telle quelle puis avec un
+sous-dossier `tuiles` :
 
 1. `$ARTOUSTE_TUILES/<carte>/`, si la variable d'environnement est définie ;
-2. `assets/terrain/<carte>/tuiles/`.
+2. `<tuiles_dossier>/<carte>/`, la clé de `assets/config.txt`, que le
+   gestionnaire de cartes retient quand il fabrique ailleurs que dans le jeu ;
+3. `assets/terrain/<carte>/tuiles/`.
 
-Le premier chemin existe pour les gros jeux qu'on préfère garder sur un autre
-disque. Tout est facultatif : carte sans tuiles, dossier absent, tuile manquante
-ou abîmée, pilote sans BC7, `tuiles_fenetre_px 0` dans la configuration -- dans
-tous ces cas le terrain s'affiche avec sa seule orthophoto d'ensemble.
+Les deux premiers chemins existent pour les gros jeux qu'on préfère garder sur un
+autre disque. Tout est facultatif : carte sans tuiles, dossier absent, tuile
+manquante ou abîmée, pilote sans BC7, `tuiles_fenetre_px 0` dans la configuration
+-- dans tous ces cas le terrain s'affiche avec sa seule orthophoto d'ensemble.
+
+Un dossier ne compte comme jeu de tuiles que s'il porte un index : un dossier
+laissé par une fabrication interrompue n'en a pas et sera ignoré.
 
 Une tuile hors couverture BD ORTHO (blanc pur, au-delà de la frontière espagnole
 sur les cartes de montagne) n'est volontairement PAS écrite : le moteur y
 retombe sur l'orthophoto d'ensemble, qui a été recousue à la préparation de la
 carte, plutôt que de plaquer un carré blanc sur le paysage.
+
+## Le gestionnaire de cartes
+
+Le menu de démarrage ouvre un écran des cartes, par le bouton `Cartes` ou par la
+touche C. Il sert à trois choses : voir ce que chaque carte occupe, régler ce
+qu'elle affiche, et passer une carte de LR à HR ou l'inverse. Il fabrique
+lui-même les tuiles, sans passer par les scripts Python et sans rien installer.
+
+Sa règle de conduite : **annoncer avant d'agir**. La place occupée par chaque
+carte est affichée en permanence, celle qui reste sur le disque du jeu et sur
+celui des tuiles aussi, et rien de lourd ni de destructeur ne part sans un
+écran de confirmation chiffré.
+
+### Ce que montre l'écran
+
+Une ligne par carte, six colonnes :
+
+| Colonne | Ce qu'elle dit |
+|---------|----------------|
+| Carte | le sous-dossier de `assets/terrain/` |
+| État | LR, la carte livrée, sol flou au ras du sol ; HR, la même avec ses tuiles, sol net ; `HR (éteintes)` si elles sont là mais désactivées ; `HR (partiel)` si la fabrication a été interrompue |
+| Socle | relief, orthophoto d'ensemble, lieux, hélisurfaces |
+| Tuiles | ce que pèse le jeu de tuiles de détail ; `-` si la carte n'en a pas encore, `x` si elle n'a rien à en attendre |
+| Bâtiments | `buildings.bin`, ou `aucun` |
+| Arbres | oui ou non : un réglage, jamais une taille, les arbres n'occupant aucun disque |
+
+Sous la table, la carte choisie est détaillée : ce qu'elle hérite de la
+configuration générale, où vivent ses tuiles, la finesse de sa photo d'ensemble
+et celle de ses tuiles, avec le rapport des deux.
+
+### Les touches
+
+Le curseur de souris est masqué en plein écran : tout est atteignable au clavier,
+les boutons ne sont qu'un raccourci.
+
+| Touche | Effet |
+|--------|-------|
+| flèches | choisir la carte |
+| Entrée | fabriquer les tuiles, puis confirmer |
+| Suppr | supprimer les tuiles, puis confirmer |
+| A, B, T | arbres, bâtiments, tuiles : allumer ou éteindre pour cette carte |
+| R | rendre à cette carte les trois réglages généraux |
+| Échap | annuler ce qui est en cours, sinon revenir au menu |
+
+Les trois réglages sont écrits dans le `options.txt` de la carte, et seulement
+ceux qu'on a explicitement pris : les autres continuent de suivre la
+configuration générale, et l'écran dit lesquels.
+
+### La finesse, choisie carte par carte
+
+L'écran choisit seul la finesse des tuiles, car elle ne peut pas être la même
+partout : ce qui décide de la netteté du sol est le RAPPORT entre la finesse des
+tuiles et celle de l'orthophoto d'ensemble de la carte, jamais la finesse seule.
+Des tuiles à 0,75 m/px rendent Ossau, dont l'ortho est à 3,6 m/px, cinq fois plus
+net ; les mêmes ne changent rien sur dax, dont l'ortho est déjà à 0,85 m/px.
+
+La règle appliquée (`interet`, dans `src/app/cartes/FabriqueTuiles.cpp`) :
+
+- viser trois fois plus fin que l'orthophoto d'ensemble ;
+- jamais plus fin que 0,20 m/px, la finesse de la source IGN ;
+- jamais plus grossier que 0,75 m/px, le compromis qui rend une grande carte
+  lisible au ras du sol pour environ un gigaoctet ;
+- ne rien proposer du tout si le gain resterait sous 1,5, ce qui est le cas
+  d'une petite carte découpée dans une image déjà fine, comme dax-arene. Le
+  bouton est alors grisé et l'écran dit pourquoi.
+
+Un jeu de tuiles qui n'est pas plus fin que l'orthophoto est écarté au chargement
+par le moteur (`render::Terrain::ouvrirDetail`) : la carte est alors annoncée LR
+malgré les mégaoctets posés sur le disque, et l'écran propose de les refaire ou
+de les supprimer.
+
+### Avant de télécharger
+
+La confirmation donne quatre chiffres, tous calculés avant le moindre octet reçu :
+
+- le nombre de tuiles et leur finesse ;
+- la place occupée une fois la carte fabriquée, exacte, le BC7 ayant une densité
+  fixe ;
+- le volume à télécharger et une fourchette de durée, remplacée par une mesure
+  dès le premier bloc reçu ;
+- l'espace libre du disque visé, et ce qu'il en restera après.
+
+La fabrication tourne en tâche de fond, avec sa barre d'avancement et son débit
+mesuré. Elle s'arrête par Échap, et ce qui est écrit reste écrit : une reprise
+saute les tuiles déjà là.
+
+### Reprendre une fabrication interrompue
+
+L'index d'un jeu de tuiles est écrit avant la première tuile, et il décrit la
+grille VOULUE, pas celle qui est sur le disque. Un jeu interrompu ressemblerait
+donc à un jeu complet, et l'écran annoncerait des tuiles qui ne couvrent qu'un
+coin de la carte.
+
+D'où un second fichier, `fabrication_inachevee.txt`, posé dans le dossier de
+sortie en même temps que l'index et retiré à la seule condition que la grille
+ait été parcourue en entier. Il survit à un arrêt demandé comme à une coupure de
+courant. Tant qu'il est là :
+
+- la carte est annoncée `HR (partiel)` ;
+- l'écran donne le compte, par exemple "87 tuiles écrites sur 3066" ;
+- le bouton devient `Reprendre la fabrication`, et la reprise garde la finesse du
+  jeu entamé plutôt que celle que viserait une fabrication neuve : deux grilles
+  différentes dans le même dossier ne se mélangent pas ;
+- seules les tuiles manquantes sont téléchargées, l'écran le dit avant de partir.
+
+Un jeu produit par les scripts Python n'a jamais porté ce fichier : il est donc
+toujours tenu pour complet, ce qui est le bon défaut.
 
 ## Bâtiments 3D (BD TOPO)
 

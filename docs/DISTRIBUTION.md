@@ -56,6 +56,16 @@ ceux-là :
   le cas échéant, d'un relief plus fin. Quelques centaines de mégaoctets à
   plusieurs gigaoctets.
 
+Le joueur y gagne un sol qui reste net quand il descend. Rien d'autre ne change,
+ni le relief, ni les bâtiments, ni le contenu de la carte.
+
+HR n'est pas une question de poids. Une carte porte l'état HR si ses tuiles sont
+plus fines que son orthophoto d'ensemble, et elle reste annoncée LR si elles ne
+le sont pas, ses gigaoctets fussent-ils bien là : le moteur les écarte alors au
+chargement, et l'écran ne doit pas promettre ce que le vol ne montre pas. C'est
+pourquoi la finesse visée se calcule carte par carte, à partir de l'orthophoto de
+chacune, au lieu d'être la même partout (voir `docs/CARTES.md`).
+
 Règle d'interface, non négociable : **toute action qui remplit le disque annonce
 son coût AVANT de commencer**, et le gestionnaire affiche en permanence la place
 occupée par chaque carte et la place restante sur le disque. Personne ne doit
@@ -87,7 +97,7 @@ chaque étage facultatif et remplaçable :
 |-------|---------|---------|---------------|------|
 | 1. Socle | `terrain.txt`, relief, ortho d'ensemble, lieux, hélisurfaces | oui pour 3 cartes | 5 à 20 Mo | LR |
 | 2. Bâtiments | `buildings.bin` (BD TOPO extrudée) | avec le socle | 0,7 à 9 Mo | LR |
-| 3. Tuiles, niveau large | ortho à ~0,75 m/px sur toute l'emprise | non | 0,5 à 1,5 Go | HR |
+| 3. Tuiles, niveau large | ortho fine sur toute l'emprise, de 0,75 à 0,20 m/px selon la carte | non | 0,1 à 1,5 Go | HR |
 | 4. Tuiles, niveau serré | ortho à 0,20 m/px autour des posers | non | 0,3 à 1,5 Go | HR |
 
 Le relief traverse cet empilement : sa finesse est fixée à la fabrication du
@@ -119,8 +129,9 @@ part au catalogue, pas dans l'archive.
 C'est le cas d'usage le plus fréquent, et il se traite en deux gestes
 indépendants.
 
-**L'orthophoto** : ajouter un ou deux niveaux de tuiles. Déjà implémenté
-(`tools/terrain/fetch_tuiles.py`), à porter dans l'outil joueur.
+**L'orthophoto** : ajouter un ou deux niveaux de tuiles. Fait des deux côtés,
+par les scripts de l'auteur (`tools/terrain/fetch_tuiles.py`) et par le
+gestionnaire de cartes du jeu, qui télécharge et compresse lui-même.
 
 **Le relief** : régénérer la grille d'altitudes plus fine. C'est un remplacement
 en place, sans effet de bord : toutes les données annexes d'une carte (lieux,

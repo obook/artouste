@@ -259,6 +259,36 @@ progression ; les lancements suivants sont immédiats.
 Ce cache est jetable : le supprimer ne fait perdre que ce temps de préparation.
 Il se refait tout seul si une carte est remplacée.
 
+### Gestionnaire de cartes
+
+Le menu de démarrage ouvre un écran des cartes, par le bouton `Cartes` ou par la
+touche C. Il montre ce que chaque carte occupe sur le disque, permet d'allumer ou
+d'éteindre ses arbres, ses bâtiments et ses tuiles, et surtout de télécharger la
+haute résolution d'une carte, ou de récupérer la place qu'elle occupe.
+
+**Ce que le téléchargement apporte.** Une carte est livrée avec une photo
+aérienne d'ensemble. Elle suffit en vol haut et devient floue quand on descend.
+Les tuiles sont la même photo en beaucoup plus fin. Une fois téléchargées, le sol
+redevient net au ras du sol : on distingue les marquages de piste, les toits, les
+voitures. Rien ne change en altitude, et rien ne se perd si vous les supprimez.
+
+**LR et HR** sont les deux mots que l'écran emploie pour la finesse du sol :
+
+| État | Ce que c'est | Poids | Le sol vu de près |
+|------|--------------|-------|-------------------|
+| **LR** | la carte telle qu'elle est livrée | 5 à 20 Mo | flou |
+| **HR** | la même, plus ses tuiles de détail | 0,1 à 2 Go | net |
+
+Une carte reste annoncée LR tant que ses tuiles n'apportent rien de visible,
+même si elles occupent le disque : c'est le rapport entre leur finesse et celle
+de la photo d'ensemble qui compte, jamais leur poids.
+
+Rien ne part sans annonce : avant de télécharger, l'écran donne la place occupée,
+le volume à recevoir, la durée probable et ce qui restera sur le disque visé. Il
+choisit seul la finesse, adaptée à chaque carte, et ne propose pas le
+téléchargement quand la photo d'ensemble est déjà assez fine pour que les tuiles
+ne changent rien (voir [docs/CARTES.md](docs/CARTES.md)).
+
 ### Tuiles de détail
 
 Une orthophoto d'un seul tenant occupe la mémoire vidéo en proportion de

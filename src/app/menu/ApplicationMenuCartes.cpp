@@ -40,6 +40,7 @@
 #include <stb_image_write.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -688,6 +689,14 @@ void Application::runGestionnaireCartes() {
                 ImGui::TextWrapped("Reprise : %d tuiles déjà écrites (%s), seules les manquantes "
                                    "seront téléchargées.",
                                    c.tuilesPresentes, formaterOctets(c.octetsTuiles).c_str());
+            } else if (c.finesseTuiles > 0.0f &&
+                       std::fabs(c.finesseTuiles - finesseAFabriquer(c)) > 1e-4f) {
+                /* Rien de destructeur sans annonce : deux finesses ne se
+                   mélangent pas dans un même dossier, l'ancien jeu part. */
+                ImGui::TextWrapped("Les tuiles en place (%.2f m/px, %s) seront effacées : deux "
+                                   "finesses ne se mélangent pas.",
+                                   static_cast<double>(c.finesseTuiles),
+                                   formaterOctets(c.octetsTuiles).c_str());
             }
 
             /* Où cela va-t-il atterrir, et que restera-t-il sur CE disque ? Sans

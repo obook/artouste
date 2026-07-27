@@ -326,6 +326,19 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
         return;
     }
 
+    /* Un jeu déjà là, mais à une AUTRE finesse, ne peut pas être complété : ses
+       fichiers portent les mêmes noms et couvrent d'autres emprises, si bien que
+       la reprise, qui saute les tuiles présentes, mélangerait deux échelles sur
+       la même carte. On l'efface donc avant d'écrire le nouvel index. L'écran
+       l'annonce dans sa confirmation, la règle de cet écran étant de ne rien
+       détruire sans le dire (voir ApplicationMenuCartes.cpp). */
+    if (const auto ancien = render::tuiles::Pyramide::ouvrir(dossierSortie)) {
+        if (std::fabs(ancien->calage().mParPixel - mParPixel) > 1e-4f) {
+            std::error_code ec;
+            std::filesystem::remove_all(dossierSortie, ec);
+        }
+    }
+
     /* L'index d'abord : c'est lui qui fixe la grille, et le moteur s'y réfère.
        Écrit avant la première tuile, pour qu'une fabrication interrompue laisse
        un jeu cohérent, seulement incomplet. */

@@ -40,6 +40,13 @@ constexpr const char* WMS_LAYER = "ORTHOIMAGERY.ORTHOPHOTOS";
    avant d'avoir mesuré quoi que ce soit. */
 constexpr double OCTETS_JPEG_PAR_PIXEL = 0.25;
 
+/* Cadence de fabrication, tuiles par seconde, découpage et compression BC7
+   compris. Mesurée sur deux jeux réels (2,6 sur une petite carte, 1,8 sur une
+   grande), on retient la valeur basse : mieux vaut annoncer un peu long. Elle
+   dépend de la machine, c'est un ordre de grandeur, remplacé par la mesure dès
+   le premier bloc terminé. */
+constexpr double TUILES_PAR_SECONDE = 1.8;
+
 /* Calage d'une carte, lu dans son terrain.txt. */
 struct CalageCarte {
     float largeurM = 0.0f;
@@ -234,20 +241,34 @@ Estimation estimer(const std::filesystem::path& dossierCarte, float mParPixel) {
     est.blocs = ((g.colonnes + TUILES_PAR_BLOC - 1) / TUILES_PAR_BLOC) *
                 ((g.rangees + TUILES_PAR_BLOC - 1) / TUILES_PAR_BLOC);
 
-    /* Durée : une fourchette, et seulement une fourchette. On ne connaît pas le
-       débit de la ligne avant d'avoir reçu quelque chose, et annoncer une durée
-       précise tirée d'une vitesse supposée serait un chiffre faux. La mesure
-       prend le relais dès le premier bloc. */
-    const double minutesRapide = static_cast<double>(est.octetsReseau) / (10e6 * 60.0);
-    const double minutesLent   = static_cast<double>(est.octetsReseau) / (1e6 * 60.0);
-    char         phrase[384];
+    /* Durée : deux plafonds, et c'est le plus haut qui commande. Celui de la
+       ligne est une fourchette, on ne connaît pas son débit avant d'avoir reçu
+       quelque chose. Celui de la MACHINE est plus régulier : découper un bloc et
+       compresser ses tuiles en BC7 tient une cadence à peu près constante, et sur
+       une carte fine il domine largement le téléchargement. L'annoncer évite de
+       promettre dix minutes pour un travail de quatre heures. La mesure prend le
+       relais dès le premier bloc terminé, elle englobe les deux. */
+    const double minutesLigne = static_cast<double>(est.octetsReseau) / (1e6 * 60.0);
+    const double minutesMachine =
+        static_cast<double>(g.colonnes) * static_cast<double>(g.rangees) /
+        (TUILES_PAR_SECONDE * 60.0);
+    const double minutes = std::max(std::max(minutesLigne, minutesMachine), 1.0);
+
+    char duree[64];
+    if (minutes >= 90.0) {
+        std::snprintf(duree, sizeof(duree), "environ %.0f h %02.0f", std::floor(minutes / 60.0),
+                      minutes - 60.0 * std::floor(minutes / 60.0));
+    } else {
+        std::snprintf(duree, sizeof(duree), "environ %.0f minutes", minutes);
+    }
+
+    char phrase[448];
     std::snprintf(phrase, sizeof(phrase),
                   "%d x %d tuiles à %.2f m/px : %s sur le disque, environ %s à télécharger, "
-                  "en %d blocs. Durée probable entre %.0f et %.0f minutes selon la ligne.",
+                  "en %d blocs. Compter %s, la compression pesant autant que la ligne.",
                   g.colonnes, g.rangees, static_cast<double>(mParPixel),
                   formaterOctets(est.octetsDisque).c_str(),
-                  formaterOctets(est.octetsReseau).c_str(), est.blocs,
-                  std::max(1.0, minutesRapide), std::max(2.0, minutesLent));
+                  formaterOctets(est.octetsReseau).c_str(), est.blocs, duree);
     est.detail = phrase;
     return est;
 }

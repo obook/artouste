@@ -17,6 +17,21 @@ struct GLFWwindow;
 
 namespace artouste::input {
 
+/* Jeton GLFW de la touche qui IMPRIME cette lettre sur le clavier de
+   l'utilisateur.
+
+   Les jetons GLFW désignent des POSITIONS physiques, définies sur une
+   disposition US : GLFW_KEY_A est la touche en haut à gauche, celle qui écrit
+   "a" en QWERTY mais "q" en AZERTY. Un raccourci écrit en dur avec ces jetons ne
+   tombe donc sur la bonne touche que pour une partie des utilisateurs. On
+   demande ici à GLFW le nom réel de chaque touche, ce qui donne la disposition
+   effective, quelle qu'elle soit (AZERTY, QWERTZ, Dvorak...).
+
+   Renvoie le jeton US correspondant si la disposition n'est pas connue de GLFW,
+   ce qui ne fait pas pire qu'avant. La lettre doit être minuscule et non
+   accentuée. Demande GLFW initialisé. */
+[[nodiscard]] int toucheImprimant(char lettre);
+
 class Keyboard {
 public:
     explicit Keyboard(GLFWwindow* window) noexcept : m_window(window) {}

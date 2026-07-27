@@ -120,6 +120,36 @@ private:
        en dernier. Définie dans ApplicationMenuMaps.cpp. */
     static std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets);
 
+    /* Ce qu'une carte occupe sur le disque, et ce qu'elle affiche. Rempli par
+       inventorierCartes, consommé par le gestionnaire de cartes
+       (ApplicationMenuCartes.cpp). */
+    struct EtatCarte {
+        std::string           dir;
+        std::string           titre;
+        std::filesystem::path dossier;
+        std::filesystem::path dossierTuiles;  /* vide si la carte n'a pas de tuiles */
+        std::uintmax_t        octetsSocle     = 0;
+        std::uintmax_t        octetsBatiments = 0;
+        std::uintmax_t        octetsTuiles    = 0;
+        bool                  arbres          = true;  /* options effectives de la carte */
+        bool                  batiments       = true;
+        /* Tuiles utilisées ou seulement conservées : les éteindre libère la
+           mémoire vidéo sans rien effacer du disque. */
+        bool                  tuiles          = true;
+    };
+
+    /* Recense les cartes du dossier de ressources donné et mesure ce qu'elles
+       occupent. Le chemin est passé en argument parce que le gestionnaire s'ouvre
+       depuis le menu, avant que m_assetsDir ne soit renseigné. Parcourt des
+       milliers de fichiers sur une carte tuilée : à appeler à l'ouverture de
+       l'écran, pas à chaque image. */
+    std::vector<EtatCarte> inventorierCartes(const std::filesystem::path& assets);
+
+    /* Gestionnaire de cartes : montre l'occupation disque de chaque carte, bascule
+       ses arbres et ses bâtiments, et libère la place prise par ses tuiles. Rend
+       la main au menu de démarrage. Défini dans ApplicationMenuCartes.cpp. */
+    void runGestionnaireCartes();
+
     /* Menu de démarrage affiché dans la fenêtre (ImGui) : choix de la carte et du
        démarrage immédiat de la turbine, à la place de l'ancien launch.bat (bloqué par
        le Contrôle intelligent des applications de Windows). Les choix sont déposés dans
@@ -161,6 +191,19 @@ private:
     GLFWmonitor* monitorForWindow() const;
 
     /* --- Terrain et cycle jour/nuit -------------------------------------------- */
+
+    /* Options propres à une carte (fichier options.txt facultatif), une fois
+       combinées à la configuration générale : ce que le moteur applique
+       réellement à cette carte-là. */
+    struct OptionsCarte {
+        bool arbres    = true;
+        bool batiments = true;
+        bool tuiles    = true;
+        [[nodiscard]] bool operator==(const OptionsCarte&) const = default;
+    };
+
+    /* Lit les options effectives d'une carte. Définie dans ApplicationScene.cpp. */
+    [[nodiscard]] OptionsCarte optionsEffectives(const std::filesystem::path& dossierCarte) const;
 
     /* Charge (ou recharge) le terrain nommé : relief, bâtiments et position de
        départ. Réutilisable au runtime, notamment pour basculer sur Arcachon quand
@@ -522,6 +565,22 @@ private:
        ARTOUSTE_TREE_MAX), résolu dans initScene et passé à Vegetation par loadTerrain.
        0 = laisser Vegetation appliquer son défaut. */
     std::size_t m_treeBudget = 0;
+
+    /* Côté de la fenêtre de tuiles fines (clé "tuiles_fenetre_px" de config.txt,
+       surchargée par ARTOUSTE_TUILES_FENETRE), résolu dans initScene et passé à
+       Terrain par loadTerrain. 0 = pas de détail fin. */
+    int m_detailWindowPx = 0;
+
+    /* Budget de sommets du relief dessiné (clé "relief_sommets_max", surchargée
+       par ARTOUSTE_RELIEF_SOMMETS). 0 = dessiner tous les points de la carte
+       d'altitude. */
+    int m_reliefVertexBudget = 0;
+
+    /* Options en vigueur pour le terrain actuellement chargé. Le gestionnaire de
+       cartes peut les changer pendant que la scène est en mémoire : on les garde
+       pour savoir, au retour du menu, s'il faut recharger la carte (voir
+       applyMenuSession). */
+    OptionsCarte m_optionsChargees;
 
     /* --- État de session (menu, pause, plein écran) ---------------------------------------- */
 

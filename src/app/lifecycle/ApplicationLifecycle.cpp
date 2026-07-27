@@ -230,6 +230,15 @@ int Application::run() {
        intelligent des applications de Windows). Sauté en mode capture, quand la carte
        est déjà imposée par une variable d'environnement (scripts, tests), ou sur
        demande explicite (ARTOUSTE_NO_MENU). */
+    /* ARTOUSTE_CARTES : ouvre directement le gestionnaire de cartes, sans passer
+       par le menu. Sert à en faire le tour sans lancer de vol, et à le tester
+       d'une seule commande. */
+    if (std::getenv("ARTOUSTE_CARTES") != nullptr) {
+        m_hud.init(m_window);
+        runGestionnaireCartes();
+        return EXIT_SUCCESS;
+    }
+
     const bool menuDemande = std::getenv("ARTOUSTE_SCREENSHOT") == nullptr &&
                              std::getenv("ARTOUSTE_TERRAIN") == nullptr &&
                              std::getenv("ARTOUSTE_NO_MENU") == nullptr;

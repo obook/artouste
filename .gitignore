@@ -81,3 +81,12 @@ imgui.ini
 # Config personnelle du joueur : créée au premier lancement en recopiant le modèle
 # versionné assets/config.default.txt. Éditée à la main, elle n'est pas suivie.
 assets/config.txt
+
+# Tuiles de détail fabriquées sur place (gestionnaire de cartes ou
+# tools/terrain/fetch_tuiles.py) : donnée dérivée, régénérable, et de l'ordre du
+# gigaoctet par carte. Elle se distribue en paquets à part, jamais par le dépôt.
+assets/terrain/*/tuiles/
+
+# Options par carte, écrites par le gestionnaire de cartes (arbres, bâtiments,
+# tuiles) : réglages personnels, comme assets/config.txt.
+assets/terrain/*/options.txt

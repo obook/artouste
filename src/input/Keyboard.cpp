@@ -20,7 +20,36 @@
 
 #include "util/Math.hpp"
 
+#include <array>
+#include <cstddef>
+
 namespace artouste::input {
+
+int toucheImprimant(char lettre) {
+    /* Table dressée une fois : glfwGetKeyName interroge la disposition du
+       système, ce qui n'a pas à être refait à chaque image. Le balayage couvre
+       les touches imprimables, et pas seulement A-Z : sur AZERTY, la lettre M
+       occupe la position que GLFW nomme GLFW_KEY_SEMICOLON. */
+    static const auto table = [] {
+        std::array<int, 26> jetons{};
+        for (std::size_t i = 0; i < jetons.size(); ++i) {
+            jetons[i] = GLFW_KEY_A + static_cast<int>(i);  /* repli : disposition US */
+        }
+        for (int jeton = GLFW_KEY_SPACE; jeton <= GLFW_KEY_GRAVE_ACCENT; ++jeton) {
+            const char* nom = glfwGetKeyName(jeton, 0);
+            if (nom == nullptr || nom[0] < 'a' || nom[0] > 'z' || nom[1] != '\0') {
+                continue;
+            }
+            jetons[static_cast<std::size_t>(nom[0] - 'a')] = jeton;
+        }
+        return jetons;
+    }();
+
+    if (lettre < 'a' || lettre > 'z') {
+        return GLFW_KEY_UNKNOWN;
+    }
+    return table[static_cast<std::size_t>(lettre - 'a')];
+}
 
 namespace {
 

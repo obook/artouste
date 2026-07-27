@@ -14,6 +14,7 @@
  */
 
 #include "app/Application.hpp"
+#include "input/Keyboard.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Terrain.hpp"
 #include "ui/HudWidgets.hpp"
@@ -74,8 +75,11 @@ bool Application::runStartupMenu() {
             valid = glfwGetKey(m_window, GLFW_KEY_ENTER) == GLFW_PRESS ||
                     glfwGetKey(m_window, GLFW_KEY_KP_ENTER) == GLFW_PRESS;
             turb = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
-            demo = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
-            zombie = glfwGetKey(m_window, GLFW_KEY_Z) == GLFW_PRESS;
+            /* Lettres résolues par la disposition réelle : en AZERTY, le "Z"
+               imprimé se trouve là où GLFW nomme GLFW_KEY_W, et ce raccourci ne
+               fonctionnait donc pas. */
+            demo = glfwGetKey(m_window, input::toucheImprimant('d')) == GLFW_PRESS;
+            zombie = glfwGetKey(m_window, input::toucheImprimant('z')) == GLFW_PRESS;
             quit = glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
             /* Première manette reconnue, quel que soit son slot (un périphérique virtuel
                peut occuper le slot 0 et reléguer la vraie manette plus loin) -- même logique
@@ -114,6 +118,7 @@ bool Application::runStartupMenu() {
          pvDemo = false, pvZombie = false;
     glfwPollEvents();
     lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvZombie, pvQuit);
+    bool pvCartes = glfwGetKey(m_window, input::toucheImprimant('c')) == GLFW_PRESS;
 
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !lancer) {
         glfwPollEvents();
@@ -149,6 +154,23 @@ bool Application::runStartupMenu() {
         }
         if (edge(quit, pvQuit)) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE); /* Échap dans le menu = quitter */
+        }
+        /* Touche C : gestionnaire de cartes. Au clavier seulement, sans raccourci
+           manette : l'écran qu'elle ouvre se pilote lui aussi au clavier, et lui
+           donner une entrée manette laisserait l'utilisateur devant un tableau
+           qu'il ne pourrait plus parcourir. */
+        const bool cartesDemandees =
+            glfwGetKey(m_window, input::toucheImprimant('c')) == GLFW_PRESS;
+        if (edge(cartesDemandees, pvCartes)) {
+            runGestionnaireCartes();
+            /* Le gestionnaire a tenu la fenêtre pendant tout ce temps, et on en
+               sort par Échap : cette touche est donc encore enfoncée au retour
+               ici, où elle n'a pas été vue s'abaisser. Sans réarmer les états
+               précédents, le menu la prendrait pour un nouvel appui et quitterait
+               le jeu. Même précaution qu'à l'ouverture du menu. */
+            glfwPollEvents();
+            lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvZombie, pvQuit);
+            pvCartes = glfwGetKey(m_window, input::toucheImprimant('c')) == GLFW_PRESS;
         }
 
         int fbw = 0;
@@ -212,12 +234,20 @@ bool Application::runStartupMenu() {
             }
         }
         ImGui::SameLine();
+        /* Gestionnaire de cartes : place occupée, arbres et bâtiments par carte,
+           suppression des tuiles (voir ApplicationMenuCartes.cpp). Il prend la
+           fenêtre le temps qu'il faut, puis rend la main ici ; on relit ensuite
+           les cartes, l'utilisateur ayant pu en effacer les tuiles. */
+        if (ImGui::Button("Cartes", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
+            runGestionnaireCartes();
+        }
+        ImGui::SameLine();
         if (ImGui::Button("Quitter", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         }
         ImGui::Separator();
         ImGui::TextDisabled("Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   "
-                            "D/Y : démo   Échap/B : quitter");
+                            "D/Y : démo   C : cartes   Échap/B : quitter");
         if (cartes[selection].zombieCapable && !cartes[selection].zombieOnly) {
             ImGui::TextDisabled("Z / LB : mode zombie");
         }
@@ -263,13 +293,23 @@ void Application::applyMenuSession() {
     if (m_menuDemo) {
         m_menuTerrain = "arcachon";
     }
-    /* Terrain : rechargé seulement s'il a changé (l'opération est coûteuse). Dans
-       tous les cas on repasse ensuite par resetToStart : il repose l'appareil ET
-       remet à zéro les commandes mémorisées (collectif), l'assistance et l'aide au
-       posé -- loadTerrain seul ne purge pas ces états, et un collectif resté haut
-       ferait redécoller l'appareil tout seul sur la nouvelle carte. */
-    if (!m_menuTerrain.empty() && m_menuTerrain != m_terrainName) {
-        loadTerrain(m_menuTerrain);
+    /* Terrain : rechargé s'il a changé (l'opération est coûteuse), mais AUSSI si
+       ses options ont changé. Le gestionnaire de cartes a pu éteindre ses
+       bâtiments ou ses tuiles pendant que la scène était en mémoire, et relancer
+       la même carte doit en tenir compte : sans cela les bâtiments éteints
+       restaient à l'écran. Dans tous les cas on repasse ensuite par resetToStart :
+       il repose l'appareil ET remet à zéro les commandes mémorisées (collectif),
+       l'assistance et l'aide au posé -- loadTerrain seul ne purge pas ces états,
+       et un collectif resté haut ferait redécoller l'appareil tout seul sur la
+       nouvelle carte. */
+    if (!m_menuTerrain.empty()) {
+        const bool carteChangee = m_menuTerrain != m_terrainName;
+        const bool optionsChangees =
+            !carteChangee && !m_terrainName.empty() &&
+            !(optionsEffectives(m_assetsDir / "terrain" / m_terrainName) == m_optionsChargees);
+        if (carteChangee || optionsChangees) {
+            loadTerrain(m_menuTerrain);
+        }
     }
     resetToStart();
 

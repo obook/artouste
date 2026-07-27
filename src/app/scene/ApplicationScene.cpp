@@ -22,8 +22,10 @@
 #include "render/Vegetation.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
 #include <random>
 #include <string>
 
@@ -37,6 +39,67 @@ namespace {
  * l'axe (plus naturel). Petit, pour rester loin de la sortie d'échappement.
  */
 constexpr float ROTOR_PARK_JITTER = 0.26f; /* ~15 degrés */
+
+/*
+ * Options propres à une carte, lues dans son options.txt facultatif : même
+ * mécanisme que ses autres fichiers optionnels (zombies.txt, hapi.txt,
+ * exclusions.txt). Le gestionnaire de cartes les écrit, l'utilisateur peut les
+ * éditer à la main.
+ *
+ * Elles sont PAR CARTE parce que les arbres comptent en montagne et les
+ * bâtiments en ville, rarement les deux au même endroit, alors que la
+ * configuration générale, elle, doit choisir une fois pour toutes. Une clé
+ * absente laisse donc la valeur générale s'appliquer, et une carte sans ce
+ * fichier se comporte exactement comme avant.
+ */
+struct OptionsLues {
+    bool arbresDefinis    = false;
+    bool arbres           = true;
+    bool batimentsDefinis = false;
+    bool batiments        = true;
+    /* Tuiles de détail : éteindre sans effacer. Elles pèsent des gigaoctets sur
+       le disque et une centaine de mégaoctets de mémoire vidéo ; sur une machine
+       à l'étroit, on veut pouvoir renoncer aux secondes sans renoncer aux
+       premiers, et les rallumer sans tout retélécharger. */
+    bool tuilesDefinies = false;
+    bool tuiles         = true;
+};
+
+[[nodiscard]] bool valeurOui(const std::string& valeur) {
+    return !(valeur == "0" || valeur == "non" || valeur == "false");
+}
+
+[[nodiscard]] OptionsLues lireOptionsCarte(const std::filesystem::path& dir) {
+    OptionsLues options;
+    std::ifstream fichier(dir / "options.txt");
+    if (!fichier) {
+        return options;
+    }
+    std::string cle;
+    while (fichier >> cle) {
+        if (!cle.empty() && cle[0] == '#') {
+            std::getline(fichier, cle);
+            continue;
+        }
+        std::string valeur;
+        if (!(fichier >> valeur)) {
+            break;
+        }
+        if (cle == "arbres") {
+            options.arbres        = valeurOui(valeur);
+            options.arbresDefinis = true;
+        } else if (cle == "batiments") {
+            options.batiments        = valeurOui(valeur);
+            options.batimentsDefinis = true;
+        } else if (cle == "tuiles") {
+            options.tuiles        = valeurOui(valeur);
+            options.tuilesDefinies = true;
+        }
+        /* Clé inconnue : ignorée, un options.txt écrit par une version plus
+           récente reste lisible. */
+    }
+    return options;
+}
 
 } /* namespace */
 
@@ -56,10 +119,37 @@ void Application::initScene() {
     initSceneConfig();
 }
 
+Application::OptionsCarte
+Application::optionsEffectives(const std::filesystem::path& dossierCarte) const {
+    const OptionsLues lues = lireOptionsCarte(dossierCarte);
+    OptionsCarte      effectives;
+    /* ARTOUSTE_NO_TREES garde le dernier mot : c'est l'interrupteur de secours,
+       il doit couper les arbres même sur une carte qui les réclame. */
+    effectives.arbres = (std::getenv("ARTOUSTE_NO_TREES") == nullptr) &&
+                        (lues.arbresDefinis ? lues.arbres : m_treesEnabled);
+    effectives.batiments = !lues.batimentsDefinis || lues.batiments;
+    effectives.tuiles    = !lues.tuilesDefinies || lues.tuiles;
+    return effectives;
+}
+
 void Application::loadTerrain(const std::string& name) {
     m_terrainName = name;
     std::printf("[scène] terrain : %s\n", name.c_str());
     const std::filesystem::path terrainDir = m_assetsDir / "terrain" / name;
+
+    /* Options propres à cette carte (options.txt facultatif) : elles priment sur
+       la configuration générale, qui ne peut pas savoir qu'on veut des arbres en
+       montagne et des bâtiments en ville. Lues AVANT le terrain : la fenêtre de
+       tuiles se décide à sa construction. Mémorisées, pour savoir au retour du
+       menu si elles ont changé et s'il faut recharger. */
+    m_optionsChargees       = optionsEffectives(terrainDir);
+    const bool arbresIci    = m_optionsChargees.arbres;
+    const bool batimentsIci = m_optionsChargees.batiments;
+    const bool tuilesIci    = m_optionsChargees.tuiles;
+    std::printf("[scène] options de la carte : arbres %s, bâtiments %s, tuiles %s\n",
+                arbresIci ? "oui" : "non",
+                batimentsIci ? "oui" : "non",
+                tuilesIci ? "oui" : "non");
 
     /* Au tout premier chargement d'une carte, son orthophoto doit être
        compressée avant d'être mise en cache : une trentaine de secondes sur une
@@ -67,20 +157,26 @@ void Application::loadTerrain(const std::string& name) {
        figée. Les lancements suivants relisent le cache et n'appellent jamais ce
        rappel. Renvoyer faux annule la préparation : on le fait si l'utilisateur
        ferme la fenêtre, plutôt que de le retenir jusqu'au bout. */
-    m_terrain = std::make_unique<render::Terrain>(terrainDir, [this](float fraction) {
-        renderLoadingScreen("Préparation de la carte, une seule fois...", fraction);
-        return glfwWindowShouldClose(m_window) == 0;
-    });
+    m_terrain = std::make_unique<render::Terrain>(
+        terrainDir,
+        [this](float fraction) {
+            renderLoadingScreen("Préparation de la carte, une seule fois...", fraction);
+            return glfwWindowShouldClose(m_window) == 0;
+        },
+        tuilesIci ? m_detailWindowPx : 0,
+        m_reliefVertexBudget);
 
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
-       Absents (fichier buildings.bin manquant) : rien n'est dessiné. */
-    m_buildings = std::make_unique<render::Buildings>(terrainDir, *m_terrain);
+       Absents (fichier buildings.bin manquant) ou refusés par la carte : rien
+       n'est dessiné. */
+    m_buildings = batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain)
+                               : nullptr;
 
     /* Végétation en billboards : arbres semés d'après l'orthophoto, posés sur le
        relief. Activée par défaut ; désactivable par la clé "arbres 0" de config.txt
        (et toujours désactivée si ARTOUSTE_NO_TREES est défini) -- voir m_treesEnabled,
        calculé dans initScene. Atlas de sprites partagé entre terrains. */
-    if (m_treesEnabled) {
+    if (arbresIci) {
         m_vegetation = std::make_unique<render::Vegetation>(
             terrainDir, *m_terrain, m_assetsDir / "vegetation" / "trees_atlas.png", m_treeBudget);
     } else {

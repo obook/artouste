@@ -50,7 +50,8 @@ public:
        mériter d'être montrée. Il peut renvoyer faux pour annuler.
 
        fenetreDetailPx fixe le côté de la fenêtre de tuiles fines, si la carte en
-       livre (voir tuiles/Fenetre.hpp) ; 0 y renonce.
+       livre (voir tuiles/Fenetre.hpp) ; 0 y renonce. racineTuiles dit où les
+       chercher, vide pour ne regarder que dans le dossier de la carte.
 
        sommetsMax plafonne le nombre de sommets DESSINÉS : au-delà, un point de
        grille sur deux, sur trois... est retenu pour le maillage. Les altitudes,
@@ -61,7 +62,8 @@ public:
     explicit Terrain(const std::filesystem::path& dir,
                      bc7::Progression             progression     = {},
                      int                          fenetreDetailPx = tuiles::COTE_FENETRE_PX,
-                     int                          sommetsMax      = 0);
+                     int                          sommetsMax      = 0,
+                     std::filesystem::path        racineTuiles    = {});
 
     void draw() const { m_mesh.draw(); }
 
@@ -163,7 +165,8 @@ private:
     /* Ouvre le jeu de tuiles de détail de la carte, s'il y en a un, et prépare
        sa fenêtre au côté demandé. Appelée une fois, après l'orthophoto
        d'ensemble. */
-    void ouvrirDetail(const std::filesystem::path& dir, int fenetrePx);
+    void ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
+                      const std::filesystem::path& racineTuiles);
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
     void

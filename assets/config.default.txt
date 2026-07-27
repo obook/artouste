@@ -40,13 +40,18 @@ turbine_demarree 0
 # 0 = pas de démo. (La démo se lance aussi par le bouton Démo du menu de démarrage.)
 demo 0
 
-# arbres : 1 = végétation activée -- des arbres en billboards sont semés sur les
-# terrains de montagne d'après l'orthophoto (là où le sol est vert et sous la
-# limite forestière). 0 = pas d'arbres (défaut) -- rendu plus léger, utile sur une
-# machine modeste (ex. tablette : 30-50 fps avec les arbres contre 60 fps sans).
-# La variable d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation
-# quelle que soit cette clé.
-arbres 0
+# arbres : 1 = végétation activée (défaut) -- des arbres en billboards sont semés
+# d'après l'orthophoto, là où le sol est vert et sous la limite forestière. Ce
+# n'est pas réservé à la montagne : une ville entourée de bois en reçoit aussi.
+# 0 = pas d'arbres, rendu plus léger, utile sur une machine modeste (ex. tablette :
+# 30-50 fps avec les arbres contre 60 fps sans) ; voir aussi "tree_max" plus bas,
+# qui les éclaircit sans les supprimer.
+#
+# Cette clé ne décide que pour les cartes qui ne disent rien : le gestionnaire de
+# cartes (touche C au menu) permet de trancher carte par carte, ce qui laisse les
+# arbres en montagne et les évite en ville. La variable d'environnement
+# ARTOUSTE_NO_TREES, si définie, force la désactivation quelle que soit cette clé.
+arbres 1
 
 # radio_url : URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit.
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.
@@ -80,6 +85,21 @@ tree_max 1600000
 # 2 allège la bande passante mémoire (différence peu visible en 1080p) ; 0 le désactive
 # (le plus rapide). La variable d'environnement ARTOUSTE_MSAA, si définie, a la priorité.
 msaa 4
+
+# tuiles_dossier : dossier où sont rangés les jeux de tuiles de détail, un
+# sous-dossier par carte. Par défaut "assets/terrain", c'est-à-dire chaque carte
+# chez elle, dans son sous-dossier "tuiles" : rien à changer si vous les laissez
+# où le jeu les a fabriquées.
+#
+# Une carte fine pèse jusqu'à deux gigaoctets : indiquez ici un chemin absolu
+# pour les garder sur un autre disque, sans quoi elles remplissent le disque
+# système.
+#   Linux   : tuiles_dossier /media/moi/DISQUE/artouste-tuiles
+#   Windows : tuiles_dossier D:/artouste-tuiles
+# Un chemin relatif est compris depuis le dossier du jeu. La variable
+# d'environnement ARTOUSTE_TUILES, si définie, a la priorité (pratique pour
+# essayer un autre disque le temps d'un lancement).
+tuiles_dossier assets/terrain
 
 # relief_sommets_max : nombre maximum de points de la carte d'altitude
 # effectivement DESSINÉS. Au-delà, le maillage n'en retient qu'un sur deux, sur

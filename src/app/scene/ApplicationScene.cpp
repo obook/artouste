@@ -119,6 +119,24 @@ void Application::initScene() {
     initSceneConfig();
 }
 
+std::filesystem::path Application::racineTuiles() const {
+    /* La variable d'environnement prime sur la configuration : elle sert à
+       essayer un autre disque le temps d'un lancement, sans rien réécrire. */
+    if (const char* env = std::getenv("ARTOUSTE_TUILES"); env != nullptr && env[0] != '\0') {
+        return env;
+    }
+    const std::filesystem::path demande = m_config.tilesDir;
+    if (demande.empty() || demande.is_absolute()) {
+        return demande;
+    }
+    /* Chemin relatif : compris depuis le dossier du jeu, celui qui contient
+       "assets", et non depuis le répertoire courant, qui dépend de la façon dont
+       le jeu a été lancé. m_assetsDir n'est pas encore renseigné au menu, d'où la
+       localisation à la demande. */
+    const std::filesystem::path assets = m_assetsDir.empty() ? resolveAssetDir() : m_assetsDir;
+    return assets.parent_path() / demande;
+}
+
 Application::OptionsCarte
 Application::optionsEffectives(const std::filesystem::path& dossierCarte) const {
     const OptionsLues lues = lireOptionsCarte(dossierCarte);
@@ -164,7 +182,8 @@ void Application::loadTerrain(const std::string& name) {
             return glfwWindowShouldClose(m_window) == 0;
         },
         tuilesIci ? m_detailWindowPx : 0,
-        m_reliefVertexBudget);
+        m_reliefVertexBudget,
+        racineTuiles());
 
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien

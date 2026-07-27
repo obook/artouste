@@ -36,9 +36,11 @@ struct Config {
        coupe la démo. */
     bool demo = false;
 
-    /* Végétation : si vrai (défaut), des arbres en billboards sont semés sur les
-       terrains de montagne d'après l'orthophoto. Mettre "arbres 0" dans config.txt
-       pour un rendu léger (machine modeste) ou l'ancien rendu sans arbres. La variable
+    /* Végétation : si vrai (défaut), des arbres en billboards sont semés d'après
+       l'orthophoto, là où le sol est vert et sous la limite forestière -- donc
+       pas seulement en montagne. Mettre "arbres 0" dans config.txt pour un rendu
+       léger sur une machine modeste. Cette valeur ne vaut que pour les cartes qui
+       ne tranchent pas elles-mêmes (voir le options.txt d'une carte) ; la variable
        d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
     bool trees = true;
 
@@ -77,6 +79,18 @@ struct Config {
        mémoire vidéo. 0 renonce au détail fin. La variable d'environnement
        ARTOUSTE_TUILES_FENETRE, si définie, a la priorité. */
     int detailWindowPx = 8192;
+
+    /* Dossier où sont rangés les jeux de tuiles de détail, un sous-dossier par
+       carte. Par défaut "assets/terrain", c'est-à-dire chaque carte chez elle,
+       dans son sous-dossier "tuiles". Un chemin absolu permet de les garder sur
+       un autre disque, ce qui est souvent nécessaire : une carte fine pèse
+       jusqu'à deux gigaoctets.
+
+           tuiles_dossier /media/disque/tuiles
+
+       Un chemin relatif est compris depuis le dossier du jeu. La variable
+       d'environnement ARTOUSTE_TUILES, si définie, a la priorité. */
+    std::string tilesDir = "assets/terrain";
 
     /* Budget de sommets du relief : nombre maximum de points de la carte
        d'altitude effectivement DESSINÉS. Au-delà, le maillage n'en retient

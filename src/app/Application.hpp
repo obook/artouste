@@ -131,11 +131,20 @@ private:
         std::uintmax_t        octetsSocle     = 0;
         std::uintmax_t        octetsBatiments = 0;
         std::uintmax_t        octetsTuiles    = 0;
-        bool                  arbres          = true;  /* options effectives de la carte */
-        bool                  batiments       = true;
+        /* Options effectives de la carte. Chacune est accompagnée de son drapeau
+           "défini" : faux tant que la carte ne tranche pas elle-même, auquel cas
+           la valeur vient de la configuration générale. On n'écrit dans le
+           options.txt d'une carte que ce qui a été explicitement réglé, sinon
+           toucher un seul réglage figerait les deux autres et soustrairait la
+           carte à la configuration générale sans le dire. */
+        bool arbres          = true;
+        bool arbresDefini    = false;
+        bool batiments       = true;
+        bool batimentsDefini = false;
         /* Tuiles utilisées ou seulement conservées : les éteindre libère la
            mémoire vidéo sans rien effacer du disque. */
-        bool                  tuiles          = true;
+        bool tuiles       = true;
+        bool tuilesDefinie = false;
     };
 
     /* Recense les cartes du dossier de ressources donné et mesure ce qu'elles
@@ -201,6 +210,12 @@ private:
         bool tuiles    = true;
         [[nodiscard]] bool operator==(const OptionsCarte&) const = default;
     };
+
+    /* Racine où chercher les jeux de tuiles : clé "tuiles_dossier" de la
+       configuration, surchargée par ARTOUSTE_TUILES, et rendue absolue depuis le
+       dossier du jeu si elle est relative. Utilisable dès le menu, avant même le
+       chargement de la scène. Définie dans ApplicationScene.cpp. */
+    [[nodiscard]] std::filesystem::path racineTuiles() const;
 
     /* Lit les options effectives d'une carte. Définie dans ApplicationScene.cpp. */
     [[nodiscard]] OptionsCarte optionsEffectives(const std::filesystem::path& dossierCarte) const;

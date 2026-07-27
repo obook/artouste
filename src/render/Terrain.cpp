@@ -118,7 +118,8 @@ bool readMetadata(const std::filesystem::path& path,
 Terrain::Terrain(const std::filesystem::path& dir,
                  bc7::Progression             progression,
                  int                          fenetreDetailPx,
-                 int                          sommetsMax)
+                 int                          sommetsMax,
+                 std::filesystem::path        racineTuiles)
     : m_progression(std::move(progression)) {
     const std::filesystem::path meta = dir / "terrain.txt";
     const std::filesystem::path height = dir / "heightmap.png";
@@ -313,15 +314,16 @@ Terrain::Terrain(const std::filesystem::path& dir,
                     static_cast<double>(m_widthM),
                     static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
-        ouvrirDetail(dir, fenetreDetailPx);
+        ouvrirDetail(dir, fenetreDetailPx, racineTuiles);
     }
 }
 
-void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx) {
+void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
+                           const std::filesystem::path& racineTuiles) {
     if (fenetrePx <= 0) {
         return;  /* détail fin refusé par la configuration */
     }
-    const std::filesystem::path candidat = tuiles::cheminJeuDeTuiles(dir);
+    const std::filesystem::path candidat = tuiles::cheminJeuDeTuiles(dir, racineTuiles);
     if (!candidat.empty()) {
         std::vector<tuiles::Pyramide> niveaux = tuiles::ouvrirNiveaux(candidat);
 

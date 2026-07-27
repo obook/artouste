@@ -106,12 +106,23 @@ std::filesystem::path Pyramide::fichier(int col, int rangee) const {
     return m_dossier / std::to_string(rangee) / (std::to_string(col) + ".dds");
 }
 
-std::filesystem::path cheminJeuDeTuiles(const std::filesystem::path& dossierCarte) {
+std::filesystem::path cheminJeuDeTuiles(const std::filesystem::path& dossierCarte,
+                                        const std::filesystem::path& racine) {
+    /* Racines à explorer, dans l'ordre de priorité, chacune pouvant ranger le jeu
+       de tuiles directement ou sous un sous-dossier "tuiles". */
     std::vector<std::filesystem::path> candidats;
-    if (const char* racine = std::getenv("ARTOUSTE_TUILES");
-        racine != nullptr && racine[0] != '\0') {
-        candidats.emplace_back(std::filesystem::path(racine) / dossierCarte.filename());
+    const auto ajouterRacine = [&candidats, &dossierCarte](const std::filesystem::path& base) {
+        if (base.empty()) {
+            return;
+        }
+        candidats.push_back(base / dossierCarte.filename());
+        candidats.push_back(base / dossierCarte.filename() / "tuiles");
+    };
+
+    if (const char* env = std::getenv("ARTOUSTE_TUILES"); env != nullptr && env[0] != '\0') {
+        ajouterRacine(env);
     }
+    ajouterRacine(racine);
     candidats.push_back(dossierCarte / "tuiles");
 
     std::error_code ec;

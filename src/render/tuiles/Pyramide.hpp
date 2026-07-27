@@ -128,14 +128,21 @@ private:
 
 /* Où sont rangées les tuiles d'une carte, ou un chemin vide si elle n'en a pas.
 
-   Deux emplacements possibles, dans cet ordre. La variable d'environnement
-   ARTOUSTE_TUILES d'abord : les tuiles d'une carte fine pèsent des gigaoctets, et
-   on les garde volontiers sur un autre disque que le jeu, en développement comme
-   chez un joueur à l'étroit. Le sous-dossier "tuiles" de la carte ensuite, qui
-   est l'emplacement d'un paquet installé normalement.
+   On regarde d'abord sous la RACINE demandée (clé "tuiles_dossier" de la
+   configuration, ou variable d'environnement ARTOUSTE_TUILES qui prime sur
+   elle) : les tuiles d'une carte fine pèsent des gigaoctets, et on les garde
+   volontiers sur un autre disque que le jeu. On retombe ensuite sur le
+   sous-dossier "tuiles" de la carte, emplacement d'un paquet installé
+   normalement.
+
+   Sous une racine, les deux rangements sont acceptés : le jeu de tuiles
+   directement dans <racine>/<carte>, ou dans <racine>/<carte>/tuiles. La racine
+   par défaut, "assets/terrain", tombe ainsi sur le second sans rien avoir à
+   régler.
 
    Le moteur et le gestionnaire de cartes doivent chercher au même endroit, d'où
    cette fonction partagée. */
-[[nodiscard]] std::filesystem::path cheminJeuDeTuiles(const std::filesystem::path& dossierCarte);
+[[nodiscard]] std::filesystem::path cheminJeuDeTuiles(const std::filesystem::path& dossierCarte,
+                                                      const std::filesystem::path& racine = {});
 
 }  /* namespace artouste::render::tuiles */

@@ -120,6 +120,10 @@ Config loadConfig(const std::filesystem::path& path) {
             } catch (const std::exception&) {
                 std::fprintf(stderr, "[Config] tuiles_fenetre_px invalide : %s\n", value.c_str());
             }
+        } else if (key == "tuiles_dossier") {
+            if (!value.empty()) {
+                cfg.tilesDir = value;
+            }
         } else if (key == "relief_sommets_max") {
             try {
                 cfg.reliefVertexBudget = std::max(0, std::stoi(value));

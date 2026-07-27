@@ -1,6 +1,6 @@
 # Terrain Artouste - invasion - Happy DeathHour (mode zombies)
-# Repere monde identique a la carte source (origin_x/origin_z) : tous les
-# fichiers en coordonnees monde restent valides sans decalage.
+# Repère monde identique à la carte source (origin_x/origin_z) : tous les
+# fichiers en coordonnées monde restent valides sans décalage.
 cols 142
 rows 93
 width_m 1996.0

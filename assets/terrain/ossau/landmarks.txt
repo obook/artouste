@@ -14,7 +14,7 @@
 -0.3101 42.8549 Pic d'Artouste
 -0.4949 42.8395 Lac de Bersau
 -0.3327 42.8628 Barrage d'Artouste
--0.3428 42.8758 Petit train d'Artouste
+-0.335246 42.864184 Petit train d'Artouste
 -0.4269 42.8355 Refuge de Pombie
 -0.4912 42.8484 Refuge d'Ayous
 -0.3292 42.846 Refuge d'Arrémoulit

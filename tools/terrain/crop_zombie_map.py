@@ -147,7 +147,9 @@ def write_cropped_meta(dst, src, m, new_cols, new_rows, elev_min, elev_max,
         f"origin_x {origin_x:.2f}",
         f"origin_z {origin_z:.2f}",
     ]
-    (dst / "terrain.txt").write_text("\n".join(lines) + "\n")
+    # encoding explicite : la première ligne sert de titre au menu et porte des
+    # accents, on ne dépend pas de l'encodage par défaut de la plateforme.
+    (dst / "terrain.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def copy_aux_files(src, dst):

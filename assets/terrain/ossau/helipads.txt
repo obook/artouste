@@ -5,4 +5,4 @@
 -0.4269 42.8355 Refuge de Pombie
 -0.4912 42.8484 Refuge d'Ayous
 -0.3292 42.846 Refuge d'Arrémoulit
--0.3327 42.8628 Barrage d'Artouste
+-0.334181 42.862335 Barrage d'Artouste

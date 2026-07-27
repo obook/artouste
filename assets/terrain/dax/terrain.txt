@@ -1,6 +1,6 @@
-# Terrain Artouste - recadre depuis dax_orig (mode zombie, sous-region)
-# Repere monde identique a la carte source (origin_x/origin_z) : tous les
-# fichiers en coordonnees monde restent valides sans decalage.
+# Terrain Artouste - Dax (l'Adour, les arènes, aérodrome de Seyresse et musée de l'ALAT)
+# Repère monde identique à la carte source (origin_x/origin_z) : tous les
+# fichiers en coordonnées monde restent valides sans décalage.
 cols 431
 rows 282
 width_m 6087.1

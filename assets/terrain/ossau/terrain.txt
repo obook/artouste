@@ -1,12 +1,12 @@
 # Terrain Artouste - vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)
 # Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
 # width_m / height_m : dimensions au sol du maillage, en mètres
-cols 1024
-rows 1024
+cols 2048
+rows 2048
 width_m 17946.1
 height_m 17811.2
 elev_min 0.00
-elev_max 2938.42
+elev_max 2938.71
 lon_min -0.52
 lon_max -0.3
 lat_min 42.8

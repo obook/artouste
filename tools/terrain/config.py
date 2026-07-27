@@ -20,6 +20,36 @@ ALTI_RESOURCE = "ign_rge_alti_wld"
 WMS_URL = "https://data.geopf.fr/wms-r/wms"
 WMS_LAYER = "ORTHOIMAGERY.ORTHOPHOTOS"
 
+# Relief en RASTER : le même service WMS sert la grille d'altitudes sous forme
+# d'image BIL, un flottant 32 bits par point. Une requête rend donc des milliers
+# d'altitudes d'un coup, là où l'API altimétrie ci-dessus en rend 200 au maximum
+# et demande plus d'un millier de requêtes pour une grille 512. On garde l'API
+# comme repli si la couche raster venait à disparaître.
+ALTI_WMS_LAYER = "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES"
+ALTI_WMS_FORMAT = "image/x-bil;bits=32"
+
+# Côté maximal d'une requête de relief raster, en PIXELS demandés. La réponse
+# n'est pas compressée : 2048 de côté font déjà 16 Mo. Au-delà, on découpe.
+ALTI_MAX_PX = 2048
+
+# Suréchantillonnage du relief raster. Le service rééchantillonne AU PLUS PROCHE
+# depuis sa propre pyramide : lui demander exactement un pixel par point de
+# grille lui fait choisir un niveau grossier, et l'altitude rendue s'écarte de
+# plusieurs mètres en forte pente. Mesuré sur un versant d'Ossau, contre l'API
+# altimétrie prise pour référence :
+#
+#     1 pixel par point   7,24 m d'écart moyen
+#     2 x                 3,53 m
+#     4 x                 1,58 m
+#     8 x                 0,81 m
+#
+# On demande donc plus fin que nécessaire et on moyenne soi-même. La moyenne
+# vaut mieux qu'un prélèvement au centre : elle rend l'altitude MOYENNE de la
+# maille, ce que le maillage représente, au lieu d'un point qui peut tomber sur
+# une arête. 4 est le compromis retenu (16 fois plus d'octets pour ramener
+# l'écart sous 2 m) ; 8 quadruple encore le téléchargement pour gagner 0,8 m.
+ALTI_SURECHANTILLONNAGE = 4
+
 # Valeur renvoyée par l'API là où il n'y a pas de donnée terrestre (mer) ; on la
 # ramène au niveau de la mer (0 m).
 NODATA = -1000.0

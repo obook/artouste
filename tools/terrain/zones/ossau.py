@@ -15,7 +15,11 @@ ZONE = {
     # Montagne : on garde les petites constructions (cabanes, bergeries, granges),
     # nombreuses en estive et utiles au repérage, donc seuil de hauteur à 0.
     "height_min": 0.0,
-    "grid": 1024,      # mailles ~17,5 m (défaut 512 pour les autres zones)
+    # Mailles ~8,8 m (défaut 512 pour les autres zones). Le relief est récupéré
+    # en raster, ce qui rend cette finesse abordable ; le moteur n'en dessine que
+    # ce que le budget de sommets autorise (clé relief_sommets_max), mais s'en
+    # sert en entier pour poser l'appareil et porter les hélisurfaces.
+    "grid": 2048,
     "ortho_px": 4970,  # ortho ~3,6 m/px (bbox plus large que haute : largeur WMS
                        # déjà à ~5008 px, tout près de la limite serveur 5010)
     "title": "vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau)",
@@ -36,7 +40,7 @@ ZONE = {
         ("Lac de Bersau", -0.4949, 42.8395),
         # Lieux ajoutés (coordonnées OpenStreetMap).
         ("Barrage d'Artouste", -0.3327, 42.8628),
-        ("Petit train d'Artouste", -0.3428, 42.8758),
+        ("Petit train d'Artouste", -0.335246, 42.864184),
         ("Refuge de Pombie", -0.4269, 42.8355),
         ("Refuge d'Ayous", -0.4912, 42.8484),
         ("Refuge d'Arrémoulit", -0.3292, 42.8460),
@@ -59,7 +63,9 @@ ZONE = {
         ("Refuge de Pombie", -0.4269, 42.8355),
         ("Refuge d'Ayous", -0.4912, 42.8484),
         ("Refuge d'Arrémoulit", -0.3292, 42.8460),
-        ("Barrage d'Artouste", -0.3327, 42.8628),
+        # Sur l'éperon rocheux de la culée ouest, et non sur la crête du barrage :
+        # le disque y débordait sur le lac.
+        ("Barrage d'Artouste", -0.334181, 42.862335),
     ],
     # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
     # media/gt_installation_hapi.pdf) sur le pad de départ (Fabrèges). Azimut

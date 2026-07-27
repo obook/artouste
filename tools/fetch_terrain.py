@@ -17,8 +17,15 @@ outputs) pour garder chaque fichier court et lisible.
 Données : IGN Géoplateforme, Licence Ouverte Etalab 2.0.
 Dépendances : Python 3, Pillow (PIL), NumPy, SciPy. Aucun GDAL requis.
 
-Usage : python3 tools/fetch_terrain.py [zone]   (zone par défaut : ossau)
+Usage : python3 tools/fetch_terrain.py [zone] [--relief-seul]
+        (zone par défaut : ossau)
 Sortie : assets/terrain/<zone>/{heightmap.png, ortho.jpg, terrain.txt, landmarks.txt}
+
+--relief-seul ne refait QUE la carte d'altitude, et met à jour les seules clés
+qui en dépendent (cols, rows, elev_min, elev_max) dans un terrain.txt existant.
+L'orthophoto, le point de départ et les fichiers annexes sont laissés intacts :
+c'est ce qu'il faut pour affiner le relief d'une carte déjà en place sans
+déplacer d'un mètre ce qui a été vérifié dessus.
 
 Auteur : O. Booklage
 Licence : GPL v2
@@ -41,10 +48,50 @@ from terrain.relief import fetch_heightmap, find_flat_start, write_heightmap
 from terrain.zones import DEFAULT_ZONE
 
 
+def maj_relief_seul(elev_min, elev_max):
+    """Réécrit les seules clés de terrain.txt qui dépendent de la grille, en
+       conservant tout le reste ligne par ligne (ortho, point de départ, cap,
+       décalage d'origine, commentaires)."""
+    chemin = os.path.join(config.OUT_DIR, "terrain.txt")
+    remplace = {
+        "cols": str(config.COLS),
+        "rows": str(config.ROWS),
+        "elev_min": f"{elev_min:.2f}",
+        "elev_max": f"{elev_max:.2f}",
+    }
+    with open(chemin, encoding="utf-8") as f:
+        lignes = f.readlines()
+    sorties = []
+    for ligne in lignes:
+        cle = ligne.split(None, 1)[0] if ligne.strip() and not ligne.startswith("#") else None
+        sorties.append(f"{cle} {remplace.pop(cle)}\n" if cle in remplace else ligne)
+    if remplace:
+        raise SystemExit(f"terrain.txt sans les clés {', '.join(remplace)} : "
+                         "régénérer la carte entière plutôt qu'en relief seul.")
+    with open(chemin, "w", encoding="utf-8") as f:
+        f.writelines(sorties)
+    print(f"[meta] {chemin} mis à jour (cols/rows/elev_min/elev_max)")
+
+
 def main():
-    # Zone choisie : premier argument, sinon la zone par défaut.
-    zone = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_ZONE
+    # Zone choisie : premier argument non optionnel, sinon la zone par défaut.
+    options = [a for a in sys.argv[1:] if a.startswith("--")]
+    positionnels = [a for a in sys.argv[1:] if not a.startswith("--")]
+    relief_seul = "--relief-seul" in options
+    if set(options) - {"--relief-seul"}:
+        raise SystemExit(f"option inconnue : {' '.join(set(options) - {'--relief-seul'})}")
+    zone = positionnels[0] if positionnels else DEFAULT_ZONE
     config.select_zone(zone)
+
+    if relief_seul:
+        print(f"[zone] {zone} -> {config.OUT_DIR} (relief seul)")
+        debut = time.time()
+        grille = fetch_heightmap()
+        elev_min, elev_max = write_heightmap(grille)
+        maj_relief_seul(elev_min, elev_max)
+        print(f"[ok] relief refait en {time.time() - debut:.0f} s")
+        return
+
     print(f"[zone] {zone} -> {config.OUT_DIR}")
     os.makedirs(config.OUT_DIR, exist_ok=True)
 

@@ -152,6 +152,10 @@ Application::optionsEffectives(const std::filesystem::path& dossierCarte) const 
 
 void Application::loadTerrain(const std::string& name) {
     m_terrainName = name;
+    /* Le terrain qu'on va bâtir reflétera le disque tel qu'il est maintenant,
+       tuiles comprises : ce qu'a pu faire le gestionnaire de cartes est donc pris
+       en compte, et le drapeau qui le signalait n'a plus lieu d'être. */
+    m_cartesRemaniees = false;
     std::printf("[scène] terrain : %s\n", name.c_str());
     const std::filesystem::path terrainDir = m_assetsDir / "terrain" / name;
 

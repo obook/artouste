@@ -614,6 +614,13 @@ private:
        applyMenuSession). */
     OptionsCarte m_optionsChargees;
 
+    /* Le gestionnaire de cartes a fabriqué ou supprimé des tuiles pendant que la
+       scène était en mémoire. Ni la carte choisie ni son options.txt n'en portent
+       la trace, et pourtant la fenêtre de détail se construit au chargement du
+       terrain : sans ce drapeau, des tuiles fraîchement téléchargées ne
+       s'affichaient qu'au redémarrage du jeu. */
+    bool m_cartesRemaniees = false;
+
     /* --- État de session (menu, pause, plein écran) ---------------------------------------- */
 
     /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend

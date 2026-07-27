@@ -307,8 +307,11 @@ void Application::applyMenuSession() {
         const bool optionsChangees =
             !carteChangee && !m_terrainName.empty() &&
             !(optionsEffectives(m_assetsDir / "terrain" / m_terrainName) == m_optionsChargees);
-        if (carteChangee || optionsChangees) {
-            loadTerrain(m_menuTerrain);
+        /* Un jeu de tuiles fabriqué ou supprimé ne se lit ni dans le nom de la
+           carte ni dans son options.txt, alors qu'il change tout au chargement :
+           le gestionnaire le signale par m_cartesRemaniees. */
+        if (carteChangee || optionsChangees || m_cartesRemaniees) {
+            loadTerrain(m_menuTerrain);  /* remet lui-même le drapeau à faux */
         }
     }
     resetToStart();

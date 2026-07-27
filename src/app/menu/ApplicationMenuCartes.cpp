@@ -277,9 +277,15 @@ void Application::runGestionnaireCartes() {
         return (c.tuilesInachevees && c.finesseTuiles > 0.0f) ? c.finesseTuiles
                                                               : c.interet.visee;
     };
-    const auto lancerFabrication = [&fabrique, &destinationTuiles,
+    /* Les deux actions qui touchent au disque lèvent le même drapeau : la scène
+       peut être en mémoire, avec sa fenêtre de détail construite au chargement, et
+       elle doit être rechargée au prochain lancement. On le lève dès le DÉPART de
+       la fabrication et non à son terme : une fabrication arrêtée en route a tout
+       de même posé ses premières tuiles. */
+    const auto lancerFabrication = [this, &fabrique, &destinationTuiles,
                                     &finesseAFabriquer](EtatCarte& c) {
         fabrique.lancer(c.dossier, destinationTuiles(c), finesseAFabriquer(c));
+        m_cartesRemaniees = true;
     };
     /* N'écrit que les réglages explicitement pris pour cette carte : les autres
        restent absents du fichier et continuent donc de suivre la configuration
@@ -326,11 +332,15 @@ void Application::runGestionnaireCartes() {
         c.tuilesDefinie   = false;
     };
 
-    const auto supprimerTuiles = [](EtatCarte& c) {
+    const auto supprimerTuiles = [this](EtatCarte& c) {
         std::error_code effacement;
         std::filesystem::remove_all(c.dossierTuiles, effacement);
-        c.octetsTuiles = 0;
+        c.octetsTuiles      = 0;
+        c.tuilesPresentes   = 0;
+        c.tuilesInachevees  = false;
+        c.finesseTuiles     = 0.0f;
         c.dossierTuiles.clear();
+        m_cartesRemaniees = true;
     };
 
     bool pvHaut = false, pvBas = false, pvRetour = false, pvArbres = false, pvBatiments = false,

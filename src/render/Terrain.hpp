@@ -20,9 +20,11 @@
 #include "render/Mesh.hpp"
 #include "render/Texture.hpp"
 #include "render/hapi/Hapi.hpp"
+#include "render/tuiles/Fenetre.hpp"
 
 #include <cmath>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -45,8 +47,21 @@ public:
        Le rappel de progression n'est utilisé qu'au tout premier chargement
        d'une carte, quand l'orthophoto doit être compressée avant sa mise en
        cache (voir TextureCache.hpp) : c'est la seule étape assez longue pour
-       mériter d'être montrée. Il peut renvoyer faux pour annuler. */
-    explicit Terrain(const std::filesystem::path& dir, bc7::Progression progression = {});
+       mériter d'être montrée. Il peut renvoyer faux pour annuler.
+
+       fenetreDetailPx fixe le côté de la fenêtre de tuiles fines, si la carte en
+       livre (voir tuiles/Fenetre.hpp) ; 0 y renonce.
+
+       sommetsMax plafonne le nombre de sommets DESSINÉS : au-delà, un point de
+       grille sur deux, sur trois... est retenu pour le maillage. Les altitudes,
+       elles, restent lues en entier par heightAt, qui porte le poser, les
+       plates-formes d'hélisurface et la collision : une carte d'altitude fine
+       améliore donc le vol même quand elle est allégée au dessin. 0 dessine
+       tous les points. */
+    explicit Terrain(const std::filesystem::path& dir,
+                     bc7::Progression             progression     = {},
+                     int                          fenetreDetailPx = tuiles::COTE_FENETRE_PX,
+                     int                          sommetsMax      = 0);
 
     void draw() const { m_mesh.draw(); }
 
@@ -113,6 +128,19 @@ public:
     /* Identifiant OpenGL de l'orthophoto (pour l'afficher dans la minimap). */
     [[nodiscard]] unsigned int orthoTexId() const noexcept { return m_ortho.id(); }
 
+    /* Fenêtres de détail de ce terrain, ou nullptr (voir tuiles/Fenetre.hpp).
+       La première couvre l'emprise de la carte ; la seconde, plus fine, n'existe
+       que là où la carte fournit un niveau serré (abords des aires de poser,
+       fond de vallée). Le rendu s'en sert pour ses uniformes ; tout le reste du
+       moteur peut les ignorer. */
+    [[nodiscard]] const tuiles::Fenetre* detail() const noexcept { return m_detail.get(); }
+    [[nodiscard]] const tuiles::Fenetre* detailFin() const noexcept { return m_detailFin.get(); }
+
+    /* Recentre la fenêtre de détail sur un point du monde (en pratique la
+       caméra) et fait avancer ses chargements. Sans effet si la carte n'a pas
+       de tuiles. À appeler une fois par image. */
+    void suivreDetail(float x, float z, float dt);
+
     /* Lieux remarquables propres à ce terrain (vide si le terrain n'en fournit pas). */
     [[nodiscard]] const std::vector<Landmark>& landmarks() const noexcept { return m_landmarks; }
 
@@ -132,6 +160,10 @@ public:
 
 private:
     void buildFlatFallback();
+    /* Ouvre le jeu de tuiles de détail de la carte, s'il y en a un, et prépare
+       sa fenêtre au côté demandé. Appelée une fois, après l'orthophoto
+       d'ensemble. */
+    void ouvrirDetail(const std::filesystem::path& dir, int fenetrePx);
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
     void
@@ -151,6 +183,11 @@ private:
 
     Mesh m_mesh;
     Texture m_ortho;
+    /* Tuiles fines de la carte, si elle en livre : le niveau large d'abord, le
+       niveau serré ensuite. Non déplaçables (ressources OpenGL et fil de
+       lecture), d'où les pointeurs. */
+    std::unique_ptr<tuiles::Fenetre> m_detail;
+    std::unique_ptr<tuiles::Fenetre> m_detailFin;
     bool m_textured = false;
     /* Rappel de progression de la préparation de l'orthophoto, transmis au
        cache. Vide en dehors du premier chargement d'une carte. */

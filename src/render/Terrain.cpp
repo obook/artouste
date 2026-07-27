@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <utility>
 #include <sstream>
@@ -114,7 +115,10 @@ bool readMetadata(const std::filesystem::path& path,
 
 } /* namespace */
 
-Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
+Terrain::Terrain(const std::filesystem::path& dir,
+                 bc7::Progression             progression,
+                 int                          fenetreDetailPx,
+                 int                          sommetsMax)
     : m_progression(std::move(progression)) {
     const std::filesystem::path meta = dir / "terrain.txt";
     const std::filesystem::path height = dir / "heightmap.png";
@@ -192,10 +196,48 @@ Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
     const float dx = m_widthM / static_cast<float>(m_cols - 1);  /* pas est-ouest (m) */
     const float dz = m_heightM / static_cast<float>(m_rows - 1); /* pas nord-sud (m) */
 
+    /* Points de grille RETENUS pour le maillage. La carte d'altitude peut être
+       plus fine que ce qu'on veut dessiner : doubler sa finesse quadruple le
+       nombre de triangles, ce qu'un GPU intégré ne suit pas, alors que les
+       altitudes elles-mêmes restent utiles en entier pour heightAt (poser,
+       plates-formes, collision). On échantillonne donc le relief pour le dessin
+       sans rien jeter pour la physique.
+
+       Le dernier point de chaque axe est toujours retenu, quitte à raccourcir la
+       dernière maille : les positions se déduisent de l'indice réel, la
+       géométrie reste donc exacte jusqu'au bord de l'emprise. */
+    const auto retenus = [](int nb, int pas) {
+        std::vector<int> pris;
+        pris.reserve(static_cast<std::size_t>(nb / pas + 2));
+        for (int k = 0; k < nb - 1; k += pas) {
+            pris.push_back(k);
+        }
+        pris.push_back(nb - 1);
+        return pris;
+    };
+    /* Pas d'échantillonnage : le plus petit qui tienne dans le budget de
+       sommets. Un pas de s divise leur nombre par s au carré. */
+    int pasMaillage = 1;
+    if (sommetsMax > 0) {
+        const double total = static_cast<double>(m_cols) * static_cast<double>(m_rows);
+        pasMaillage = std::max(1, static_cast<int>(std::ceil(
+                                      std::sqrt(total / static_cast<double>(sommetsMax)))));
+    }
+    const std::vector<int> colonnes    = retenus(m_cols, pasMaillage);
+    const std::vector<int> rangees     = retenus(m_rows, pasMaillage);
+    if (pasMaillage > 1) {
+        std::printf("[Terrain] maillage allégé : 1 point sur %d, %zu x %zu sommets "
+                    "(maille %.0f m au lieu de %.0f m).\n",
+                    pasMaillage,
+                    colonnes.size(),
+                    rangees.size(),
+                    static_cast<double>(dx * static_cast<float>(pasMaillage)),
+                    static_cast<double>(dx));
+    }
+
     primitives::MeshData data;
-    data.vertices.reserve(m_heights.size());
-    data.indices.reserve(static_cast<std::size_t>(m_cols - 1) *
-                         static_cast<std::size_t>(m_rows - 1) * 6);
+    data.vertices.reserve(colonnes.size() * rangees.size());
+    data.indices.reserve((colonnes.size() - 1) * (rangees.size() - 1) * 6);
 
     /* Indice linéaire d'un point (colonne i, rangée j) dans la grille. */
     const auto idx = [cols = m_cols](int i, int j) -> std::size_t {
@@ -212,8 +254,8 @@ Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
        sans rien enlever au relief lui-même. */
     const int step = std::max(1, static_cast<int>(std::lround(35.0f / dx)));
 
-    for (int j = 0; j < m_rows; ++j) {
-        for (int i = 0; i < m_cols; ++i) {
+    for (const int j : rangees) {
+        for (const int i : colonnes) {
             const float x = m_originX - halfW + static_cast<float>(i) * dx;
             const float z =
                 m_originZ - halfH + static_cast<float>(j) * dz; /* rangée 0 = nord (Z min) */
@@ -242,11 +284,13 @@ Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
         }
     }
 
-    for (int j = 0; j < m_rows - 1; ++j) {
-        for (int i = 0; i < m_cols - 1; ++i) {
-            const unsigned int a = static_cast<unsigned int>(j * m_cols + i);
+    /* Les indices portent sur les sommets RETENUS, pas sur la grille d'origine. */
+    const auto largeurMaillage = static_cast<unsigned int>(colonnes.size());
+    for (unsigned int j = 0; j + 1 < rangees.size(); ++j) {
+        for (unsigned int i = 0; i + 1 < largeurMaillage; ++i) {
+            const unsigned int a = j * largeurMaillage + i;
             const unsigned int b = a + 1;
-            const unsigned int c = a + static_cast<unsigned int>(m_cols);
+            const unsigned int c = a + largeurMaillage;
             const unsigned int d = c + 1;
             data.indices.insert(data.indices.end(), {a, c, b, b, c, d});
         }
@@ -269,6 +313,80 @@ Terrain::Terrain(const std::filesystem::path& dir, bc7::Progression progression)
                     static_cast<double>(m_widthM),
                     static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
+        ouvrirDetail(dir, fenetreDetailPx);
+    }
+}
+
+void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx) {
+    if (fenetrePx <= 0) {
+        return;  /* détail fin refusé par la configuration */
+    }
+    const std::filesystem::path candidat = tuiles::cheminJeuDeTuiles(dir);
+    if (!candidat.empty()) {
+        std::vector<tuiles::Pyramide> niveaux = tuiles::ouvrirNiveaux(candidat);
+
+        /* Des tuiles pas plus fines que l'orthophoto déjà chargée n'apporteraient
+           rien et coûteraient de la mémoire vidéo : c'est le cas d'un jeu de
+           tuiles produit à la finesse de la source pour une carte dont
+           l'orthophoto d'ensemble est déjà fine. */
+        const float finesseOrtho = orthoMetersPerPixel();
+        if (finesseOrtho > 0.0f) {
+            const std::size_t avant = niveaux.size();
+            std::erase_if(niveaux, [finesseOrtho](const tuiles::Pyramide& p) {
+                return p.calage().mParPixel > 0.9f * finesseOrtho;
+            });
+            if (niveaux.empty()) {
+                std::printf("[tuiles] %s : aucun niveau plus fin que l'orthophoto "
+                            "(%.2f m/px), fenêtre inutile.\n",
+                            candidat.string().c_str(),
+                            static_cast<double>(finesseOrtho));
+                return;
+            }
+            if (niveaux.size() != avant) {
+                std::printf("[tuiles] %s : %zu niveau(x) écarté(s), pas plus fin(s) que "
+                            "l'orthophoto.\n",
+                            candidat.string().c_str(),
+                            avant - niveaux.size());
+            }
+        }
+
+        /* Deux niveaux au plus, les DEUX PLUS FINS : au-delà, l'orthophoto
+           d'ensemble couvre déjà le lointain, et chaque fenêtre supplémentaire
+           coûterait sa mémoire vidéo pour une distance où l'oeil ne distingue
+           plus rien. Ils sont classés du plus large au plus fin, on garde donc
+           la fin de la liste. */
+        if (niveaux.size() > 2) {
+            niveaux.erase(niveaux.begin(),
+                          niveaux.end() - 2);
+        }
+
+        /* La fenêtre serrée est deux fois plus petite que la large : elle ne sert
+           qu'au ras du sol, où son rayon suffit largement, et la seconde moitié
+           de sa mémoire vidéo serait dépensée pour du terrain que le niveau
+           large couvre déjà correctement. */
+        m_detail = std::make_unique<tuiles::Fenetre>(std::move(niveaux.front()), fenetrePx);
+        if (!m_detail->active()) {
+            m_detail.reset();
+            return;
+        }
+        if (niveaux.size() > 1) {
+            auto serree =
+                std::make_unique<tuiles::Fenetre>(std::move(niveaux.back()),
+                                                  std::max(1024, fenetrePx / 2));
+            if (serree->active()) {
+                m_detailFin = std::move(serree);
+            }
+        }
+        return;
+    }
+}
+
+void Terrain::suivreDetail(float x, float z, float dt) {
+    if (m_detail) {
+        m_detail->suivre(x, z, dt);
+    }
+    if (m_detailFin) {
+        m_detailFin->suivre(x, z, dt);
     }
 }
 

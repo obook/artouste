@@ -119,6 +119,86 @@ Pour ajouter une zone, copier une entrée du dictionnaire `ZONES` en tête du
 script (bornes géographiques, mer ou montagne, point de départ, lieux
 remarquables, hélipads). Voir [TERRAIN.md](TERRAIN.md) pour les détails du pipeline.
 
+## Tuiles de détail (orthophoto fine)
+
+L'orthophoto d'une carte est une seule texture : sa taille en mémoire vidéo
+suit l'emprise du terrain, et c'est ce budget qui plafonne la finesse au sol.
+Sur le bassin d'Arcachon, 35 x 49 km, l'ortho livrée est à 9,8 m/px : vu de
+50 mètres, un pixel de photo couvre dix mètres de sol, le décor est une
+bouillie. Descendre à 1,5 m/px sur cette carte demanderait 780 mégapixels, soit
+780 Mo de mémoire vidéo même en BC7. Impossible.
+
+Le jeu de tuiles lève la contrainte. La même orthophoto fine y est découpée en
+carrés de 512 pixels, compressés en BC7 une fois pour toutes, et le moteur n'en
+tient qu'une fenêtre autour de l'appareil (voir
+`src/render/tuiles/Pyramide.hpp` et `Fenetre.hpp`). La mémoire vidéo devient
+constante -- 89 Mo pour la fenêtre par défaut de 8192 px -- quelle que soit
+l'emprise, et le lointain reste couvert par l'orthophoto d'ensemble, vers
+laquelle le détail se fond progressivement.
+
+### Produire un jeu de tuiles
+
+`tools/terrain/fetch_tuiles.py` récupère l'orthophoto fine auprès de l'IGN et la
+découpe, bloc par bloc, sans jamais tenir la mosaïque entière en mémoire :
+
+```bash
+cmake --build build --target orthotuiles          # une fois
+cd tools
+python3 -m terrain.fetch_tuiles ossau /media/disque/tuiles/ossau \
+        --m-par-pixel 0.75 --reprendre --outil ../build/bin/orthotuiles
+```
+
+C'est long (une vingtaine de secondes par bloc de 9 x 9 tuiles, soit une demi-heure
+pour une carte de montagne), d'où `--reprendre`, qui saute les blocs déjà faits.
+Finesses raisonnables, choisies pour qu'un paquet de carte reste sous le
+gigaoctet :
+
+| Carte | Emprise | Ortho livrée | Tuiles | Disque | Zip |
+|-------|---------|--------------|--------|--------|-----|
+| ossau | 18 x 18 km | 3,6 m/px | 0,75 m/px | 713 Mo | 655 Mo |
+| cauterets, bigorre | ~16 x 22 km | 3,8 - 4,9 m/px | 0,75 m/px | ~0,8 Go | |
+| cote-landes | 16 x 28 km | 3,5 m/px | 0,75 m/px | ~1,1 Go | |
+| arcachon | 36 x 49 km | 9,8 m/px | 1,5 m/px | ~1,0 Go | |
+| bordeaux | 25 x 27 km | 5,3 m/px | 1,0 m/px | ~0,9 Go | |
+| paris | 18 x 10 km | 3,6 m/px | 0,5 m/px | ~0,9 Go | |
+| dax | 6 x 6 km | 0,85 m/px | 0,25 m/px | ~0,8 Go | |
+
+Seule la ligne d'Ossau est mesurée ; les autres sont des estimations à
+1,33 octet par pixel, la densité du BC7 avec ses niveaux de réduction. Le zip ne
+gagne presque rien : des blocs compressés ne se recompressent pas.
+
+L'IGN photographie la France à 0,20 m/px : viser plus fin ne rapporterait rien.
+
+Sur les cartes de montagne, une part des tuiles tombe au-delà de la frontière
+espagnole, hors couverture de la BD ORTHO : sur Ossau, 88 des 2209 tuiles n'ont
+pas été écrites pour cette raison (2121 sur disque), et le moteur y garde
+l'orthophoto d'ensemble.
+
+Un jeu de tuiles n'est pas versionné (donnée dérivée, régénérable, sans commune
+mesure avec le dépôt). Pour l'empaqueter en vue d'une release :
+
+```bash
+cmake -S . -B build -DARTOUSTE_TUILES_DIR=/media/disque/tuiles
+cmake --build build --target tuiles     # écrit build/tuiles-<carte>.zip
+```
+
+### Où le jeu cherche les tuiles
+
+Dans cet ordre :
+
+1. `$ARTOUSTE_TUILES/<carte>/`, si la variable d'environnement est définie ;
+2. `assets/terrain/<carte>/tuiles/`.
+
+Le premier chemin existe pour les gros jeux qu'on préfère garder sur un autre
+disque. Tout est facultatif : carte sans tuiles, dossier absent, tuile manquante
+ou abîmée, pilote sans BC7, `tuiles_fenetre_px 0` dans la configuration -- dans
+tous ces cas le terrain s'affiche avec sa seule orthophoto d'ensemble.
+
+Une tuile hors couverture BD ORTHO (blanc pur, au-delà de la frontière espagnole
+sur les cartes de montagne) n'est volontairement PAS écrite : le moteur y
+retombe sur l'orthophoto d'ensemble, qui a été recousue à la préparation de la
+carte, plutôt que de plaquer un carré blanc sur le paysage.
+
 ## Bâtiments 3D (BD TOPO)
 
 Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur

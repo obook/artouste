@@ -200,6 +200,14 @@ bool Application::mainLoop() {
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);
         advanceRotor(rotorFraction, frameDt);
 
+        /* Tuiles fines : la fenêtre de détail suit la caméra, et non l'appareil,
+           parce que c'est elle qui décide de ce qui est à l'écran (vue orbite
+           lointaine comprise). Hors du test de pause, à dessein : le
+           chargement des tuiles et leur apparition doivent se terminer même si
+           la simulation est figée, sinon le décor resterait flou sous les yeux
+           du joueur. */
+        m_terrain->suivreDetail(m_camera.position().x, m_camera.position().z, frameDt);
+
         renderScene(base,
                     m_rotorAngle,
                     rotorFraction,

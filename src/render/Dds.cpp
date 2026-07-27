@@ -162,7 +162,11 @@ bool ecrire(const std::filesystem::path& chemin, const Image& image, const Empre
     return true;
 }
 
-std::optional<Image> lire(const std::filesystem::path& chemin, const Empreinte& attendue) {
+namespace {
+
+/* Corps commun aux deux lectures. attendue nulle = on ne contrôle pas
+   l'empreinte (texture livrée plutôt que cache, voir Dds.hpp). */
+std::optional<Image> lireImage(const std::filesystem::path& chemin, const Empreinte* attendue) {
     std::ifstream in(chemin, std::ios::binary);
     if (!in) {
         return std::nullopt;
@@ -183,10 +187,12 @@ std::optional<Image> lire(const std::filesystem::path& chemin, const Empreinte& 
         mots[MOT_DXGI] != DXGI_BC7) {
         return std::nullopt;
     }
-    const Empreinte trouvee{lireMot64(mots, MOT_EMPREINTE),
-                            static_cast<std::int64_t>(lireMot64(mots, MOT_EMPREINTE + 2))};
-    if (!(trouvee == attendue)) {
-        return std::nullopt;
+    if (attendue != nullptr) {
+        const Empreinte trouvee{lireMot64(mots, MOT_EMPREINTE),
+                                static_cast<std::int64_t>(lireMot64(mots, MOT_EMPREINTE + 2))};
+        if (!(trouvee == *attendue)) {
+            return std::nullopt;
+        }
     }
 
     Image image;
@@ -217,6 +223,16 @@ std::optional<Image> lire(const std::filesystem::path& chemin, const Empreinte& 
         return std::nullopt;  /* fichier tronqué */
     }
     return image;
+}
+
+}  /* namespace */
+
+std::optional<Image> lire(const std::filesystem::path& chemin, const Empreinte& attendue) {
+    return lireImage(chemin, &attendue);
+}
+
+std::optional<Image> lire(const std::filesystem::path& chemin) {
+    return lireImage(chemin, nullptr);
 }
 
 }  /* namespace artouste::render::dds */

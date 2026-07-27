@@ -49,10 +49,9 @@ constexpr unsigned int GL_COMPRESSED_RGBA_BPTC_UNORM = 0x8E8C;
 #endif
 constexpr unsigned int GL_TEXTURE_COMPRESSED_IMAGE_SIZE_ = 0x86A0;
 
-/* Le pilote annonce-t-il BC7 ? Sans lui, glTexImage2D rejetterait le format
-   interne et la texture serait perdue : on retombe alors sur du RGBA8. La
-   réponse ne change pas d'un appel à l'autre, d'où le calcul unique. */
-bool bptcDisponible() {
+}  /* namespace */
+
+bool bc7Disponible() {
     static const bool dispo = [] {
         int nb = 0;
         glGetIntegerv(GL_NUM_EXTENSIONS, &nb);
@@ -68,8 +67,6 @@ bool bptcDisponible() {
     }();
     return dispo;
 }
-
-}  /* namespace */
 
 Texture::Texture(const std::filesystem::path& path) {
     /* stb_image place l'origine de l'image en haut à gauche, alors qu'OpenGL
@@ -124,7 +121,7 @@ void Texture::upload(const unsigned char* pixels, int width, int height) {
 }
 
 Texture::Texture(const dds::Image& blocsBc7) {
-    if (blocsBc7.niveaux.empty() || blocsBc7.donnees.empty() || !bptcDisponible()) {
+    if (blocsBc7.niveaux.empty() || blocsBc7.donnees.empty() || !bc7Disponible()) {
         return;
     }
     m_width  = blocsBc7.largeur;

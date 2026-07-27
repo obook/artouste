@@ -76,4 +76,10 @@ bool ecrire(const std::filesystem::path& chemin, const Image& image, const Empre
 [[nodiscard]] std::optional<Image> lire(const std::filesystem::path& chemin,
                                         const Empreinte&             attendue);
 
+/* Même lecture, sans contrôle d'empreinte : sert aux textures LIVRÉES avec une
+   carte (tuiles de détail, voir tuiles/Pyramide.hpp), qui ne sont pas un cache
+   dérivé d'une source locale mais la donnée elle-même. Rien à quoi comparer une
+   empreinte, donc rien à périmer. */
+[[nodiscard]] std::optional<Image> lire(const std::filesystem::path& chemin);
+
 }  /* namespace artouste::render::dds */

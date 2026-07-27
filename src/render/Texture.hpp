@@ -18,6 +18,13 @@
 
 namespace artouste::render {
 
+/* Le pilote annonce-t-il BC7 (GL_ARB_texture_compression_bptc) ? Sans lui, un
+   format interne compressé est rejeté et la texture est perdue : les appelants
+   retombent alors sur du RGBA8 (orthophoto d'ensemble) ou renoncent au détail
+   (fenêtre de tuiles). La réponse ne change pas d'un appel à l'autre, elle est
+   donc calculée une seule fois. Demande un contexte OpenGL courant. */
+[[nodiscard]] bool bc7Disponible();
+
 class Texture {
 public:
     Texture() = default;

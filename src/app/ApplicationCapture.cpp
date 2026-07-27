@@ -26,11 +26,13 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace artouste::app {
@@ -243,6 +245,33 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     if (const char* e = std::getenv("ARTOUSTE_SHOT_ROTORANGLE")) {
         shotRotorAngle = std::strtof(e, nullptr);
     }
+    /* Tuiles de détail : en vol elles arrivent au fil des images, mais une
+       capture n'en rend que trois. On laisse donc la fenêtre se remplir avant de
+       photographier, sinon la carte serait immortalisée floue -- exactement ce
+       qu'on cherche à vérifier. Plafond de temps pour ne jamais bloquer : une
+       carte sans tuiles, ou un disque absent, ne doit pas empêcher la capture.
+       Un dt généreux fait aussi terminer les fondus d'un coup. */
+    if (m_terrain->detail() != nullptr) {
+        const render::tuiles::Fenetre* large = m_terrain->detail();
+        const render::tuiles::Fenetre* serree = m_terrain->detailFin();
+        for (int i = 0; i < 400; ++i) {
+            /* Le suivi d'abord : c'est lui qui recense les tuiles attendues, et
+               le compte partirait de zéro si on le testait avant. */
+            m_terrain->suivreDetail(m_camera.position().x, m_camera.position().z, 1.0f);
+            if (large->stabilisee() && (serree == nullptr || serree->stabilisee())) {
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        std::printf("[capture] tuiles de détail : %d / %d en place",
+                    large->residentes(),
+                    large->attendues());
+        if (serree != nullptr) {
+            std::printf(", niveau serré %d / %d", serree->residentes(), serree->attendues());
+        }
+        std::printf(".\n");
+    }
+
     for (int i = 0; i < 3; ++i) {
         /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
            0,1 s tombe dans la phase allumée du flash). */

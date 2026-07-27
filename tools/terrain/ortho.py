@@ -93,6 +93,14 @@ def _request_tile(lat_lo, lon_lo, lat_hi, lon_hi, width, height):
     raise RuntimeError(f"tuile WMS {width}x{height} : échec après plusieurs essais ({last_err})")
 
 
+def request_map(lat_lo, lon_lo, lat_hi, lon_hi, width, height):
+    """Une requête WMS GetMap, exposée aux outils qui composent eux-mêmes leur
+       mosaïque au lieu de laisser fetch_ortho l'assembler en mémoire : c'est le
+       cas du découpage en tuiles de détail, dont la mosaïque complète tiendrait
+       des centaines de mégapixels (voir fetch_tuiles.py)."""
+    return _request_tile(lat_lo, lon_lo, lat_hi, lon_hi, width, height)
+
+
 def _tile_edges(total_px, max_px):
     """Découpe [0, total_px) en tranches contiguës d'au plus max_px pixels."""
     n = math.ceil(total_px / max_px)

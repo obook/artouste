@@ -1,6 +1,7 @@
 # Tests Catch2 du simulateur : vol (arcade, modèle physique, assistance),
-# atterrissage automatique, configuration, tampon audio et mode zombie
-# (combat, découpé par sous-système en plusieurs fichiers ci-dessous).
+# atterrissage automatique, configuration, tampon audio, cache de textures,
+# tuiles d'orthophoto et mode zombie (combat, découpé par sous-système en
+# plusieurs fichiers ci-dessous).
 
 find_package(Threads REQUIRED)
 
@@ -18,6 +19,7 @@ add_executable(artouste_tests
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
     texture_cache_tests.cpp
+    ortho_tiles_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
@@ -34,6 +36,7 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Dds.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Bc7.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/tuiles/Pyramide.cpp
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).

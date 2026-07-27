@@ -87,6 +87,33 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         if (m_terrainDetail) {
             m_terrainDetail->bind(1);
         }
+
+        /* Tuiles fines autour de la caméra, si la carte en livre : niveau large
+           sur les unités 2 et 3, niveau serré sur les unités 4 et 5. Une taille
+           de fenêtre nulle éteint le niveau côté shader, ce qui est le cas
+           normal d'une carte sans tuiles : il n'y a alors ni texture à attacher
+           ni autre uniforme à renseigner. */
+        const auto reglerNiveau = [this](const render::tuiles::Fenetre* fenetre,
+                                         const char*                   prefixe,
+                                         unsigned int                  uniteTuiles,
+                                         unsigned int                  uniteMasque) {
+            const std::string base = std::string("u_") + prefixe;
+            m_terrainShader->setInt(base, static_cast<int>(uniteTuiles));
+            m_terrainShader->setInt(base + "Masque", static_cast<int>(uniteMasque));
+            if (fenetre == nullptr) {
+                m_terrainShader->setFloat(base + "TailleM", 0.0f);
+                return;
+            }
+            fenetre->bind(uniteTuiles, uniteMasque);
+            m_terrainShader->setVec2(base + "Ancre", vec2{fenetre->ancreX(), fenetre->ancreZ()});
+            m_terrainShader->setFloat(base + "TailleM", fenetre->tailleM());
+            m_terrainShader->setFloat(base + "MPP", fenetre->mParPixel());
+            m_terrainShader->setFloat(base + "Plein", fenetre->rayonPleinM());
+            m_terrainShader->setFloat(base + "Fondu", fenetre->rayonFonduM());
+        };
+        reglerNiveau(m_terrain->detail(), "fine", 2, 3);
+        reglerNiveau(m_terrain->detailFin(), "serre", 4, 5);
+
         m_terrain->bindTexture(0);
         m_terrain->draw();
     } else {

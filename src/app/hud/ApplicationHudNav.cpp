@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <vector>
 
 namespace artouste::app {
 
@@ -45,6 +46,19 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
     /* Étiquette 3D + point minimap d'un lieu (nom + position WGS84), s'il tombe dans
        l'emprise du terrain courant. Projetée légèrement au-dessus du sol. */
     const mat4 viewProj = m_camera.proj() * m_camera.view();
+
+    /* Étiquettes ayant adopté une balise HAPI, et leur distance à celle-ci. Une
+       balise n'en éclaire qu'une seule, choisie plus bas : le lieu nommé et
+       l'hélisurface qui le sert sont deux étiquettes distinctes, séparées de
+       quelques dizaines de mètres (70 m à l'aérodrome de Dax), et les colorer
+       toutes les deux ferait croire à deux systèmes HAPI là où il n'y en a qu'un. */
+    struct AdoptionHapi {
+        const render::HapiUnit* balise = nullptr;
+        float                   dist   = 0.0f;
+        std::size_t             label  = 0;
+    };
+    std::vector<AdoptionHapi> adoptions;
+
     const auto addLabel = [&](const render::Landmark& place, const char* displayName,
                               bool generic) {
         float x = 0.0f, z = 0.0f;
@@ -84,12 +98,11 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         /* Pad équipé d'une balise HAPI toute proche (voir hapiUnitNear) : le point
            de l'étiquette adopte la couleur/clignotement de la balise plutôt que sa
            couleur par défaut (cyan générique ou doré pour un lieu nommé), pour lire
-           la pente d'approche sans chercher la lueur au sol. Vaut aussi pour un lieu
-           nommé qui coïncide avec le pad (l'aérodrome de Dax-Seyresse, par exemple) :
-           sinon son point doré fixe resterait affiché à la place du vert/rouge HAPI,
-           qui ne doit jamais laisser paraître d'ambre. Même calcul (secteur +
-           clignotement) que la lueur 3D (Application::drawHapi), pour rester en phase
-           avec elle. */
+           la pente d'approche sans chercher la lueur au sol. Même calcul (secteur +
+           clignotement) que la lueur 3D (Application::drawHapi), pour rester en
+           phase avec elle. L'adoption n'est ici que NOTÉE : plusieurs étiquettes
+           voisines revendiquent la même balise, et il faut les avoir toutes posées
+           pour savoir laquelle est la plus proche. Le partage se fait plus bas. */
         if (const render::HapiUnit* hapi = m_terrain->hapiUnitNear(place.lon, place.lat, 100.0f)) {
             float hx = 0.0f, hz = 0.0f;
             m_terrain->worldAt(hapi->lon, hapi->lat, hx, hz);
@@ -102,6 +115,8 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
             label.hasHapi   = true;
             label.hapiGreen = glow.green;
             label.hapiOff   = glow.off;
+            adoptions.push_back({hapi, std::sqrt((x - hx) * (x - hx) + (z - hz) * (z - hz)),
+                                 hud.labels.size()});
         }
 
         const float y    = altSol + 25.0f;
@@ -135,6 +150,23 @@ void Application::buildNavHud(ui::HudData& hud, const vec3& heliPos, float headi
         }
         for (const render::Landmark& pad : m_terrain->helipads()) {
             addLabel(pad, "Hélisurface", true);
+        }
+    }
+
+    /* Une balise, une étiquette : celle qui est posée dessus. Les autres reprennent
+       leur couleur ordinaire. À égalité de distance -- un pad exactement sur un
+       lieu nommé, comme à Fabrèges -- elle revient à la DERNIÈRE inscrite, donc à
+       l'hélisurface : les deux points se superposent alors à l'écran, et c'est le
+       sien qui est dessiné par-dessus (Hud::renderLabels trace les lieux nommés
+       d'abord). La donner au lieu nommé reviendrait à cacher le vert/rouge sous le
+       cyan du pad. */
+    for (const AdoptionHapi& a : adoptions) {
+        for (const AdoptionHapi& autre : adoptions) {
+            if (autre.balise == a.balise && autre.label != a.label &&
+                (autre.dist < a.dist || (autre.dist == a.dist && autre.label > a.label))) {
+                hud.labels[a.label].hasHapi = false;
+                break;
+            }
         }
     }
 

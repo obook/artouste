@@ -80,11 +80,19 @@ struct Estimation {
 
 /* Bornes de la finesse des tuiles, en mètres par pixel. La plus fine est celle de
    la source : la BD ORTHO de l'IGN est à 20 cm, en demander davantage ne ferait
-   qu'agrandir les mêmes pixels. La plus grossière est le compromis des cartes
-   d'ensemble, dont l'orthophoto tourne autour de 3 à 5 m/px : plus fin leur
-   coûterait des gigaoctets pour du terrain qu'on ne fait que survoler. */
+   qu'agrandir les mêmes pixels.
+
+   La plus grossière est celle que reçoivent toutes les grandes cartes, dont le
+   tiers d'orthophoto tombe bien au-delà : c'est donc elle, et non le rapport, qui
+   décide de ce qu'on voit au ras du sol sur ossau, cote-landes ou arcachon.
+
+   Elle vaut 0,25 m/px, soit 64 % de l'information que porte la source : un pixel
+   couvre 1,6 fois la surface du pixel IGN, contre 6 fois à 0,50 et 14 fois à
+   0,75, les deux valeurs essayées avant. Le prix est connu et assumé : une carte
+   de montagne pèse alors 7 Go et demande près de trois heures de fabrication, à
+   deux tuiles par seconde. */
 inline constexpr float FINESSE_LA_PLUS_FINE      = 0.20f;
-inline constexpr float FINESSE_LA_PLUS_GROSSIERE = 0.75f;
+inline constexpr float FINESSE_LA_PLUS_GROSSIERE = 0.25f;
 
 /* Gain visé sur l'orthophoto d'ensemble, et gain en deçà duquel la fabrication
    ne vaut pas d'être proposée. Trois fois plus fin se voit d'emblée au ras du

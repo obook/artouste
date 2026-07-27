@@ -80,11 +80,24 @@ TEST_CASE("une carte d'ensemble reçoit la finesse de compromis") {
     CHECK(i.vaut);
 }
 
-TEST_CASE("une carte déjà fine reçoit trois fois mieux que son orthophoto") {
-    /* 6 km pour 7200 px : 0,85 m/px. Le compromis de 0,75 m/px n'y changerait
-       rien de visible, et c'était le défaut avant que la finesse s'adapte. */
+TEST_CASE("une carte d'aérodrome reçoit elle aussi la borne") {
+    /* 6 km pour 7200 px : 0,85 m/px. Son tiers, 0,28 m/px, reste plus grossier
+       que la borne : c'est encore elle qui l'emporte. La carte a malgré tout de
+       quoi gagner, et la fabrication doit rester proposée. */
     const DossierTemporaire dossier("artouste_finesse_aerodrome");
     ecrireCarte(dossier.chemin(), 6100.0f, 7200);
+
+    const Interet i = interet(dossier.chemin());
+    CHECK(i.visee == FINESSE_LA_PLUS_GROSSIERE);
+    CHECK(i.vaut);
+}
+
+TEST_CASE("le tiers l'emporte quand l'orthophoto approche la borne") {
+    /* 2 km pour 3000 px : 0,67 m/px. Son tiers, 0,22 m/px, tombe entre les deux
+       bornes : c'est le seul cas où le rapport décide, et il vaut alors
+       exactement le gain visé. */
+    const DossierTemporaire dossier("artouste_finesse_tiers");
+    ecrireCarte(dossier.chemin(), 2000.0f, 3000);
 
     const Interet i = interet(dossier.chemin());
     CHECK(i.visee < FINESSE_LA_PLUS_GROSSIERE);

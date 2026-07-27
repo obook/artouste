@@ -96,23 +96,6 @@ namespace {
     return tampon;
 }
 
-/* Écrit le options.txt d'une carte. Les deux clés y sont toujours, pour que le
-   fichier se relise et s'édite à la main sans surprise. */
-bool ecrireOptionsCarte(const std::filesystem::path& dossier, bool arbres, bool batiments,
-                        bool tuiles) {
-    std::ofstream out(dossier / "options.txt", std::ios::trunc);
-    if (!out) {
-        return false;
-    }
-    out << "# Options de la carte, écrites par le gestionnaire de cartes.\n";
-    out << "# Le moteur les relit au chargement ; une clé retirée rend la main à\n";
-    out << "# la configuration générale (assets/config.txt).\n";
-    out << "arbres " << (arbres ? 1 : 0) << "\n";
-    out << "batiments " << (batiments ? 1 : 0) << "\n";
-    out << "tuiles " << (tuiles ? 1 : 0) << "\n";
-    return out.good();
-}
-
 }  /* namespace */
 
 std::vector<Application::EtatCarte>
@@ -126,7 +109,7 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
         etat.titre            = carte.title;
         etat.dossier          = dossier;
         etat.octetsBatiments  = tailleFichier(dossier / "buildings.bin");
-        etat.dossierTuiles    = render::tuiles::cheminJeuDeTuiles(dossier);
+        etat.dossierTuiles    = render::tuiles::cheminJeuDeTuiles(dossier, racineTuiles());
         etat.octetsTuiles     = tailleDossier(etat.dossierTuiles);
         /* Le socle, c'est tout ce que porte le dossier de la carte, moins les
            bâtiments comptés à part et moins les tuiles si elles y sont rangées. */
@@ -155,11 +138,14 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
             }
             const bool oui = !(valeur == "0" || valeur == "non" || valeur == "false");
             if (cle == "arbres") {
-                etat.arbres = oui;
+                etat.arbres       = oui;
+                etat.arbresDefini = true;
             } else if (cle == "batiments") {
-                etat.batiments = oui;
+                etat.batiments       = oui;
+                etat.batimentsDefini = true;
             } else if (cle == "tuiles") {
-                etat.tuiles = oui;
+                etat.tuiles        = oui;
+                etat.tuilesDefinie = true;
             }
         }
         etats.push_back(std::move(etat));
@@ -200,19 +186,61 @@ void Application::runGestionnaireCartes() {
        ira les chercher (ARTOUSTE_TUILES, ou la carte elle-même). Calculée par une
        seule fonction, car l'annonce doit nommer EXACTEMENT le dossier que le
        lancement va remplir. */
-    const auto destinationTuiles = [](const EtatCarte& c) {
+    const auto destinationTuiles = [this](const EtatCarte& c) {
         if (!c.dossierTuiles.empty()) {
             return c.dossierTuiles;
         }
-        if (const char* racine = std::getenv("ARTOUSTE_TUILES");
-            racine != nullptr && racine[0] != '\0') {
-            return std::filesystem::path(racine) / c.dir;
-        }
-        return c.dossier / "tuiles";
+        const std::filesystem::path racine = racineTuiles();
+        return racine.empty() ? c.dossier / "tuiles" : racine / c.dir;
     };
     const auto lancerFabrication = [&fabrique, &finesse, &destinationTuiles](EtatCarte& c) {
         fabrique.lancer(c.dossier, destinationTuiles(c), finesse);
     };
+    /* N'écrit que les réglages explicitement pris pour cette carte : les autres
+       restent absents du fichier et continuent donc de suivre la configuration
+       générale. */
+    const auto ecrireOptions = [](const EtatCarte& c) {
+        if (!c.arbresDefini && !c.batimentsDefini && !c.tuilesDefinie) {
+            std::error_code ec;
+            std::filesystem::remove(c.dossier / "options.txt", ec);
+            return;
+        }
+        std::ofstream out(c.dossier / "options.txt", std::ios::trunc);
+        if (!out) {
+            return;
+        }
+        out << "# Options de la carte, écrites par le gestionnaire de cartes.\n";
+        out << "# Le moteur les relit au chargement ; une clé absente rend la main à\n";
+        out << "# la configuration générale (assets/config.txt).\n";
+        if (c.arbresDefini) {
+            out << "arbres " << (c.arbres ? 1 : 0) << "\n";
+        }
+        if (c.batimentsDefini) {
+            out << "batiments " << (c.batiments ? 1 : 0) << "\n";
+        }
+        if (c.tuilesDefinie) {
+            out << "tuiles " << (c.tuiles ? 1 : 0) << "\n";
+        }
+    };
+
+    /* Ce que vaut un réglage qu'aucune carte n'a pris pour elle : même calcul que
+       dans inventorierCartes, dont il doit rester le reflet exact. */
+    const bool arbresGeneral = m_config.trees && std::getenv("ARTOUSTE_NO_TREES") == nullptr;
+
+    /* Rend ses trois réglages à la configuration générale : le fichier de la
+       carte disparaît, et elle suivra de nouveau tout changement commun. Sans
+       cela, un réglage pris une fois l'était pour toujours. */
+    const auto rendreAuDefaut = [arbresGeneral](EtatCarte& c) {
+        std::error_code ec;
+        std::filesystem::remove(c.dossier / "options.txt", ec);
+        c.arbres          = arbresGeneral;
+        c.arbresDefini    = false;
+        c.batiments       = true;
+        c.batimentsDefini = false;
+        c.tuiles          = true;
+        c.tuilesDefinie   = false;
+    };
+
     const auto supprimerTuiles = [](EtatCarte& c) {
         std::error_code effacement;
         std::filesystem::remove_all(c.dossierTuiles, effacement);
@@ -221,7 +249,7 @@ void Application::runGestionnaireCartes() {
     };
 
     bool pvHaut = false, pvBas = false, pvRetour = false, pvArbres = false, pvBatiments = false,
-         pvTuiles = false, pvValider = false, pvSupprimer = false;
+         pvTuiles = false, pvValider = false, pvSupprimer = false, pvRendre = false;
     const auto edge = [](bool actuel, bool& precedent) {
         const bool front = actuel && !precedent;
         precedent        = actuel;
@@ -250,6 +278,7 @@ void Application::runGestionnaireCartes() {
         const bool bascArbres    = glfwGetKey(m_window, input::toucheImprimant('a')) == GLFW_PRESS;
         const bool bascBatiments = glfwGetKey(m_window, input::toucheImprimant('b')) == GLFW_PRESS;
         const bool bascTuiles    = glfwGetKey(m_window, input::toucheImprimant('t')) == GLFW_PRESS;
+        const bool rendre        = glfwGetKey(m_window, input::toucheImprimant('r')) == GLFW_PRESS;
 
         const bool frontRetour    = edge(retour, pvRetour);
         const bool frontValider   = edge(valider, pvValider);
@@ -257,6 +286,7 @@ void Application::runGestionnaireCartes() {
         const bool frontArbres    = edge(bascArbres, pvArbres);
         const bool frontBatiments = edge(bascBatiments, pvBatiments);
         const bool frontTuiles    = edge(bascTuiles, pvTuiles);
+        const bool frontRendre    = edge(rendre, pvRendre);
         const bool frontHaut      = edge(haut, pvHaut);
         const bool frontBas       = edge(bas, pvBas);
 
@@ -306,22 +336,25 @@ void Application::runGestionnaireCartes() {
                 aSupprimer = static_cast<int>(selection);
             }
             if (frontArbres) {
-                courante.arbres = !courante.arbres;
-                ecrireOptionsCarte(courante.dossier, courante.arbres, courante.batiments,
-                                   courante.tuiles);
+                courante.arbres       = !courante.arbres;
+                courante.arbresDefini = true;
+                ecrireOptions(courante);
             }
             if (frontBatiments) {
-                courante.batiments = !courante.batiments;
-                ecrireOptionsCarte(courante.dossier, courante.arbres, courante.batiments,
-                                   courante.tuiles);
+                courante.batiments       = !courante.batiments;
+                courante.batimentsDefini = true;
+                ecrireOptions(courante);
+            }
+            if (frontRendre) {
+                rendreAuDefaut(courante);
             }
             /* Éteindre les tuiles n'a de sens que si la carte en a : sinon la
                touche écrirait une option sans effet, et l'écran afficherait un
                état que rien ne justifie. */
             if (frontTuiles && courante.octetsTuiles > 0) {
-                courante.tuiles = !courante.tuiles;
-                ecrireOptionsCarte(courante.dossier, courante.arbres, courante.batiments,
-                                   courante.tuiles);
+                courante.tuiles        = !courante.tuiles;
+                courante.tuilesDefinie = true;
+                ecrireOptions(courante);
             }
         }
 
@@ -339,6 +372,13 @@ void Application::runGestionnaireCartes() {
         const ImVec2 centre(ImGui::GetIO().DisplaySize.x * 0.5f,
                             ImGui::GetIO().DisplaySize.y * 0.5f);
         ImGui::SetNextWindowPos(centre, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        /* Largeur figée, hauteur libre : sans cela la fenêtre s'ajuste au texte le
+           plus long et bondit d'une carte à l'autre, au gré de la longueur des
+           titres et des chemins. Les lignes variables passent à la ligne plus
+           bas plutôt que d'élargir l'écran. */
+        const float largeur = ui::hud_widgets::sc(780.0f);
+        ImGui::SetNextWindowSizeConstraints(ImVec2(largeur, 0.0f),
+                                            ImVec2(largeur, ImGui::GetIO().DisplaySize.y));
         ImGui::Begin("Artouste -- cartes",
                      nullptr,
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
@@ -446,13 +486,32 @@ void Application::runGestionnaireCartes() {
            du même instant. */
         const fab::Avancement av = fabrique.avancement();
         const EtatCarte&      c  = cartes[selection];
-        ImGui::Text("%s -- %s", c.dir.c_str(), c.titre.c_str());
+        ImGui::TextWrapped("%s -- %s", c.dir.c_str(), c.titre.c_str());
         /* Pendant une fabrication et tant que son compte rendu est affiché,
            l'inventaire date d'avant : taire cette ligne plutôt qu'annoncer
            "pas de tuiles" juste au-dessus d'un "terminé, 2371 tuiles". */
         if (!fabrique.enCours() && !av.termine) {
+            /* Ce qui n'a pas été réglé pour cette carte suit la configuration
+               générale : le dire, sinon rien ne distingue un choix pris ici d'une
+               valeur héritée, et on ne saurait pas ce qu'un changement général
+               viendrait encore modifier. */
+            std::string herites;
+            if (!c.arbresDefini) {
+                herites += "arbres";
+            }
+            if (!c.batimentsDefini) {
+                herites += herites.empty() ? "bâtiments" : ", bâtiments";
+            }
+            if (!c.tuilesDefinie && c.octetsTuiles > 0) {
+                herites += herites.empty() ? "tuiles" : ", tuiles";
+            }
+            if (!herites.empty()) {
+                ImGui::TextDisabled("Suit la configuration générale : %s", herites.c_str());
+            }
             if (c.octetsTuiles > 0) {
-                ImGui::TextDisabled("Tuiles : %s", c.dossierTuiles.string().c_str());
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+                ImGui::TextWrapped("Tuiles : %s", c.dossierTuiles.string().c_str());
+                ImGui::PopStyleColor();
             } else {
                 ImGui::TextDisabled("Pas de tuiles de détail : le sol reste flou au ras du sol.");
             }
@@ -556,47 +615,66 @@ void Application::runGestionnaireCartes() {
                 aSupprimer = -1;
             }
         } else {
-            if (ImGui::Button(cartes[selection].arbres ? "Arbres : oui" : "Arbres : non",
+            /* Deux rangées, et les MÊMES boutons quelle que soit la carte : ceux
+               qui ne s'appliquent pas sont grisés plutôt que retirés. La fenêtre
+               s'ajuste à son contenu, si bien que faire apparaître des boutons
+               sur une carte tuilée la faisait bondir en largeur d'un tiers à
+               chaque déplacement dans la liste. Les libellés ne rappellent plus
+               leur touche : la ligne d'aide, juste en dessous, les donne toutes.
+
+               Première rangée : ce qui se règle carte par carte. */
+            EtatCarte& choisie = cartes[selection];
+            if (ImGui::Button(choisie.arbres ? "Arbres : oui" : "Arbres : non",
                               ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
-                cartes[selection].arbres = !cartes[selection].arbres;
-                ecrireOptionsCarte(cartes[selection].dossier, cartes[selection].arbres,
-                                   cartes[selection].batiments, cartes[selection].tuiles);
+                choisie.arbres       = !choisie.arbres;
+                choisie.arbresDefini = true;
+                ecrireOptions(choisie);
             }
             ImGui::SameLine();
-            if (ImGui::Button(cartes[selection].batiments ? "Bâtiments : oui" : "Bâtiments : non",
+            if (ImGui::Button(choisie.batiments ? "Bâtiments : oui" : "Bâtiments : non",
                               ImVec2(ui::hud_widgets::sc(170.0f), 0.0f))) {
-                cartes[selection].batiments = !cartes[selection].batiments;
-                ecrireOptionsCarte(cartes[selection].dossier, cartes[selection].arbres,
-                                   cartes[selection].batiments, cartes[selection].tuiles);
+                choisie.batiments       = !choisie.batiments;
+                choisie.batimentsDefini = true;
+                ecrireOptions(choisie);
             }
-            if (cartes[selection].octetsTuiles > 0) {
-                ImGui::SameLine();
-                if (ImGui::Button(cartes[selection].tuiles ? "Tuiles : oui" : "Tuiles : non",
-                                  ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
-                    cartes[selection].tuiles = !cartes[selection].tuiles;
-                    ecrireOptionsCarte(cartes[selection].dossier, cartes[selection].arbres,
-                                       cartes[selection].batiments, cartes[selection].tuiles);
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Supprimer les tuiles (Suppr)",
-                                  ImVec2(ui::hud_widgets::sc(260.0f), 0.0f))) {
-                    aSupprimer = static_cast<int>(selection);
-                }
-            }
-            /* Fabriquer : proposé quand la carte n'a pas encore ses tuiles, ou
-               pour compléter un jeu interrompu. Sans libcurl, on le dit plutôt
-               que d'afficher un bouton sans effet. */
             ImGui::SameLine();
-            if (!fab::reseauDisponible()) {
-                ImGui::TextDisabled("(compilé sans réseau)");
-            } else if (ImGui::Button("Fabriquer les tuiles (Entrée)",
-                                     ImVec2(ui::hud_widgets::sc(260.0f), 0.0f))) {
-                estimation = fab::estimer(cartes[selection].dossier, finesse);
+            ImGui::BeginDisabled(choisie.octetsTuiles == 0);
+            if (ImGui::Button(choisie.tuiles ? "Tuiles : oui" : "Tuiles : non",
+                              ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
+                choisie.tuiles        = !choisie.tuiles;
+                choisie.tuilesDefinie = true;
+                ecrireOptions(choisie);
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            ImGui::BeginDisabled(!choisie.arbresDefini && !choisie.batimentsDefini &&
+                                 !choisie.tuilesDefinie);
+            if (ImGui::Button("Réglages par défaut", ImVec2(ui::hud_widgets::sc(200.0f), 0.0f))) {
+                rendreAuDefaut(choisie);
+            }
+            ImGui::EndDisabled();
+
+            /* Seconde rangée : ce qui touche au disque, et la sortie. */
+            ImGui::BeginDisabled(!fab::reseauDisponible());
+            if (ImGui::Button("Fabriquer les tuiles",
+                              ImVec2(ui::hud_widgets::sc(200.0f), 0.0f))) {
+                estimation = fab::estimer(choisie.dossier, finesse);
                 aFabriquer = static_cast<int>(selection);
             }
+            ImGui::EndDisabled();
             ImGui::SameLine();
-            if (ImGui::Button("Retour", ImVec2(ui::hud_widgets::sc(120.0f), 0.0f))) {
+            ImGui::BeginDisabled(choisie.octetsTuiles == 0);
+            if (ImGui::Button("Supprimer les tuiles",
+                              ImVec2(ui::hud_widgets::sc(200.0f), 0.0f))) {
+                aSupprimer = static_cast<int>(selection);
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Retour", ImVec2(ui::hud_widgets::sc(150.0f), 0.0f))) {
                 fini = true;
+            }
+            if (!fab::reseauDisponible()) {
+                ImGui::TextDisabled("Compilé sans libcurl : la fabrication est indisponible.");
             }
         }
 
@@ -604,7 +682,7 @@ void Application::runGestionnaireCartes() {
         ImGui::TextDisabled("Flèches : choisir   Entrée : fabriquer les tuiles   "
                             "Suppr : les supprimer");
         ImGui::TextDisabled("A : arbres   B : bâtiments   T : allumer ou éteindre les tuiles   "
-                            "Échap : retour");
+                            "R : réglages par défaut   Échap : retour");
         ImGui::TextDisabled("Les arbres n'occupent aucun disque : ils coûtent des images par "
                             "seconde, pas des mégaoctets.");
         ImGui::End();

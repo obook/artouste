@@ -257,10 +257,13 @@ Estimation estimer(const std::filesystem::path& dossierCarte, float mParPixel) {
     const double minutesMachine =
         static_cast<double>(g.colonnes) * static_cast<double>(g.rangees) /
         (TUILES_PAR_SECONDE * 60.0);
-    const double minutes = std::max(std::max(minutesLigne, minutesMachine), 1.0);
+    /* Arrondi AVANT de choisir l'unité : sans cela 59,7 minutes s'afficheraient
+       "environ 60 minutes", une durée qui se dit en heures. */
+    const double minutes =
+        std::round(std::max(std::max(minutesLigne, minutesMachine), 1.0));
 
     char duree[64];
-    if (minutes >= 90.0) {
+    if (minutes >= 60.0) {
         std::snprintf(duree, sizeof(duree), "environ %.0f h %02.0f", std::floor(minutes / 60.0),
                       minutes - 60.0 * std::floor(minutes / 60.0));
     } else {

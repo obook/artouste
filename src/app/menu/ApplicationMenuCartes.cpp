@@ -117,12 +117,14 @@ namespace {
     return tampon;
 }
 
-/* Durée restante lisible : en heures dès qu'elle dépasse l'heure et demie, comme
-   l'annonce d'avant lancement. "112 minutes" se compte mal. */
+/* Durée restante lisible : en heures dès la soixantième minute, comme l'annonce
+   d'avant lancement. Au-delà de l'heure on ne compte plus en minutes, "112
+   minutes" se compte mal. L'arrondi précède le choix de l'unité, sans quoi 59,7
+   minutes s'afficheraient "60 minutes". */
 [[nodiscard]] std::string formaterDuree(double secondes) {
     char         tampon[32];
-    const double minutes = secondes / 60.0;
-    if (minutes >= 90.0) {
+    const double minutes = std::round(secondes / 60.0);
+    if (minutes >= 60.0) {
         std::snprintf(tampon, sizeof(tampon), "%.0f h %02.0f", std::floor(minutes / 60.0),
                       minutes - 60.0 * std::floor(minutes / 60.0));
     } else {

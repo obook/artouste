@@ -522,7 +522,10 @@ private:
 
     ui::Hud m_hud;
     audio::AudioEngine m_audio;
-    int m_viewMode = 0; /* 0 poursuite, 1 cockpit, 2 orbite */
+    /* 0 poursuite, 1 cockpit, 2 orbite, 3 orbite solaire. Le vol commence en
+       cockpit : c'est la place du pilote, et le tableau de bord est le premier
+       repère dont il a besoin. La touche C fait le tour des quatre vues. */
+    int m_viewMode = 1;
     /* Origine de rendu (rendu relatif à la caméra) : on retranche cette position
        horizontale (X, Z ; Y laissé à 0 pour préserver les altitudes) de la caméra et
        de toutes les géométries avant de les confier au GPU. Les coordonnées près de la

@@ -274,11 +274,11 @@ bool Application::runStartupMenu() {
        combat. Lancé par initScene/applyMenuSession. */
     m_menuCombat = modeZombieChoisi || cartes[selection].zombieOnly;
     /* Présentation de départ, identique à chaque lancement depuis le menu : vue
-       arrière (poursuite), HUD complet et livrée armée de terre. Les moteurs, eux,
-       sont remis dans l'état choisi ci-dessus (turbine démarrée ou à froid) par
+       cockpit, HUD complet et livrée armée de terre. Les moteurs, eux, sont remis
+       dans l'état choisi ci-dessus (turbine démarrée ou à froid) par
        initScene/applyMenuSession. La livrée n'est qu'enregistrée ici ; son
        application (setLivery) se fait au chargement de la scène. */
-    m_viewMode = 0;                          /* vue poursuite (arrière) */
+    m_viewMode = 1;                          /* vue cockpit, la place du pilote */
     m_prevCamView = -1;                      /* la caméra repart d'un état neuf */
     m_hudMode = ui::HudMode::Overlay;        /* HUD complet */
     m_livery = render::Livery::ArmeeDeTerre; /* livrée armée de terre (verte) */

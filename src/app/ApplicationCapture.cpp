@@ -150,6 +150,11 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         const vec3 sunDir = glm::normalize(vec3{0.35f, elev, 1.0f});
         m_camera.orbitSolar(shotPos + vec3{0.0f, targetY, 0.0f}, sunDir, radius, height);
     } else {
+        /* Caméra placée en orbite autour de l'appareil : il faut donc le dessiner
+           en entier. Le vol commence en cockpit, où le modèle est allégé (voir
+           ApplicationRenderActors) ; sans ce retour à la vue extérieure, la
+           capture cadrerait un appareil incomplet. */
+        m_viewMode = 0;
         m_camera.setNear(0.5f);
         /* Décalages horizontaux du point visé (le repère corps est aligné sur le monde
            en capture) : pratique pour centrer la cabine, en avant de l'origine. */

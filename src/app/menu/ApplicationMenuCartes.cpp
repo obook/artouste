@@ -117,6 +117,20 @@ namespace {
     return tampon;
 }
 
+/* Tourniquet d'attente : le caractère tourne tant que la fabrication travaille,
+   et dit d'un coup d'oeil que le programme n'est pas figé, là où un débit et une
+   durée qui ne bougent qu'à la fin d'un bloc laissent le doute.
+
+   Quatre positions ASCII et pas un caractère plus joli : la police par défaut
+   d'ImGui, la seule chargée ici, s'arrête au latin-1. Un braille tournant ou un
+   demi-bloc n'y donnerait qu'un carré vide. Huit changements par seconde, la
+   cadence à laquelle l'oeil lit un mouvement sans être agacé. */
+[[nodiscard]] char caractereTournant(double secondes) {
+    static constexpr char PHASES[] = {'|', '/', '-', '\\'};
+    const int             phase    = static_cast<int>(secondes * 8.0) % 4;
+    return PHASES[phase < 0 ? 0 : phase];
+}
+
 /* Durée restante lisible : en heures dès la soixantième minute, comme l'annonce
    d'avant lancement. Au-delà de l'heure on ne compte plus en minutes, "112
    minutes" se compte mal. L'arrondi précède le choix de l'unité, sans quoi 59,7
@@ -686,14 +700,22 @@ void Application::runGestionnaireCartes() {
                 ImGui::ProgressBar(part, ImVec2(ui::hud_widgets::sc(420.0f), 0.0f), etiquette);
                 ImGui::PopStyleColor();
             }
-            /* Débit et durée restante seulement une fois mesurés : tant qu'aucun
-               bloc n'est revenu, on ne sait rien et on ne prétend rien. */
-            if (av.octetsParSeconde > 0.0) {
-                ImGui::TextDisabled("Débit IGN : %s, encore %s",
-                                    formaterDebit(av.octetsParSeconde).c_str(),
-                                    formaterDuree(av.secondesRestantes).c_str());
-            } else if (!av.termine) {
-                ImGui::TextDisabled("Débit IGN : pas encore mesuré, premier bloc en cours.");
+            /* Débit et durée restante seulement pendant le travail, et seulement
+               une fois mesurés : tant qu'aucun bloc n'est revenu, on ne sait rien
+               et on ne prétend rien. Une fois terminé, ces deux chiffres n'ont
+               plus d'objet, le compte rendu prend leur place. Le tourniquet, lui,
+               tourne d'un bout à l'autre : c'est le seul élément de l'écran qui
+               bouge entre deux blocs, et donc le seul qui dise que ça avance. */
+            if (fabrique.enCours()) {
+                const char rouet = caractereTournant(glfwGetTime());
+                if (av.octetsParSeconde > 0.0) {
+                    ImGui::TextDisabled("%c Débit IGN : %s, encore %s", rouet,
+                                        formaterDebit(av.octetsParSeconde).c_str(),
+                                        formaterDuree(av.secondesRestantes).c_str());
+                } else {
+                    ImGui::TextDisabled("%c Débit IGN : pas encore mesuré, premier bloc en cours.",
+                                        rouet);
+                }
             }
             if (fabrique.enCours()) {
                 if (ImGui::Button("Arrêter (Échap)", ImVec2(ui::hud_widgets::sc(160.0f), 0.0f))) {

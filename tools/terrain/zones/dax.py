@@ -63,17 +63,19 @@ ZONE = {
         ("Lac de Christus", -1.0688, 43.7289),
         ("Golf de Saint-Paul-lès-Dax", -1.0947, 43.7341),
     ],
-    # Les deux hélipads de l'aérodrome (carré sombre à bordure blanche, H au
-    # centre, balises de périmètre) sont visibles sur l'orthophoto fine de
-    # dax-arene (0,25 m/px). Position relevée sur cette ortho puis recoupée avec
-    # le nœud OpenStreetMap correspondant : concordance à 0,6 m au pire.
+    # L'aérodrome porte DEUX aires de poser réelles (carré sombre à bordure
+    # blanche, H au centre, balises de périmètre), toutes deux visibles sur
+    # l'orthophoto fine de dax-arene (0,25 m/px) et recoupées avec leur nœud
+    # OpenStreetMap, concordance à 0,6 m au pire. Une seule est retenue ici,
+    # décision du 27/07/2026 : celle du point de départ, pour ne pas montrer deux
+    # aires côte à côte. Le pad ouest écarté est à (-1.070968, 43.687601), à
+    # 212 m à l'ouest-sud-ouest, si on veut le remettre.
     # L'ancienne entrée unique (-1.0692, 43.6884) était une approximation posée
-    # dans l'herbe, à 70 m du pad est et 168 m du pad ouest.
+    # dans l'herbe, à 70 m du pad est.
     # Le reste des nœuds "helipad" d'OSM sur ce site (une centaine) sont les
     # emplacements de stationnement du parking, pas des aires de poser.
     "helipads": [
         ("Aérodrome de Dax-Seyresse (pad est)", -1.068430, 43.688117),
-        ("Aérodrome de Dax-Seyresse (pad ouest)", -1.070968, 43.687601),
         # Relevé sur OpenStreetMap (docs/HELIPADS.tsv), non revérifié sur l'ortho.
         ("Centre hospitalier de Dax", -1.0416, 43.7112),
     ],

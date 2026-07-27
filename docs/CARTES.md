@@ -278,8 +278,8 @@ La règle appliquée (`interet`, dans `src/app/cartes/FabriqueTuiles.cpp`) :
 - jamais plus grossier que 0,25 m/px, soit 64 % de l'information que porte la
   source. C'est cette borne, et non le rapport, qui s'applique à presque toutes
   les cartes : leur tiers d'orthophoto tombe au-delà. Le prix est assumé, une
-  carte de montagne pèse alors 7 Go et demande près de trois heures de
-  fabrication ;
+  carte de montagne pèse alors 7 Go et demande une heure et demie de
+  fabrication, à quatre tuiles par seconde ;
 - ne rien proposer du tout si le gain resterait sous 1,5, ce qui est le cas
   d'une petite carte découpée dans une image déjà fine, comme dax-arene. Le
   bouton est alors grisé et l'écran dit pourquoi.

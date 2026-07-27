@@ -41,11 +41,16 @@ constexpr const char* WMS_LAYER = "ORTHOIMAGERY.ORTHOPHOTOS";
 constexpr double OCTETS_JPEG_PAR_PIXEL = 0.25;
 
 /* Cadence de fabrication, tuiles par seconde, découpage et compression BC7
-   compris. Mesurée sur deux jeux réels (2,6 sur une petite carte, 1,8 sur une
-   grande), on retient la valeur basse : mieux vaut annoncer un peu long. Elle
-   dépend de la machine, c'est un ordre de grandeur, remplacé par la mesure dès
-   le premier bloc terminé. */
-constexpr double TUILES_PAR_SECONDE = 1.8;
+   compris. Mesurée en cours de route sur une fabrication réelle : 4,3 à 4,5
+   tuiles par seconde, deux relevés concordants. On retient 4,0, un peu en
+   dessous, pour ne pas promettre plus court que nature.
+
+   Ne pas la déduire de l'horodatage d'un jeu terminé : l'écart entre la première
+   et la dernière tuile inclut les pauses et les interruptions, ce qui donnait
+   1,8 et faisait annoncer le double du temps réel. Cette valeur dépend de la
+   machine et n'est qu'un ordre de grandeur ; la mesure du fil de fabrication
+   prend le relais dès le premier bloc terminé. */
+constexpr double TUILES_PAR_SECONDE = 4.0;
 
 /* Calage d'une carte, lu dans son terrain.txt. */
 struct CalageCarte {

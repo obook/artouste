@@ -89,8 +89,8 @@ struct Estimation {
    Elle vaut 0,25 m/px, soit 64 % de l'information que porte la source : un pixel
    couvre 1,6 fois la surface du pixel IGN, contre 6 fois à 0,50 et 14 fois à
    0,75, les deux valeurs essayées avant. Le prix est connu et assumé : une carte
-   de montagne pèse alors 7 Go et demande près de trois heures de fabrication, à
-   deux tuiles par seconde. */
+   de montagne pèse alors 7 Go et demande une heure et demie de fabrication, à
+   quatre tuiles par seconde. */
 inline constexpr float FINESSE_LA_PLUS_FINE      = 0.20f;
 inline constexpr float FINESSE_LA_PLUS_GROSSIERE = 0.25f;
 

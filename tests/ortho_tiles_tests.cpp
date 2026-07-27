@@ -149,9 +149,9 @@ TEST_CASE("dansGrille borne les deux indices") {
 }
 
 TEST_CASE("une tuile a un fichier par rangée-dossier") {
-    const Pyramide p{"/tuiles/capbreton", calageEssai()};
-    CHECK(p.fichier(0, 0) == std::filesystem::path("/tuiles/capbreton/0/0.dds"));
-    CHECK(p.fichier(3, 2) == std::filesystem::path("/tuiles/capbreton/2/3.dds"));
+    const Pyramide p{"/tuiles/ossau", calageEssai()};
+    CHECK(p.fichier(0, 0) == std::filesystem::path("/tuiles/ossau/0/0.dds"));
+    CHECK(p.fichier(3, 2) == std::filesystem::path("/tuiles/ossau/2/3.dds"));
 }
 
 TEST_CASE("l'index écrit se relit à l'identique") {

@@ -1,6 +1,0 @@
-# Lieux remarquables - Capbreton, Hossegor et le lac marin (un par ligne : lon lat nom)
-# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
--1.431 43.642 Capbreton
--1.4276 43.6589 Hossegor
--1.4287 43.6722 Lac d'Hossegor
--1.4488 43.6552 Estacade de Capbreton

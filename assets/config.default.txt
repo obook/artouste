@@ -15,7 +15,6 @@
 # Terrains disponibles :
 #   ossau        vallée d'Ossau (lac d'Artouste, pic du Midi d'Ossau), montagne
 #   cote-landes  côte landaise (Labenne -> Vieux-Boucau), bord de mer
-#   capbreton    Capbreton, Hossegor et le lac marin, bord de mer
 #   arcachon     bassin d'Arcachon (Cap Ferret -> Marcheprime, Biscarrosse -> Arès), bord de mer
 #   cauterets    Cauterets - Gavarnie (chemin des cascades, Pont d'Espagne, cirque de Gavarnie), montagne
 #   bigorre      Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie), montagne

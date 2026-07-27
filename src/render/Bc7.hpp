@@ -5,8 +5,8 @@
  *
  * Pourquoi ne pas laisser le pilote graphique le faire : passer un format
  * interne compressé à glTexImage2D fonctionne, mais l'encodeur du pilote
- * travaille sur un seul fil et sans budget de temps. Mesuré sur la carte
- * capbreton, 94 mégapixels, cela portait le chargement de 3 à 38 secondes, à
+ * travaille sur un seul fil et sans budget de temps. Mesuré sur une carte de
+ * 94 mégapixels, cela portait le chargement de 3 à 38 secondes, à
  * refaire à chaque lancement. Ici on compresse une fois, en parallèle sur tous
  * les cœurs, et on range le résultat dans un cache.
  *

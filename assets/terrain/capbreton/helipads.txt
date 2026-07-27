@@ -1,4 +1,0 @@
-# Helipads - Capbreton, Hossegor et le lac marin (un par ligne : lon lat nom)
-# Positions approximatives, à affiner sur place.
--1.4457112839188175 43.65393627677582 Capbreton
--1.4438385382046726 43.661316497891036 Hossegor

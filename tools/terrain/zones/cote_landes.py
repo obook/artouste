@@ -52,6 +52,9 @@ ZONE = {
         ("St-Vincent-de-Tyrosse", -1.3055, 43.6667),
         ("Bénesse-Maremne", -1.3594, 43.6342),  # mairie
         ("Marais d'Orx", -1.3972, 43.6007),
+        # Repris de la carte capbreton, retirée le 27/07/2026 : c'était le seul
+        # de ses lieux qui manquait ici.
+        ("Estacade de Capbreton", -1.4488, 43.6552),
     ],
     # Coordonnées relevées sur Google Maps.
     "helipads": [

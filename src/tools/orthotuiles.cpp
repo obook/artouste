@@ -32,7 +32,7 @@
  *                     tools/terrain/fetch_tuiles.py).
  *
  * Exemple :
- *   ./build/bin/orthotuiles assets/terrain/capbreton /media/disque/capbreton
+ *   ./build/bin/orthotuiles assets/terrain/cauterets /media/disque/cauterets
  *
  * Auteur : O. Booklage
  * Licence : GPL v2

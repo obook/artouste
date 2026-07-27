@@ -227,16 +227,16 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 d'environnement `ARTOUSTE_TERRAIN`.
 
 **Les autres sont proposées en téléchargement séparé**, sur la page des
-releases : Capbreton, Dax, Bordeaux, Paris, bassin d'Arcachon, Cauterets et Pic
-du Midi de Bigorre. Une orthophoto fine pèse lourd, et embarquer les dix
-cartes ferait passer le téléchargement de 45 à environ 130 Mo pour des terrains
-que tout le monde ne survolera pas.
+releases : Dax, Bordeaux, Paris, bassin d'Arcachon, Cauterets et Pic du Midi de
+Bigorre. Une orthophoto fine pèse lourd, et embarquer les neuf cartes ferait
+passer le téléchargement de 45 à environ 110 Mo pour des terrains que tout le
+monde ne survolera pas.
 
 Pour en ajouter une, dézippez `carte-<nom>.zip` dans le dossier
 `assets/terrain/` du jeu :
 
 ```bash
-cd assets/terrain && unzip ~/Téléchargements/carte-capbreton.zip
+cd assets/terrain && unzip ~/Téléchargements/carte-cauterets.zip
 ```
 
 La carte apparaît au menu au lancement suivant, sans rien configurer : le jeu

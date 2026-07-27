@@ -82,10 +82,10 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   carte : un repère au sol qui indique la pente d'approche par sa couleur, selon
   les seuils du guide DGAC/STAC : vert clignotant si trop haut, vert fixe sur la
   pente, rouge fixe légèrement trop bas, rouge clignotant si trop bas. Le point de
-  l'étiquette HUD (coin ou minimap) reprend cette couleur, qu'il s'agisse du pad
-  lui-même ou d'un lieu remarquable qui coïncide avec lui (l'aérodrome de
-  Dax-Seyresse, par exemple) ; hors des seuils, le point s'éteint plutôt que de
-  passer à une couleur intermédiaire. Données par carte dans un fichier optionnel
+  l'étiquette HUD (coin ou minimap) reprend cette couleur, sur l'étiquette la plus
+  proche de la balise et sur elle seule, pour qu'une balise n'en éclaire jamais
+  deux ; hors des seuils, le point s'éteint plutôt que de passer à une couleur
+  intermédiaire. Données par carte dans un fichier optionnel
   `hapi.txt` (`lon lat azimut_deg pente_pct nom`), voir [docs/CARTES.md](docs/CARTES.md).
 * Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
   étiquettes) et le menu de démarrage suivent la taille réelle de l'affichage
@@ -304,11 +304,17 @@ moins d'un mètre.
 
 Le mécanisme se règle par la clé `tuiles_fenetre_px` de `assets/config.txt` :
 
-| Valeur | Mémoire vidéo | Rayon de détail à 0,75 m/px |
+| Valeur | Mémoire vidéo | Rayon de détail à 0,25 m/px |
 |--------|---------------|------------------------------|
-| `8192` (défaut) | 89 Mo | 2,7 km |
-| `4096` | 22 Mo | 1,2 km |
+| `8192` (défaut) | 89 Mo | 0,9 km |
+| `16384` | 356 Mo | 1,8 km |
+| `4096` | 22 Mo | 0,5 km |
 | `0` | aucune | pas de détail fin |
+
+Plus les tuiles sont fines, plus la fenêtre couvre un rayon court à mémoire
+vidéo constante : au-delà, le sol revient à l'orthophoto d'ensemble, le passage
+se faisant en fondu. Monter à `16384` retrouve le rayon d'avant, au prix de
+356 Mo de mémoire vidéo.
 
 Les tuiles peuvent vivre ailleurs que dans le jeu, ce qui est commode quand le
 disque système est à l'étroit : la variable d'environnement `ARTOUSTE_TUILES`

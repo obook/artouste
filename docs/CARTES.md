@@ -263,18 +263,23 @@ configuration générale, et l'écran dit lesquels.
 
 ### La finesse, choisie carte par carte
 
-L'écran choisit seul la finesse des tuiles, car elle ne peut pas être la même
-partout : ce qui décide de la netteté du sol est le RAPPORT entre la finesse des
-tuiles et celle de l'orthophoto d'ensemble de la carte, jamais la finesse seule.
-Des tuiles à 0,75 m/px rendent Ossau, dont l'ortho est à 3,6 m/px, cinq fois plus
-net ; les mêmes ne changent rien sur dax, dont l'ortho est déjà à 0,85 m/px.
+L'écran choisit seul la finesse des tuiles. Deux grandeurs entrent en jeu, et
+elles ne servent pas à la même chose. Le RAPPORT entre la finesse des tuiles et
+celle de l'orthophoto dit si la fabrication vaut le coup : des tuiles à 0,25 m/px
+rendent Ossau, dont l'ortho est à 3,6 m/px, quatorze fois plus net, alors que les
+mêmes n'apporteraient rien à dax-arene, déjà à 0,25. La finesse ELLE-MÊME, en
+revanche, décide de ce que l'oeil voit à vingt mètres, et c'est une grandeur
+absolue.
 
 La règle appliquée (`interet`, dans `src/app/cartes/FabriqueTuiles.cpp`) :
 
 - viser trois fois plus fin que l'orthophoto d'ensemble ;
 - jamais plus fin que 0,20 m/px, la finesse de la source IGN ;
-- jamais plus grossier que 0,75 m/px, le compromis qui rend une grande carte
-  lisible au ras du sol pour environ un gigaoctet ;
+- jamais plus grossier que 0,25 m/px, soit 64 % de l'information que porte la
+  source. C'est cette borne, et non le rapport, qui s'applique à presque toutes
+  les cartes : leur tiers d'orthophoto tombe au-delà. Le prix est assumé, une
+  carte de montagne pèse alors 7 Go et demande près de trois heures de
+  fabrication ;
 - ne rien proposer du tout si le gain resterait sous 1,5, ce qui est le cas
   d'une petite carte découpée dans une image déjà fine, comme dax-arene. Le
   bouton est alors grisé et l'écran dit pourquoi.

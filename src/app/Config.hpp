@@ -72,7 +72,9 @@ struct Config {
 
     /* Côté, en pixels, de la fenêtre de tuiles fines entretenue autour de
        l'appareil sur les cartes qui livrent un jeu de tuiles (voir
-       render/tuiles/Fenetre.hpp). 8192 (défaut) occupe 89 Mo de mémoire vidéo,
+       render/tuiles/Fenetre.hpp). Attention, le rayon couvert dépend de la
+       finesse des tuiles : 8192 px portent 2 km de terrain à 0,25 m/px, mais 6 km
+       à 0,75. 8192 (défaut) occupe 89 Mo de mémoire vidéo,
        quelle que soit l'emprise de la carte, et couvre 2 km de terrain à
        0,25 m/px. 4096 divise cette mémoire par quatre, au prix d'un rayon de
        détail deux fois plus court : c'est le réglage d'une machine à faible

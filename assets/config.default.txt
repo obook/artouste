@@ -117,9 +117,12 @@ relief_sommets_max 1200000
 # "tuiles", voir docs/CARTES.md). Le sol proche y passe de plusieurs mètres par
 # pixel à moins d'un mètre, pour une occupation de mémoire vidéo constante, quelle
 # que soit la taille de la carte.
-#   8192 = 89 Mo de mémoire vidéo, détail jusqu'à 2,7 km (défaut)
-#   4096 = 22 Mo, détail jusqu'à 1,2 km (machine à faible mémoire vidéo)
-#   0    = pas de détail fin (l'orthophoto d'ensemble seule, comme avant)
+#   8192  = 89 Mo de mémoire vidéo, détail jusqu'à 0,9 km (défaut)
+#   16384 = 356 Mo, détail jusqu'à 1,8 km (grosse carte graphique)
+#   4096  = 22 Mo, détail jusqu'à 0,5 km (machine à faible mémoire vidéo)
+#   0     = pas de détail fin (l'orthophoto d'ensemble seule, comme avant)
+# Rayons donnés pour des tuiles à 0,25 m/px, la finesse que fabrique le
+# gestionnaire de cartes ; ils doublent sur un jeu à 0,50 m/px.
 # Sans effet sur une carte sans tuiles. La variable d'environnement
 # ARTOUSTE_TUILES_FENETRE, si définie, a la priorité ; ARTOUSTE_TUILES désigne un
 # dossier de tuiles hors du jeu (un sous-dossier par carte).

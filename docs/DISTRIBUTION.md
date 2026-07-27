@@ -106,23 +106,24 @@ point traité plus bas.
 
 ## Le paquet initial
 
-Objectif : rester sous 60 Mo, et être jouable et beau sans rien télécharger de
-plus.
+Objectif : être jouable et beau sans rien télécharger de plus, sur les neuf
+cartes.
 
-Composition actuelle, 45 Mo compressés :
+Composition au 28/07/2026, environ 140 Mo compressés :
 
 | Poste | Poids |
 |-------|-------|
+| Neuf cartes en basse résolution | 134 Mo |
 | Modèles 3D (Alouette, zombies, explosion) | 32 Mo |
-| Sons | 9,1 Mo |
-| Trois cartes (ossau, cote-landes, dax-arene) | 46 Mo |
 | Exécutable | 11 Mo |
+| Sons | 9,1 Mo |
 | Textures, végétation, shaders | 1,8 Mo |
 
-Rien à changer : c'est déjà un paquet raisonnable, et le rogner dégraderait
-l'expérience de celui qui ne télécharge jamais rien. La seule évolution
-proposée est de **ne plus jamais l'augmenter** : toute carte ajoutée au projet
-part au catalogue, pas dans l'archive.
+Le seuil des 60 Mo visé au départ est abandonné : il obligeait à sortir six
+cartes de l'archive, donc à faire dézipper le joueur carte par carte, pour
+économiser 90 Mo sur un téléchargement fait une fois. Ce qui reste hors de
+l'archive, et le restera, ce sont les tuiles de détail : elles pèsent cent fois
+plus et se fabriquent depuis le jeu.
 
 ## Améliorer une carte existante
 
@@ -266,11 +267,16 @@ Deux points techniques à trancher à l'écriture :
 
 | Fichier | Poids | Rôle |
 |---------|-------|------|
-| `artouste-Linux-x86_64.tar.gz` | ~50 Mo | jeu, trois cartes, outil de cartes |
-| `artouste-Windows-AMD64.zip` | ~50 Mo | idem |
-| `carte-<nom>.zip` x7 | 5 à 22 Mo | socles des cartes existantes |
+| `artouste-Linux-x86_64.tar.gz` | ~140 Mo | jeu, les neuf cartes, outil de cartes |
+| `artouste-Windows-AMD64.zip` | ~140 Mo | idem |
 
-**Aucun zip de tuiles, décision du 28/07/2026.** Elles ne s'obtiennent que par
+**Un seul fichier à télécharger, décision du 28/07/2026.** Les neuf cartes
+voyagent dans l'archive, en basse résolution. La proposition d'origine, trois
+cartes livrées et six en zips séparés, économisait 90 Mo au prix d'une manoeuvre
+par carte : dézipper au bon endroit, se tromper de dossier, recommencer. Un seul
+téléchargement vaut mieux qu'une économie sur le dos du joueur.
+
+**Aucun zip de tuiles, même décision.** Elles ne s'obtiennent que par
 l'IGN, depuis le gestionnaire de cartes du jeu. Trois raisons :
 
 - à 0,25 m/px, aucune carte ne tient sous le plafond de 2 Go d'un fichier de

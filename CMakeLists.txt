@@ -98,37 +98,45 @@ endif()
 
 install(TARGETS artouste RUNTIME DESTINATION .)
 
-# Cartes livrées avec le jeu. Les autres sont proposées en paquets zip à
-# dézipper dans assets/terrain/ (cible "cartes" ci-dessous) : les orthophotos
-# fines pèsent lourd, et embarquer les dix cartes ferait passer la release de
-# 45 à environ 130 Mo pour des terrains que tout le monde ne survolera pas. Le moteur
-# recense les cartes en parcourant assets/terrain/ (ApplicationMenuMaps.cpp),
-# une carte ajoutée après coup apparaît donc au menu sans rien reconfigurer.
-set(ARTOUSTE_CARTES_LIVREES ossau cote-landes dax-arene)
-
-# Tout assets/ SAUF terrain/, puis les seules cartes livrées.
-install(DIRECTORY assets/ DESTINATION assets PATTERN "terrain" EXCLUDE)
-foreach(carte IN LISTS ARTOUSTE_CARTES_LIVREES)
-    install(DIRECTORY assets/terrain/${carte} DESTINATION assets/terrain)
-endforeach()
+# TOUTES les cartes voyagent dans l'archive, décision du 28/07/2026. Elles sont en
+# basse résolution : les neuf pèsent 134 Mo sur le disque, une centaine dans
+# l'archive, ce qui reste un seul téléchargement et évite au joueur d'aller
+# chercher des zips séparés carte par carte. Seules les TUILES de détail, elles,
+# se téléchargent depuis le jeu auprès de l'IGN (voir docs/DISTRIBUTION.md).
+#
+# Le moteur recense les cartes en parcourant assets/terrain/
+# (ApplicationMenuMaps.cpp) : rien à déclarer ici quand on en ajoute une.
+#
+# Deux exclusions, qui ne coûtent rien sur la forge (dépôt tout neuf) mais
+# comptent pour qui empaquette depuis sa machine : les jeux de tuiles rangés dans
+# une carte pèsent des gigaoctets et se retéléchargent, et config.txt est la
+# configuration PERSONNELLE de celui qui compile, que le modèle recrée au premier
+# lancement de toute façon.
+install(DIRECTORY assets/ DESTINATION assets
+        PATTERN "tuiles" EXCLUDE
+        PATTERN "config.txt" EXCLUDE)
 install(FILES README.md LICENSE DESTINATION . OPTIONAL)
 # Notice PDF des commandes, à la racine de l'archive. Le fichier est versionné
 # (la CI ne compile pas le LaTeX) : penser à le recompiler et le recommiter
 # après toute modification de docs/notice.tex.
 install(FILES docs/notice.pdf DESTINATION . OPTIONAL)
 
-# Paquets des cartes optionnelles : "cmake --build build --target cartes" écrit un
-# carte-<nom>.zip par carte non livrée, à joindre à la release. Le zip contient le
-# dossier de la carte, donc dézipper dans assets/terrain/ suffit.
+# Paquets des cartes, un carte-<nom>.zip chacune : "cmake --build build --target
+# cartes". Le zip contient le dossier de la carte, donc le dézipper dans
+# assets/terrain/ suffit.
+#
+# Ces paquets NE VONT PLUS à la release depuis le 28/07/2026 : toutes les cartes
+# voyagent maintenant dans l'archive du jeu, en un seul téléchargement. La cible
+# reste pour l'usage local, passer une carte à quelqu'un sans lui envoyer les
+# cent mégaoctets de l'archive complète.
 #
 # La liste est établie à la configuration : après avoir ajouté une carte dans
 # assets/terrain/, relancer cmake avant de reconstruire la cible.
-add_custom_target(cartes COMMENT "Paquets des cartes optionnelles")
+add_custom_target(cartes COMMENT "Paquets des cartes")
 file(GLOB ARTOUSTE_TERRAINS RELATIVE ${CMAKE_SOURCE_DIR}/assets/terrain
      ${CMAKE_SOURCE_DIR}/assets/terrain/*)
 foreach(carte IN LISTS ARTOUSTE_TERRAINS)
-    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets/terrain/${carte} AND
-       NOT carte IN_LIST ARTOUSTE_CARTES_LIVREES)
+    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/assets/terrain/${carte})
         add_custom_command(TARGET cartes POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E tar cf
                     ${CMAKE_BINARY_DIR}/carte-${carte}.zip --format=zip -- ${carte}

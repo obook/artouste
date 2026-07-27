@@ -199,17 +199,19 @@ cd build && cpack
 
 Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
 `.zip` sous Windows) contenant le binaire autonome, les ressources (shaders,
-modèle 3D, sons, textures) et les trois cartes livrées, prête à distribuer.
+modèle 3D, sons, textures) et **les neuf cartes**, prête à distribuer. Comptez
+environ 140 Mo.
 
-Les cartes optionnelles se conditionnent à part, un zip chacune :
+Une carte se conditionne aussi à part, pour la passer à quelqu'un sans lui
+envoyer l'archive entière :
 
 ```bash
 cmake --build build --target cartes
 ```
 
-Produit un `build/carte-<nom>.zip` par carte non livrée, à joindre à la
-release. La liste est établie à la configuration : après avoir ajouté une carte
-dans `assets/terrain/`, relancez `cmake` avant de reconstruire cette cible.
+Produit un `build/carte-<nom>.zip` par carte. La liste est établie à la
+configuration : après avoir ajouté une carte dans `assets/terrain/`, relancez
+`cmake` avant de reconstruire cette cible.
 
 ## Modèle 3D, sons et textures
 
@@ -221,26 +223,18 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 
 ## Cartes (terrains)
 
-**Trois cartes sont livrées avec le jeu** : Ossau (montagne), côte landaise
-(bord de mer) et Happy DeathHour (arène du mode zombie). À choisir dans
+**Les neuf cartes sont livrées avec le jeu**, dans l'archive : Ossau, côte
+landaise, Happy DeathHour (l'arène du mode zombie), Dax, Bordeaux, Paris, bassin
+d'Arcachon, Cauterets-Gavarnie et Pic du Midi de Bigorre. À choisir dans
 `assets/config.txt` (clé `terrain`), au menu de démarrage, ou via la variable
 d'environnement `ARTOUSTE_TERRAIN`.
 
-**Les autres sont proposées en téléchargement séparé**, sur la page des
-releases : Dax, Bordeaux, Paris, bassin d'Arcachon, Cauterets et Pic du Midi de
-Bigorre. Une orthophoto fine pèse lourd, et embarquer les neuf cartes ferait
-passer le téléchargement de 45 à environ 110 Mo pour des terrains que tout le
-monde ne survolera pas.
+Elles sont en basse résolution, ce qui suffit en vol haut : leur photo aérienne
+d'ensemble tient en une quinzaine de mégaoctets par carte. La haute résolution,
+elle, se télécharge depuis le jeu (voir le gestionnaire de cartes plus bas).
 
-Pour en ajouter une, dézippez `carte-<nom>.zip` dans le dossier
-`assets/terrain/` du jeu :
-
-```bash
-cd assets/terrain && unzip ~/Téléchargements/carte-cauterets.zip
-```
-
-La carte apparaît au menu au lancement suivant, sans rien configurer : le jeu
-recense les cartes en parcourant ce dossier.
+Une carte ajoutée à la main dans `assets/terrain/` apparaît au menu au lancement
+suivant, sans rien configurer : le jeu recense ce dossier.
 
 Les terrains et bâtiments 3D sont générés hors-ligne depuis les données IGN
 (Licence Ouverte Etalab 2.0). Détails, configuration complète et régénération :

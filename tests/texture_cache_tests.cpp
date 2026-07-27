@@ -30,7 +30,11 @@ std::vector<unsigned char> mire(int largeur, int hauteur) {
                                       static_cast<std::size_t>(hauteur) * 4);
     for (int y = 0; y < hauteur; ++y) {
         for (int x = 0; x < largeur; ++x) {
-            const std::size_t i     = (static_cast<std::size_t>(y) * largeur + x) * 4;
+            /* Toute l'arithmétique en size_t : ne convertir que le premier terme
+               laisse la largeur et l'abscisse en int, promus ensuite en silence. */
+            const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(largeur) +
+                                   static_cast<std::size_t>(x)) *
+                                  4u;
             const bool        carre = ((x / 7) % 2) == ((y / 5) % 2);
             pixels[i + 0] = static_cast<unsigned char>(carre ? 250 : (x * 255) / largeur);
             pixels[i + 1] = static_cast<unsigned char>(carre ? 250 : (y * 255) / hauteur);

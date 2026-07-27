@@ -43,6 +43,16 @@ const bc7enc_compress_block_params& parametres() {
     return p;
 }
 
+/* Décalage en octets du pixel (x, y) dans une image RGBA de cette largeur. Tout
+   passe en size_t d'un coup : ne convertir que le premier terme, comme on le
+   faisait, laissait la largeur et l'abscisse en int, que la multiplication
+   promeut ensuite en silence. Le compilateur le signalait à juste titre. */
+[[nodiscard]] constexpr std::size_t decalagePixel(int x, int y, int largeur) noexcept {
+    return (static_cast<std::size_t>(y) * static_cast<std::size_t>(largeur) +
+            static_cast<std::size_t>(x)) *
+           4u;
+}
+
 /* Réduit une image RGBA de moitié par moyenne de 2x2 pixels. Les dimensions
    impaires sont gérées en bornant les indices : le dernier pixel d'une ligne
    ou d'une colonne impaire se moyenne avec lui-même plutôt que de déborder. */
@@ -59,13 +69,15 @@ std::vector<unsigned char> reduireMoitie(const unsigned char* source, int largeu
         for (int x = 0; x < largeurReduite; ++x) {
             const int x0 = std::min(2 * x, largeur - 1);
             const int x1 = std::min(2 * x + 1, largeur - 1);
-            for (int c = 0; c < 4; ++c) {
-                const unsigned int somme =
-                    source[(static_cast<std::size_t>(y0) * largeur + x0) * 4 + c] +
-                    source[(static_cast<std::size_t>(y0) * largeur + x1) * 4 + c] +
-                    source[(static_cast<std::size_t>(y1) * largeur + x0) * 4 + c] +
-                    source[(static_cast<std::size_t>(y1) * largeur + x1) * 4 + c];
-                reduite[(static_cast<std::size_t>(y) * largeurReduite + x) * 4 + c] =
+            for (std::size_t c = 0; c < 4; ++c) {
+                /* Somme en int, et non en unsigned : quatre octets font au plus
+                   1020, et la promotion entière des octets donne déjà un int. Le
+                   demander non signé imposait une conversion de plus. */
+                const int somme = source[decalagePixel(x0, y0, largeur) + c] +
+                                  source[decalagePixel(x1, y0, largeur) + c] +
+                                  source[decalagePixel(x0, y1, largeur) + c] +
+                                  source[decalagePixel(x1, y1, largeur) + c];
+                reduite[decalagePixel(x, y, largeurReduite) + c] =
                     static_cast<unsigned char>(somme / 4);
             }
         }
@@ -83,8 +95,8 @@ void extraireBloc(const unsigned char* image, int largeur, int hauteur, int bloc
         const int y = std::min(blocY * COTE_BLOC + j, hauteur - 1);
         for (int i = 0; i < COTE_BLOC; ++i) {
             const int x = std::min(blocX * COTE_BLOC + i, largeur - 1);
-            const std::size_t src = (static_cast<std::size_t>(y) * largeur + x) * 4;
-            const std::size_t dst = (static_cast<std::size_t>(j) * COTE_BLOC + i) * 4;
+            const std::size_t src = decalagePixel(x, y, largeur);
+            const std::size_t dst = decalagePixel(i, j, COTE_BLOC);
             bloc[dst + 0] = image[src + 0];
             bloc[dst + 1] = image[src + 1];
             bloc[dst + 2] = image[src + 2];
@@ -104,7 +116,9 @@ void compresserLignes(const unsigned char* image, int largeur, int hauteur, int 
         for (int bx = 0; bx < blocsX; ++bx) {
             extraireBloc(image, largeur, hauteur, bx, by, bloc);
             unsigned char* destination =
-                sortie + (static_cast<std::size_t>(by) * blocsX + bx) * OCTETS_BLOC;
+                sortie + (static_cast<std::size_t>(by) * static_cast<std::size_t>(blocsX) +
+                          static_cast<std::size_t>(bx)) *
+                             OCTETS_BLOC;
             bc7enc_compress_block(destination, bloc, &params);
         }
     }

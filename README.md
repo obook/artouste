@@ -228,9 +228,9 @@ d'environnement `ARTOUSTE_TERRAIN`.
 
 **Les autres sont proposées en téléchargement séparé**, sur la page des
 releases : Capbreton, Dax, Bordeaux, Paris, bassin d'Arcachon, Cauterets et Pic
-du Midi de Bigorre. Une orthophoto fine pèse lourd, et embarquer les neuf
-cartes ferait passer le téléchargement de 45 à 152 Mo pour des terrains que
-tout le monde ne survolera pas.
+du Midi de Bigorre. Une orthophoto fine pèse lourd, et embarquer les dix
+cartes ferait passer le téléchargement de 45 à environ 130 Mo pour des terrains
+que tout le monde ne survolera pas.
 
 Pour en ajouter une, dézippez `carte-<nom>.zip` dans le dossier
 `assets/terrain/` du jeu :
@@ -258,6 +258,38 @@ progression ; les lancements suivants sont immédiats.
 
 Ce cache est jetable : le supprimer ne fait perdre que ce temps de préparation.
 Il se refait tout seul si une carte est remplacée.
+
+### Tuiles de détail
+
+Une orthophoto d'un seul tenant occupe la mémoire vidéo en proportion de
+l'emprise de la carte, et c'est ce budget qui plafonne la finesse au sol : sur
+une grande carte comme le bassin d'Arcachon, le sol vu d'en bas reste flou.
+
+Les cartes qui livrent un dossier `tuiles/` échappent à cette limite. Leur
+orthophoto fine y est découpée en carrés de 512 pixels, dont seuls ceux qui
+entourent l'appareil sont tenus en mémoire vidéo, les autres arrivant du disque
+au fil du vol. La mémoire occupée devient constante, 89 Mo, quelle que soit la
+taille de la carte, et le sol proche passe de plusieurs mètres par pixel à
+moins d'un mètre.
+
+Le mécanisme se règle par la clé `tuiles_fenetre_px` de `assets/config.txt` :
+
+| Valeur | Mémoire vidéo | Rayon de détail à 0,75 m/px |
+|--------|---------------|------------------------------|
+| `8192` (défaut) | 89 Mo | 2,7 km |
+| `4096` | 22 Mo | 1,2 km |
+| `0` | aucune | pas de détail fin |
+
+Les tuiles peuvent vivre ailleurs que dans le jeu, ce qui est commode quand le
+disque système est à l'étroit : la variable d'environnement `ARTOUSTE_TUILES`
+désigne alors un dossier contenant un sous-dossier par carte.
+
+```bash
+ARTOUSTE_TUILES=/media/disque/tuiles ./artouste
+```
+
+Une carte sans tuiles, un dossier absent ou une tuile manquante ne posent pas
+de problème : le jeu retombe sur l'orthophoto d'ensemble, comme avant.
 
 ## Contributions
 

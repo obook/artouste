@@ -107,18 +107,24 @@ void main() {
                  + 0.4 * texture(u_detail, monde / 11.0).r;
     float pente  = smoothstep(0.08, 0.30, 1.0 - n.y);
     /* Plancher du grain sur le PLAT : il n'existe que pour casser l'aplat d'une
-       orthophoto grossière, qui n'a aucun détail propre à montrer de près. Dès
-       que l'ortho descend sous ~1 m/px (dax-arene, dax, capbreton), elle a son
-       vrai grain et le motif de synthèse ne compense plus rien : il pose au
-       contraire un tissage régulier de 1,5 m, très visible sur une surface
-       uniforme comme une plage vue de 30 m. On l'efface donc progressivement.
+       orthophoto qui n'a pas de détail propre à montrer de près. Sous ~0,3 m/px
+       (dax, dax-arene) la photo a son vrai grain et le motif de synthèse ne
+       compense plus rien : il pose au contraire un tissage régulier de 1,5 m,
+       très visible sur une surface uniforme comme une plage vue de 30 m. On
+       l'efface donc là, et seulement là.
+
+       Le seuil a d'abord été posé à 0,8 m/px, ce qui éteignait aussi le grain
+       sur les jeux de tuiles à 0,75 puis 0,50 : une plage de sable nu y devenait
+       plus lisse en HR qu'en LR, faute de tout relief à montrer. La rampe part
+       donc maintenant de 0,30 et n'atteint son plein qu'à 1 m/px.
+
        Le grain reste plein sur les fortes pentes, où il sert toujours, et sur
        les cartes larges restées grossières. Le dosage suit la finesse EFFECTIVE
        (tuiles comprises), sans quoi une carte large gardée grossière au loin
        poserait encore son tissage sur le sol fin juste sous l'appareil.
        u_orthoMPP vaut 0 si l'uniforme n'est pas fourni, ce qui éteint le
        plancher : repli sans danger. */
-    float plancher = 0.15 * smoothstep(0.8, 2.5, finesse);
+    float plancher = 0.15 * smoothstep(0.30, 1.00, finesse);
     float force  = mix(plancher, 1.0, pente) * (1.0 - smoothstep(300.0, 1200.0, dist));
     vec3  albedo = ortho * mix(1.0, 0.60 + 0.80 * detail, force);
 

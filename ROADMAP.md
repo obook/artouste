@@ -415,24 +415,24 @@ ou sortir de France.
 
 ## Mode zombie
 
-### Pondeuse (boss) et yeux lumineux
+### Largueur (boss) et yeux lumineux
 
 - [x] Une manche sur cinq est désormais une manche de boss (`WaveManager::isBossWave`,
-  `BOSS_WAVE_INTERVAL`). Une pondeuse (`ZombieHorde::Type::Brood`) y apparaît dès
-  l'ouverture, escortée de la moitié seulement des marcheurs habituels, puis engendre
-  un marcheur toutes les trois secondes autour d'elle tant qu'elle tient debout. La
+  `BOSS_WAVE_INTERVAL`). Un largueur (`ZombieHorde::Type::Brood`) y apparaît dès
+  l'ouverture, escorté de la moitié seulement des marcheurs habituels, puis lâche
+  un marcheur toutes les trois secondes autour de lui tant qu'il tient debout. La
   manche ne peut donc pas se gagner en patientant : l'anti-blocage de 90 secondes est
-  suspendu tant qu'elle vit. Elle encaisse cinq roquettes (5000 PV contre 100 pour un
+  suspendu tant qu'il vit. Il encaisse cinq roquettes (5000 PV contre 100 pour un
   marcheur), avance à 45 % de la vitesse d'un marcheur, et son modèle comme sa sphère
   de collision sont agrandis 3,2 fois, soit près de six mètres de haut (un seul champ
   `scale` pour les deux, afin que la silhouette et la cible ne divergent pas).
-  Neutralisée : 500 points, annonce `PONDEUSE NEUTRALISÉE !` et jauge de vie au HUD
+  Neutralisé : 500 points, annonce `LARGUEUR NEUTRALISÉ !` et jauge de vie au HUD
   tout le combat. Le râle `rale.wav`, jusqu'ici inutilisé,
-  annonce son apparition (non spatial comme l'annonce de vague : elle apparaît à
+  annonce son apparition (non spatial comme l'annonce de vague : il apparaît à
   quelques centaines de mètres, un son spatialisé y serait inaudible).
 
 - [x] Yeux lumineux : deux billboards additifs par zombie (`render::combat::ZombieEyes`,
-  `assets/shaders/zombie_eyes.*`), verts pour un marcheur et rouges pour une pondeuse,
+  `assets/shaders/zombie_eyes.*`), verts pour un marcheur et rouges pour un largueur,
   ce qui signale le boss avant même qu'on distingue sa silhouette. Ils sont calés sur la
   matrice d'instance du corps (`ZombieHorde::buildEyes`), pas sur l'os du cou animé par
   le squelette : à distance de jeu, l'écart ne se voit pas, et cela évite de poser une
@@ -492,6 +492,121 @@ ou sortir de France.
     Pistes pour aller plus loin : types de zombies (coureur, colosse, cracheur) plutôt
   qu'une horde uniforme ; plafond toxique qui monte avec les manches ; ravitaillement
   en munitions à récupérer en se posant ; manche bonus entre deux vagues.
+
+### Yeux qui flottaient devant le visage
+
+- [x] Défaut signalé en jeu : les lueurs vertes ne tenaient pas sur la tête. Elles
+  étaient posées à un point fixe du repère du modèle (1,62 m de haut, 11 cm en avant),
+  au motif qu'à distance de jeu l'écart avec l'os du cou ne se verrait pas. Mesure faite
+  sur le pack : le crâne s'écarte de ce point de 13 à 34 cm selon la variante et
+  l'instant du cycle, dérive de root motion déjà compensée, et il se déplace lui-même
+  dans une boule de 9 à 29 cm de rayon pendant la marche. Un crâne mesurant 26 cm, aucun
+  point fixe ne pouvait convenir : les neuf variantes du pack ne partagent même pas la
+  même position de tête au repos (jusqu'à 27 cm d'écart entre elles).
+
+    Les yeux sont donc calibrés au chargement sur l'os qui pilote le haut de la tête,
+  variante par variante (`SkinnedModel::eyePoints`) : on repère cet os par vote des
+  sommets de la tranche haute, puis on exprime les deux yeux DANS son repère. Le rendu
+  les relit sur la pose qu'il vient de dessiner (`SkinnedZombies::eyeAnchors`), au prix
+  de deux produits matrice-point par lot déjà posé. Vérifié sur les neuf variantes et
+  vingt-quatre instants du cycle : les ancrages restent tous dans la boîte du crâne.
+
+    Deux essais en vol ont ensuite recalé le placement, qui partait de la boîte du
+  crâne. "Sur les oreilles et trop gros de près" : cette boîte fait 18 à 29 cm de large
+  (oreilles et cheveux compris), si bien qu'un demi-écart pris sur elle visait les
+  oreilles, alors que l'écart entre pupilles vaut 6,4 cm quelle que soit la coiffure ;
+  et le rayon de base de 13 cm donnait une boule de 26 cm sur une tête de 26. Le repère
+  devient donc le NEZ, point le plus avancé du crâne, qui donne l'axe du visage, la
+  hauteur et l'avancée ; le rayon tombe à 3,2 cm, la croissance à distance étant
+  relancée (référence à 1 m, plafond à 15) pour garder le loin lisible : 32 cm de rayon
+  à 100 m contre 46 avant, mais quatre fois moins au contact.
+
+    "Sur le front" : le point le plus avancé n'est pas toujours le nez -- sur trois
+  variantes c'est le front ou une mèche, et le regard remontait. On retient désormais la
+  plus basse des deux estimations, celle tirée du nez et celle tirée de la taille de la
+  tête, bornée entre 11 et 18 cm sous le sommet du crâne. Mesuré après correction : 11,0
+  à 15,6 cm selon la variante, contre 8,0 à 13,6 avant.
+
+    Retenu en l'état après essai en vol : juste sur la plupart des variantes, approximatif
+  sur quelques-unes. Le pack ne donne pas de repère d'yeux, et ses neuf têtes ne partagent
+  ni la même proportion ni le même point le plus avancé ; aller plus loin demanderait un
+  ancrage saisi à la main, variante par variante.
+
+    La horde ne fournit plus que la couleur et le rayon (`buildEyeTints`), dans le même
+  ordre que les matrices et les `kind` : elle ignore où le squelette a posé la tête, ce
+  qui n'est pas son affaire.
+
+### Pas d'annonce de la tour en mode zombie
+
+- [x] Le mode zombie n'annonce plus rien : on entre en combat turbine et rotor déjà au
+  régime, face à une horde, et une autorisation de décollage n'y a pas sa place. Le
+  verrou de rotor qui accompagnait l'annonce saute avec elle, sans quoi l'appareil
+  resterait cloué au pad en attendant une réplique qui ne vient plus.
+
+    Deux effets de bord relevés en chemin, corrigés dans la foulée pour le vol libre.
+  D'abord la voix lisait "Dax-Seyresse (pad est) tower" : le nom d'hélipad porte une
+  précision entre parenthèses que la synthèse prononce telle quelle (Dax et Paris sont
+  concernés). Elle est retirée comme l'était déjà le préfixe "Aérodrome de" -- la tour
+  annonce le terrain, pas le pad. Ensuite l'annonce ne se réarmait qu'en voyant la
+  turbine redescendre sous la moitié du régime : deux vols lancés d'affilée turbine
+  chaude, et seul le premier était annoncé. `applyMenuSession` réarme désormais
+  explicitement (`resetRadioMessage`), sous-titre compris.
+
+### Le largueur emporte ce qu'il a lâché
+
+- [x] Abattre le largueur fait éclater sur place tous les marcheurs qu'il a lâchés :
+  une boule de feu et un cri par marcheur, et ils comptent comme des mises à mort, le
+  joueur les ayant gagnées en abattant le boss. Les marcheurs venus du bord de l'arène,
+  eux, continuent leur chemin. La manche de boss cesse ainsi de traîner : ce n'était plus
+  qu'un ménage de fin, sans enjeu, une fois le largueur tombé.
+
+    Ces marcheurs rapportent 25 points CHACUN, et non le barème du kill multiple utilisé
+  pour le souffle d'une roquette : celui-ci plafonne à trois têtes, ce qui convenait à une
+  explosion mais pas ici, où le largueur peut en avoir lâché quinze. Un largueur abattu
+  vaut donc 500 points de prime, plus la roquette qui l'achève, plus 25 par marcheur
+  emporté.
+
+    Un marcheur porte donc désormais son origine (`ZombieHorde::Zombie::fromBrood`, posé
+  par `spawnBroodling`), et ses yeux sont ROUGES comme ceux du largueur au lieu de verts.
+  La couleur prévient : tout ce qui luit rouge tombera avec le boss. On distingue le
+  largueur de sa portée à la taille de la lueur, trois fois plus large à son échelle.
+
+    Le `RocketSystem` accepte pour l'occasion une détonation qui ne vient d'aucun tir
+  (`addExplosion`) : purement visuelle, sans dégâts de zone ni trace au sol, puisque ce
+  n'est pas un impact de roquette.
+
+### Dégâts au contact du sol
+
+- [x] En mode zombie, toucher le sol coûte désormais de la vie : rien en deçà de 3 m/s
+  (un posé), puis 0,35 point par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une droite,
+  qui faisait perdre trop de vie à chaque contact : les dégâts suivent l'énergie du choc,
+  si bien qu'une touche un peu ferme s'encaisse (1 point à 5 m/s, 9 à 8 m/s, 17 à 10 m/s)
+  alors qu'un vrai crash reste fatal (79 points à 18 m/s, la mort à 20). Le bruit
+  d'impact des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
+  l'appareil comme les autres coups reçus.
+
+    La vitesse ne peut se mesurer QUE dans la physique : le contact annule aussitôt la
+  composante verticale, si bien que la boucle de jeu, bien plus lente que la simulation à
+  pas fixe, ne verrait plus qu'un appareil posé, vitesse nulle. `FlightModel` relève donc
+  la vitesse complète au pas qui ENTRE en contact (rentrer dans un versant à
+  l'horizontale reste un contact) et la tient à disposition jusqu'à lecture
+  (`consumeGroundImpact`). Rester posé ne produit aucun nouveau contact, et repositionner
+  l'appareil oublie une valeur non lue, sans quoi la partie suivante encaisserait les
+  dégâts d'un posé qui n'a pas eu lieu.
+
+### Silence à la fin de partie
+
+- [x] La fin de partie fige le vol (`frozen` dans `mainLoop`) mais laissait tourner le
+  son : turbine, rotor et radio continuaient derrière le bandeau, sur un appareil
+  abattu. La fin de partie suit désormais le même chemin que la pause
+  (`AudioEngine::setPaused`), qui garde la position des boucles : la partie suivante les
+  reprend là où elles s'étaient tues.
+
+    Les sons ponctuels du combat ne passent pas par là (ils ne sont pas des boucles) et
+  leur purge s'arrête avec `update()`, faute d'appel une fois le jeu figé : un râle ou
+  une queue d'explosion se serait poursuivi seul. D'où `stopCombatSounds`, qui les coupe
+  et les libère, appelé à chaque image de fin de partie plutôt que sur le front de
+  `gameOver` (sans effet une fois la liste vide, et rien à retenir entre deux images).
 
 ## Quelques observations à traiter
 

@@ -1,7 +1,7 @@
 /*
  * wave_manager_tests.cpp
  * Tests de l'orchestration des vagues du mode zombie (WaveManager) : première
- * vague, escalade de difficulté, score et manches de boss (pondeuse). Se teste
+ * vague, escalade de difficulté, score et manches de boss (largueur). Se teste
  * sans contexte graphique.
  *
  * Auteur : O. Booklage
@@ -98,7 +98,7 @@ void avanceJusqua(WaveManager& waves, ZombieHorde& horde, int wave) {
 }
 } /* namespace */
 
-TEST_CASE("WaveManager : manches de boss (pondeuse)", "[combat][waves][boss]") {
+TEST_CASE("WaveManager : manches de boss (largueur)", "[combat][waves][boss]") {
     const auto dir = writeTempSpawnDir("artouste_boss_test", "10 0\n20 0\n30 0\n");
 
     SECTION("une manche sur cinq est une manche de boss") {
@@ -109,13 +109,13 @@ TEST_CASE("WaveManager : manches de boss (pondeuse)", "[combat][waves][boss]") {
         CHECK(WaveManager::isBossWave(10));
     }
 
-    SECTION("la pondeuse apparaît dès l'ouverture de la manche 5") {
+    SECTION("le largueur apparaît dès l'ouverture de la manche 5") {
         WaveManager waves;
         ZombieHorde horde;
         REQUIRE(waves.start(dir, horde));
         CHECK_FALSE(horde.broodAlive()); /* manche 1 : pas de boss */
 
-        /* Extermination des manches 1 à 4 : la pondeuse doit être debout dès
+        /* Extermination des manches 1 à 4 : le largueur doit être debout dès
            l'instant où la manche 5 s'ouvre, avant même son escorte. */
         while (waves.waveNumber() < 5) {
             horde.clear();
@@ -126,7 +126,7 @@ TEST_CASE("WaveManager : manches de boss (pondeuse)", "[combat][waves][boss]") {
         CHECK(horde.broodHealthPct() == Catch::Approx(1.0f));
     }
 
-    SECTION("la pondeuse engendre des marcheurs tant qu'elle est debout") {
+    SECTION("le largueur lâche des marcheurs tant qu'il est debout") {
         WaveManager waves;
         ZombieHorde horde;
         REQUIRE(waves.start(dir, horde));
@@ -138,7 +138,7 @@ TEST_CASE("WaveManager : manches de boss (pondeuse)", "[combat][waves][boss]") {
         CHECK(horde.count() > avant);
     }
 
-    SECTION("l'anti-blocage ne clôt pas une manche dont la pondeuse tient debout") {
+    SECTION("l'anti-blocage ne clôt pas une manche dont le largueur tient debout") {
         WaveManager waves;
         ZombieHorde horde;
         REQUIRE(waves.start(dir, horde));

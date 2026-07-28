@@ -28,12 +28,12 @@ constexpr float WAVE_MAX_DURATION_S  = 90.0f; /* anti-blocage (zombie coincé, r
 constexpr float SPEED_STEP           = 0.12f; /* += facteur de difficulté par vague */
 constexpr float MAX_DIFFICULTY       = 2.5f;   /* plafond du facteur de difficulté */
 
-/* Manche de boss : la pondeuse remplace la moitié de l'escorte habituelle (le
-   reste de la pression vient de ce qu'elle engendre), et pond un marcheur à cet
-   intervalle tant qu'elle vit. Ces apparitions s'arrêtent au plafond de vague
+/* Manche de boss : le largueur remplace la moitié de l'escorte habituelle (le
+   reste de la pression vient de ce qu'il lâche), et largue un marcheur à cet
+   intervalle tant qu'il vit. Ces apparitions s'arrêtent au plafond de vague
    pour ne pas laisser la horde enfler sans fin si le joueur tarde à l'abattre. */
 constexpr float BROOD_SPAWN_INTERVAL_S = 3.0f;
-/* Distances (m) autour de la pondeuse où atterrit sa portée. */
+/* Distances (m) autour du largueur où atterrit son largage. */
 constexpr float BROOD_SPAWN_RADIUS_MIN_M = 3.0f;
 constexpr float BROOD_SPAWN_RADIUS_MAX_M = 9.0f;
 
@@ -135,7 +135,7 @@ void WaveManager::beginWave(int number, ZombieHorde& horde, bool immediateEscort
 float WaveManager::update(float dt, ZombieHorde& horde) noexcept {
     m_waveElapsedS += dt;
 
-    /* Portée de la pondeuse : elle engendre pendant toute la manche de boss,
+    /* Largage du largueur : il lâche pendant toute la manche de boss,
        phase d'apparition de l'escorte comprise, et s'arrête au plafond de
        vague pour ne pas laisser la horde enfler sans fin. */
     if (horde.broodAlive()) {
@@ -160,7 +160,7 @@ float WaveManager::update(float dt, ZombieHorde& horde) noexcept {
         }
     } else {
         const bool cleared = horde.count() == 0;
-        /* L'anti-blocage ne s'applique pas tant que la pondeuse tient debout :
+        /* L'anti-blocage ne s'applique pas tant que le largueur tient debout :
            une manche de boss se gagne en l'abattant, pas en patientant. */
         const bool timedOut = !horde.broodAlive() && m_waveElapsedS > WAVE_MAX_DURATION_S;
         if (cleared || timedOut) {

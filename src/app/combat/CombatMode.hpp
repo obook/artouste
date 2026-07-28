@@ -168,7 +168,7 @@ public:
 
     /* Annonce affichée au HUD quand une même explosion fauche plusieurs zombies
        d'un coup (voir killScoreForCount, même seuils que le score), ou quand la
-       pondeuse tombe (Brood, qui prime sur un kill multiple simultané) : reste
+       le largueur tombe (Brood, qui prime sur un kill multiple simultané) : reste
        affichée KILL_ANNOUNCE_DURATION_S après l'événement qui l'a déclenchée,
        puis retombe à None. */
     enum class KillAnnouncement { None, Double, Triple, Carnage, Brood };

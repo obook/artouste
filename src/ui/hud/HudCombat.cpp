@@ -94,8 +94,8 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
                                                     : "HORS DE PORTEE DES ZOMBIES");
     ImGui::PopStyleColor();
 
-    /* Pondeuse : jauge de vie, visible seulement pendant une manche de boss et
-       tant qu'elle tient debout. Sans elle, le joueur ne peut pas savoir s'il
+    /* Largueur : jauge de vie, visible seulement pendant une manche de boss et
+       tant qu'il tient debout. Sans elle, le joueur ne peut pas savoir s'il
        progresse : cinq roquettes séparent l'apparition de la mise à mort, ce qui
        est long sans retour. Dessinée DANS le panneau de combat plutôt qu'en
        bandeau haut centré : là-haut, elle recouvrait le ruban de cap (tracé de
@@ -105,7 +105,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
     if (data.combat.broodActive) {
         ImGui::Separator();
         ImGui::PushStyleColor(ImGuiCol_Text, HUD_RED);
-        ImGui::TextUnformatted("PONDEUSE");
+        ImGui::TextUnformatted("LARGUEUR");
         ImGui::PopStyleColor();
         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, HUD_RED);
         ImGui::ProgressBar(data.combat.broodHealthPct, ImVec2(sc(200.0f), sc(12.0f)), "");
@@ -114,7 +114,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
 
     ImGui::End();
 
-    /* Annonce de kill multiple (double/triple/carnage) ou de pondeuse neutralisée :
+    /* Annonce de kill multiple (double/triple/carnage) ou de largueur neutralisé :
        bandeau bref, haut de l'écran, distinct du panneau permanent ci-dessus --
        couleur et taille montent avec la gravité, mêmes seuils que le score (voir
        CombatMode::killScoreForCount). Rien à afficher (killAnnounceKind == 0)
@@ -127,7 +127,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
             case 1:  texte = "DOUBLE KILL !";      couleur = HUD_GREEN; echelle = 1.3f; break;
             case 2:  texte = "TRIPLE KILL !";      couleur = HUD_AMBER; echelle = 1.6f; break;
             case 3:  texte = "CARNAGE !";          couleur = HUD_RED;   echelle = 2.0f; break;
-            default: texte = "PONDEUSE NEUTRALISÉE !"; couleur = HUD_RED; echelle = 2.0f; break;
+            default: texte = "LARGUEUR NEUTRALISÉ !"; couleur = HUD_RED; echelle = 2.0f; break;
         }
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.22f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.0f);

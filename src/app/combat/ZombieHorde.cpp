@@ -187,8 +187,8 @@ std::vector<ThrowRequest> ZombieHorde::update(float dt, const vec3& playerPos, f
            continuent de converger, mais ne peuvent pas viser. */
         z.throwCooldownS = std::max(0.0f, z.throwCooldownS - dt);
         if (dist <= TOXIC_RANGE_MAX_M && playerAgl <= TOXIC_CEILING_M && z.throwCooldownS <= 0.0f) {
-            /* Hauteur de bras mise à l'échelle du lanceur : sans cela, une
-               pondeuse de près de six mètres lancerait depuis ses chevilles. */
+            /* Hauteur de bras mise à l'échelle du lanceur : sans cela, un
+               largueur de près de six mètres lancerait depuis ses chevilles. */
             requests.push_back(
                 ThrowRequest{z.position + vec3{0.0f, THROW_ORIGIN_HEIGHT_M * z.scale, 0.0f},
                              playerPos});
@@ -224,7 +224,7 @@ mat4 ZombieHorde::instanceMatrix(const Zombie& z) const {
         m = glm::rotate(m, z.yaw, vec3{0.0f, 1.0f, 0.0f});
     }
     if (z.scale != 1.0f) {
-        m = glm::scale(m, vec3{z.scale});  /* pondeuse : même modèle, agrandi */
+        m = glm::scale(m, vec3{z.scale});  /* largueur : même modèle, agrandi */
     }
     return m;
 }

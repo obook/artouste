@@ -157,7 +157,7 @@ RocketSystem::UpdateResult RocketSystem::update(
                     if (z.state != ZombieHorde::State::Alive) {
                         continue;
                     }
-                    /* Sphère mise à l'échelle du zombie : une pondeuse
+                    /* Sphère mise à l'échelle du zombie : un largueur
                        (ZombieHorde::BROOD_SCALE) est une cible plus haute et
                        plus large, comme sa silhouette le laisse attendre. */
                     const vec3 c = z.position + vec3{0.0f, DIRECT_HIT_HEIGHT_M * z.scale, 0.0f};

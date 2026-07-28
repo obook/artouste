@@ -148,14 +148,14 @@ struct HudData {
         int kills = 0; /* zombies tués depuis le début de la session */
 
         /* Annonce à afficher (0 = aucune, 1 = double, 2 = triple, 3 = carnage,
-           4 = pondeuse neutralisée), voir app::CombatMode::KillAnnouncement -- valeur
+           4 = largueur neutralisé), voir app::CombatMode::KillAnnouncement -- valeur
            brute plutôt que l'enum pour garder HudData indépendant du module
            combat, comme le reste de cette structure (vec3 exclu, voir
            zombieMapPoints plus bas). */
         int killAnnounceKind = 0;
 
-        /* Pondeuse (boss d'une manche sur cinq, voir app::WaveManager) : jauge de
-           vie affichée seulement tant qu'elle est debout. */
+        /* Largueur (boss d'une manche sur cinq, voir app::WaveManager) : jauge de
+           vie affichée seulement tant qu'il est debout. */
         bool broodActive = false;
         float broodHealthPct = 1.0f;
 

@@ -40,15 +40,15 @@ public:
 
     enum class State { Alive, Dying, Dead };
 
-    /* Nature d'un zombie. La pondeuse (Brood) est le boss des manches multiples
+    /* Nature d'un zombie. Le largueur (Brood) est le boss des manches multiples
        de cinq (voir WaveManager) : même modèle et même IA de marche que les
-       autres, mais agrandie, très résistante, plus lente, et surtout elle fait
-       apparaître des marcheurs autour d'elle tant qu'elle vit -- c'est le
+       autres, mais agrandi, très résistant, plus lent, et surtout il fait
+       apparaître des marcheurs autour de lui tant qu'il vit -- c'est le
        gestionnaire de vagues qui pilote ces apparitions, la horde ne fait que
        porter l'état. */
     enum class Type { Walker, Brood };
 
-    /* Vie d'une pondeuse : la roquette inflige 1000 de dégâts de zone
+    /* Vie d'un largueur : la roquette inflige 1000 de dégâts de zone
        (RocketSystem::BLAST_DAMAGE), il faut donc cinq impacts pour l'abattre,
        là où un marcheur (100 PV) tombe du premier. */
     static constexpr float BROOD_HEALTH = 5000.0f;
@@ -57,8 +57,8 @@ public:
        normalisé à 1,80 m), et une cible plus facile à toucher en compensation du
        nombre de roquettes nécessaires. */
     static constexpr float BROOD_SCALE = 3.2f;
-    /* La pondeuse avance nettement moins vite qu'un marcheur : sa menace est ce
-       qu'elle engendre, pas sa course. */
+    /* Le largueur avance nettement moins vite qu'un marcheur : sa menace est ce
+       qu'il largue, pas sa course. */
     static constexpr float BROOD_SPEED_FACTOR = 0.45f;
 
     struct Zombie {
@@ -72,7 +72,7 @@ public:
         float hitFlashTimer = 0.0f;   /* décompte du flash de coup touché (voir applyDamage) */
         Type  type          = Type::Walker;
         /* Échelle du modèle ET de la sphère de collision (voir RocketSystem) :
-           1 pour un marcheur, BROOD_SCALE pour une pondeuse. Un seul champ pour
+           1 pour un marcheur, BROOD_SCALE pour un largueur. Un seul champ pour
            les deux, sans quoi la silhouette et la cible finiraient par diverger. */
         float scale         = 1.0f;
         /* Entier tiré à l'apparition : le rendu skinné en déduit, de façon

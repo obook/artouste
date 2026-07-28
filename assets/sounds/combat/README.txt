@@ -10,4 +10,4 @@ suivants (WAV, comme les autres sons du dépôt) pour les activer :
   toxic_throw.wav     - un zombie lance une boulette toxique
   toxic_impact.wav    - une boulette toxique touche l'appareil
   wave_start.wav      - une nouvelle manche commence (dès la 1re)
-  rale.wav            - apparition de la pondeuse (boss d'une manche sur cinq)
+  rale.wav            - apparition du largueur (boss d'une manche sur cinq)

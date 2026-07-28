@@ -61,6 +61,7 @@ void Application::renderScene(const mat4& base,
 
     renderSkyAndSea(ctx, timeSeconds);
     renderTerrainAndBuildings(ctx);
+    renderMonuments(ctx);
     renderVegetationAndClouds(ctx);
     renderCombatEntities(ctx, timeSeconds);
 

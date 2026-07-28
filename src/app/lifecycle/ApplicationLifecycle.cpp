@@ -95,6 +95,7 @@ Application::~Application() {
     m_loadedHeli.reset();
     m_helicopter.reset();
     m_buildings.reset();
+    m_monuments.clear();
     m_vegetation.reset();
     m_clouds.reset();
     m_terrain.reset();
@@ -107,6 +108,7 @@ Application::~Application() {
     m_flatShader.reset();
     m_shadowShader.reset();
     m_buildingShader.reset();
+    m_monumentShader.reset();
     m_vegetationShader.reset();
     m_cloudShader.reset();
     m_skyShader.reset();

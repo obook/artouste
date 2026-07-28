@@ -75,6 +75,8 @@ void Application::initSceneShaders() {
                                                       assets / "shaders" / "shadow.frag");
     m_buildingShader = std::make_unique<render::Shader>(assets / "shaders" / "building.vert",
                                                         assets / "shaders" / "building.frag");
+    m_monumentShader = std::make_unique<render::Shader>(assets / "shaders" / "monument.vert",
+                                                        assets / "shaders" / "monument.frag");
     m_vegetationShader = std::make_unique<render::Shader>(assets / "shaders" / "vegetation.vert",
                                                           assets / "shaders" / "vegetation.frag");
     m_cloudShader = std::make_unique<render::Shader>(assets / "shaders" / "clouds.vert",

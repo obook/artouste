@@ -49,6 +49,7 @@ add_executable(artouste
     app/render/ApplicationRenderWorld.cpp
     app/render/ApplicationRenderActors.cpp
     app/render/ApplicationRenderEffects.cpp
+    app/monuments/ApplicationMonuments.cpp
     app/ground/ApplicationGround.cpp
     app/ground/ApplicationGroundShadow.cpp
     app/ground/ApplicationGroundHapi.cpp

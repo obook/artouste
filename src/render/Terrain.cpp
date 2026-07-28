@@ -130,6 +130,7 @@ Terrain::Terrain(const std::filesystem::path& dir,
     loadPlaces(dir / "landmarks.txt", m_landmarks, "lieu(x) remarquable(s)");
     loadPlaces(dir / "helipads.txt", m_helipads, "hélipad(s)");
     loadHapiUnits(dir / "hapi.txt", m_hapiUnits);
+    loadMonuments(dir / "monuments.txt", m_monuments);
 
     if (!readMetadata(meta,
                       m_cols,

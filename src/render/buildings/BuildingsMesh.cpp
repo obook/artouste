@@ -169,6 +169,27 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     }
     constexpr float PAD_CLEAR_M2 = 15.0f * 15.0f; /* rayon dégagé autour d'un pad, au carré */
 
+    /* Monuments 3D de la carte : leur modèle décrit déjà l'édifice, et la BD TOPO
+       en donne l'emprise extrudée. Poser les deux imbriquerait deux géométries
+       (la tour Eiffel deviendrait un bloc à fenêtres traversé par un treillis).
+       On dégage donc, autour de chaque monument, le rayon qu'il déclare dans
+       monuments.txt. Centres convertis une fois pour toutes en monde. */
+    struct MonumentClear {
+        float x = 0.0f;
+        float z = 0.0f;
+        float radius2 = 0.0f;
+    };
+    std::vector<MonumentClear> monumentClears;
+    for (const Monument& mon : terrain.monuments()) {
+        if (mon.clearRadiusM <= 0.0f) {
+            continue; /* monument sans dégagement demandé : les bâtiments restent */
+        }
+        MonumentClear mc;
+        terrain.worldAt(mon.lon, mon.lat, mc.x, mc.z);
+        mc.radius2 = mon.clearRadiusM * mon.clearRadiusM;
+        monumentClears.push_back(mc);
+    }
+
     /* La géométrie n'est plus accumulée dans un tampon unique : chaque bâtiment est
        rangé dans une tuile spatiale (voir plus bas), puis les tuiles sont concaténées
        en fin de construction. Cela permet le culling par tuile au rendu. */
@@ -210,7 +231,8 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     std::vector<TileBuild> tiles(static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows));
 
     std::vector<float> px, pz;    /* emprise en coordonnées monde (réutilisé par bâtiment) */
-    std::size_t skippedWater = 0; /* bâtiments écartés car bâtis sur l'eau */
+    std::size_t skippedWater = 0;     /* bâtiments écartés car bâtis sur l'eau */
+    std::size_t skippedMonument = 0;  /* bâtiments écartés car sous un monument 3D */
     for (std::uint32_t b = 0; b < count; ++b) {
         float height = 0.0f;
         std::uint16_t npts = 0;
@@ -313,6 +335,23 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             continue;
         }
 
+        /* Emprise sous un monument 3D : même logique que pour les pads, mais au
+           rayon déclaré par le monument. Le test point-dans-polygone rattrape le
+           cas de la grande emprise qui contient le monument sans que son centre
+           en soit proche (l'esplanade du Champ de Mars autour de la tour). */
+        bool underMonument = false;
+        for (const MonumentClear& mc : monumentClears) {
+            const float dmx = cx - mc.x, dmz = cz - mc.z;
+            if (dmx * dmx + dmz * dmz < mc.radius2 || inFootprint(mc.x, mc.z)) {
+                underMonument = true;
+                break;
+            }
+        }
+        if (underMonument) {
+            ++skippedMonument;
+            continue;
+        }
+
         const float top = base + height;
 
         /* Tuile de ce bâtiment (d'après son centre) et mise à jour de sa boîte
@@ -381,6 +420,10 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
     if (skippedWater > 0) {
         std::printf("[Buildings] %zu bâtiment(s) sur l'eau écarté(s) (cabanes au ras du bassin).\n",
                     skippedWater);
+    }
+    if (skippedMonument > 0) {
+        std::printf("[Buildings] %zu emprise(s) écartée(s) sous un monument 3D.\n",
+                    skippedMonument);
     }
     if (m_count == 0) {
         return;

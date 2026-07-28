@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -78,6 +79,66 @@ void Terrain::loadHapiUnits(const std::filesystem::path& path, std::vector<HapiU
         out.push_back(std::move(hapi));
     }
     std::printf("[Terrain] %zu balise(s) HAPI chargée(s).\n", out.size());
+}
+
+void Terrain::loadMonuments(const std::filesystem::path& path, std::vector<Monument>& out) {
+    /* Format : un monument par ligne
+       "lon lat altitude cap echelle_h echelle_v rayon_m fichier nom", le nom
+       étant le reste de la ligne (il peut contenir des espaces et des accents).
+       Le champ altitude accepte un nombre (mètres) ou le mot-clé "sol", qui
+       repose le modèle sur le relief. Ligne vide, commentaire ou mal formée
+       ignorée. */
+    std::ifstream file(path);
+    if (!file) {
+        return;  /* fichier absent pour ce terrain : tableau vide */
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        Monument           mon;
+        std::string        altitude;
+        if (!(iss >> mon.lon >> mon.lat >> altitude >> mon.headingDeg >> mon.scaleH >>
+              mon.scaleV >> mon.clearRadiusM >> mon.file)) {
+            continue;  /* ligne vide, commentaire ou mal formée */
+        }
+        if (altitude == "sol") {
+            mon.onGround = true;
+        } else {
+            /* Altitude explicite : une valeur illisible disqualifie la ligne
+               plutôt que de poser le monument à zéro sans prévenir. */
+            try {
+                mon.altitudeM = std::stof(altitude);
+            } catch (const std::exception&) {
+                std::fprintf(stderr,
+                             "[Terrain] monuments.txt : altitude \"%s\" illisible, ligne ignorée.\n",
+                             altitude.c_str());
+                continue;
+            }
+        }
+        /* Le chemin du modèle désigne un fichier RANGÉ SOUS
+           assets/models/monuments/ : on refuse la remontée d'arborescence et le
+           chemin absolu. Les cartes circulent en zip (voir la cible "cartes" du
+           CMakeLists), donc un monuments.txt peut venir d'ailleurs que du dépôt :
+           il n'a pas à désigner un fichier hors du dossier des modèles. */
+        if (mon.file.find("..") != std::string::npos || mon.file.front() == '/' ||
+            mon.file.find(':') != std::string::npos) {
+            std::fprintf(stderr,
+                         "[Terrain] monuments.txt : chemin \"%s\" hors du dossier des modèles, "
+                         "ligne ignorée.\n",
+                         mon.file.c_str());
+            continue;
+        }
+
+        std::getline(iss, mon.name);
+        const std::size_t first = mon.name.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            continue;  /* monument sans nom : on ignore */
+        }
+        const std::size_t last = mon.name.find_last_not_of(" \t\r\n");
+        mon.name                = mon.name.substr(first, last - first + 1);
+        out.push_back(std::move(mon));
+    }
+    std::printf("[Terrain] %zu monument(s) 3D déclaré(s).\n", out.size());
 }
 
 void Terrain::flattenPads() {

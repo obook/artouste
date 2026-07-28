@@ -80,6 +80,9 @@ public:
            (voir render::SkinnedZombies). La horde reste ignorante de leur
            nombre. */
         unsigned int kind = 0;
+        /* Marcheur lâché par le largueur, et non venu du bord de l'arène : il ne
+           lui survit pas (voir killBroodlings). */
+        bool fromBrood = false;
     };
 
     /* Fait apparaître un zombie à la position donnée. yaw/phase varient
@@ -151,23 +154,23 @@ public:
        et le groupe de phase de chaque instance. */
     [[nodiscard]] std::vector<int> buildKinds() const;
 
-    /* Une lueur d'oeil à dessiner (voir render::combat::ZombieEyes) : deux par
-       zombie affiché. Type volontairement neutre (pas de type du module de
-       rendu ici), converti à l'image par l'adaptateur de rendu -- même principe
-       que RocketSystem::ExplosionView. */
-    struct EyeView {
-        vec3  position{0.0f};  /* repère monde */
-        float radius = 0.0f;   /* rayon de la lueur (m), avant grossissement à distance */
-        vec3  color{0.0f};     /* couleur ET intensité (elle s'éteint à la mort) */
+    /* De quoi allumer les deux yeux d'un zombie (voir render::combat::ZombieEyes) :
+       couleur et taille, sans position -- la horde ignore où le squelette du
+       modèle a posé la tête à cette image. C'est le rendu qui place les lueurs,
+       sur l'os de tête de la variante (voir render::SkinnedZombies::eyeAnchors).
+       Type volontairement neutre (pas de type du module de rendu ici), converti
+       à l'image par l'adaptateur de rendu -- même principe que
+       RocketSystem::ExplosionView. */
+    struct EyeTint {
+        vec3  color{0.0f};    /* couleur ET intensité (elle s'éteint à la mort) */
+        float radius = 0.0f;  /* rayon de la lueur (m), avant grossissement à distance */
     };
 
-    /* Deux lueurs par zombie encore affiché, calées sur la même matrice
-       d'instance que buildInstanceMatrices (donc soumises au même balancement
-       et à la même bascule de chute). Elles sont posées sur la tête du modèle
-       en dur, sans suivre l'os du cou animé par le squelette : à la distance de
-       jeu (vue d'hélicoptère), l'écart ne se voit pas, et cela évite de calculer
-       une pose par instance. Verte pour un marcheur, rouge pour une pondeuse. */
-    [[nodiscard]] std::vector<EyeView> buildEyes() const;
+    /* Une teinte par zombie encore affiché, MÊME ordre/filtrage que
+       buildInstanceMatrices/buildKinds. Verte pour un marcheur, rouge pour un
+       largueur ; couleur nulle quand le regard est éteint (fin de chute), ce
+       que le rendu prend pour "pas de lueur". */
+    [[nodiscard]] std::vector<EyeTint> buildEyeTints() const;
 
     [[nodiscard]] std::size_t count() const noexcept { return m_zombies.size(); }
     [[nodiscard]] std::vector<Zombie>&       zombies() noexcept { return m_zombies; }

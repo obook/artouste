@@ -4,8 +4,8 @@
  * zombie_eyes.vert
  * Lueur des yeux d'un zombie : billboard face caméra, même construction que
  * projectile.vert (axes droite/haut relus dans u_view), avec deux différences.
- * D'abord une couleur par instance, verte pour un marcheur et rouge pour une
- * pondeuse. Ensuite un grossissement avec la distance : un oeil de 9 cm serait
+ * D'abord une couleur par instance, verte pour un marcheur et rouge pour un
+ * largueur. Ensuite un grossissement avec la distance : un oeil de 9 cm serait
  * plus fin qu'un pixel depuis l'hélicoptère, alors que ces lueurs servent
  * justement à repérer la horde de loin. La taille apparente est donc bornée par
  * le bas (angle minimal), et le grossissement plafonne pour que la lueur reste
@@ -26,7 +26,7 @@ uniform mat4 u_proj;
 uniform vec3 u_camPos; /* position de la caméra (repère recalé) */
 
 /* Grossissement avec la distance. Il faut un compromis : sans lui, un oeil de
-   13 cm passe sous le pixel dès quelques dizaines de mètres et la horde
+   3 cm passe sous le pixel dès quelques dizaines de mètres et la horde
    lointaine devient invisible ; mais viser une taille apparente CONSTANTE (le
    rayon croissant proportionnellement à la distance, première version) donnait
    des lueurs d'un mètre de large à moyenne portée -- bien plus grosses que la
@@ -37,12 +37,14 @@ uniform vec3 u_camPos; /* position de la caméra (repère recalé) */
    la perspective, ce qui garde un point lisible au loin. Au-delà du plafond, le
    rayon ne bouge plus et la lueur rétrécit normalement.
 
-   Réglage arrêté à mi-chemin entre les deux essais précédents : la taille
-   apparente constante était trop grosse (des boules), la première version en
-   racine trop discrète. À 100 m, le rayon vaut environ 46 cm, contre 60 cm pour
-   la première et 38 cm pour la seconde. */
-const float GROWTH_REF_M = 8.0;   /* en deçà : rayon inchangé (vue rapprochée) */
-const float MAX_GROWTH   = 5.0;   /* plafond, atteint vers 200 m */
+   Le réglage a été repris quand les yeux se sont avérés trop gros de près : le
+   rayon de base est passé de 13 à 3,2 cm (voir app::ZombieHorde, EYE_RADIUS_M),
+   ce qui aurait effacé la horde lointaine à croissance inchangée. La référence
+   descend donc à 1 m et le plafond monte à 15, de sorte que le loin bouge peu
+   (32 cm de rayon à 100 m, contre 46 avant) alors que le près est divisé par
+   quatre (3,2 cm au contact, contre 13). */
+const float GROWTH_REF_M = 1.0;   /* en deçà : rayon inchangé (au contact) */
+const float MAX_GROWTH   = 15.0;  /* plafond, atteint vers 225 m */
 
 out vec2 v_uv;
 out vec3 v_color;
@@ -55,8 +57,8 @@ void main() {
 
     float dist   = length(u_camPos - center);
     float growth = clamp(sqrt(dist / GROWTH_REF_M), 1.0, MAX_GROWTH);
-    /* Le rayon de près (a_instance.w) porte déjà l'échelle du zombie : une
-       pondeuse garde donc sa lueur plus large à toute distance. */
+    /* Le rayon de près (a_instance.w) porte déjà l'échelle du zombie : un
+       largueur garde donc sa lueur plus large à toute distance. */
     float radius = a_instance.w * growth;
 
     vec3 pos = center + (right * a_corner.x + up * a_corner.y) * radius * 2.0;

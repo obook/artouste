@@ -41,22 +41,19 @@ constexpr float THROW_COOLDOWN_MAX_S = 4.0f;
    zombie qui lance le bras en avant. */
 constexpr float THROW_ORIGIN_HEIGHT_M = 1.4f;
 
-/* Position des yeux dans le repère local du modèle, dont le chargeur normalise
-   la taille à 1,80 m (voir render::SkinnedModel, TARGET_HEIGHT_M) : hauteur du
-   regard, demi-écart entre les deux yeux et avancée sur le visage. Le modèle
-   regarde vers +Z local, sens dans lequel buildInstanceMatrices oriente la
-   marche. */
-constexpr float EYE_HEIGHT_M  = 1.62f;
-constexpr float EYE_SPACING_M = 0.075f;
-constexpr float EYE_FORWARD_M = 0.11f;
-/* Rayon de base de la lueur (m). Le shader la fait grossir avec la distance
-   pour qu'elle reste repérable depuis l'hélicoptère (voir zombie_eyes.vert) :
-   cette valeur ne vaut donc que de tout près. */
-constexpr float EYE_RADIUS_M = 0.13f;
+/* Rayon de base de la lueur (m), c'est-à-dire sa taille au contact. Le shader la
+   fait ensuite grossir avec la distance pour qu'elle reste repérable depuis
+   l'hélicoptère (voir zombie_eyes.vert) : cette valeur ne vaut donc que de tout
+   près. 13 cm à l'origine, soit une boule de 26 cm sur une tête de 26 cm : les
+   yeux mangeaient le visage dès qu'on approchait. Ramené à l'échelle d'un oeil
+   qui luit, la croissance à distance étant relancée pour ne rien perdre de loin. */
+constexpr float EYE_RADIUS_M = 0.032f;
 
 /* Couleurs des lueurs, au-delà de 1 pour saturer franchement le rendu additif :
-   vert pour un marcheur, rouge pour une pondeuse (le boss se repère ainsi de
-   loin, avant même de distinguer sa silhouette). */
+   vert pour un marcheur venu du bord de l'arène, rouge pour le largueur ET pour
+   ce qu'il lâche. Le boss se repère ainsi de loin, avant même de distinguer sa
+   silhouette (sa lueur est aussi trois fois plus large, à son échelle), et le
+   rouge annonce du même coup quels marcheurs tomberont avec lui. */
 const vec3 EYE_COLOR_WALKER{0.30f, 3.00f, 0.50f};
 const vec3 EYE_COLOR_BROOD{3.20f, 0.18f, 0.10f};
 }  /* namespace */
@@ -222,9 +219,9 @@ std::vector<mat4> ZombieHorde::buildInstanceMatrices() const {
     return out;
 }
 
-std::vector<ZombieHorde::EyeView> ZombieHorde::buildEyes() const {
-    std::vector<EyeView> out;
-    out.reserve(m_zombies.size() * 2);
+std::vector<ZombieHorde::EyeTint> ZombieHorde::buildEyeTints() const {
+    std::vector<EyeTint> out;
+    out.reserve(m_zombies.size());
     for (const Zombie& z : m_zombies) {
         if (z.state == State::Dead) {
             continue;
@@ -233,19 +230,11 @@ std::vector<ZombieHorde::EyeView> ZombieHorde::buildEyes() const {
            zombie au lieu de rester allumée sur un corps à terre. */
         const float fade = z.state == State::Dying ? saturate(z.stateTimer / DEATH_ANIM_DURATION_S)
                                                    : 1.0f;
-        if (fade <= 0.0f) {
-            continue;
-        }
-        const vec3 color = (z.type == Type::Brood ? EYE_COLOR_BROOD : EYE_COLOR_WALKER) * fade;
-        const mat4 m     = instanceMatrix(z);
-        for (const float side : {-1.0f, 1.0f}) {
-            const vec4 local{side * EYE_SPACING_M, EYE_HEIGHT_M, EYE_FORWARD_M, 1.0f};
-            EyeView    eye;
-            eye.position = vec3(m * local);
-            eye.radius   = EYE_RADIUS_M * z.scale;
-            eye.color    = color;
-            out.push_back(eye);
-        }
+        EyeTint    tint;
+        const bool auLargueur = z.type == Type::Brood || z.fromBrood;
+        tint.color  = (auLargueur ? EYE_COLOR_BROOD : EYE_COLOR_WALKER) * fade;
+        tint.radius = EYE_RADIUS_M * z.scale;
+        out.push_back(tint);
     }
     return out;
 }

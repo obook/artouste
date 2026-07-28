@@ -99,6 +99,21 @@ std::vector<mat4> SkinnedModel::boneMatrices(std::size_t meshIndex,
     return out;
 }
 
+bool SkinnedModel::eyePoints(std::size_t meshIndex, const std::vector<mat4>& bones, vec3& left,
+                             vec3& right) const {
+    if (meshIndex >= m_meshes.size()) {
+        return false;
+    }
+    const MeshData& md = m_meshes[meshIndex];
+    if (md.eyeBone < 0 || static_cast<std::size_t>(md.eyeBone) >= bones.size()) {
+        return false;
+    }
+    const mat4& b = bones[static_cast<std::size_t>(md.eyeBone)];
+    left          = vec3(b * vec4(md.eyeLocal[0], 1.0f));
+    right         = vec3(b * vec4(md.eyeLocal[1], 1.0f));
+    return true;
+}
+
 vec2 SkinnedModel::rootDriftXZ(std::size_t meshIndex, float t) const {
     if (meshIndex >= m_centerTable.size() || m_centerTable[meshIndex].empty()) {
         return vec2{0.0f};

@@ -21,7 +21,9 @@
 #include "render/combat/ZombieEyes.hpp"
 #include "util/Math.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 namespace artouste::app {
@@ -55,21 +57,44 @@ void Application::renderCombatEntities(const RenderContext& ctx, float timeSecon
     /*
      * Lueur des yeux : deux billboards additifs par zombie, dessinés APRÈS les
      * personnages pour se superposer à leur visage (profondeur lue, pas écrite,
-     * voir ZombieEyes::draw). Verte pour un marcheur, rouge pour une pondeuse,
-     * ce qui signale le boss de loin. Indépendante du pack skinné : les lueurs
-     * sont posées sur la matrice d'instance, pas sur un os du modèle.
+     * voir ZombieEyes::draw). Verte pour un marcheur, rouge pour un largueur,
+     * ce qui signale le boss de loin.
+     *
+     * Les deux points viennent du pack skinné (SkinnedZombies::eyeAnchors), qui
+     * les tient sur l'os de tête de la pose qu'il vient de dessiner -- d'où
+     * l'ordre : les zombies au-dessus, les yeux ici. Un point fixe du repère du
+     * modèle ne suffisait pas : la tête animée s'en écarte de plus de sa propre
+     * taille, et les lueurs flottaient à côté du visage. La horde ne fournit que
+     * la couleur et le rayon (zombieEyeTints), dans le même ordre que les
+     * matrices et les "kind".
      */
-    if (m_combat.active() && m_zombieEyesRender && m_zombieEyesRender->built()) {
-        const auto eyes = m_combat.zombieEyes();
-        if (!eyes.empty()) {
-            std::vector<render::ZombieEyes::Instance> instances;
-            instances.reserve(eyes.size());
-            for (const auto& e : eyes) {
+    if (m_combat.active() && m_zombieEyesRender && m_zombieEyesRender->built() && m_zombiesRender &&
+        m_zombiesRender->built()) {
+        const auto transforms = m_combat.zombieTransforms();
+        const auto kinds      = m_combat.zombieKinds();
+        const auto tints      = m_combat.zombieEyeTints();
+        const std::size_t n   = std::min({transforms.size(), kinds.size(), tints.size()});
+
+        std::vector<render::ZombieEyes::Instance> instances;
+        instances.reserve(n * 2);
+        for (std::size_t i = 0; i < n; ++i) {
+            if (tints[i].color == vec3(0.0f)) {
+                continue;  /* regard éteint (fin de chute) : pas de lueur du tout */
+            }
+            vec3 left{0.0f};
+            vec3 right{0.0f};
+            if (!m_zombiesRender->eyeAnchors(kinds[i], left, right)) {
+                continue;  /* variante sans os de tête repéré au chargement */
+            }
+            for (const vec3& local : {left, right}) {
                 render::ZombieEyes::Instance inst;
-                inst.posRadius = vec4{e.position, e.radius};
-                inst.color     = vec4{e.color, 0.0f};
+                inst.posRadius = vec4{vec3(transforms[i] * vec4{local, 1.0f}), tints[i].radius};
+                inst.color     = vec4{tints[i].color, 0.0f};
                 instances.push_back(inst);
             }
+        }
+
+        if (!instances.empty()) {
             m_zombieEyesShader->use();
             m_zombieEyesShader->setMat4("u_model", ctx.toRel);
             m_zombieEyesShader->setMat4("u_view", ctx.view);

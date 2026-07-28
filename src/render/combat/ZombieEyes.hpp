@@ -4,7 +4,7 @@
  * zombie, dessinés en mélange additif après les personnages. Même construction
  * que render::combat::Projectiles (un quad, un tampon d'instances réécrit
  * chaque image), avec une couleur par instance en plus : c'est elle qui
- * distingue un marcheur (vert) d'une pondeuse (rouge).
+ * distingue un marcheur (vert) d'un largueur (rouge).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026

@@ -102,14 +102,16 @@ public:
     [[nodiscard]] float healthPct() const noexcept { return m_playerHealth / PLAYER_HEALTH_MAX; }
     [[nodiscard]] bool  gameOver() const noexcept { return m_gameOver; }
 
-    /* Pondeuse (boss des manches multiples de cinq, voir WaveManager) : présence
+    /* Largueur (boss des manches multiples de cinq, voir WaveManager) : présence
        et vie restante (0..1), pour la jauge du HUD. */
     [[nodiscard]] bool  broodActive() const noexcept { return m_horde.broodAlive(); }
     [[nodiscard]] float broodHealthPct() const noexcept { return m_horde.broodHealthPct(); }
 
-    /* Lueurs d'yeux à dessiner cette image (deux par zombie affiché), prêtes
-       pour render::combat::ZombieEyes. */
-    [[nodiscard]] std::vector<ZombieHorde::EyeView> zombieEyes() const { return m_horde.buildEyes(); }
+    /* Couleur et taille des lueurs d'yeux de chaque zombie affiché (leur
+       position vient du rendu, qui seul connaît la pose de la tête). */
+    [[nodiscard]] std::vector<ZombieHorde::EyeTint> zombieEyeTints() const {
+        return m_horde.buildEyeTints();
+    }
 
     /* Vague en cours et durée totale de la session -- pour le HUD (étape 5). */
     [[nodiscard]] int   wave() const noexcept { return m_waves.waveNumber(); }

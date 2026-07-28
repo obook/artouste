@@ -1,7 +1,7 @@
 /*
  * zombie_horde_tests.cpp
  * Tests du cycle de vie d'un zombie (ZombieHorde) : dégâts, mort et despawn,
- * marche vers le joueur, jets de boulettes toxiques, et cas de la pondeuse
+ * marche vers le joueur, jets de boulettes toxiques, et cas du largueur
  * (boss). Se teste sans contexte graphique (ni render::Zombies ni CombatMode
  * ne sont nécessaires).
  *
@@ -117,10 +117,10 @@ TEST_CASE("ZombieHorde : marche vers le joueur et jets de boulettes toxiques",
     }
 }
 
-TEST_CASE("ZombieHorde : pondeuse (boss)", "[combat][zombie][boss]") {
+TEST_CASE("ZombieHorde : largueur (boss)", "[combat][zombie][boss]") {
     ZombieHorde horde;
 
-    SECTION("une pondeuse est repérable, très résistante et plus lente") {
+    SECTION("un largueur est repérable, très résistant et plus lent") {
         horde.spawnBrood(vec3{100.0f, 0.0f, 0.0f});
         REQUIRE(horde.broodAlive());
         CHECK(horde.zombies()[0].type == ZombieHorde::Type::Brood);
@@ -147,15 +147,29 @@ TEST_CASE("ZombieHorde : pondeuse (boss)", "[combat][zombie][boss]") {
         CHECK(horde.broodHealthPct() == Catch::Approx(0.0f));
     }
 
-    SECTION("deux lueurs d'yeux par zombie, rouges pour la pondeuse") {
+    SECTION("une teinte d'yeux par zombie, rouge pour le largueur") {
         horde.spawn(vec3{0.0f, 0.0f, 0.0f});
         horde.spawnBrood(vec3{50.0f, 0.0f, 0.0f});
-        const auto eyes = horde.buildEyes();
-        REQUIRE(eyes.size() == 4);
-        /* Marcheur (indices 0-1) : dominante verte. Pondeuse (2-3) : rouge, et
-           une lueur plus large, à l'échelle de sa silhouette. */
-        CHECK(eyes[0].color.g > eyes[0].color.r);
-        CHECK(eyes[2].color.r > eyes[2].color.g);
-        CHECK(eyes[2].radius > eyes[0].radius);
+        const auto tints = horde.buildEyeTints();
+        /* Même ordre et même filtrage que les matrices et les "kind" : le rendu
+           indexe les trois tableaux ensemble pour poser les lueurs. */
+        REQUIRE(tints.size() == horde.buildInstanceMatrices().size());
+        REQUIRE(tints.size() == 2);
+        /* Marcheur : dominante verte. Largueur : rouge, et une lueur plus
+           large, à l'échelle de sa silhouette. */
+        CHECK(tints[0].color.g > tints[0].color.r);
+        CHECK(tints[1].color.r > tints[1].color.g);
+        CHECK(tints[1].radius > tints[0].radius);
+    }
+
+    SECTION("le regard s'éteint avec la chute") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});
+        horde.applyDamage(0, 100.0f);  /* passe en Dying : la lueur décroît */
+        REQUIRE(horde.zombies()[0].state == ZombieHorde::State::Dying);
+        const float debut = horde.buildEyeTints()[0].color.g;
+        horde.update(0.5f, vec3{1000.0f, 0.0f, 0.0f}, 100.0f, 1.0f, flatGround);
+        const auto tints = horde.buildEyeTints();
+        REQUIRE(tints.size() == 1);
+        CHECK(tints[0].color.g < debut);
     }
 }

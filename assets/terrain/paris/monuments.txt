@@ -274,8 +274,16 @@
 2.304207 48.851925 sol -23.8 1.0 1.0 180 paris/ecole_militaire-ba.ac École militaire
 2.378196 48.839698 sol -129.2 1.0 1.0 180 paris/bercy-ba.ac Palais omnisports de Bercy
 2.356246 48.845572 sol 49.9 1.0 1.0 200 paris/Jussieux-ba.ac Campus de Jussieu
-2.286890 48.850804 sol -109.5 1.0 1.0 240 paris/beaugrenelle-ba.ac Front de Seine
-2.278716 48.853104 sol -40.7 1.0 1.0 130 paris/Radio-ba.ac Maison de la Radio
+2.284600 48.850166 sol 15.4 1.038 1.038 260 paris/beaugrenelle-ba.ac Front de Seine
+# Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
+# 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
+# pose unique ne pouvait satisfaire ensemble. Découpé avec
+# tools/monuments/decouper_ac.py (région -220..0 sur X), en ne gardant que la
+# rive droite : le Front de Seine a son propre modèle et sa propre ligne. La
+# coupe ne traversait aucune géométrie, un vide de 49 m séparant les deux.
+# Cap relevé à l'écran sur la tour rectangulaire, échelle native confirmée par
+# l'union des emprises BD TOPO de l'anneau, qui donne 112 m.
+2.278472 48.852454 sol 5.2 1.0 1.0 95 paris/Radio-ba.ac Maison de la Radio
 2.247579 48.890327 sol 10.8 1.0 1.0 380 paris/Defense-ba.ac Quartier de la Défense
 2.369975 48.851567 sol -151.0 1.0 1.0 130 paris/bastille-ba.ac Opéra Bastille
 2.329553 48.868579 sol -39.0 1.0 1.0 80 paris/vendome-ba.ac Place Vendôme

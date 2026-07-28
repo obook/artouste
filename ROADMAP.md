@@ -496,7 +496,33 @@ qui peuvent se mener séparément.
         corrigés : le cap était retourné de 180 deg, et une couche coplanaire
         parasite (objet "jour1", 252 sommets, entièrement contenue dans le
         corps) provoquait un scintillement ; elle a été retirée du fichier.
-    14. Antennes de la tour Eiffel, à modéliser sous Blender. Le modèle s'arrête
+    14. Front de Seine (Beaugrenelle) : pose non résolue, reprise en cours.
+        Le modèle a d'abord été trouvé dans la Seine, cap à -109,5 alors qu'il
+        fallait environ 15 : la ligne de tours barrait le fleuve. Reposé au
+        centre des vingt-quatre tours de plus de 45 m relevées dans BD TOPO
+        (2,284600 / 48,850166) et au cap de leur axe principal (42,8 deg, soit
+        15,4 pour ce modèle), il tombe à peu près sur la rive gauche.
+
+        Reste un désaccord non tranché, relevé sur une paire de repères tracés
+        à l'écran sur un même bord de bâtiment : ce bord est à 439 m du centre
+        du modèle et devrait être à 559. Une rotation conservant les distances,
+        il manque 120 m, et UNE SEULE paire de repères ne permet pas de savoir
+        s'il faut translater le modèle ou l'agrandir de 1,27. La translation a
+        été essayée et renvoie les tours dans le fleuve, donc c'est
+        vraisemblablement l'échelle ou le point d'ancrage qui est en cause.
+
+        Ce qui rend le diagnostic incertain : l'étendue du modèle (884 m) colle
+        pourtant à celle des tours relevées (918 m), ce qui contredit un facteur
+        de 1,27. L'hypothèse la plus probable est que le centre de la boîte
+        englobante du modèle ne correspond pas au centre des tours réelles.
+
+        Marche à suivre : relever DEUX paires de repères sur deux bâtiments
+        éloignés, ce qui détermine exactement rotation, échelle et translation.
+        Si les tours du modèle ne correspondent à rien de reconnaissable dans la
+        photo, leur espacement interne est faux comme aux Invalides : écarter
+        alors ce modèle et laisser l'extrusion BD TOPO, juste par construction.
+
+    15. Antennes de la tour Eiffel, à modéliser sous Blender. Le modèle s'arrête
        au sommet de la structure : après mise à l'échelle il culmine à 300 m,
        alors que la tour atteint 330 m depuis que les antennes de radiodiffusion
        la coiffent (1957, rehaussées depuis, 330 m après celle de la TNT en
@@ -540,7 +566,7 @@ Trois points à contrôler sur chacun :
 3. L'ASSISE ET LA POSITION. Le monument doit toucher le sol et se superposer à
    son emprise photographiée.
 
-- [ ] Tour Eiffel
+- [x] Tour Eiffel
 - [ ] Arc de Triomphe
 - [ ] Sacré-Coeur
 - [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
@@ -566,8 +592,8 @@ Trois points à contrôler sur chacun :
 - [ ] École militaire
 - [ ] Palais omnisports de Bercy
 - [ ] Campus de Jussieu
-- [ ] Front de Seine
-- [ ] Maison de la Radio
+- [ ] Front de Seine -- EN COURS, voir le point 14
+- [x] Maison de la Radio
 - [ ] Quartier de la Défense
 - [ ] Opéra Bastille
 - [ ] Place Vendôme

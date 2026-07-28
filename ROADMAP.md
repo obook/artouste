@@ -509,16 +509,12 @@ qui peuvent se mener séparément.
        `monuments.txt` ne coûte qu'une ligne. Sans urgence : la silhouette est
        déjà juste pour tout le reste.
 
-    Licence, À ÉCLAIRCIR avant toute diffusion. Cette section annonçait des
-  modèles en GPL v2 : l'archive ne le dit nulle part. Son `Read-Me.txt`, présent
-  dans chaque dossier, n'annonce aucune licence et se borne à créditer l'auteur
-  du travail d'origine, dont les modèles sont extraits : "tout les éléments
-  présent sont extraits des scènes pour X-Plane réalisées par Bertrand AUGRAS"
-  (`http://baugras.club.fr/xplane/Site/france.html`), signé BARANGER Emmanuel.
-  Deux auteurs, donc, et aucune autorisation écrite. Pour un essai local la
-  question ne se pose pas ; tant qu'elle n'est pas tranchée, ces modèles ne
-  doivent pas partir dans une archive de version. L'entrée est déjà dans
-  `CREDITS.md`, avec la même réserve.
+    Licence : GPL v2, comme le projet. L'archive d'origine ne l'annonçait nulle
+  part et son `Read-Me.txt` se bornait à créditer Bertrand AUGRAS, auteur des
+  scènes X-Plane dont les modèles sont tirés
+  (`http://baugras.club.fr/xplane/Site/france.html`). Emmanuel Baranger a
+  confirmé la licence par courriel le 28/07/2026. L'attribution figure dans
+  `CREDITS.md` et en bas du `README.md`.
 
 
 #### Monuments posés, TOUS à revérifier en vol

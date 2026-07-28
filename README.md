@@ -331,3 +331,11 @@ cette base.
 
 Ce projet est distribué sous licence **GPL v2** (voir `LICENSE`), comme le
 modèle 3D et les sons d'Emmanuel Baranger qu'il inclut.
+
+Les modèles 3D des monuments de Paris viennent de la scène FlightGear
+"Paris V2" du même auteur
+(<http://embaranger.free.fr/flightgear/scenery/ParisV2/ParisV2.htm>), placée
+sous **GPL v2** ; Emmanuel Baranger l'a confirmé par courriel le 28 juillet
+2026. Ils sont eux-mêmes tirés des scènes X-Plane de Bertrand Augras
+(<http://baugras.club.fr/xplane/Site/france.html>), que son `Read-Me.txt`
+crédite et que nous reprenons dans `assets/models/monuments/paris/`.

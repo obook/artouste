@@ -56,8 +56,8 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   sous licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_throw.wav`.
 
-- **Impact de boulette toxique (mode zombie)** : "SZ_Squish_09.wav"
-  (<https://freesound.org/people/PaulMorek/sounds/196726/>) par PaulMorek, sous
+- **Impact de boulette toxique (mode zombie)** : "simple ding.mp3"
+  (<https://freesound.org/people/achinverma/sounds/332518/>) par achinverma, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_impact.wav`.
 
@@ -66,7 +66,7 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   licence [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
   Fichier : `assets/sounds/combat/rale.wav`.
 
-- **Nouvelle vague (mode zombie)** : "Dark Loop #2"
-  (<https://freesound.org/people/danlucaz/sounds/514164/>) par danlucaz, sous
+- **Nouvelle vague (mode zombie)** : "PENNERATH_Claire_2019_2020_KeyFound.aiff"
+  (<https://freesound.org/people/univ_lyon3/sounds/485635/>) par univ_lyon3, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/wave_start.wav`.

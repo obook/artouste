@@ -39,6 +39,16 @@ public:
        marche, fréquence de jet), à transmettre à ZombieHorde::update. */
     float update(float dt, ZombieHorde& horde) noexcept;
 
+    /* Une manche sur cinq est une manche de boss : une pondeuse
+       (ZombieHorde::Type::Brood) y apparaît d'emblée, escortée de la moitié
+       seulement des marcheurs habituels, et engendre ensuite un marcheur toutes
+       les BROOD_SPAWN_INTERVAL_S secondes tant qu'elle est debout. La manche ne
+       peut donc se terminer qu'en l'abattant. */
+    static constexpr int BOSS_WAVE_INTERVAL = 5;
+    [[nodiscard]] static bool isBossWave(int wave) noexcept {
+        return wave > 0 && wave % BOSS_WAVE_INTERVAL == 0;
+    }
+
     [[nodiscard]] int   waveNumber() const noexcept { return m_waveNumber; }
     [[nodiscard]] float waveElapsedS() const noexcept { return m_waveElapsedS; }
     /* Vagues intégralement survécues (la vague en cours ne compte pas tant
@@ -49,7 +59,16 @@ private:
     enum class Phase { Spawning, Fighting };
 
     void spawnOne(ZombieHorde& horde) noexcept;
-    void beginWave(int number, ZombieHorde* immediateSpawnHorde = nullptr) noexcept;
+    /* Ouvre une manche. La pondeuse d'une manche de boss apparaît toujours
+       d'emblée (le joueur doit la voir arriver) ; immediateEscort ne concerne
+       que les marcheurs qui l'accompagnent, peuplés d'un coup pour la manche 1
+       (voir start) et échelonnés ensuite. */
+    void beginWave(int number, ZombieHorde& horde, bool immediateEscort) noexcept;
+    /* Fait apparaître un marcheur autour de la pondeuse (à quelques mètres, dans
+       une direction quelconque) : la relève arrive du boss lui-même et non des
+       points de spawn du bord de carte, sans quoi rien ne rattacherait
+       visuellement ces zombies à lui. */
+    void spawnFromBrood(ZombieHorde& horde) noexcept;
 
     std::vector<vec3> m_spawnPoints;
     Phase              m_phase          = Phase::Fighting;
@@ -57,6 +76,7 @@ private:
     float              m_waveElapsedS   = 0.0f;
     float              m_spawnTimerS    = 0.0f;
     int                m_zombiesToSpawn = 0;
+    float              m_broodTimerS    = 0.0f;  /* avant la prochaine portée de la pondeuse */
     std::mt19937       m_rng{std::random_device{}()};
 };
 

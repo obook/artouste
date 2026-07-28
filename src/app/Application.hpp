@@ -48,6 +48,7 @@ class Texture;
 class SkinnedZombies;
 class ExplosionFx;
 class Projectiles;
+class ZombieEyes;
 } /* namespace artouste::render */
 
 namespace artouste::input {
@@ -483,6 +484,8 @@ private:
         m_projectileShader; /* mode zombie : boulettes toxiques (billboard) */
     std::unique_ptr<render::Shader>
         m_explosionShader; /* mode zombie : explosion 3D animée (émissive) */
+    std::unique_ptr<render::Shader>
+        m_zombieEyesShader; /* mode zombie : lueur des yeux (billboard additif) */
     std::unique_ptr<render::Skybox> m_sky;
     std::unique_ptr<render::Mesh> m_shadowDisc;
     std::unique_ptr<render::Mesh> m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -502,6 +505,8 @@ private:
     std::unique_ptr<render::SkinnedZombies>
         m_zombiesRender; /* mode zombie : pack skinné animé, chargé une fois */
     std::unique_ptr<render::Projectiles> m_projectilesRender; /* mode zombie : boulettes toxiques */
+    std::unique_ptr<render::ZombieEyes>
+        m_zombieEyesRender; /* mode zombie : lueur des yeux, deux par zombie */
     std::unique_ptr<render::ExplosionFx>
         m_explosionFx;   /* mode zombie : explosions 3D à l'impact des roquettes */
     CombatMode m_combat; /* mode zombie : horde et état de session */

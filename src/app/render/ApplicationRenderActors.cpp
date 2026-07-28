@@ -18,6 +18,7 @@
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/Projectiles.hpp"
 #include "render/combat/SkinnedZombies.hpp"
+#include "render/combat/ZombieEyes.hpp"
 #include "util/Math.hpp"
 
 #include <cmath>
@@ -49,6 +50,34 @@ void Application::renderCombatEntities(const RenderContext& ctx, float timeSecon
         m_zombiesRender->updateInstances(
             m_combat.zombieTransforms(), m_combat.zombieHitFlashes(), m_combat.zombieKinds());
         m_zombiesRender->draw(*m_zombieShader, timeSeconds);
+    }
+
+    /*
+     * Lueur des yeux : deux billboards additifs par zombie, dessinés APRÈS les
+     * personnages pour se superposer à leur visage (profondeur lue, pas écrite,
+     * voir ZombieEyes::draw). Verte pour un marcheur, rouge pour une pondeuse,
+     * ce qui signale le boss de loin. Indépendante du pack skinné : les lueurs
+     * sont posées sur la matrice d'instance, pas sur un os du modèle.
+     */
+    if (m_combat.active() && m_zombieEyesRender && m_zombieEyesRender->built()) {
+        const auto eyes = m_combat.zombieEyes();
+        if (!eyes.empty()) {
+            std::vector<render::ZombieEyes::Instance> instances;
+            instances.reserve(eyes.size());
+            for (const auto& e : eyes) {
+                render::ZombieEyes::Instance inst;
+                inst.posRadius = vec4{e.position, e.radius};
+                inst.color     = vec4{e.color, 0.0f};
+                instances.push_back(inst);
+            }
+            m_zombieEyesShader->use();
+            m_zombieEyesShader->setMat4("u_model", ctx.toRel);
+            m_zombieEyesShader->setMat4("u_view", ctx.view);
+            m_zombieEyesShader->setMat4("u_proj", ctx.proj);
+            m_zombieEyesShader->setVec3("u_camPos", ctx.camPosRel);
+            m_zombieEyesRender->updateInstances(instances);
+            m_zombieEyesRender->draw();
+        }
     }
 
     /*

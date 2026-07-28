@@ -23,6 +23,7 @@
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/Projectiles.hpp"
 #include "render/combat/SkinnedZombies.hpp"
+#include "render/combat/ZombieEyes.hpp"
 
 #include <filesystem>
 #include <vector>
@@ -53,6 +54,12 @@ constexpr int ZOMBIE_PHASE_GROUPS = 6;
  * plus côté GPU que ce que la logique de jeu peut produire à la fois).
  */
 constexpr std::size_t PROJECTILE_CAPACITY = 64;
+
+/*
+ * Capacité du tampon des lueurs d'yeux : deux par zombie dessiné, donc le
+ * double de ZOMBIE_CAPACITY (voir render::combat::ZombieEyes).
+ */
+constexpr std::size_t ZOMBIE_EYES_CAPACITY = ZOMBIE_CAPACITY * 2;
 
 } /* namespace */
 
@@ -85,6 +92,8 @@ void Application::initSceneShaders() {
                                                           assets / "shaders" / "projectile.frag");
     m_explosionShader = std::make_unique<render::Shader>(assets / "shaders" / "explosion.vert",
                                                          assets / "shaders" / "explosion.frag");
+    m_zombieEyesShader = std::make_unique<render::Shader>(assets / "shaders" / "zombie_eyes.vert",
+                                                          assets / "shaders" / "zombie_eyes.frag");
     m_sky = std::make_unique<render::Skybox>();
 
     /* Mode zombie : pack de personnages skinnés (marche + bras animés) chargé une
@@ -98,6 +107,11 @@ void Application::initSceneShaders() {
     }
     /* Boulettes toxiques : billboard procédural, pas de modèle à charger. */
     m_projectilesRender = std::make_unique<render::Projectiles>(PROJECTILE_CAPACITY);
+
+    /* Lueur des yeux : billboard procédural lui aussi, indépendant du pack
+       skinné (elle est posée sur la tête du modèle, voir ZombieHorde::buildEyes)
+       et donc dessinée même si ce pack manque. */
+    m_zombieEyesRender = std::make_unique<render::ZombieEyes>(ZOMBIE_EYES_CAPACITY);
 
     /* Explosions 3D des roquettes : modèle animé chargé une fois. Rayon monde
        proche de la zone létale (RocketSystem::EXPLOSION_RADIUS_M = 3 m). Absent :

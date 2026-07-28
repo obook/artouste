@@ -147,10 +147,15 @@ void Application::fillHud(ui::HudData& hud,
             case KillAnnouncement::Carnage:
                 hud.combat.killAnnounceKind = 3;
                 break;
+            case KillAnnouncement::Brood:
+                hud.combat.killAnnounceKind = 4;
+                break;
             case KillAnnouncement::None:
                 hud.combat.killAnnounceKind = 0;
                 break;
         }
+        hud.combat.broodActive = m_combat.broodActive();
+        hud.combat.broodHealthPct = m_combat.broodHealthPct();
 
         /* Mire : projette un point loin devant l'appareil dans l'axe de tir
            (repère corps, canon fixe -- voir CombatMode::update, même axe que

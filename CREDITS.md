@@ -61,6 +61,11 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_impact.wav`.
 
+- **Apparition de la pondeuse (mode zombie)** : "Zombies.wav"
+  (<https://freesound.org/people/xtrgamr/sounds/257790/>) par xtrgamr, sous
+  licence [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
+  Fichier : `assets/sounds/combat/rale.wav`.
+
 - **Nouvelle vague (mode zombie)** : "Dark Loop #2"
   (<https://freesound.org/people/danlucaz/sounds/514164/>) par danlucaz, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)

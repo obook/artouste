@@ -1,17 +1,18 @@
 /*
  * AudioEngineCombat.cpp
  * Sons ponctuels du mode zombie (tir, touché, mort, jet, impact, nouvelle
- * vague) : chargement paresseux à la première lecture depuis
- * assets/sounds/combat/, même principe que AudioEngine::playMusic. Fichier
- * absent : silencieux, sans erreur.
+ * vague, apparition de la pondeuse) : chargement paresseux à la première
+ * lecture depuis assets/sounds/combat/, même principe que
+ * AudioEngine::playMusic. Fichier absent : silencieux, sans erreur.
  *
- * Tous (sauf wave_start) sont spatiaux : chaque appel crée sa propre instance
- * de lecture (ma_sound_init_copy à partir d'un modèle décodé une seule fois),
- * volume selon la distance source<->hélico, détruite automatiquement dès la
- * fin de la lecture (reapOneShots, appelé chaque image depuis
- * AudioEngine::update). wave_start est l'exception : annonce non spatiale, à
- * volume fixe, qui réutilise un unique son rejoué depuis le début (comme
- * avant), puisqu'il n'a pas de position source pertinente.
+ * Tous (sauf wave_start et rale) sont spatiaux : chaque appel crée sa propre
+ * instance de lecture (ma_sound_init_copy à partir d'un modèle décodé une
+ * seule fois), volume selon la distance source<->hélico, détruite
+ * automatiquement dès la fin de la lecture (reapOneShots, appelé chaque image depuis
+ * AudioEngine::update). wave_start et rale sont les exceptions : annonces non
+ * spatiales, à volume fixe, qui réutilisent chacune un unique son rejoué depuis
+ * le début, puisqu'elles n'ont pas de position source pertinente à l'échelle de
+ * l'arène.
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -169,6 +170,31 @@ void AudioEngine::playWaveStart() {
     ma_sound_seek_to_pcm_frame(&m_impl->waveStartSound, 0);
     ma_sound_set_volume(&m_impl->waveStartSound, 0.7f);
     ma_sound_start(&m_impl->waveStartSound);
+}
+
+void AudioEngine::playBroodSpawn() {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    if (m_impl->combatSoundsDir.empty()) {
+        return;
+    }
+    if (!m_impl->broodSpawnLoaded) {
+        const std::filesystem::path path = m_impl->combatSoundsDir / "rale.wav";
+        if (!std::filesystem::exists(path)) {
+            return;
+        }
+        if (ma_sound_init_from_file(&m_impl->engine, path.string().c_str(), MA_SOUND_FLAG_STREAM,
+                                    nullptr, nullptr, &m_impl->broodSpawnSound) != MA_SUCCESS) {
+            return;
+        }
+        m_impl->broodSpawnLoaded = true;
+    }
+    ma_sound_seek_to_pcm_frame(&m_impl->broodSpawnSound, 0);
+    /* Un cran au-dessus de l'annonce de vague : c'est l'événement le plus fort
+       de la partie. */
+    ma_sound_set_volume(&m_impl->broodSpawnSound, 0.9f);
+    ma_sound_start(&m_impl->broodSpawnSound);
 }
 
 }  /* namespace artouste::audio */

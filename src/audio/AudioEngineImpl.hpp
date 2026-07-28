@@ -115,7 +115,10 @@ struct AudioEngine::Impl {
     ma_sound  zombieDeathSound{};
     ma_sound  toxicThrowSound{};
     ma_sound  toxicImpactSound{};
-    ma_sound  waveStartSound{};  /* seule exception : rejoué depuis le début, jamais copié (voir playWaveStart) */
+    /* Ces deux-là sont les exceptions : rejoués depuis le début, jamais copiés
+       (voir playWaveStart et playBroodSpawn). */
+    ma_sound  waveStartSound{};
+    ma_sound  broodSpawnSound{};
     bool      gunfireLoaded     = false;
     bool      explosionLoaded   = false;
     bool      zombieHitLoaded   = false;
@@ -123,6 +126,7 @@ struct AudioEngine::Impl {
     bool      toxicThrowLoaded  = false;
     bool      toxicImpactLoaded = false;
     bool      waveStartLoaded   = false;
+    bool      broodSpawnLoaded  = false;
 
     /* Instances de lecture en cours, une par appel à playGunfire/playExplosion/
        etc. std::list : contrairement à un vector, il ne déplace jamais les

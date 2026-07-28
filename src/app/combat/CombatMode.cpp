@@ -84,6 +84,7 @@ void CombatMode::start(const std::filesystem::path& terrainDir,
     m_score             = 0;
     m_killAnnounce      = KillAnnouncement::None;
     m_killAnnounceTimer = 0.0f;
+    m_broodWasAlive     = m_horde.broodAlive();
 }
 
 void CombatMode::stop() noexcept {
@@ -173,6 +174,21 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
             m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
         }
     }
+
+    /* Pondeuse neutralisée : prime de score et annonce dédiée, qui écrase un
+       éventuel kill multiple de la même explosion (l'événement marquant, c'est
+       le boss). Détecté après la mise à jour des roquettes, seule source de
+       dégâts capable de l'entamer. */
+    const bool broodAlive = m_horde.broodAlive();
+    if (m_broodWasAlive && !broodAlive) {
+        m_score += BROOD_SCORE;
+        m_killAnnounce      = KillAnnouncement::Brood;
+        m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
+    }
+    /* Apparition : le gestionnaire de vagues vient de la poser (manche de boss),
+       c'est le moment du râle. */
+    m_events.broodSpawned = !m_broodWasAlive && broodAlive;
+    m_broodWasAlive       = broodAlive;
 
     const float damage = m_projectiles.update(dt, body.position, HELI_HIT_RADIUS_M);
     if (damage > 0.0f) {

@@ -181,7 +181,10 @@ void Application::initSceneConfig() {
        cartes compatibles, voir ApplicationMenu.cpp) : démarre la session de combat sur
        le terrain qui vient d'être chargé. Sans effet si la carte n'a pas de
        zombies.txt (CombatMode::active() reste faux). */
-    if (m_menuCombat) {
+    /* ARTOUSTE_SHOT_ZOMBIE : arme le mode zombie sans passer par le menu, qui est
+       justement sauté en mode capture (voir ApplicationCapture) -- sans quoi
+       aucune capture ne pourrait montrer la horde. */
+    if (m_menuCombat || std::getenv("ARTOUSTE_SHOT_ZOMBIE") != nullptr) {
         m_combat.start(assets / "terrain" / m_terrainName,
                        [this](float x, float z) { return m_terrain->heightAt(x, z); });
         if (m_combat.active()) {

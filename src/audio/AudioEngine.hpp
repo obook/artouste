@@ -82,8 +82,11 @@ public:
      * (deux zombies tués la même image, par exemple) sans se couper la parole.
      * 'sourcePos' est la position monde de l'événement (explosion, zombie...),
      * 'listenerPos' celle de l'hélico ; le volume décroît avec leur distance.
-     * playWaveStart() est la seule exception : annonce de vague non spatiale, à
-     * volume fixe, qui réutilise un unique son rejoué depuis le début. */
+     * playWaveStart() et playBroodSpawn() sont les exceptions : annonces non
+     * spatiales, à volume fixe, qui réutilisent chacune un unique son rejoué
+     * depuis le début. La pondeuse apparaît au bord de l'arène, à quelques
+     * centaines de mètres : un râle spatialisé y serait inaudible, alors que
+     * l'apparition du boss doit justement s'entendre. */
     void initCombatSounds(const std::filesystem::path& dir);
     void playGunfire(const vec3& sourcePos, const vec3& listenerPos);
     void playExplosion(const vec3& sourcePos, const vec3& listenerPos);
@@ -92,6 +95,7 @@ public:
     void playToxicThrow(const vec3& sourcePos, const vec3& listenerPos);
     void playToxicImpact(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
+    void playBroodSpawn();
 
     /* Flux radio internet branché sur le moteur audio. URL vide ou libcurl absente :
      * no-op silencieux. startRadio (re)démarre le flux, stopRadio le coupe,

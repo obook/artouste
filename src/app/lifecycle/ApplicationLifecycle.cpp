@@ -37,6 +37,7 @@
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/SkinnedZombies.hpp"
 #include "render/combat/Projectiles.hpp"
+#include "render/combat/ZombieEyes.hpp"
 
 #include <cstdio>
 #include <cstdlib>

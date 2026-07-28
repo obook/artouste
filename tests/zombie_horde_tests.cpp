@@ -1,8 +1,9 @@
 /*
  * zombie_horde_tests.cpp
  * Tests du cycle de vie d'un zombie (ZombieHorde) : dégâts, mort et despawn,
- * puis marche vers le joueur et jets de boulettes toxiques. Se teste sans
- * contexte graphique (ni render::Zombies ni CombatMode ne sont nécessaires).
+ * marche vers le joueur, jets de boulettes toxiques, et cas de la pondeuse
+ * (boss). Se teste sans contexte graphique (ni render::Zombies ni CombatMode
+ * ne sont nécessaires).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -113,5 +114,48 @@ TEST_CASE("ZombieHorde : marche vers le joueur et jets de boulettes toxiques",
         /* Le cooldown est réarmé : un appel immédiat suivant ne relance pas. */
         const auto requests2 = horde.update(0.01f, vec3{95.0f, 0.0f, 0.0f}, 0.0f, 1.0f, flatGround);
         CHECK(requests2.empty());
+    }
+}
+
+TEST_CASE("ZombieHorde : pondeuse (boss)", "[combat][zombie][boss]") {
+    ZombieHorde horde;
+
+    SECTION("une pondeuse est repérable, très résistante et plus lente") {
+        horde.spawnBrood(vec3{100.0f, 0.0f, 0.0f});
+        REQUIRE(horde.broodAlive());
+        CHECK(horde.zombies()[0].type == ZombieHorde::Type::Brood);
+        CHECK(horde.zombies()[0].health == Catch::Approx(ZombieHorde::BROOD_HEALTH));
+        CHECK(horde.broodHealthPct() == Catch::Approx(1.0f));
+
+        /* Un marcheur parti du même point avance plus loin sur le même pas de temps. */
+        ZombieHorde marcheurs;
+        marcheurs.spawn(vec3{100.0f, 0.0f, 0.0f});
+        const vec3 player{0.0f, 0.0f, 0.0f};
+        horde.update(1.0f, player, 100.0f, 1.0f, flatGround);
+        marcheurs.update(1.0f, player, 100.0f, 1.0f, flatGround);
+        CHECK(horde.zombies()[0].position.x > marcheurs.zombies()[0].position.x);
+    }
+
+    SECTION("une roquette ne suffit pas : il en faut cinq") {
+        horde.spawnBrood(vec3{0.0f, 0.0f, 0.0f});
+        for (int i = 0; i < 4; ++i) {
+            horde.applyDamage(0, 1000.0f); /* RocketSystem::BLAST_DAMAGE */
+            CHECK(horde.broodAlive());
+        }
+        horde.applyDamage(0, 1000.0f);
+        CHECK_FALSE(horde.broodAlive());
+        CHECK(horde.broodHealthPct() == Catch::Approx(0.0f));
+    }
+
+    SECTION("deux lueurs d'yeux par zombie, rouges pour la pondeuse") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});
+        horde.spawnBrood(vec3{50.0f, 0.0f, 0.0f});
+        const auto eyes = horde.buildEyes();
+        REQUIRE(eyes.size() == 4);
+        /* Marcheur (indices 0-1) : dominante verte. Pondeuse (2-3) : rouge, et
+           une lueur plus large, à l'échelle de sa silhouette. */
+        CHECK(eyes[0].color.g > eyes[0].color.r);
+        CHECK(eyes[2].color.r > eyes[2].color.g);
+        CHECK(eyes[2].radius > eyes[0].radius);
     }
 }

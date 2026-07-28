@@ -107,6 +107,7 @@ add_executable(artouste
     render/combat/SkinnedZombies.cpp
     render/combat/ExplosionFx.cpp
     render/combat/Projectiles.cpp
+    render/combat/ZombieEyes.cpp
     render/Clouds.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp

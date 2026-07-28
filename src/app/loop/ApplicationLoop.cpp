@@ -195,6 +195,9 @@ bool Application::mainLoop() {
             if (combatEvents.waveStart) {
                 m_audio.playWaveStart();
             }
+            if (combatEvents.broodSpawned) {
+                m_audio.playBroodSpawn();
+            }
         }
 
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);

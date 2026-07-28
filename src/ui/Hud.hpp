@@ -147,11 +147,17 @@ struct HudData {
         int score = 0; /* points, voir app::CombatMode::score */
         int kills = 0; /* zombies tués depuis le début de la session */
 
-        /* Annonce de kill multiple à afficher (0 = aucune, 1 = double, 2 = triple,
-           3 = carnage), voir app::CombatMode::KillAnnouncement -- valeur brute plutôt
-           que l'enum pour garder HudData indépendant du module combat, comme le
-           reste de cette structure (vec3 exclu, voir zombieMapPoints plus bas). */
+        /* Annonce à afficher (0 = aucune, 1 = double, 2 = triple, 3 = carnage,
+           4 = pondeuse neutralisée), voir app::CombatMode::KillAnnouncement -- valeur
+           brute plutôt que l'enum pour garder HudData indépendant du module
+           combat, comme le reste de cette structure (vec3 exclu, voir
+           zombieMapPoints plus bas). */
         int killAnnounceKind = 0;
+
+        /* Pondeuse (boss d'une manche sur cinq, voir app::WaveManager) : jauge de
+           vie affichée seulement tant qu'elle est debout. */
+        bool broodActive = false;
+        float broodHealthPct = 1.0f;
 
         /* Points des zombies sur la minimap (fractions 0-1 dans l'emprise du
            terrain, même convention que HudLabel::mapU/mapV). Pas de type vec2

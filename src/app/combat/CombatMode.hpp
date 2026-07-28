@@ -102,6 +102,15 @@ public:
     [[nodiscard]] float healthPct() const noexcept { return m_playerHealth / PLAYER_HEALTH_MAX; }
     [[nodiscard]] bool  gameOver() const noexcept { return m_gameOver; }
 
+    /* Pondeuse (boss des manches multiples de cinq, voir WaveManager) : présence
+       et vie restante (0..1), pour la jauge du HUD. */
+    [[nodiscard]] bool  broodActive() const noexcept { return m_horde.broodAlive(); }
+    [[nodiscard]] float broodHealthPct() const noexcept { return m_horde.broodHealthPct(); }
+
+    /* Lueurs d'yeux à dessiner cette image (deux par zombie affiché), prêtes
+       pour render::combat::ZombieEyes. */
+    [[nodiscard]] std::vector<ZombieHorde::EyeView> zombieEyes() const { return m_horde.buildEyes(); }
+
     /* Vague en cours et durée totale de la session -- pour le HUD (étape 5). */
     [[nodiscard]] int   wave() const noexcept { return m_waves.waveNumber(); }
     [[nodiscard]] float elapsedS() const noexcept { return m_elapsedS; }
@@ -142,17 +151,22 @@ public:
 
         bool impacted = false;  /* une boulette toxique a touché l'appareil (à sa position : distance nulle) */
 
-        /* Nouvelle vague : son non spatial, à volume fixe -- seule exception au
-           principe "volume selon la distance à l'hélico" (voir AudioEngine::playWaveStart). */
-        bool waveStart = false;
+        /* Nouvelle vague et apparition d'une pondeuse : sons non spatiaux, à
+           volume fixe -- seules exceptions au principe "volume selon la distance
+           à l'hélico" (voir AudioEngine::playWaveStart et playBroodSpawn). Une
+           manche de boss lève les deux le même pas : l'annonce de vague, puis le
+           râle par-dessus. */
+        bool waveStart   = false;
+        bool broodSpawned = false;
     };
     [[nodiscard]] const SoundEvents& soundEvents() const noexcept { return m_events; }
 
     /* Annonce affichée au HUD quand une même explosion fauche plusieurs zombies
-       d'un coup (voir killScoreForCount, même seuils que le score) : reste
-       affichée KILL_ANNOUNCE_DURATION_S après l'explosion qui l'a déclenchée,
+       d'un coup (voir killScoreForCount, même seuils que le score), ou quand la
+       pondeuse tombe (Brood, qui prime sur un kill multiple simultané) : reste
+       affichée KILL_ANNOUNCE_DURATION_S après l'événement qui l'a déclenchée,
        puis retombe à None. */
-    enum class KillAnnouncement { None, Double, Triple, Carnage };
+    enum class KillAnnouncement { None, Double, Triple, Carnage, Brood };
     [[nodiscard]] KillAnnouncement killAnnouncement() const noexcept {
         return m_killAnnounceTimer > 0.0f ? m_killAnnounce : KillAnnouncement::None;
     }
@@ -193,8 +207,17 @@ private:
     static constexpr float MUZZLE_FWD_M = 6.0f;
     static constexpr float MUZZLE_UP_M  = 1.0f;
 
+    /* Points accordés en plus pour l'abattage d'une pondeuse, au-delà des points
+       de l'explosion qui l'a achevée : de l'ordre de vingt marcheurs, à la
+       mesure des cinq roquettes qu'elle encaisse. */
+    static constexpr int BROOD_SCORE = 500;
+
     bool             m_active        = false;
     bool             m_gameOver      = false;
+    /* Pondeuse debout à la fin de l'update précédent : sa disparition d'une
+       image à l'autre vaut mise à mort (même principe de comparaison d'état que
+       les événements sonores). */
+    bool             m_broodWasAlive = false;
     /* Force l'annonce sonore (waveStart) au tout premier update() suivant
        start() : la manche 1 est peuplée par start() lui-même, avant le
        premier update(), donc la comparaison de numéro de manche habituelle ne

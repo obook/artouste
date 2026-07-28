@@ -66,6 +66,9 @@ AudioEngine::~AudioEngine() {
     if (m_impl->waveStartLoaded) {
         ma_sound_uninit(&m_impl->waveStartSound);
     }
+    if (m_impl->broodSpawnLoaded) {
+        ma_sound_uninit(&m_impl->broodSpawnSound);
+    }
     for (ma_sound& s : m_impl->oneShots) {
         ma_sound_uninit(&s);
     }

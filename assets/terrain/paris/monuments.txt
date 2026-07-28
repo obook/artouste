@@ -1,0 +1,282 @@
+# Monuments 3D posés sur la carte (un par ligne). Fichier facultatif : absent,
+# aucun monument n'est dessiné et les bâtiments extrudés restent seuls en place.
+#
+# Format : lon lat altitude cap echelle_h echelle_v rayon_m fichier nom
+#
+#   lon lat    position WGS84 du centre du modèle (degrés).
+#   altitude   altitude du socle en mètres, ou le mot-clé "sol" pour le poser sur
+#              le relief. Une valeur explicite vaut mieux là où la carte
+#              d'altitude est trop lâche pour tenir un socle (Paris : ~17,6 m par
+#              cellule).
+#   cap        cap boussole du modèle en degrés (0 = nord, 90 = est). Cap 0 laisse
+#              le modèle tel que son auteur l'a orienté.
+#   echelle_h  facteur horizontal, echelle_v facteur vertical. Deux réglages
+#   echelle_v  distincts parce qu'un modèle de scène n'est pas toujours aux
+#              proportions de l'édifice ; 1 et 1 le laissent tel quel.
+#   rayon_m    rayon dégagé autour du centre : aucun bâtiment BD TOPO n'y est
+#              extrudé, sinon les emprises se logeraient dans le monument.
+#   fichier    chemin du modèle SOUS assets/models/monuments/, séparateur "/".
+#              Les modèles sont rangés par jeu d'origine (paris/, capbreton/...) :
+#              une trentaine de fichiers par scène, plus leurs textures, ne
+#              tiennent pas à plat. Rien n'empêche deux cartes de désigner le
+#              même fichier, un phare par exemple.
+#   nom        reste de la ligne, espaces et accents permis.
+#
+# Attribution des modèles : voir le Read-Me.txt du dossier de chaque jeu (ici
+# assets/models/monuments/paris/Read-Me.txt) et CREDITS.md.
+
+# Tour Eiffel.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO de la tour (les quatre volumes
+# empilés donnent tous 2,294512 / 48,858256 et des côtés à 44 deg modulo 90). Le
+# fichier de placement de la scène FlightGear d'origine annonçait 2,297421 /
+# 48,861295 et un cap de 47 : décalé de près de 400 m sur cette carte.
+#
+# Échelles : le modèle mesure 121,5 m de côté pour 268 m de haut, alors que la
+# tour fait 125 m de côté et 300 m au sommet de la structure (sans les antennes,
+# que le modèle n'a pas). Ses quatre planchers tombent à 52, 105, 240 et 268 m
+# contre 58, 116, 276 et 300 : il est régulièrement tassé, pas amputé de son
+# sommet, d'où deux facteurs plutôt qu'un.
+2.294512 48.858256 sol 44 1.029 1.119 90 paris/TourEiffel-ba.ac Tour Eiffel
+
+# Arc de Triomphe.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO (idx unique, 7 points, 46,2 m) :
+# 2,295045 / 48,873774, ses deux façades de 45 m courant à 26 deg modulo 180 et
+# ses deux flancs de 22 m à 116. Le modèle présente ses façades selon X, soit un
+# cap de 90 : il faut donc le tourner de 116 pour les amener sur 26.
+#
+# Échelles : l'arc du modèle mesure 47,3 x 25,0 m pour 44,9 m de haut, contre
+# 45 x 22 pour 49,5 en vrai. Il est donc trop LARGE, là où la tour Eiffel était
+# trop étroite : ces modèles n'ont pas d'échelle commune, chacun se mesure.
+2.295045 48.873774 sol 116 0.951 1.102 45 paris/ArcDeTriomphe-ba.ac Arc de Triomphe
+
+# Sacré-Coeur.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO du corps (257 points, très
+# subdivisée par les contreforts : le cap vient des moments d'ordre 2, pas du
+# plus long côté). Axe principal à 175,6 deg modulo 180, presque nord-sud, la
+# façade au sud et l'abside au nord. Le campanile est bien au nord (BD TOPO :
+# 48,887177 contre 48,886751 pour le corps).
+#
+# Ce modèle a servi à découvrir que l'origine d'un modèle n'est pas toujours en
+# son centre : la sienne est à 70 m de sa géométrie. Le chargement recentre
+# désormais sur la boîte englobante, donc lon/lat désigne bien le milieu du
+# monument (voir ApplicationMonuments.cpp).
+#
+# Échelles : en largeur le modèle tombe juste, 54,3 m contre 54 m mesurés sur
+# l'emprise BD TOPO, d'où 1,0. En hauteur il culmine à 92,7 m, dôme et
+# campanile atteignant tous deux ce niveau, alors que le dôme fait 83 m et le
+# campanile 84 : celui-ci est donc trop HAUT d'un dixième, quand la tour Eiffel
+# et l'Arc étaient trop bas d'autant. Troisième modèle, troisième échelle.
+2.343027 48.886751 sol 175.6 1.0 0.901 55 paris/Sacrecoeur-ba.ac Sacré-Coeur
+
+# Hôtel des Invalides. IMPARFAIT mais accepté en l'état, voir la ROADMAP.
+#
+# Le modèle place mal ses éléments les uns par rapport aux autres : aucune pose
+# ne satisfait à la fois le corps du complexe et l'église du Dôme, décalés d'une
+# quinzaine de mètres l'un de l'autre dans le fichier. On a essayé de le couper
+# en deux pour poser chaque moitié séparément ; la découpe tranchait dans le
+# bâti et laissait une façade décollée du côté du dôme. RETOUR à un modèle
+# unique, posé au compromis : la coordonnée ci-dessous est à mi-chemin entre la
+# pose qui cale le corps (2,312328 / 48,855594) et celle qui cale le dôme
+# (2,312193 / 48,855684). Chacun est donc fautif de 7 m, au lieu d'un juste et
+# l'autre à 14 m.
+#
+# Cap -85,86. Les cinq grandes emprises BD TOPO du complexe donnent toutes la
+# même direction dominante, 4,14 deg modulo 90 (4,18, 4,19, 4,22 et 4,38 prises
+# une à une, pondérées par la longueur des côtés), à quoi s'ajoute le quart de
+# tour qui amène les cours vers le nord.
+#
+# Échelle 1,0 en plan et en hauteur, l'échelle native du modèle. Deux calages
+# successifs à 0,804 puis 0,884, tirés de comparaisons avec BD TOPO, se sont
+# révélés trop petits en vol. LEÇON : pour une échelle, ne pas se fier à BD
+# TOPO, qui simplifie l'Hôtel des Invalides en gros blocs pleins sans percer les
+# cours. Mesurer sur l'orthophoto, tuiles de détail chargées.
+#
+# Le jeu livre aussi un Invalidessol-ba.ac, simple quadrilatère de 402 x 941 m
+# qui plaque une photo de l'esplanade au sol. Écarté : notre orthophoto IGN fait
+# déjà ce travail, en mieux et à jour.
+2.312261 48.855639 sol -85.86 1.0 1.0 220 paris/invalides-ba.ac Hôtel des Invalides
+
+# Panthéon. IMPARFAIT mais accepté en l'état, voir la ROADMAP.
+#
+# Le modèle d'origine fait 263 x 132 m : il embarque la place et un pâté de
+# maisons voisin, qui se seraient plaqués sur l'orthophoto. Détaché avec
+# tools/monuments/decouper_ac.py, région X 45..145, Z -50..50. Le Panthéon seul
+# fait alors 100 x 81 m pour 97 m de haut, contre 110 x 84 pour 83 en réalité,
+# et son dôme tombe au centre de sa boîte : pas de découpe en deux à prévoir.
+#
+# Cap 18,5, mesuré sur l'emprise BD TOPO 112349 (119 points, 117 x 87 m). Le
+# premier essai avait pris l'autre branche modulo 90 (-71,5) et posait le
+# monument en croix de travers : la nef court d'est en ouest, dans l'axe de la
+# rue Soufflot, pas du nord au sud.
+#
+# Position affinée par balayage : on cherche le décalage qui pose la silhouette
+# du modèle sur les contours de l'orthophoto, tuiles chargées. Correction
+# trouvée de 0,5 m à l'est et 2,4 m au sud, donc le relevé BD TOPO était déjà
+# bon. Le même balayage suggère une échelle légèrement inférieure, autour de
+# 0,95, non appliquée : à confirmer en vol avant d'y toucher.
+2.346073 48.846167 sol 18.5 1.0 1.0 70 paris/pantheon-ba.ac Panthéon
+# Notre-Dame de Paris. IMPARFAIT mais accepté en l'état, voir la ROADMAP.
+#
+# Cap -64,5 : l'emprise BD TOPO 114871 (49 points, 107 x 63 m) donne 25,5 deg
+# modulo 90, et la nef court d'ouest en est, donc la branche 115,5. Le modèle
+# présente son axe selon Z, soit un cap de 180 : d'où -64,5. Bon du premier
+# coup, contrairement au Panthéon.
+#
+# Échelle 0,92 et position affinées par balayage conjoint sur l'orthophoto,
+# tuiles chargées. Le maximum est LARGE (0,87 à 0,93 se valent), pour une raison
+# qui tient à la photo et non au modèle : voir ci-dessous.
+#
+# ATTENTION, l'orthophoto de cette carte montre Notre-Dame EN CHANTIER. Prise de
+# vue IGN d'entre 2020 et 2023 : toiture de la nef déposée, voûtes à nu, deux
+# grues, parvis en travaux. Le modèle, lui, représente la cathédrale intacte, ce
+# qui correspond de nouveau à la réalité depuis la repose de la flèche et la
+# réouverture de décembre 2024. C'est donc la photo qui est périmée, pas la 3D,
+# et c'est aussi pourquoi le calage sur les contours photographiques est moins
+# sûr ici qu'ailleurs. À reprendre le jour où la carte sera refabriquée sur une
+# ortho plus récente.
+2.349905 48.853115 sol -64.5 0.92 0.92 75 paris/NotreDame-ba.ac Notre-Dame de Paris
+# Opéra Garnier.
+#
+# Cap -15,9 : l'emprise BD TOPO 113411 (201 points) donne 74,1 deg modulo 90, et
+# la boîte fait 98 m est-ouest pour 142 m nord-sud, donc le grand axe est sur la
+# branche 164,1. Le modèle présente le sien selon Z, soit un cap de 180, d'où
+# -15,9. Vérification du sens : la cage de scène, partie la plus haute du
+# modèle, part bien au nord une fois tournée, comme dans la réalité, la façade
+# regardant la place au sud.
+#
+# Échelle 0,96, la seule des six à ne pas venir du balayage sur l'orthophoto :
+# celui-ci hésite entre 0,80 et 0,97 sans maximum franc, la place et les toits
+# voisins offrant trop de contours parasites. Elle vient donc des dimensions du
+# modèle lui-même, 129,7 x 180,3 m contre 125 x 173 en réalité, soit 0,963 et
+# 0,960 sur les deux axes : deux mesures indépendantes qui concordent, ce qui
+# vaut mieux qu'un balayage indécis.
+#
+# Hauteur au même facteur. Le modèle culmine à 49,7 m quand l'Opéra en fait
+# 73,6 : sa cage de scène est manifestement sous-modelée. On suit le modèle
+# plutôt que la cote publiée, comme aux Invalides.
+2.331544 48.872068 sol -15.9 0.96 0.96 90 paris/opera-ba.ac Opéra Garnier
+# Église de la Madeleine.
+#
+# Le modèle le plus sain du jeu : origine centrée, socle à +0,33 m, 137 x 54 m
+# pour 35,6 m de haut, et rien d'autre que le monument dans le fichier.
+#
+# Cap -64,1 : l'emprise BD TOPO 123774 donne 25,9 deg modulo 90, et le grand axe
+# est bien sur cette branche et non sur 115,9. Vérification par le calcul : un
+# rectangle de 108 x 43 m (la Madeleine au nu des colonnes) tourné de 25,9 deg
+# donne une boîte de 85,9 x 115,9 m, quand BD TOPO en relève 86 x 113. Le modèle
+# présente son grand axe selon X, soit un cap de 90, d'où -64,1.
+#
+# Échelle 1,0, l'échelle native. Le balayage sur l'orthophoto est faible ici, la
+# place et le marché couvert donnant trop de contours parasites : deux pics
+# équivalents à 0,87 et 1,05, sans maximum franc. Comparer le modèle au relevé
+# BD TOPO suggérerait 0,79, mais c'est le piège déjà rencontré aux Invalides :
+# BD TOPO trace le bâtiment au nu des colonnes (108 x 43 m) quand le modèle
+# inclut le stylobate et ses marches, plus larges. À l'échelle native le
+# balayage ne réclame plus qu'un mètre de décalage, ce qui la conforte.
+2.324460 48.870027 sol -64.1 1.0 1.0 70 paris/madeleine-ba.ac Église de la Madeleine
+# Grande Arche de la Défense.
+#
+# Cap 32,0 et centre relevés sur l'emprise BD TOPO 124054 (18 points, 116,4 m de
+# haut). Vérification par le calcul : un carré de 110 m tourné de 32 deg donne
+# une boîte de 151 x 151 m, quand BD TOPO en relève 151 x 150. L'Arche étant
+# carrée, l'ambiguïté modulo 90 ne se pose pas ; seule compte l'orientation de
+# l'évidement, qui doit suivre l'axe historique.
+#
+# Échelle 0,873 = 110 / 126, du modèle vers la cote connue du cube. C'est le seul
+# monument où le balayage sur l'orthophoto a dû être ÉCARTÉ, et la raison mérite
+# d'être retenue : le modèle mesure 126 m de haut, la caméra du balayage était à
+# 330 m, donc sa toiture apparaissait grossie de 330/(330-126), soit 1,6 fois.
+# La silhouette à l'écran faisait 269 m pour un monument de 126, et le balayage
+# cherchait naturellement à rétrécir le modèle pour le faire tenir dans son
+# emprise photographiée. La méthode du balayage suppose un monument bas devant
+# une caméra haute : au-delà d'une vingtaine de mètres, corriger la parallaxe ou
+# s'en remettre aux cotes, comme ici.
+2.235868 48.892569 sol 32.0 0.873 0.873 90 paris/ArcheDefense-ba.ac Grande Arche de la Défense
+# Tour Montparnasse.
+#
+# Cap -47,8 : l'axe principal de l'emprise BD TOPO 56480 (82 points) est à
+# 42,2 deg, et le modèle présente le sien selon X, soit un cap de 90. L'axe vient
+# des MOMENTS et non de la direction des côtés : les petits côtés de la tour sont
+# courbes, donc leurs segments pointent dans toutes les directions.
+#
+# Échelles : 0,982 en plan (64,8 m relevés le long de l'axe contre 66,0 dans le
+# modèle) et 0,907 en hauteur (210 m connus, 207,4 relevés par BD TOPO, contre
+# 231,6 dans le modèle). Le modèle est donc proportionnellement trop élancé de
+# 8 %, ce qui se verrait sur la ligne d'horizon : chaque facteur garde sa mesure.
+#
+# Pas de balayage sur l'orthophoto : à 210 m de haut la parallaxe fausse tout,
+# voir la note de la Grande Arche.
+2.321980 48.842113 sol -47.8 0.982 0.907 60 paris/Montparnasse-ba.ac Tour Montparnasse
+
+# Hôtel de Ville.
+#
+# Cap -162,4 : l'axe principal de l'emprise BD TOPO 68975 (515 points) est à
+# 17,6 deg, et le modèle présente son grand axe selon Z, soit un cap de 180.
+# Attention à la branche : un premier essai à -72,4 posait le bâtiment en
+# travers, ses deux cours perpendiculaires à ce qu'elles doivent être.
+#
+# Échelle 1,0, l'échelle native. Le balayage propose 0,80, soit 0,86 une fois
+# corrigé de la parallaxe (caméra à 800 m, monument à 53,8 m, grossissement
+# 1,072), mais son accord plafonne à 0,19 contre 0,40 à 0,48 sur les monuments
+# bien calés : à cette altitude les tuiles de détail ne se chargent plus et
+# l'orthophoto d'ensemble, à 3,6 m par pixel, ne donne plus de contours francs.
+# La superposition montre en revanche les deux cours du modèle tombant sur
+# celles de la photo, ce qui suffit à valider l'échelle native.
+2.352527 48.856428 sol -162.4 1.0 1.0 100 paris/hotel_de_ville-ba.ac Hôtel de Ville
+# ---------------------------------------------------------------------------
+# Monuments posés en série, méthode automatisée (28/07/2026).
+#
+# Le centre et le cap viennent de l'emprise BD TOPO la plus ressemblante autour
+# de la position connue du monument, le cap par les moments d'ordre 2 ; l'échelle
+# est le rapport des deux grandes dimensions. Chaque pose a été confrontée aux
+# coordonnées réelles du monument, et celles qui s'en écartaient de plus de 60 m
+# ont été reprises ou écartées. Ces sept-là sont donc moins finement calées que
+# les onze premières, qui ont chacune eu leur balayage sur l'orthophoto.
+#
+# Les coordonnées de la scène FlightGear d'origine ne servent que d'amorce : elle
+# est décalée de 217 m à l'ouest et 335 m au sud de façon systématique (médiane
+# sur les onze premiers monuments, dispersion de 35 m).
+# ---------------------------------------------------------------------------
+
+2.375835 48.833639 sol -43.1 0.798 0.798 150 paris/BNF-ba.ac Bibliothèque nationale de France
+2.352435 48.860531 sol 116.5 0.768 0.768 85 paris/Beaubourg-ba.ac Centre Pompidou
+2.345147 48.863407 sol 17.5 1.124 1.124 59 paris/corp_cathedrale-ba.ac Église Saint-Eustache
+2.334815 48.851007 sol -34.2 0.800 0.800 42 paris/corp_cathedrale-ba.ac Église Saint-Sulpice
+2.345028 48.855396 sol 37.6 1.034 1.034 30 paris/ste_chapelle-ba.ac Sainte-Chapelle
+2.349100 48.858200 sol 0.0 1.0 1.0 30 paris/tour_stjacques-ba.ac Tour Saint-Jacques
+2.283414 48.879450 sol -74.2 0.952 0.952 95 paris/lafayette-ba.ac Hôtel Concorde Lafayette
+
+# Palais du Louvre (calage en cours).
+2.335728 48.861266 sol 34.7 1.0 1.0 300 paris/louvre-ba.ac Palais du Louvre
+
+# ---------------------------------------------------------------------------
+# Grands ensembles, posés en série le 28/07/2026. À VÉRIFIER UN PAR UN : voir la
+# liste à cocher de la ROADMAP.
+#
+# Même méthode que le Louvre : le centre du BÂTI (ce qui dépasse 8 m, la dalle
+# de sol exclue) est amené à la position connue du monument, le cap vient de
+# l'axe principal de la plus grande emprise BD TOPO voisine, l'échelle reste
+# native. Le cap est donné modulo 180 par cette mesure : une pose sur deux peut
+# donc se retrouver retournée bout pour bout, comme l'a été le Centre Pompidou.
+# C'est le premier point à contrôler sur chacun.
+#
+# L'île de la Cité est volontairement absente : son modèle de 1 468 m de bâti
+# contient Notre-Dame et la Sainte-Chapelle, déjà posées séparément.
+# ---------------------------------------------------------------------------
+
+2.312445 48.866478 sol -180.0 1.0 1.0 200 paris/Grdpalais-ba.ac Grand Palais
+2.286635 48.864618 sol -81.9 1.0 1.0 160 paris/Trocadero-ba.ac Palais de Chaillot
+2.336979 48.848279 sol 87.9 1.0 1.0 140 paris/Luxembourg-ba.ac Palais du Luxembourg
+2.316298 48.861099 sol -67.1 1.0 1.0 130 paris/assemblee-ba.ac Assemblée nationale
+2.304207 48.851925 sol -23.8 1.0 1.0 180 paris/ecole_militaire-ba.ac École militaire
+2.378196 48.839698 sol -129.2 1.0 1.0 180 paris/bercy-ba.ac Palais omnisports de Bercy
+2.356246 48.845572 sol 49.9 1.0 1.0 200 paris/Jussieux-ba.ac Campus de Jussieu
+2.286890 48.850804 sol -109.5 1.0 1.0 240 paris/beaugrenelle-ba.ac Front de Seine
+2.278716 48.853104 sol -40.7 1.0 1.0 130 paris/Radio-ba.ac Maison de la Radio
+2.247579 48.890327 sol 10.8 1.0 1.0 380 paris/Defense-ba.ac Quartier de la Défense
+2.369975 48.851567 sol -151.0 1.0 1.0 130 paris/bastille-ba.ac Opéra Bastille
+2.329553 48.868579 sol -39.0 1.0 1.0 80 paris/vendome-ba.ac Place Vendôme
+2.321135 48.865807 sol 19.2 1.0 1.0 130 paris/Concorde-ba.ac Place de la Concorde

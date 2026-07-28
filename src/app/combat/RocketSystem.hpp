@@ -62,6 +62,12 @@ public:
     UpdateResult update(float dt, const std::function<float(float, float)>& terrainHeight,
                         ZombieHorde& horde) noexcept;
 
+    /* Ajoute une boule de feu qui ne vient d'aucun tir : le mode zombie s'en sert
+       pour faire éclater les marcheurs d'un largueur abattu. Purement visuel --
+       ni dégâts de zone, ni trace au sol (ce n'est pas un impact de roquette),
+       et l'appelant reste maître des morts et des sons. */
+    void addExplosion(const vec3& center);
+
     /* Roquette en vol, pour le rendu (traînée de feu tendue de tail à head). */
     struct RocketView {
         vec3 head{0.0f};  /* pointe de la roquette (monde) */

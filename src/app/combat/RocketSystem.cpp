@@ -260,6 +260,10 @@ std::vector<RocketSystem::RocketView> RocketSystem::rockets() const {
     return out;
 }
 
+void RocketSystem::addExplosion(const vec3& center) {
+    m_explosions.push_back(Explosion{center, 0.0f});
+}
+
 std::vector<RocketSystem::ExplosionView> RocketSystem::explosions() const {
     std::vector<ExplosionView> out;
     out.reserve(m_explosions.size());

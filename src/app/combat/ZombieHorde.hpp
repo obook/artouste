@@ -90,21 +90,32 @@ public:
        (sans quoi ils seraient tous parfaitement synchronisés). */
     void spawn(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
 
-    /* Fait apparaître une pondeuse (le boss, voir Type) à la position donnée.
-       Une seule à la fois en pratique : le gestionnaire de vagues n'en lance
-       qu'une par manche de boss, et les accesseurs ci-dessous renvoient la
-       première trouvée. */
+    /* Fait apparaître un largueur (le boss, voir Type) à la position donnée.
+       Un seul à la fois en pratique : le gestionnaire de vagues n'en lance
+       qu'un par manche de boss, et les accesseurs ci-dessous renvoient le
+       premier trouvé. */
     void spawnBrood(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
 
-    /* Une pondeuse est-elle encore debout (Alive, ni en train de tomber ni
-       morte) ? Le gestionnaire de vagues s'en sert pour engendrer autour d'elle
+    /* Un largueur est-il encore debout (Alive, ni en train de tomber ni
+       mort) ? Le gestionnaire de vagues s'en sert pour larguer autour de lui
        et pour retenir la fin de manche ; le HUD, pour afficher sa jauge. */
     [[nodiscard]] bool broodAlive() const noexcept;
-    /* Position de cette pondeuse, ou l'origine s'il n'y en a plus (à lire
+    /* Position de ce largueur, ou l'origine s'il n'y en a plus (à lire
        seulement quand broodAlive() est vrai). */
     [[nodiscard]] vec3 broodPosition() const noexcept;
-    /* Vie restante de cette pondeuse (0..1), 0 s'il n'y en a plus. */
+    /* Vie restante de ce largueur (0..1), 0 s'il n'y en a plus. */
     [[nodiscard]] float broodHealthPct() const noexcept;
+
+    /* Fait apparaître un marcheur LÂCHÉ par le largueur, à la position donnée :
+       même chose qu'un marcheur ordinaire, mais marqué comme sien (fromBrood). */
+    void spawnBroodling(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
+
+    /* Tue d'un coup tous les marcheurs encore debout lâchés par le largueur, et
+       renvoie leurs positions -- à l'appelant d'y poser une explosion et un cri
+       (voir app::CombatMode). Sert quand le largueur tombe : ce qu'il a lâché ne
+       lui survit pas. Les marcheurs venus du bord de l'arène ne sont pas
+       touchés. */
+    [[nodiscard]] std::vector<vec3> killBroodlings() noexcept;
 
     /* Vide la horde (fin de partie, changement de carte...). */
     void clear() noexcept { m_zombies.clear(); }

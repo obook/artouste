@@ -182,12 +182,26 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
         }
     }
 
-    /* Pondeuse neutralisée : prime de score et annonce dédiée, qui écrase un
+    /* Largueur neutralisé : prime de score et annonce dédiée, qui écrase un
        éventuel kill multiple de la même explosion (l'événement marquant, c'est
        le boss). Détecté après la mise à jour des roquettes, seule source de
        dégâts capable de l'entamer. */
     const bool broodAlive = m_horde.broodAlive();
     if (m_broodWasAlive && !broodAlive) {
+        /* Ce que le largueur a lâché ne lui survit pas : ses marcheurs éclatent
+           sur place. Une boule de feu et un cri par marcheur, et ils comptent
+           comme des mises à mort -- le joueur les a bien gagnées en abattant le
+           boss. L'annonce, elle, reste celle du largueur : elle est posée après,
+           pour qu'un éventuel carnage simultané ne la vole pas. */
+        const std::vector<vec3> eclates = m_horde.killBroodlings();
+        for (const vec3& pos : eclates) {
+            m_rockets.addExplosion(pos);
+            m_events.explosionPositions.push_back(pos);
+            m_events.zombieDeathPositions.push_back(pos);
+        }
+        m_kills += static_cast<int>(eclates.size());
+        m_score += BROODLING_SCORE * static_cast<int>(eclates.size());
+
         m_score += BROOD_SCORE;
         m_killAnnounce      = KillAnnouncement::Brood;
         m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;

@@ -162,6 +162,35 @@ TEST_CASE("ZombieHorde : largueur (boss)", "[combat][zombie][boss]") {
         CHECK(tints[1].radius > tints[0].radius);
     }
 
+    SECTION("les marcheurs lâchés par le largueur ont aussi les yeux rouges") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});           /* venu du bord : vert */
+        horde.spawnBroodling(vec3{10.0f, 0.0f, 0.0f}); /* lâché : rouge */
+        const auto tints = horde.buildEyeTints();
+        REQUIRE(tints.size() == 2);
+        CHECK(tints[0].color.g > tints[0].color.r);
+        CHECK(tints[1].color.r > tints[1].color.g);
+        /* Rouge comme le largueur, mais la lueur garde la taille d'un marcheur. */
+        CHECK(tints[1].radius == Catch::Approx(tints[0].radius));
+    }
+
+    SECTION("le largueur abattu emporte ce qu'il a lâché, et lui seul") {
+        horde.spawnBrood(vec3{0.0f, 0.0f, 0.0f});
+        horde.spawnBroodling(vec3{3.0f, 0.0f, 0.0f});
+        horde.spawnBroodling(vec3{6.0f, 0.0f, 0.0f});
+        horde.spawn(vec3{60.0f, 0.0f, 0.0f}); /* venu du bord : épargné */
+
+        const auto eclates = horde.killBroodlings();
+        REQUIRE(eclates.size() == 2);
+        CHECK(eclates[0].x == Catch::Approx(3.0f));
+        CHECK(eclates[1].x == Catch::Approx(6.0f));
+        CHECK(horde.zombies()[1].state == ZombieHorde::State::Dying);
+        CHECK(horde.zombies()[2].state == ZombieHorde::State::Dying);
+        CHECK(horde.zombies()[3].state == ZombieHorde::State::Alive);
+
+        /* Rien à tuer deux fois : un second appel ne renvoie plus personne. */
+        CHECK(horde.killBroodlings().empty());
+    }
+
     SECTION("le regard s'éteint avec la chute") {
         horde.spawn(vec3{0.0f, 0.0f, 0.0f});
         horde.applyDamage(0, 100.0f);  /* passe en Dying : la lueur décroît */

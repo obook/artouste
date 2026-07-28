@@ -103,7 +103,7 @@ void WaveManager::spawnFromBrood(ZombieHorde& horde) noexcept {
                         vec3{std::sin(angle) * radius, 0.0f, std::cos(angle) * radius};
     /* L'altitude est recalée sur le relief au prochain ZombieHorde::update,
        comme pour les apparitions ordinaires (voir spawnOne). */
-    horde.spawn(around, angleDist(m_rng), phaseDist(m_rng));
+    horde.spawnBroodling(around, angleDist(m_rng), phaseDist(m_rng));
 }
 
 void WaveManager::beginWave(int number, ZombieHorde& horde, bool immediateEscort) noexcept {

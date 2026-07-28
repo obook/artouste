@@ -75,6 +75,28 @@ void ZombieHorde::spawnBrood(const vec3& position, float yaw, float phase) {
     z.health  = BROOD_HEALTH;
 }
 
+void ZombieHorde::spawnBroodling(const vec3& position, float yaw, float phase) {
+    spawn(position, yaw, phase);
+    m_zombies.back().fromBrood = true;
+}
+
+std::vector<vec3> ZombieHorde::killBroodlings() noexcept {
+    std::vector<vec3> positions;
+    for (Zombie& z : m_zombies) {
+        if (!z.fromBrood || z.state != State::Alive) {
+            continue;
+        }
+        /* Mise à mort immédiate, sans passer par applyDamage : ils n'encaissent
+           pas un coup, ils s'éteignent avec ce qui les a lâchés. L'animation de
+           chute reste jouée (Dying), le temps que l'explosion les couvre. */
+        z.health     = 0.0f;
+        z.state      = State::Dying;
+        z.stateTimer = DEATH_ANIM_DURATION_S;
+        positions.push_back(z.position);
+    }
+    return positions;
+}
+
 bool ZombieHorde::broodAlive() const noexcept {
     return std::any_of(m_zombies.begin(), m_zombies.end(), [](const Zombie& z) {
         return z.type == Type::Brood && z.state == State::Alive;

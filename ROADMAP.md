@@ -18,17 +18,12 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Mode assisté conservé d'une carte à l'autre
 
-- [ ] Le mode assisté reste allumé au démarrage d'une carte alors qu'il devrait
-  repartir éteint. Diagnostic : `resetToStart` (`ApplicationSession.cpp`) appelle
-  bien `m_assist.reset()`, mais `FlightAssist::reset()` ne fait que
-  `syncTo(Controls{})`, c'est-à-dire resynchroniser les commandes lissées ; il ne
-  remet ni `m_active` ni `m_intensity` à zéro. L'interrupteur survit donc au
-  chargement.
-
-  Attention en corrigeant : `resetToStart` sert AUSSI aux touches de remise en
-  place en vol (`R` et `X`), où couper l'assistance surprendrait le pilote. La
-  correction doit donc viser le démarrage d'une carte (`applyMenuSession`, après
-  `loadTerrain`) et non `FlightAssist::reset()`.
+- [x] Le mode assisté restait allumé au démarrage d'une carte alors qu'il doit
+  repartir éteint. `resetToStart` appelait bien `m_assist.reset()`, mais celui-ci
+  ne fait que resynchroniser les commandes lissées et laissait l'interrupteur
+  intact. Corrigé par un `FlightAssist::disable()` appelé au départ en vol depuis
+  le menu (`applyMenuSession`), et non dans `resetToStart` qui sert aussi aux
+  touches `R` et `X` en vol, où couper l'assistance surprendrait le pilote.
 
 ### Lacet en approche (dérive à droite)
 

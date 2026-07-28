@@ -324,6 +324,14 @@ void Application::applyMenuSession() {
     }
     resetToStart();
 
+    /* Assistance éteinte à chaque départ en vol. resetToStart ne peut pas s'en
+       charger : il sert aussi aux touches R et X, où couper l'assistance
+       surprendrait le pilote en plein vol. Sans cette ligne, l'interrupteur
+       survivait au retour au menu et l'on repartait assisté sans l'avoir
+       demandé. La démo n'est pas concernée, elle a son propre chemin (voir
+       setRealFlyPhysicsEnabled dans ApplicationLoop.cpp). */
+    m_assist.disable();
+
     /* Livrée de départ (armée de terre) : appliquée à chaque relance depuis le menu,
        le modèle 3D persistant gardant sinon la livrée du vol précédent. */
     if (m_loadedHeli) {

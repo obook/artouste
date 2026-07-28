@@ -22,6 +22,9 @@
 #include "audio/AudioEngine.hpp"
 #include "audio/AudioEngineImpl.hpp"
 
+#include <algorithm>
+#include <cstddef>
+
 namespace artouste::audio {
 
 using namespace audio_detail;
@@ -54,14 +57,24 @@ bool ensureTemplate(ma_engine& engine, ma_sound& templateSound, bool& loaded,
     return true;
 }
 
+/* Nombre maximal d'exemplaires du MÊME son jouant en même temps. Au-delà, le
+   nouvel appel est ignoré : superposer davantage n'ajoute plus d'information
+   (on n'entend pas la différence entre huit et douze pneus lancés), mais leurs
+   amplitudes s'additionnent et saturent la sortie, en plus de masquer les sons
+   utiles -- l'impact sur l'appareil, notamment, qui est le retour de dégâts du
+   joueur. */
+constexpr std::size_t MAX_SAME_SOUND = 3;
+
 /* Joue une nouvelle instance du modèle à un volume selon la distance de
    sourcePos à listenerPos (voir distanceAttenuation). Rejoint oneShots ;
-   silencieuse (aucun objet créé) si le volume résultant est inaudible.
+   silencieuse (aucun objet créé) si le volume résultant est inaudible ou si ce
+   son atteint déjà son plafond d'exemplaires simultanés.
    Prend ses paramètres un par un (plutôt qu'AudioEngine::Impl&) : Impl est
    privé, inaccessible depuis cette fonction libre hors de la classe. */
-void playPositional(ma_engine& engine, std::list<ma_sound>& oneShots, ma_sound& templateSound,
+void playPositional(ma_engine& engine, std::list<OneShot>& oneShots, ma_sound& templateSound,
                     bool& loaded, const std::filesystem::path& dir, const char* filename,
-                    float baseVolume, const vec3& sourcePos, const vec3& listenerPos) {
+                    float baseVolume, const vec3& sourcePos, const vec3& listenerPos,
+                    std::size_t maxSimultaneous = MAX_SAME_SOUND) {
     if (!ensureTemplate(engine, templateSound, loaded, dir, filename)) {
         return;
     }
@@ -69,24 +82,32 @@ void playPositional(ma_engine& engine, std::list<ma_sound>& oneShots, ma_sound& 
     if (volume <= 0.001f) {
         return;
     }
+    const std::size_t enCours = static_cast<std::size_t>(std::count_if(
+        oneShots.begin(), oneShots.end(),
+        [&templateSound](const OneShot& o) { return o.source == &templateSound; }));
+    if (enCours >= maxSimultaneous) {
+        return;
+    }
+
     oneShots.emplace_back();
-    ma_sound& instance = oneShots.back();
-    if (ma_sound_init_copy(&engine, &templateSound, 0, nullptr, &instance) != MA_SUCCESS) {
+    OneShot& slot = oneShots.back();
+    if (ma_sound_init_copy(&engine, &templateSound, 0, nullptr, &slot.sound) != MA_SUCCESS) {
         oneShots.pop_back();
         return;
     }
-    ma_sound_set_volume(&instance, volume);
-    ma_sound_start(&instance);
+    slot.source = &templateSound;
+    ma_sound_set_volume(&slot.sound, volume);
+    ma_sound_start(&slot.sound);
 }
 
 }  /* namespace */
 
 /* Purge les instances de lecture arrivées à leur fin (voir oneShots dans
    AudioEngineImpl.hpp). Appelée chaque image depuis AudioEngine::update. */
-void reapOneShots(std::list<ma_sound>& oneShots) {
+void reapOneShots(std::list<OneShot>& oneShots) {
     for (auto it = oneShots.begin(); it != oneShots.end();) {
-        if (ma_sound_at_end(&*it) == MA_TRUE) {
-            ma_sound_uninit(&*it);
+        if (ma_sound_at_end(&it->sound) == MA_TRUE) {
+            ma_sound_uninit(&it->sound);
             it = oneShots.erase(it);
         } else {
             ++it;
@@ -131,21 +152,27 @@ void AudioEngine::playZombieDeath(const vec3& sourcePos, const vec3& listenerPos
                   sourcePos, listenerPos);
 }
 
+/* Deux exemplaires au plus, et à volume modéré : l'échantillon dure sept
+   secondes alors que le geste, lui, est instantané, si bien qu'une horde qui
+   lance en rafale accumulait une pile de queues de son. */
 void AudioEngine::playToxicThrow(const vec3& sourcePos, const vec3& listenerPos) {
     if (!m_impl->engineInit) {
         return;
     }
     playPositional(m_impl->engine, m_impl->oneShots, m_impl->toxicThrowSound,
-                  m_impl->toxicThrowLoaded, m_impl->combatSoundsDir, "toxic_throw.wav", 0.6f,
-                  sourcePos, listenerPos);
+                  m_impl->toxicThrowLoaded, m_impl->combatSoundsDir, "toxic_throw.wav", 0.35f,
+                  sourcePos, listenerPos, 2);
 }
 
+/* Plein volume : c'est l'échantillon le plus discret du lot (une quinzaine de
+   décibels sous les autres) alors qu'il porte l'information la plus utile au
+   joueur, les dégâts encaissés. */
 void AudioEngine::playToxicImpact(const vec3& sourcePos, const vec3& listenerPos) {
     if (!m_impl->engineInit) {
         return;
     }
     playPositional(m_impl->engine, m_impl->oneShots, m_impl->toxicImpactSound,
-                  m_impl->toxicImpactLoaded, m_impl->combatSoundsDir, "toxic_impact.wav", 0.8f,
+                  m_impl->toxicImpactLoaded, m_impl->combatSoundsDir, "toxic_impact.wav", 1.0f,
                   sourcePos, listenerPos);
 }
 

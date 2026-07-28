@@ -16,8 +16,15 @@ namespace artouste::app {
 namespace {
 /* Rayon (m) de la sphère de collision de l'appareil pour les boulettes
    toxiques : englobant large plutôt qu'une forme précise, cohérent avec le
-   reste du mode (mitrailleuse elle aussi en sphères simples). */
-constexpr float HELI_HIT_RADIUS_M = 2.5f;
+   reste du mode (mitrailleuse elle aussi en sphères simples).
+
+   2,5 m ne couvrait que la bulle de la cabine, sur une Alouette II qui mesure
+   près de dix mètres poutre de queue comprise : un pneu qui passait
+   visiblement dans la machine la traversait sans rien déclencher, ni dégâts ni
+   bruit d'impact. 4 m englobe la cabine et une bonne part de la poutre, au prix
+   d'un englobant encore généreux sous le rotor -- moindre mal comparé à des
+   impacts visibles restés sans effet. */
+constexpr float HELI_HIT_RADIUS_M = 4.0f;
 /* Durée d'affichage du flash de bouche après un coup parti (s) : assez long
    pour rester visible à l'oeil même à pleine cadence (12 coups/s, un flash
    toutes les ~83 ms), sans jamais tout à fait s'éteindre entre deux coups. */

@@ -75,11 +75,21 @@ inline float distanceAttenuation(const vec3& sourcePos, const vec3& listenerPos)
     return 1.0f - smooth;
 }
 
+/* Instance de lecture ponctuelle en cours, avec le modèle dont elle est issue :
+   c'est lui qui sert à compter les occurrences simultanées d'un MÊME son, pour
+   les plafonner (voir playPositional). Sans ce plafond, une horde entière
+   lançant ses pneus empilait une dizaine d'exemplaires d'un échantillon de sept
+   secondes, dont la somme saturait la sortie et noyait tout le reste. */
+struct OneShot {
+    ma_sound        sound{};
+    const ma_sound* source = nullptr;  /* modèle d'origine, jamais déréférencé */
+};
+
 }  /* namespace audio_detail */
 
 /* Purge les instances de lecture ponctuelles arrivées à leur fin (voir
    AudioEngineCombat.cpp) : appelée chaque image depuis AudioEngine::update. */
-void reapOneShots(std::list<ma_sound>& oneShots);
+void reapOneShots(std::list<audio_detail::OneShot>& oneShots);
 
 struct AudioEngine::Impl {
     ma_engine engine{};
@@ -133,7 +143,7 @@ struct AudioEngine::Impl {
        éléments existants (une réallocation invaliderait les ma_sound déjà
        démarrés). Purgées à chaque image (voir reapOneShots, appelé depuis
        update()) dès que ma_sound_at_end() les signale terminées. */
-    std::list<ma_sound> oneShots;
+    std::list<audio_detail::OneShot> oneShots;
 
     /* Message radio : voix de synthèse (Flite) "radioïsée", générée à la volée sans
        fichier. Le tampon PCM doit rester en vie tant que la source l'utilise : ici. */

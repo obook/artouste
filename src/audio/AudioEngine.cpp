@@ -69,8 +69,8 @@ AudioEngine::~AudioEngine() {
     if (m_impl->broodSpawnLoaded) {
         ma_sound_uninit(&m_impl->broodSpawnSound);
     }
-    for (ma_sound& s : m_impl->oneShots) {
-        ma_sound_uninit(&s);
+    for (audio_detail::OneShot& s : m_impl->oneShots) {
+        ma_sound_uninit(&s.sound);
     }
     if (m_impl->msgSoundReady) {
         ma_sound_uninit(&m_impl->msgSound);

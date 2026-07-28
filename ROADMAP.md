@@ -450,6 +450,23 @@ ou sortir de France.
   lueurs trop grosses et la deuxième trop discrètes : à 100 m, le rayon vaut environ
   46 cm, contre 60 et 38 cm pour les deux essais.
 
+### Sons de combat et sphère de collision de l'appareil
+
+- [x] Deux défauts liés, signalés en jeu : le bruit d'impact d'un pneu sur l'appareil
+  ne s'entendait pas, et le bruit de lancer saturait à courte distance. Le lancer
+  utilise un échantillon de sept secondes alors que le geste est instantané : une horde
+  qui lance en rafale empilait une dizaine de queues de son, dont la somme saturait la
+  sortie et masquait le reste. Les instances simultanées d'un même son sont désormais
+  plafonnées (trois en général, deux pour le lancer), le lancer est passé de 0,6 à 0,35
+  de volume, et l'impact de 0,8 à plein volume, son échantillon étant le plus discret
+  du lot (une quinzaine de décibels sous les autres) alors qu'il porte l'information la
+  plus utile au joueur.
+
+    Seconde cause pour l'impact : la sphère de collision de l'appareil ne faisait que
+  2,5 m de rayon, soit la bulle de la cabine, sur une Alouette II qui mesure près de dix
+  mètres poutre de queue comprise. Un pneu qui passait visiblement dans la machine la
+  traversait sans rien déclencher, ni dégâts ni bruit. Portée à 4 m.
+
 ### Traces d'impact des roquettes
 
 - [x] Chaque impact laisse désormais une trace de forme et de taille propres, au lieu

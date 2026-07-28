@@ -56,12 +56,12 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   sous licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_throw.wav`.
 
-- **Impact de boulette toxique (mode zombie)** : "simple ding.mp3"
-  (<https://freesound.org/people/achinverma/sounds/332518/>) par achinverma, sous
+- **Impact de boulette toxique (mode zombie)** : "Glass_Shards_Impact_04"
+  (<https://freesound.org/people/BlondPanda/sounds/778607/>) par BlondPanda, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_impact.wav`.
 
-- **Apparition de la pondeuse (mode zombie)** : "Zombies.wav"
+- **Apparition du largueur (mode zombie)** : "Zombies.wav"
   (<https://freesound.org/people/xtrgamr/sounds/257790/>) par xtrgamr, sous
   licence [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
   Fichier : `assets/sounds/combat/rale.wav`.

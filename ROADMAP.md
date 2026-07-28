@@ -16,6 +16,20 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
 
+### Mode assisté conservé d'une carte à l'autre
+
+- [ ] Le mode assisté reste allumé au démarrage d'une carte alors qu'il devrait
+  repartir éteint. Diagnostic : `resetToStart` (`ApplicationSession.cpp`) appelle
+  bien `m_assist.reset()`, mais `FlightAssist::reset()` ne fait que
+  `syncTo(Controls{})`, c'est-à-dire resynchroniser les commandes lissées ; il ne
+  remet ni `m_active` ni `m_intensity` à zéro. L'interrupteur survit donc au
+  chargement.
+
+  Attention en corrigeant : `resetToStart` sert AUSSI aux touches de remise en
+  place en vol (`R` et `X`), où couper l'assistance surprendrait le pilote. La
+  correction doit donc viser le démarrage d'une carte (`applyMenuSession`, après
+  `loadTerrain`) et non `FlightAssist::reset()`.
+
 ### Lacet en approche (dérive à droite)
 
 - [ ] Dérive en lacet à droite en approche finale (réduction du collectif) :

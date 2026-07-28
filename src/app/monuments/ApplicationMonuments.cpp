@@ -40,11 +40,21 @@
 
 namespace artouste::app {
 
+std::filesystem::file_time_type
+Application::dateMonuments(const std::filesystem::path& dossierCarte) const {
+    std::error_code ec;
+    const auto date = std::filesystem::last_write_time(dossierCarte / "monuments.txt", ec);
+    return ec ? std::filesystem::file_time_type{} : date;
+}
+
 void Application::loadMonuments() {
     m_monuments.clear();
     if (!m_terrain) {
         return;
     }
+    /* Date du fichier au moment du chargement : le retour au menu la comparera
+       pour savoir s'il faut recharger la carte (voir applyMenuSession). */
+    m_monumentsDate = dateMonuments(m_assetsDir / "terrain" / m_terrainName);
 
     const std::filesystem::path dir = m_assetsDir / "models" / "monuments";
     const float halfW = m_terrain->halfWidth();
@@ -161,16 +171,20 @@ void Application::renderMonuments(const RenderContext& ctx) {
        intermédiaire, sans ronger le treillis ni laisser de halo. */
     m_monumentShader->setFloat("u_alphaCutoff", 0.5f);
 
-    /* Les poutrelles sont des panneaux plats, visibles des deux côtés : sans
-       désactiver l'élimination des faces arrière, la moitié du treillis manque. */
-    glDisable(GL_CULL_FACE);
+    /* Aucun réglage d'élimination des faces arrière ici. Le moteur n'y touche
+       nulle part et la laisse donc éteinte, valeur par défaut d'OpenGL : tout
+       est dessiné des deux côtés, ce qui convient aux monuments (les poutrelles
+       de la tour Eiffel sont des panneaux plats dont on doit voir les deux
+       faces) comme au reste. Une version antérieure la rallumait après la
+       boucle et la laissait allumée pour le reste de l'image : les instruments
+       de la planche de bord devenaient transparents, leurs faces arrière étant
+       éliminées. */
     for (const MonumentInstance& mon : m_monuments) {
         /* La matrice de pose est en coordonnées monde absolues ; ctx.toRel porte le
            recalage d'origine de l'image (rendu relatif à la caméra). */
         m_monumentShader->setMat4("u_model", ctx.toRel * mon.transform);
         mon.model->draw(*m_monumentShader, render::Pass::All);
     }
-    glEnable(GL_CULL_FACE);
 }
 
 } /* namespace artouste::app */

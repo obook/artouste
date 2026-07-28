@@ -289,6 +289,12 @@ private:
        turbine atteint son plein régime. Se réarme quand la turbine redescend. */
     void updateRadioMessage(float turbineFraction, float frameDt);
 
+    /* Réarme l'annonce de la tour pour la session qui commence. Le réarmement
+       automatique attend que la turbine redescende sous la moitié du régime, ce
+       qui n'arrive jamais entre deux sessions lancées turbine chaude (mode
+       zombie) : sans cet appel, seule la première du processus est annoncée. */
+    void resetRadioMessage() noexcept;
+
     /* --- Rendu d'une image ------------------------------------------------------ */
 
     void renderScene(const mat4& base,

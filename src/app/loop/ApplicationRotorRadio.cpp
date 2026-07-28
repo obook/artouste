@@ -15,6 +15,8 @@
 #include "util/Math.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <string>
 
 namespace artouste::app {
 
@@ -85,7 +87,26 @@ void Application::advanceRotor(float rotorFraction, float frameDt) {
     }
 }
 
+void Application::resetRadioMessage() noexcept {
+    m_radioMsgArmed = false;
+    m_radioMsgDone  = false;
+    m_radioMsgDelay = 0.0f;
+    m_radioMsgShow  = 0.0f;  /* pas de sous-titre hérité de la session précédente */
+    m_radioMsg.clear();
+}
+
 void Application::updateRadioMessage(float turbineFraction, float frameDt) {
+    /* Mode zombie : pas d'annonce de la tour. On entre en combat turbine et rotor
+       déjà au régime, face à une horde : une autorisation de décollage n'aurait
+       pas de sens. Le verrou de rotor qui l'accompagne saute avec elle, sans quoi
+       l'appareil resterait cloué au pad en attendant une réplique qui ne vient
+       pas (voir la fin de cette fonction). */
+    if (m_combat.active()) {
+        m_radioMsgShow = 0.0f;  /* ni voix ni sous-titre */
+        m_flight.turbine().setRotorHold(false);
+        return;
+    }
+
     /* Turbine nettement ralentie : on réarme pour le prochain démarrage. */
     if (turbineFraction < 0.5f) {
         m_radioMsgArmed = false;
@@ -110,6 +131,13 @@ void Application::updateRadioMessage(float turbineFraction, float frameDt) {
                     station = station.substr(p.size());
                     break;
                 }
+            }
+            /* Même intention pour une précision entre parenthèses : l'arène de Dax
+               s'appelle "Dax-Seyresse (pad est)", que la voix de synthèse lit tel
+               quel, parenthèses comprises. La tour annonce le terrain, pas le pad. */
+            const std::size_t paren = station.find(" (");
+            if (paren != std::string::npos) {
+                station = station.substr(0, paren);
             }
             m_radioMsg = station.empty()
                              ? "Fox-Bravo, tower, wind calm, cleared for take-off."

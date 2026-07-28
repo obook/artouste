@@ -84,7 +84,7 @@ public:
      * 'listenerPos' celle de l'hélico ; le volume décroît avec leur distance.
      * playWaveStart() et playBroodSpawn() sont les exceptions : annonces non
      * spatiales, à volume fixe, qui réutilisent chacune un unique son rejoué
-     * depuis le début. La pondeuse apparaît au bord de l'arène, à quelques
+     * depuis le début. Le largueur apparaît au bord de l'arène, à quelques
      * centaines de mètres : un râle spatialisé y serait inaudible, alors que
      * l'apparition du boss doit justement s'entendre. */
     void initCombatSounds(const std::filesystem::path& dir);
@@ -96,6 +96,10 @@ public:
     void playToxicImpact(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
     void playBroodSpawn();
+    /* Coupe toutes les lectures de combat en cours (fin de partie) : setPaused
+     * ne suspend que les boucles, et la purge des sons ponctuels s'arrête avec
+     * update(). Sans effet s'il n'y a rien à couper. */
+    void stopCombatSounds();
 
     /* Flux radio internet branché sur le moteur audio. URL vide ou libcurl absente :
      * no-op silencieux. startRadio (re)démarre le flux, stopRadio le coupe,

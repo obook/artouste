@@ -329,10 +329,15 @@ void Application::applyMenuSession() {
         m_flight.turbine().stopNow();
     }
 
-    /* On repart d'un état neutre : ni pause, ni panneau de confirmation. */
+    /* On repart d'un état neutre : ni pause, ni panneau de confirmation, et une
+       annonce de la tour à émettre. Ce dernier point compte surtout pour le mode
+       zombie, lancé turbine chaude : le réarmement automatique attend que la
+       turbine redescende sous la moitié du régime, ce qui n'arrive pas entre deux
+       parties, si bien que seule la première du processus était annoncée. */
     m_paused = false;
     m_confirmReset = false;
     m_confirmDemo = false;
+    resetRadioMessage();
 
     /* Démo demandée au menu : on lance la démonstration (elle repose l'appareil, force
        le démarrage rapide de la turbine et joue la chorégraphie). En sortir ramènera au

@@ -1,7 +1,7 @@
 /*
  * AudioEngineCombat.cpp
  * Sons ponctuels du mode zombie (tir, touché, mort, jet, impact, nouvelle
- * vague, apparition de la pondeuse) : chargement paresseux à la première
+ * vague, apparition du largueur) : chargement paresseux à la première
  * lecture depuis assets/sounds/combat/, même principe que
  * AudioEngine::playMusic. Fichier absent : silencieux, sans erreur.
  *
@@ -117,6 +117,29 @@ void reapOneShots(std::list<OneShot>& oneShots) {
 
 void AudioEngine::initCombatSounds(const std::filesystem::path& dir) {
     m_impl->combatSoundsDir = dir;
+}
+
+void AudioEngine::stopCombatSounds() {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    /* Coupe net toutes les lectures en cours et les libère : setPaused ne les
+       connaît pas (il ne suspend que les boucles), et reapOneShots ne tourne plus
+       dès que le jeu est figé, faute d'appel à update(). Sans cela, un râle ou
+       une queue d'explosion se poursuit derrière le bandeau de fin de partie. */
+    for (audio_detail::OneShot& os : m_impl->oneShots) {
+        ma_sound_stop(&os.sound);
+        ma_sound_uninit(&os.sound);
+    }
+    m_impl->oneShots.clear();
+    /* Les deux annonces non spatiales sont réutilisées, pas copiées : on les
+       arrête sans les libérer. */
+    if (m_impl->waveStartLoaded) {
+        ma_sound_stop(&m_impl->waveStartSound);
+    }
+    if (m_impl->broodSpawnLoaded) {
+        ma_sound_stop(&m_impl->broodSpawnSound);
+    }
 }
 
 void AudioEngine::playGunfire(const vec3& sourcePos, const vec3& listenerPos) {

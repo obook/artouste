@@ -160,6 +160,14 @@ bool Application::mainLoop() {
                 return m_terrain->heightAt(x, z);
             });
 
+            /* Contact avec le sol : la vitesse d'arrivée a été relevée par la
+               physique, au pas fixe où elle s'est produite (ici, l'appareil est
+               déjà posé, vitesse annulée). On la consomme à chaque image, même
+               hors combat, pour qu'un vieux contact ne vienne pas blesser
+               l'appareil au lancement de la partie suivante. Après update(), qui
+               vide les événements sonores, et avant leur lecture ci-dessous. */
+            m_combat.applyGroundImpact(m_flight.consumeGroundImpact());
+
             /* Sons ponctuels du mode zombie, déclenchés sur les événements de
                cette image (voir CombatMode::SoundEvents) : même principe que
                le son de démarrage turbine (comparaison d'état, updateAudio).

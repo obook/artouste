@@ -151,9 +151,12 @@ public:
            zombie lanceur). */
         std::vector<vec3> throwPositions;
 
-        bool impacted = false;  /* une boulette toxique a touché l'appareil (à sa position : distance nulle) */
+        /* L'appareil a encaissé un coup, boulette toxique ou contact avec le sol
+           (voir applyGroundImpact) : même bruit, joué à sa position, donc à
+           distance nulle. */
+        bool impacted = false;
 
-        /* Nouvelle vague et apparition d'une pondeuse : sons non spatiaux, à
+        /* Nouvelle vague et apparition d'un largueur : sons non spatiaux, à
            volume fixe -- seules exceptions au principe "volume selon la distance
            à l'hélico" (voir AudioEngine::playWaveStart et playBroodSpawn). Une
            manche de boss lève les deux le même pas : l'annonce de vague, puis le
@@ -201,22 +204,43 @@ public:
         return m_rockets.scorches();
     }
 
+    /* Contact avec le sol, à la vitesse d'arrivée mesurée par la physique (voir
+       physics::FlightModel::consumeGroundImpact) : au-delà de la vitesse tolérée,
+       l'appareil encaisse des dégâts proportionnels à l'excès et fait le même
+       bruit qu'une boulette reçue. Sans effet hors combat, partie perdue, ou sous
+       le seuil : un posé normal ne coûte rien. À appeler après update(), qui
+       remet les événements sonores à zéro. */
+    void applyGroundImpact(float speedMs);
+
 private:
     static constexpr float PLAYER_HEALTH_MAX = 100.0f;
+    /* Vitesse d'arrivée (m/s) en deçà de laquelle le contact est un posé et non
+       un choc, puis dégâts par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une
+       droite : les dégâts suivent alors l'énergie du choc, si bien qu'une touche
+       un peu ferme ne coûte presque rien (2 points à 5 m/s, 9 à 8 m/s) alors
+       qu'un vrai crash reste fatal (100 points à 20 m/s). Une droite faisait
+       perdre trop de vie à chaque contact. */
+    static constexpr float GROUND_IMPACT_FREE_MS      = 3.0f;
+    static constexpr float GROUND_IMPACT_DAMAGE_COEFF = 0.35f;
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */
     static constexpr float MUZZLE_FWD_M = 6.0f;
     static constexpr float MUZZLE_UP_M  = 1.0f;
 
-    /* Points accordés en plus pour l'abattage d'une pondeuse, au-delà des points
-       de l'explosion qui l'a achevée : de l'ordre de vingt marcheurs, à la
-       mesure des cinq roquettes qu'elle encaisse. */
+    /* Points accordés en plus pour l'abattage d'un largueur, au-delà des points
+       de l'explosion qui l'a achevé : de l'ordre de vingt marcheurs, à la
+       mesure des cinq roquettes qu'il encaisse. */
     static constexpr int BROOD_SCORE = 500;
+    /* Points par marcheur éclaté avec le largueur, comptés UN PAR UN et non au
+       barème du kill multiple : celui-ci plafonne à trois têtes, ce qui convient
+       au souffle d'une roquette mais pas ici, où le largueur peut en avoir lâché
+       quinze. Même valeur qu'un marcheur tué seul. */
+    static constexpr int BROODLING_SCORE = 25;
 
     bool             m_active        = false;
     bool             m_gameOver      = false;
-    /* Pondeuse debout à la fin de l'update précédent : sa disparition d'une
+    /* Largueur debout à la fin de l'update précédent : sa disparition d'une
        image à l'autre vaut mise à mort (même principe de comparaison d'état que
        les événements sonores). */
     bool             m_broodWasAlive = false;

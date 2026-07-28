@@ -35,6 +35,7 @@ public:
     void reset() noexcept {
         m_body      = RigidBody{};
         m_fuelLiters = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une altitude donnée, pratique pour tester loin du sol. */
@@ -42,6 +43,7 @@ public:
         m_body            = RigidBody{};
         m_body.position.y = altitude;
         m_fuelLiters      = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une position donnée (par exemple posé sur la côte). */
@@ -49,6 +51,7 @@ public:
         m_body          = RigidBody{};
         m_body.position = position;
         m_fuelLiters    = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une position et un cap donnés (degrés boussole : 0 = nord,
@@ -83,13 +86,37 @@ public:
        Toujours 0 en mode assisté et en démo (physique réelle coupée). */
     [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
 
+    /* Vitesse d'arrivée (m/s) du dernier contact avec le sol, puis remise à zéro :
+       l'appelant la lit une fois et la consomme. Elle ne peut se mesurer QU'ICI,
+       le contact annulant aussitôt la composante verticale (voir update) ; la
+       boucle de jeu, qui tourne bien plus lentement que la simulation, ne verrait
+       plus qu'un appareil posé, vitesse nulle. Le mode zombie en tire les dégâts
+       d'un posé brutal. Vaut le maximum des contacts survenus depuis la dernière
+       lecture, et reste à 0 tant que l'appareil demeure au sol. */
+    [[nodiscard]] float consumeGroundImpact() noexcept {
+        const float v    = m_groundImpactMs;
+        m_groundImpactMs = 0.0f;
+        return v;
+    }
+
 private:
+    /* Repositionner l'appareil ne doit pas laisser derrière lui un contact non
+       lu : la partie suivante encaisserait les dégâts d'un posé qui n'a pas eu
+       lieu. On oublie aussi l'état "au sol", le nouveau point de départ pouvant
+       être en vol comme sur un pad. */
+    void clearGroundImpact() noexcept {
+        m_groundImpactMs  = 0.0f;
+        m_inGroundContact = false;
+    }
+
     RigidBody m_body;
     Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
     float     m_vrsIntensity  = 0.0f;          /* vortex ring state, 0..1 (alerte HUD) */
+    float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
+    bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
 };
 

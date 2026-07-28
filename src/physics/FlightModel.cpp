@@ -177,11 +177,20 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
 
     /* Contact avec le sol : l'appareil ne descend pas sous le relief. */
     if (m_body.position.y < m_groundHeight) {
+        /* Vitesse d'arrivée, relevée AVANT d'annuler la composante verticale --
+           après, il n'en reste rien. On prend la vitesse complète et non le seul
+           taux de chute : rentrer dans un versant à l'horizontale reste un
+           contact avec le sol. Seul le pas qui ENTRE en contact compte, sans quoi
+           un appareil posé se blesserait à chaque pas de simulation. */
+        if (!m_inGroundContact) {
+            m_groundImpactMs = std::max(m_groundImpactMs, glm::length(m_body.velocity));
+        }
         m_body.position.y = m_groundHeight;
         if (m_body.velocity.y < 0.0f) {
             m_body.velocity.y = 0.0f;
         }
     }
+    m_inGroundContact = m_body.position.y <= m_groundHeight;
 
     /* Posé sur les patins : tant que la poussée ne dépasse pas le poids, l'appareil
      * reste collé au sol, sans glisser ni tourner. Dès que le collectif suffit à

@@ -207,4 +207,19 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
     }
 }
 
+void CombatMode::applyGroundImpact(float speedMs) {
+    if (!m_active || m_gameOver || speedMs <= GROUND_IMPACT_FREE_MS) {
+        return;
+    }
+    /* Seul l'excès de vitesse fait mal, et il fait mal au carré : les premiers
+       mètres par seconde au-delà du posé s'encaissent, les derniers non. */
+    const float exces  = speedMs - GROUND_IMPACT_FREE_MS;
+    const float degats = exces * exces * GROUND_IMPACT_DAMAGE_COEFF;
+    m_events.impacted  = true;
+    m_playerHealth     = std::max(0.0f, m_playerHealth - degats);
+    if (m_playerHealth <= 0.0f) {
+        m_gameOver = true;
+    }
+}
+
 }  /* namespace artouste::app */

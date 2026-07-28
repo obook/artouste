@@ -18,12 +18,14 @@ add_executable(artouste_tests
     projectile_system_tests.cpp
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
+    ground_impact_tests.cpp
     texture_cache_tests.cpp
     ortho_tiles_tests.cpp
     fabrique_tuiles_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/FabriqueTuiles.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/CombatMode.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/Weapon.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/RocketSystem.cpp

@@ -135,9 +135,11 @@ void Application::drawScorchMarks(const mat4& view, const mat4& proj) {
     }
 
     constexpr float DISC_MESH_R = 6.0f;   /* rayon du maillage de disque (cf. disc(6, ...)) */
-    constexpr float SCORCH_R_M = 3.5f;    /* rayon au sol de la trace (m) */
     constexpr float SCORCH_ALPHA = 0.55f; /* opacité max (gris foncé, pas noir pur) */
-    const float scale = SCORCH_R_M / DISC_MESH_R;
+    /* Part de l'allongement reportée vers l'avant : une roquette rasante projette
+       sa gerbe devant elle, pas également de part et d'autre du point d'impact.
+       0 centrerait l'ellipse, 1 la ferait commencer exactement à l'impact. */
+    constexpr float SCORCH_FORWARD_BIAS = 0.45f;
 
     m_shadowShader->use();
     m_shadowShader->setMat4("u_view", view);
@@ -151,10 +153,24 @@ void Application::drawScorchMarks(const mat4& view, const mat4& proj) {
     glPolygonOffset(-1.0f, -1.0f);
 
     for (const RocketSystem::ScorchView& s : scorches) {
-        const mat4 model =
-            glm::translate(mat4(1.0f),
-                           vec3{s.center.x, s.center.y + 0.05f, s.center.z} - m_renderOrigin) *
-            glm::scale(mat4(1.0f), vec3{scale, 1.0f, scale});
+        /* Disque du maillage étiré en ellipse à surface constante (voir
+           ScorchView::radius) : petit axe sur X, grand axe sur Z, l'axe que la
+           rotation de lacet aligne sur la trajectoire de la roquette (voir
+           ScorchView::yaw), puis décalé vers l'avant. Un impact vertical a une
+           élongation de 1 : ni étirement, ni décalage, le rond d'avant. */
+        const float stretch = std::sqrt(std::max(s.elongation, 1.0f));
+        const float halfLong  = s.radius * stretch;   /* demi-grand axe (m) */
+        const float halfShort = s.radius / stretch;   /* demi-petit axe (m) */
+        const float scaleX  = halfShort / DISC_MESH_R;
+        const float scaleZ  = halfLong / DISC_MESH_R;
+        const float forward = (halfLong - s.radius) * SCORCH_FORWARD_BIAS;
+        const vec3  offset{std::sin(s.yaw) * forward, 0.0f, std::cos(s.yaw) * forward};
+
+        mat4 model = glm::translate(
+            mat4(1.0f),
+            vec3{s.center.x, s.center.y + 0.05f, s.center.z} + offset - m_renderOrigin);
+        model = glm::rotate(model, s.yaw, vec3{0.0f, 1.0f, 0.0f});
+        model = glm::scale(model, vec3{scaleX, 1.0f, scaleZ});
         m_shadowShader->setMat4("u_model", model);
         m_shadowShader->setFloat("u_alpha", SCORCH_ALPHA * s.alpha);
         m_shadowDisc->draw();

@@ -27,6 +27,20 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   Fichier : `assets/models/zombie/explosion.glb`. Explosion 3D animée jouée à
   l'impact des roquettes.
 
+- **Monuments de Paris** (tour Eiffel, Arc de Triomphe, Sacré-Coeur, Hôtel des
+  Invalides) : modèles de la scène FlightGear "Paris V2"
+  (<http://embaranger.free.fr/flightgear/scenery/ParisV2/ParisV2.htm>) par
+  Emmanuel Baranger (helijah), lui-même extrait des scènes X-Plane de Bertrand
+  Augras (<http://baugras.club.fr/xplane/Site/france.html>). Fichiers :
+  `assets/models/monuments/paris/`, un `.ac` par monument et deux atlas
+  (`Texture01.png`, `Texture02.png`) partagés entre eux.
+
+  ATTENTION, licence à éclaircir avant toute diffusion : l'archive d'origine
+  n'annonce aucune licence, son `Read-Me.txt` (repris dans
+  `assets/models/monuments/paris/`) se borne à créditer l'auteur X-Plane du
+  travail d'origine. Tant que l'autorisation des deux auteurs n'est pas obtenue, ce
+  modèle ne doit pas partir dans une archive de version.
+
 ## Sons
 
 - **Départ de roquette (mode zombie)** : "Shotgun Fire"

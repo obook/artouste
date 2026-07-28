@@ -413,6 +413,69 @@ ou sortir de France.
   ombres portées au sol ; approche volumétrique (ray marching) pour un plus grand
   réalisme, bien plus lourde.
 
+## Mode zombie
+
+### Pondeuse (boss) et yeux lumineux
+
+- [x] Une manche sur cinq est désormais une manche de boss (`WaveManager::isBossWave`,
+  `BOSS_WAVE_INTERVAL`). Une pondeuse (`ZombieHorde::Type::Brood`) y apparaît dès
+  l'ouverture, escortée de la moitié seulement des marcheurs habituels, puis engendre
+  un marcheur toutes les trois secondes autour d'elle tant qu'elle tient debout. La
+  manche ne peut donc pas se gagner en patientant : l'anti-blocage de 90 secondes est
+  suspendu tant qu'elle vit. Elle encaisse cinq roquettes (5000 PV contre 100 pour un
+  marcheur), avance à 45 % de la vitesse d'un marcheur, et son modèle comme sa sphère
+  de collision sont agrandis 3,2 fois, soit près de six mètres de haut (un seul champ
+  `scale` pour les deux, afin que la silhouette et la cible ne divergent pas).
+  Neutralisée : 500 points, annonce `PONDEUSE NEUTRALISÉE !` et jauge de vie au HUD
+  tout le combat. Le râle `rale.wav`, jusqu'ici inutilisé,
+  annonce son apparition (non spatial comme l'annonce de vague : elle apparaît à
+  quelques centaines de mètres, un son spatialisé y serait inaudible).
+
+- [x] Yeux lumineux : deux billboards additifs par zombie (`render::combat::ZombieEyes`,
+  `assets/shaders/zombie_eyes.*`), verts pour un marcheur et rouges pour une pondeuse,
+  ce qui signale le boss avant même qu'on distingue sa silhouette. Ils sont calés sur la
+  matrice d'instance du corps (`ZombieHorde::buildEyes`), pas sur l'os du cou animé par
+  le squelette : à distance de jeu, l'écart ne se voit pas, et cela évite de poser une
+  pose par instance. La lueur s'éteint pendant l'animation de chute, et grossit avec
+  la distance pour rester repérable depuis l'hélicoptère.
+
+    Ce grossissement a demandé deux essais. Viser une taille apparente constante
+  (rayon proportionnel à la distance) rendait les yeux parfaitement lisibles de loin,
+  mais donnait à moyenne portée des lueurs d'un mètre de large, bien plus grosses que
+  la tête qui les porte : des boules vertes flottantes plutôt que des yeux. La loi
+  retenue croît en racine de la distance, plafonnée à cinq fois le rayon de près
+  (atteint vers 200 m) : la taille apparente diminue toujours quand on s'éloigne, mais
+  moins vite que la perspective, et la lueur reste solidaire de la silhouette. Le
+  plafond a été arrêté à mi-chemin entre les deux essais, la première loi donnant des
+  lueurs trop grosses et la deuxième trop discrètes : à 100 m, le rayon vaut environ
+  46 cm, contre 60 et 38 cm pour les deux essais.
+
+### Traces d'impact des roquettes
+
+- [x] Chaque impact laisse désormais une trace de forme et de taille propres, au lieu
+  du même rond de 3,5 m pour tous. La FORME vient de l'angle d'arrivée : une roquette
+  qui tombe à la verticale creuse un rond, une roquette rasante étire sa tache le long
+  de sa trajectoire (orientée par `ScorchView::yaw`, et décalée vers l'avant, la gerbe
+  partant devant le point d'impact). La TAILLE vient de la portée du tir : +50 % de
+  rayon à 150 m, plafonné à 5 m. L'ellipse conserve sa surface (grand axe multiplié par
+  la racine de l'allongement, petit axe divisé par elle), sans quoi une trace allongée
+  serait aussi une trace démesurée.
+
+    La loi physique exacte pour la forme (rapport 1/sin de l'incidence, la tache d'un
+  cône incliné) a été écartée : elle diverge à l'horizontale et, avec un canon fixe et
+  un nez à peine piqué, l'incidence d'arrivée reste souvent sous 20 degrés, si bien que
+  presque tous les tirs auraient saturé le plafond et que toutes les traces se seraient
+  de nouveau ressemblées. On garde la tendance sur une interpolation bornée, qui étale
+  les cas de jeu entre le rond et l'allongement maximal.
+
+    Rien ne change côté jeu : la zone létale reste `EXPLOSION_RADIUS_M`, la trace est
+  un décalque. La boule de feu, elle, garde son rayon fixe (elle pourrait suivre la même
+  logique).
+
+    Pistes pour aller plus loin : types de zombies (coureur, colosse, cracheur) plutôt
+  qu'une horde uniforme ; plafond toxique qui monte avec les manches ; ravitaillement
+  en munitions à récupérer en se posant ; manche bonus entre deux vagues.
+
 ## Quelques observations à traiter
 
 - [ ] FUEL_BURN_MAX_LPH = 194.0f : nos fiches indiquent 155 kg/h à puissance maxi. Avec kérosène à 0,8 kg/L, cela donne environ 194 L/h. La conversion est juste.

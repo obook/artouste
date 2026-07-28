@@ -268,6 +268,82 @@ ou sortir de France.
   à construire, sur le modèle du chargement de l'hélipad (charger le `.ac`,
   instancier au lon/lat voulu, poser sur `heightAt`).
 
+### Monuments de Paris en 3D
+
+- [ ] Poser les monuments parisiens en volume sur la carte `paris`, à partir des
+  35 modèles d'helijah (Emmanuel Baranger, scène FlightGear "Paris V2", 2009),
+  le même auteur que l'Alouette II du projet. Source :
+  `http://helijah.free.fr/flightgear/scenery/ParisV2/ParisV2.htm`, archive
+  `Paris_V2.zip` (24,5 Mo). Copie de secours si le lien tombe : dépôt GitHub
+  `FGMEMBERS-TERRAGIT/e000n40-objects`, sous-dossier `e002n48/`. L'archive
+  contient un `.ac` et sa texture par monument (`Models/Region-Paris/`) et les
+  positions dans `Scenery/Objects/e000n40/`.
+
+    État des lieux. La carte `assets/terrain/paris/` existe déjà (heightmap,
+  ortho, `buildings.bin` de 14 Mo, `helipads.txt`, `options.txt` avec `arbres 0`)
+  et son `landmarks.txt` compte déjà 26 lieux, dont la plupart des monuments
+  visés (Tour Eiffel, Notre-Dame, Arc de Triomphe, Louvre, Sacré-Coeur,
+  Panthéon, Concorde, Invalides, Opéra Garnier, Bastille, Beaubourg,
+  Montparnasse). Il ne reste donc que la géométrie à ajouter, pas les points de
+  navigation ni le terrain.
+
+    Aucune conversion de format à prévoir. `render::ModelLoader` charge déjà
+  l'AC3D par Assimp (c'est le format d'`alouette.ac` et de tous les
+  instruments) : les `.ac` d'helijah se chargent tels quels, sans passer par
+  Blender ni par un export glTF. Seul point à vérifier du côté des fichiers :
+  les textures. Si certains monuments arrivent en `.rgb` (format SGI), stb_image
+  ne sait pas les lire et il faut les convertir en PNG.
+
+    Mécanisme manquant, commun avec les phares de Capbreton ci-dessus : rien ne
+  permet aujourd'hui de poser un modèle ponctuel arbitraire à une coordonnée
+  donnée. À construire une seule fois pour les deux besoins, sous la forme d'un
+  fichier optionnel par carte, par exemple `monuments.txt`
+  (`lon lat altitude cap echelle fichier nom`), lu comme `landmarks.txt` et
+  `hapi.txt` le sont par `Terrain::loadPlaces` et `Terrain::loadHapiUnits`, puis
+  instancié au chargement sur le modèle de l'hélipad
+  (`assets/models/helipad/helipad.ac`).
+
+    Coordonnées. Les positions exactes sont dans les fichiers `.stg` de
+  l'archive, une ligne `OBJECT_STATIC fichier.ac lon lat altitude cap` par
+  monument. Attention à l'ordre des champs : longitude d'abord, latitude
+  ensuite. À défaut d'archive, les coordonnées WGS84 se retrouvent par la
+  méthode IGN plus OSM plus Wikipédia déjà appliquée aux autres cartes.
+
+    Points durs identifiés :
+
+    1. Doublon avec les bâtiments. `buildings.bin` extrude déjà les emprises
+       BD TOPO de la Tour Eiffel, du Louvre ou de Notre-Dame ; poser le modèle
+       par-dessus donnerait deux géométries imbriquées. Il faut un mécanisme
+       d'exclusion d'emprises, sur le principe d'`exclusions.txt` qui ne sert
+       aujourd'hui qu'à la végétation, mais appliqué à `BuildingsMesh`.
+    2. Calage vertical. Le relief de Paris fait 1024 x 1024 pour 18 017 m sur
+       9 685 m, soit environ 17,6 m par cellule, trop lâche pour poser
+       proprement un socle. Prévoir une altitude explicite par monument dans le
+       fichier plutôt que le seul `heightAt`.
+    3. Orientation. Le cap des `.stg` suit la convention FlightGear et Assimp
+       réoriente les `.ac` au chargement (voir `fgToAssimp` et le commentaire de
+       `LoadedHelicopterInstruments.cpp`). La conversion vers la rotation Y du
+       moteur est à écrire, puis à vérifier monument par monument.
+    4. Échelle. Les modèles FlightGear sont en mètres, mais certains demandent
+       un ajustement : garder un facteur d'échelle par monument dans le fichier.
+    5. Culling et LOD. `render::Model` n'a ni découpage spatial ni niveau de
+       détail, contrairement aux bâtiments. Trente-cinq modèles, c'est peu, mais
+       ils seront dessinés en permanence.
+    6. Résolution de l'ortho. 5001 x 2688 pixels pour 18 km font 3,6 m par
+       pixel, donc des monuments nets sur un sol flou. La fenêtre de détail
+       tuilée (`src/render/tuiles/`) devient presque obligatoire sur cette carte.
+    7. Hors cadre. Le château de Versailles (2,120 / 48,805) tombe hors des
+       bornes de la carte (lon 2,224 à 2,47 ; lat 48,815 à 48,902). Soit on
+       l'abandonne, soit on élargit la carte au prix de la résolution. La
+       Défense et l'héliport d'Issy-les-Moulineaux (LFPI) sont dans le cadre.
+    8. Poids de l'archive. Environ 24,5 Mo de plus dans une release qui embarque
+       déjà neuf cartes.
+
+    Licence. Les modèles sont en GPL v2, comme le projet. Ajouter dans
+  `CREDITS.md`, à côté de l'entrée Alouette II du même auteur : "Modèles 3D des
+  monuments de Paris : helijah (Emmanuel Baranger), helijah.free.fr, scène
+  FlightGear Paris V2, GPL v2".
+
 ### Végétation (arbres, forêts)
 
 - [~] Prototype d'arbres en billboards instanciés (`render::Vegetation`). Chaque

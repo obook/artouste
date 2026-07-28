@@ -642,6 +642,19 @@ private:
        s'affichaient qu'au redémarrage du jeu. */
     bool m_cartesRemaniees = false;
 
+    /* Date de dernière écriture du monuments.txt de la carte chargée, relevée au
+       chargement. Comparée au retour du menu pour recharger la carte si le
+       fichier a bougé : caler trente monuments demande de retoucher ce fichier
+       des dizaines de fois, et sans ce test il fallait relancer le simulateur à
+       chaque essai. Vaut file_time_type{} si la carte n'en a pas. Définie dans
+       ApplicationMonuments.cpp (dateMonuments). */
+    std::filesystem::file_time_type m_monumentsDate{};
+
+    /* Date d'écriture du monuments.txt d'une carte, ou file_time_type{} s'il est
+       absent ou illisible. */
+    [[nodiscard]] std::filesystem::file_time_type
+    dateMonuments(const std::filesystem::path& dossierCarte) const;
+
     /* --- État de session (menu, pause, plein écran) ---------------------------------------- */
 
     /* Passe à true quand l'utilisateur appuie sur Échap en vol : la boucle de vol rend

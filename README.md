@@ -12,7 +12,20 @@ Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retro
 
 Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas sur cet appareil : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
 
-Écrit en C++ moderne et OpenGL, le pilotage est jouable au clavier ou à la manette. Le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
+Écrit en C++ moderne et OpenGL, le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
+
+> [!IMPORTANT]
+> **Un PC, une manette de jeu, et vous volez. Il n'en faut pas plus.**
+>
+> Rien à installer : on extrait l'archive, on lance l'exécutable, on décolle. Pas
+> de compte, pas de configuration, pas de contenu à télécharger ensuite -- les neuf
+> cartes sont déjà là. Une machine modeste suffit (Windows ou Linux, OpenGL 3.3), et
+> les réglages de `assets/config.txt` permettent de l'alléger encore.
+>
+> La seule vraie exigence, c'est **la manette**. Le clavier fonctionne, mais n'est pas
+> recommandé : il ne donne que des commandes tout ou rien, alors que les sticks et les
+> gâchettes délivrent une valeur continue. Sur un appareil sans servo-commandes, où tout
+> se joue au dosage, ce n'est pas un confort mais une condition pour tenir un vol stable.
 
 ## Histoire
 
@@ -60,7 +73,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 * Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté, pendant la démo et pendant l'atterrissage automatique, où le vol reste facile et prévisible.
 * En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
 * Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
-* Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
+* Entrées manette (recommandée) et clavier, avec détection automatique de la source. Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
 * Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
 * Atterrissage automatique (touche `J` / `RB`) : engage le pilote automatique vers l'hélipad le plus proche (dans un rayon de 999 m, sinon la touche n'a aucun effet), qui rejoint la pente d'approche du HAPI (6 %), se pose en douceur et rend la main une fois le collectif ramené au sol. Une action franche sur le manche, le palonnier ou le collectif désengage l'atterrissage automatique et rend la main tout de suite.
 * Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
@@ -94,7 +107,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   du petit fenêtré au plein écran 4K, y compris en fenêtre étroite.
 * Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
-  La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
+  La vitesse du temps se règle dans `assets/config.txt` (`soleil_vitesse`) : par
   défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
   temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
@@ -114,6 +127,11 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 * Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
 ## Commandes
+
+Le simulateur se pilote **à la manette**. Le clavier est là pour dépanner : les
+touches du collectif et du cyclique ne connaissent que deux états, appuyé ou
+relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil
+sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
 
 | Action                  | Clavier        | Manette              |
 |-------------------------|----------------|----------------------|
@@ -236,10 +254,12 @@ elle, se télécharge depuis le jeu (voir le gestionnaire de cartes plus bas).
 Une carte ajoutée à la main dans `assets/terrain/` apparaît au menu au lancement
 suivant, sans rien configurer : le jeu recense ce dossier.
 
-Les terrains et bâtiments 3D sont générés hors-ligne depuis les données IGN
-(Licence Ouverte Etalab 2.0). Détails, configuration complète et régénération :
-[docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de terrain :
-[docs/TERRAIN.md](docs/TERRAIN.md).
+Les terrains et bâtiments 3D sont générés hors-ligne depuis les données de
+l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Détails, configuration
+complète et régénération : [docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de
+terrain : [docs/TERRAIN.md](docs/TERRAIN.md).
+
+<img src="docs/IGN_logo_2012.png" alt="IGN" width="64" />
 
 ### Première ouverture d'une carte
 

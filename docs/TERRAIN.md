@@ -111,3 +111,10 @@ Par ordre d'effort croissant :
 Tant qu'on reste sur les terrains où volait l'Alouette gendarmerie (Pyrénées,
 Alpes, côtes françaises), rester sur l'IGN et investir dans le rendu (grille fine
 puis LOD) donne un meilleur résultat pour moins de complexité.
+
+---
+
+Relief, orthophotos et emprises de bâtiments : [IGN](https://www.ign.fr/), sous
+[Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+
+<img src="IGN_logo_2012.png" alt="IGN" width="64" />

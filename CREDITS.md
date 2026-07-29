@@ -2,6 +2,20 @@
 
 Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
 
+## Données géographiques
+
+- **Relief, orthophotos et emprises de bâtiments** : [IGN](https://www.ign.fr/)
+  (Institut national de l'information géographique et forestière), jeux RGE ALTI,
+  BD ORTHO et BD TOPO, sous
+  [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+  Ces données servent à fabriquer les terrains, les orthophotos et les bâtiments
+  3D des cartes livrées (`assets/terrain/`), ainsi que les tuiles fines
+  téléchargées depuis le gestionnaire de cartes. La licence demande de citer la
+  source : elle l'est ici, dans le README, sur la page de présentation et dans la
+  notice PDF.
+
+<img src="docs/IGN_logo_2012.png" alt="IGN" width="64" />
+
 ## Code tiers versionné
 
 - **bc7enc** (<https://github.com/richgel999/bc7enc_rdo>) par Richard Geldreich,

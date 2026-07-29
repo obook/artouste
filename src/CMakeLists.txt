@@ -62,8 +62,10 @@ add_executable(artouste
     app/cartes/FabriqueTuiles.cpp
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
+    app/CycleJourNuit.cpp
     app/DemoPilot.cpp
     app/LandingAutopilot.cpp
+    app/MiseAJour.cpp
     app/combat/CombatMode.cpp
     app/combat/ZombieHorde.cpp
     app/combat/Weapon.cpp
@@ -133,13 +135,23 @@ add_executable(artouste
 )
 
 # Racine des includes du projet : permet les chemins "render/...", "util/...".
-target_include_directories(artouste PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+# Le second chemin donne accès à app/ConfigModele.hpp, la copie du modèle de
+# configuration fabriquée par CMake (voir le CMakeLists.txt racine).
+target_include_directories(artouste PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/generated
+)
 
 # Chemin des ressources (shaders, modèles) connu à la compilation. Pratique en
 # développement ; un packaging Release (M7) copiera les assets à côté du binaire.
 target_compile_definitions(artouste PRIVATE
     ARTOUSTE_ASSET_DIR="${CMAKE_SOURCE_DIR}/assets"
     ARTOUSTE_VERSION_STRING="${ARTOUSTE_VERSION_STRING}"
+    # Numéro de version seul (champ VERSION du projet, ex. 0.28.0), comparé au
+    # tag de la dernière release publiée par la recherche de mise à jour (voir
+    # app/MiseAJour.cpp). Contrairement à ARTOUSTE_VERSION_STRING, il ne dépend
+    # pas de git : une archive source hors dépôt garde le bon numéro.
+    ARTOUSTE_VERSION_SEMVER="${PROJECT_VERSION}"
 )
 
 target_link_libraries(artouste

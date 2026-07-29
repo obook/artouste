@@ -121,3 +121,46 @@ jobs:
         with:
           files: artefacts/**/artouste-*
           generate_release_notes: false
+
+  page:
+    name: Inscrire le tag dans la page
+    needs: [release]
+    runs-on: ubuntu-latest
+    # Même garde que la release : un lancement manuel ne publie rien, il n'y a
+    # donc pas de numéro à inscrire.
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      # Le tag est un état détaché ; la page, elle, est servie par GitHub Pages
+      # depuis docs/ sur main. C'est donc main qu'on met à jour, et le push
+      # déclenche la reconstruction de la page.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # Le numéro est écrit en clair dans la page, à deux endroits repérables :
+      # le contenu des liens de classe "release-tag" (un par langue, sous les
+      # boutons de téléchargement) et le champ softwareVersion des données
+      # structurées, qui lui s'écrit sans le "v" du tag. Rien à charger côté
+      # visiteur, et le numéro reste affiché sans JavaScript.
+      - name: Inscrire le tag dans docs/index.html
+        run: |
+          sed -i \
+            -e 's|\(<a class="release-tag"[^>]*>\)[^<]*\(</a>\)|\1'"$GITHUB_REF_NAME"'\2|g' \
+            -e 's|"softwareVersion": "[^"]*"|"softwareVersion": "'"${GITHUB_REF_NAME#v}"'"|' \
+            docs/index.html
+          grep -n 'release-tag\|softwareVersion' docs/index.html
+
+      # Rien à pousser si le numéro est déjà le bon (relance du workflow sur un
+      # tag déjà traité) : sans ce garde-fou, git commit échouerait sur un index
+      # vide et ferait échouer le job pour rien.
+      - name: Commiter le numéro s'il a changé
+        run: |
+          if git diff --quiet -- docs/index.html; then
+            echo "La page porte déjà le numéro $GITHUB_REF_NAME."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git commit -m "docs(page): Version $GITHUB_REF_NAME"
+          git push

@@ -43,7 +43,7 @@ demo 0
 # d'après l'orthophoto, là où le sol est vert et sous la limite forestière. Ce
 # n'est pas réservé à la montagne : une ville entourée de bois en reçoit aussi.
 # 0 = pas d'arbres, rendu plus léger, utile sur une machine modeste (ex. tablette :
-# 30-50 fps avec les arbres contre 60 fps sans) ; voir aussi "tree_max" plus bas,
+# 30-50 fps avec les arbres contre 60 fps sans) ; voir aussi "arbres_max" plus bas,
 # qui les éclaircit sans les supprimer.
 #
 # Cette clé ne décide que pour les cartes qui ne disent rien : le gestionnaire de
@@ -52,33 +52,56 @@ demo 0
 # ARTOUSTE_NO_TREES, si définie, force la désactivation quelle que soit cette clé.
 arbres 1
 
+# verifier_maj : 1 = recherche d'une mise à jour au lancement (défaut). Le
+# simulateur demande, dans un fil séparé qui ne retarde rien, le numéro de la
+# dernière version publiée. S'il y en a une plus récente que la vôtre, le menu de
+# démarrage l'annonce en bas et propose de l'aller chercher sur la page du
+# projet, https://obook.github.io/artouste/ (bouton Télécharger, ou touche M, qui
+# ouvre votre navigateur). Rien n'est envoyé : c'est une simple lecture, sans
+# identifiant ni statistique, et le vol part sans rien attendre du réseau.
+# 0 = ne rien demander au réseau au lancement. La variable d'environnement
+# ARTOUSTE_NO_MAJ, si définie, coupe la recherche quelle que soit cette clé.
+verifier_maj 1
+
 # radio_url : URL d'un flux radio internet (MP3 sur HTTP) joué dans le cockpit.
 # Touche K en vol libre pour l'allumer ou la couper. Vide = pas de radio.
 # La variable d'environnement ARTOUSTE_RADIO_URL, si définie, a la priorité.
 # Exemple (décommenter pour activer) :
 radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
 
-# sun_time_scale : vitesse d'écoulement du temps pour le cycle jour/nuit (course du
-# soleil). Durée réelle d'une journée complète = 86400 / sun_time_scale secondes.
+# soleil_vitesse : vitesse d'écoulement du temps pour le cycle jour/nuit (course du
+# soleil). Durée réelle d'une journée complète = 86400 / soleil_vitesse secondes.
 #   1   = temps réel : départ à l'heure locale du PC
 #   72  = journée complète en 20 min (défaut)
 #   144 = journée complète en 10 min
 #   0   = temps figé à midi (le soleil ne bouge pas)
 # En temps réel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
 # part de midi, pour démarrer sur une belle lumière. Avec 0, il reste figé à midi.
-sun_time_scale 72
+soleil_vitesse 72
+
+# lune_vitesse : multiplicateur de la vitesse ci-dessus pendant la nuit, du coucher
+# (18 h) au lever (6 h). Voler une demi-journée dans le noir n'apporte pas
+# grand-chose, alors qu'un ciel qui bascule du crépuscule à l'aube pendant qu'on
+# rentre, si.
+#   2 = la nuit passe deux fois plus vite que le jour (défaut)
+#   1 = nuit et jour à la même vitesse
+#   4 = nuit expédiée
+# Avec les valeurs par défaut (soleil_vitesse 72, lune_vitesse 2), un cycle complet
+# dure un quart d'heure : dix minutes de jour et cinq de nuit. Sans effet quand le
+# temps est figé (soleil_vitesse 0).
+lune_vitesse 2
 
 # ----------------------------------------------------------------------------
 # Performances (utile sur GPU intégré ou tablette : plus la charge est basse,
 # plus la cadence est élevée et moins la machine chauffe).
 # ----------------------------------------------------------------------------
 
-# tree_max : budget de végétation (nombre maximum d'arbres soumis au GPU). Au-delà,
+# arbres_max : budget de végétation (nombre maximum d'arbres soumis au GPU). Au-delà,
 # le semis est éclairci uniformément. C'est le poste de rendu le plus coûteux quand
 # les arbres sont actifs (voir la clé "arbres"). Défaut 1600000 ; descendez vers
 # 500000, voire 300000, sur une machine modeste. Sans effet si "arbres 0".
 # La variable d'environnement ARTOUSTE_TREE_MAX, si définie, a la priorité.
-tree_max 1600000
+arbres_max 1600000
 
 # msaa : anti-crénelage (échantillons par pixel). 4 (défaut) lisse bien les contours ;
 # 2 allège la bande passante mémoire (différence peu visible en 1080p) ; 0 le désactive

@@ -1,5 +1,6 @@
 # Tests Catch2 du simulateur : vol (arcade, modèle physique, assistance),
-# atterrissage automatique, configuration, tampon audio, cache de textures,
+# atterrissage automatique, configuration, recherche de mise à jour, tampon
+# audio, cache de textures,
 # tuiles d'orthophoto et mode zombie (combat, découpé par sous-système en
 # plusieurs fichiers ci-dessous).
 
@@ -10,6 +11,8 @@ add_executable(artouste_tests
     flight_model_tests.cpp
     flight_assist_tests.cpp
     config_tests.cpp
+    cycle_jour_nuit_tests.cpp
+    mise_a_jour_tests.cpp
     ring_buffer_tests.cpp
     landing_autopilot_tests.cpp
     raycast_tests.cpp
@@ -23,6 +26,10 @@ add_executable(artouste_tests
     ortho_tiles_tests.cpp
     fabrique_tuiles_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/CycleJourNuit.cpp
+    # Compilé sans ARTOUSTE_HAS_CURL : seules les fonctions d'analyse (tag et
+    # numéros de version) entrent dans les tests, pas la requête réseau.
+    ${CMAKE_SOURCE_DIR}/src/app/MiseAJour.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/FabriqueTuiles.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/CombatMode.cpp
@@ -44,7 +51,17 @@ add_executable(artouste_tests
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).
-target_include_directories(artouste_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(artouste_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/generated  # app/ConfigModele.hpp, fabriqué par CMake
+)
+
+# Le vrai modèle de configuration livré avec le jeu : les tests de cohérence
+# comparent ses clés à celles que le chargeur sait lire (app::clesConnues), pour
+# qu'une option ne puisse pas exister d'un côté sans l'autre.
+target_compile_definitions(artouste_tests PRIVATE
+    ARTOUSTE_CONFIG_MODELE="${CMAKE_SOURCE_DIR}/assets/config.default.txt"
+)
 
 target_link_libraries(artouste_tests
     PRIVATE

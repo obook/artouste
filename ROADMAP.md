@@ -369,7 +369,7 @@ ou sortir de France.
   Même brume que le terrain / les bâtiments ;
   test alpha (pas de mélange), donc l'ordre de dessin n'importe pas. Chaque maille
   de la grille de semis donne au plus un arbre, donc l'espacement fixe la densité
-  (1 arbre / espacement^2). Un budget global (~1,6 M, clé `tree_max` de config.txt ou
+  (1 arbre / espacement^2). Un budget global (~1,6 M, clé `arbres_max` de config.txt ou
   la variable `ARTOUSTE_TREE_MAX`) éclaircit ensuite le semis de façon uniforme sur les
   grandes cartes très boisées (Bordeaux passe de ~4,9 M à ~1,6 M) pour limiter le
   surdessin des billboards croisés ; le baisser (500 000, voire 300 000) allège la charge
@@ -585,6 +585,14 @@ ou sortir de France.
   d'impact des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
   l'appareil comme les autres coups reçus.
 
+    Corrigé depuis : le son se déclenchait dès 3 m/s alors que les dégâts n'atteignaient
+  un demi-point qu'à 4,2 m/s. Entre les deux, le choc s'entendait sans que la vie affichée
+  (un pourcentage ENTIER, voir `HudCombat.cpp`) bouge d'un chiffre, et le seul cadran qui
+  descendait à ce moment-là étant le carburant, le joueur croyait le contact payé en
+  essence. Un contact qui coûte moins d'un demi-point est désormais un posé : ni dégât ni
+  bruit (`GROUND_IMPACT_MIN_DAMAGE`). Les tests vérifient les deux sens -- rien de visible
+  ne s'entend, rien d'audible ne passe inaperçu.
+
     La vitesse ne peut se mesurer QUE dans la physique : le contact annule aussitôt la
   composante verticale, si bien que la boucle de jeu, bien plus lente que la simulation à
   pas fixe, ne verrait plus qu'un appareil posé, vitesse nulle. `FlightModel` relève donc
@@ -629,6 +637,47 @@ ou sortir de France.
 - [X] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
 
 ## Interface
+
+- [x] Nuit deux fois plus rapide que le jour (clé `lune_vitesse` de `config.txt`,
+  défaut 2) : la vitesse du temps de `soleil_vitesse` est multipliée par ce facteur
+  entre le coucher (18 h) et le lever (6 h). Avec les valeurs par défaut, un cycle
+  complet dure un quart d'heure, dix minutes de jour et cinq de nuit. Le calcul est
+  sorti de l'Application (`src/app/CycleJourNuit.cpp`) : fonction pure, sans fenêtre
+  ni contexte graphique, donc vérifiable -- huit cas couvrent la durée du cycle, la
+  continuité au coucher et au lever, le départ de nuit, le temps figé, la marche
+  arrière et un facteur absurde.
+
+- [x] Configuration personnelle entretenue toute seule (`src/app/Config.cpp`), pour
+  qu'un `config.txt` écrit par une version ancienne ne se périme jamais :
+  - **option nouvelle** ajoutée à la fin du fichier avec sa documentation, valeur
+    du modèle ; les réglages existants ne sont jamais réécrits ;
+  - **option renommée** renommée sur place, valeur et mise en page conservées, via
+    la table `clesRenommees()` (une entrée ne s'en retire jamais). Réécriture par
+    fichier intermédiaire puis remplacement, pour ne jamais laisser une
+    configuration tronquée ;
+  - **modèle effacé ou abîmé** réécrit depuis la copie embarquée dans l'exécutable
+    (`ConfigModele.hpp`, fabriquée par CMake depuis `assets/config.default.txt`) ;
+    un modèle valide mais adapté volontairement n'est jamais touché.
+  Les tests verrouillent la cohérence entre les trois listes (clés du chargeur, du
+  modèle et de la table de renommage) : ajouter une option oblige à toucher les
+  trois, sinon ils tombent.
+
+- [x] Recherche de mise à jour au lancement (clé `verifier_maj` de `config.txt`,
+  activée par défaut, coupée par `ARTOUSTE_NO_MAJ`). Le tag de la dernière release
+  est demandé à l'API de GitHub dans un fil séparé (`src/app/MiseAJour.cpp`), donc
+  sans jamais retarder la fenêtre ni le vol ; s'il est plus récent que
+  `ARTOUSTE_VERSION_SEMVER` (le champ `VERSION` du projet), le menu de démarrage
+  l'annonce et propose la page <https://obook.github.io/artouste/>, ouverte par le
+  bouton `Télécharger` ou la touche `M`. La page affiche elle aussi ce numéro,
+  mais sans rien demander à personne : il est écrit en clair dans `docs/index.html`
+  (liens de classe `release-tag` et champ `softwareVersion`), remplacé à chaque
+  release par le job `page` de `.github/workflows/release.yml`, qui commite le tag
+  sur `main` -- ce qui reconstruit la page. Sans libcurl à la
+  compilation, la vérification n'a pas lieu, comme la radio. Reste à faire : rien
+  de bloquant ; à surveiller,
+  le quota anonyme de l'API GitHub (60 requêtes par heure et par adresse IP), qui
+  ne gêne qu'un réseau derrière lequel beaucoup de joueurs partageraient la même
+  sortie -- l'échec est alors silencieux, sans conséquence pour le vol.
 
 - [x] Menu de démarrage dans la fenêtre (ImGui), en remplacement de `launch.bat` :
   choix de la carte et du démarrage immédiat de la turbine, utilisable souris / clavier

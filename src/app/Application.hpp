@@ -15,6 +15,7 @@
 #include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
+#include "app/MiseAJour.hpp"
 #include "app/cartes/FabriqueTuiles.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
@@ -241,7 +242,7 @@ private:
     void loadTerrain(const std::string& name);
 
     /* (Re)règle l'heure/vitesse du soleil (m_sunTimeScale/m_sunBaseSeconds) : la
-       clé sun_time_scale de la config par défaut, sauf sur une arène dédiée au
+       clé soleil_vitesse de la config par défaut, sauf sur une arène dédiée au
        mode zombie (zombie_only.txt du terrain courant, ex. Happy DeathHour) où la
        nuit est figée en permanence. Appelée par initScene ET applyMenuSession
        (pas seulement au premier lancement) : sans quoi une session qui visite une
@@ -537,6 +538,10 @@ private:
     /* --- Cycle jour/nuit --------------------------------------------------------------- */
 
     float m_sunTimeScale = 1.0f; /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
+    /* Multiplicateur appliqué à la vitesse ci-dessus entre le coucher et le lever
+       (clé lune_vitesse, 2 par défaut) : la nuit passe donc deux fois plus vite que
+       le jour. Voir timeOfDaySeconds (ApplicationSun.cpp). */
+    float m_nightSpeedFactor = 2.0f;
     float m_sunBaseSeconds = 0.0f; /* heure locale du PC au lancement (s depuis minuit) */
     bool m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     bool m_demoUserView =
@@ -600,11 +605,17 @@ private:
        réutilisée ensuite par initScene (terrain, démo, végétation...). */
     app::Config m_config;
 
+    /* Recherche d'une version plus récente (clé "verifier_maj" de config.txt,
+       coupée par ARTOUSTE_NO_MAJ). Lancée dans run() avant l'ouverture de la
+       fenêtre, consultée par le menu de démarrage, qui propose alors d'ouvrir la
+       page du projet. */
+    app::MiseAJour m_maj;
+
     /* Végétation active (clé "arbres" de config.txt, vrai par défaut, forcée à faux
        par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
     bool m_treesEnabled = true;
 
-    /* Budget d'arbres effectif (clé "tree_max" de config.txt, surchargée par
+    /* Budget d'arbres effectif (clé "arbres_max" de config.txt, surchargée par
        ARTOUSTE_TREE_MAX), résolu dans initScene et passé à Vegetation par loadTerrain.
        0 = laisser Vegetation appliquer son défaut. */
     std::size_t m_treeBudget = 0;

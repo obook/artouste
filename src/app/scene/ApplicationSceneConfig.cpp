@@ -57,7 +57,7 @@ void Application::initSceneConfig() {
         m_treesEnabled = false;
     }
 
-    /* Budget d'arbres : clé "tree_max" de la config, surchargée par la variable
+    /* Budget d'arbres : clé "arbres_max" de la config, surchargée par la variable
        d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
        loadTerrain. C'est le principal levier de performance (poste de rendu le plus
        coûteux sur GPU intégré). */

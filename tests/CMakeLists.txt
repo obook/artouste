@@ -57,10 +57,18 @@ add_executable(artouste_tests
 target_include_directories(artouste_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_BINARY_DIR}/generated  # app/ConfigModele.hpp, fabriqué par CMake
-    # En-têtes d'ImGui seulement, sans lier la bibliothèque : ui/HudAlarms.hpp
-    # passe par ui/Hud.hpp, qui inclut imgui.h pour ses types d'affichage. Les
-    # voyants testés, eux, ne sont que des fonctions de HudData et n'appellent
-    # aucune fonction d'ImGui, donc rien à lier ni de contexte à créer.
+)
+
+# En-têtes d'ImGui seulement, sans lier la bibliothèque : ui/HudAlarms.hpp
+# passe par ui/Hud.hpp, qui inclut imgui.h pour ses types d'affichage. Les
+# voyants testés, eux, ne sont que des fonctions de HudData et n'appellent
+# aucune fonction d'ImGui, donc rien à lier ni de contexte à créer.
+#
+# SYSTEM est indispensable : la cible imgui déclare ses en-têtes en SYSTEM,
+# mais recopier INTERFACE_INCLUDE_DIRECTORIES perd cette qualité et imgui.h
+# se met alors à déclencher les avertissements d'artouste_warnings
+# (-Wold-style-cast, 84 lignes de bruit à chaque compilation des tests).
+target_include_directories(artouste_tests SYSTEM PRIVATE
     $<TARGET_PROPERTY:imgui,INTERFACE_INCLUDE_DIRECTORIES>
 )
 

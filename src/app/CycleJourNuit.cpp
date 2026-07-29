@@ -64,4 +64,17 @@ float heureDuJour(float baseSecondes, float t, float vitesseJour, float facteurN
     return normaliser(COUCHER + (avance - dureeJour) * vitesseNuit);
 }
 
+float vitesseCourante(float vitesseJour, float facteurNuit, float heureSecondes) {
+    /* Même garde que dans heureDuJour : figé ou en marche arrière, le cycle n'est
+       pas découpé en deux vitesses, donc il n'y a pas de régime de nuit à annoncer. */
+    if (vitesseJour <= 0.0f) {
+        return vitesseJour;
+    }
+    const float heure = normaliser(heureSecondes);
+    const bool  nuit  = (heure >= COUCHER || heure < LEVER);
+    /* Le facteur est borné exactement comme dans heureDuJour : la vitesse affichée
+       doit être celle qui sert vraiment au calcul, jusque dans les cas absurdes. */
+    return nuit ? vitesseJour * std::max(facteurNuit, 0.1f) : vitesseJour;
+}
+
 } /* namespace artouste::app */

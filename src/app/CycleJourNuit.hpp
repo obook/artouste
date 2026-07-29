@@ -34,4 +34,18 @@ namespace artouste::app {
    rythme uniforme (le découpage en deux vitesses n'aurait pas de sens). */
 float heureDuJour(float baseSecondes, float t, float vitesseJour, float facteurNuit);
 
+/* Vitesse à laquelle le temps s'écoule à l'heure donnée : vitesseJour entre le
+   lever et le coucher, multipliée par facteurNuit le reste du temps. C'est la
+   vitesse que le HUD doit afficher, sans quoi il annonce le régime de jour au
+   milieu de la nuit alors que l'horloge, elle, tourne plus vite.
+
+     vitesseJour   : facteur d'accélération du jour, comme pour heureDuJour
+     facteurNuit   : multiplicateur de nuit, borné comme dans heureDuJour
+     heureSecondes : heure simulée, en secondes depuis minuit
+
+   Un temps figé ou en marche arrière rend vitesseJour tel quel : heureDuJour ne
+   découpe alors pas le cycle en deux vitesses, et l'affichage doit dire la même
+   chose que le calcul. */
+float vitesseCourante(float vitesseJour, float facteurNuit, float heureSecondes);
+
 } /* namespace artouste::app */

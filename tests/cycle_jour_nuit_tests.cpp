@@ -2,7 +2,9 @@
  * cycle_jour_nuit_tests.cpp
  * Vérifie l'heure simulée (app::heureDuJour) : nuit plus rapide que le jour,
  * continuité au coucher et au lever, durée d'un cycle complet, et cas
- * particuliers (temps figé, marche arrière, facteur absurde).
+ * particuliers (temps figé, marche arrière, facteur absurde). Vérifie aussi la
+ * vitesse annoncée par le HUD (app::vitesseCourante), qui doit être celle qui
+ * sert vraiment au calcul, de nuit comme de jour.
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -16,6 +18,7 @@
 #include <cmath>
 
 using artouste::app::heureDuJour;
+using artouste::app::vitesseCourante;
 using Catch::Approx;
 
 namespace {
@@ -116,4 +119,34 @@ TEST_CASE("l'heure reste toujours dans la journée", "[cycle]") {
         REQUIRE(h >= 0.0f);
         REQUIRE(h < 86400.0f);
     }
+}
+
+TEST_CASE("la vitesse affichée double pendant la nuit", "[cycle]") {
+    /* Le HUD affichait le régime de jour à toute heure : x72 en pleine nuit alors
+       que l'horloge tournait à x144. La vitesse rendue ici est celle qui sert
+       vraiment au calcul, à l'heure demandée. */
+    const float vJour = 72.0f;
+    const float fNuit = 2.0f;
+
+    REQUIRE(vitesseCourante(vJour, fNuit, MIDI) == Approx(72.0f));
+    REQUIRE(vitesseCourante(vJour, fNuit, LEVER) == Approx(72.0f));           /* 6 h : jour */
+    REQUIRE(vitesseCourante(vJour, fNuit, COUCHER - 1.0f) == Approx(72.0f));  /* juste avant 18 h */
+    REQUIRE(vitesseCourante(vJour, fNuit, COUCHER) == Approx(144.0f));        /* 18 h : nuit */
+    REQUIRE(vitesseCourante(vJour, fNuit, MINUIT) == Approx(144.0f));
+    REQUIRE(vitesseCourante(vJour, fNuit, LEVER - 1.0f) == Approx(144.0f));   /* juste avant 6 h */
+}
+
+TEST_CASE("vitesse affichée : temps figé, marche arrière et facteur absurde", "[cycle]") {
+    /* Figé ou en marche arrière, heureDuJour n'applique pas le facteur de nuit :
+       l'affichage doit dire la même chose que le calcul, sinon il ment à nouveau. */
+    REQUIRE(vitesseCourante(0.0f, 2.0f, MINUIT) == Approx(0.0f));
+    REQUIRE(vitesseCourante(-72.0f, 2.0f, MINUIT) == Approx(-72.0f));
+
+    /* Facteur borné à 0.1 comme dans heureDuJour, jusque dans les valeurs absurdes. */
+    REQUIRE(vitesseCourante(72.0f, 0.0f, MINUIT) == Approx(7.2f));
+    REQUIRE(vitesseCourante(72.0f, -5.0f, MINUIT) == Approx(7.2f));
+
+    /* Une heure hors bornes est ramenée dans la journée, comme partout ailleurs. */
+    REQUIRE(vitesseCourante(72.0f, 2.0f, MIDI + 86400.0f) == Approx(72.0f));
+    REQUIRE(vitesseCourante(72.0f, 2.0f, -3600.0f) == Approx(144.0f)); /* 23 h */
 }

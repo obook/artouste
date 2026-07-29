@@ -22,6 +22,7 @@ add_executable(artouste_tests
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
     ground_impact_tests.cpp
+    hud_alarms_tests.cpp
     texture_cache_tests.cpp
     ortho_tiles_tests.cpp
     fabrique_tuiles_tests.cpp
@@ -54,6 +55,11 @@ add_executable(artouste_tests
 target_include_directories(artouste_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_BINARY_DIR}/generated  # app/ConfigModele.hpp, fabriqué par CMake
+    # En-têtes d'ImGui seulement, sans lier la bibliothèque : ui/HudAlarms.hpp
+    # passe par ui/Hud.hpp, qui inclut imgui.h pour ses types d'affichage. Les
+    # voyants testés, eux, ne sont que des fonctions de HudData et n'appellent
+    # aucune fonction d'ImGui, donc rien à lier ni de contexte à créer.
+    $<TARGET_PROPERTY:imgui,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 # Le vrai modèle de configuration livré avec le jeu : les tests de cohérence

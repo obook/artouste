@@ -87,7 +87,11 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     ImGui::Text("COLL %3.0f %%", static_cast<double>(data.collectivePct));
     ligneAlarme(alarmeTmp(data), "TMP  %3.0f C", static_cast<double>(data.exhaustTempC));
     const GaugeLed alCarb = alarmeCarb(data);
-    if (alCarb == GaugeLed::Red) {
+    if (data.fuelLiters <= 0.0f) {
+        /* Réservoir vide : ce n'est plus un niveau bas mais la panne sèche, et
+           c'est elle qui explique la turbine arrêtée et le rotor qui descend. */
+        ligneAlarme(alCarb, "CARB %4.0f L  PANNE", static_cast<double>(data.fuelLiters));
+    } else if (alCarb == GaugeLed::Red) {
         ligneAlarme(alCarb, "CARB %4.0f L  BAS", static_cast<double>(data.fuelLiters));
     } else {
         ligneAlarme(alCarb, "CARB %4.0f L", static_cast<double>(data.fuelLiters));

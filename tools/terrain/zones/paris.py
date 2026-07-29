@@ -20,8 +20,10 @@ ZONE = {
     "recolor_sea": False,
     # Le départ se cale toujours sur l'hélipad réel le plus proche de ce repère
     # (voir ApplicationScene::rebuildTerrain) : on vise donc directement l'Héliport
-    # de Paris - Issy-les-Moulineaux, le seul héliport de l'agglomération.
-    "start": (2.2705, 48.8305),
+    # de Paris - Issy-les-Moulineaux, le seul héliport de l'agglomération. Le point
+    # est celui de l'aire de poser elle-même : l'ancien tombait 424 m au sud-ouest,
+    # sur la piste d'athlétisme du parc des sports d'Issy.
+    "start": (2.274772, 48.833076),
     # Ville encore plus dense que Bordeaux à surface égale (183 571 bâtiments au
     # seuil de 5 m, contre 159 000 pour Bordeaux sur une emprise 4x plus grande).
     # Le bâti parisien est presque partout un immeuble haussmannien (largement
@@ -68,9 +70,10 @@ ZONE = {
     # Héliport de Paris - Issy-les-Moulineaux (le seul héliport de l'agglomération
     # parisienne) et les hôpitaux intra-muros dotés d'une hélistation connue.
     # Coordonnées relevées au géocodeur IGN et sur OpenStreetMap ; à affiner si
-    # besoin.
+    # besoin. Celle de l'héliport, elle, est relevée sur l'aire de poser et fait
+    # foi : c'est le pad de départ de la carte.
     "helipads": [
-        ("Héliport de Paris (Issy-les-Moulineaux)", 2.2705, 48.8305),
+        ("Héliport de Paris (Issy-les-Moulineaux)", 2.274772, 48.833076),
         ("Hôpital européen Georges-Pompidou", 2.2748, 48.8397),
         ("Hôpital Lariboisière", 2.3531, 48.8829),
         ("Hôpital de la Pitié-Salpêtrière", 2.3653, 48.8371),

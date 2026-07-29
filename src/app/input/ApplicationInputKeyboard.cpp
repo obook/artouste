@@ -11,6 +11,7 @@
  */
 
 #include "app/Application.hpp"
+#include "input/Keyboard.hpp"
 #include "ui/Hud.hpp"
 
 #include <GLFW/glfw3.h>
@@ -125,6 +126,19 @@ void Application::keyCallback(
         return;
     }
 
+    /* Mode assisté : la lettre est résolue par la disposition réelle du clavier
+       (input::toucheImprimant), et non par un jeton GLFW, qui ne désigne jamais
+       qu'une position de clavier US. Traité ici, avant le switch, dont les
+       étiquettes doivent être des constantes de compilation. Auparavant, deux
+       positions étaient codées en dur (celle du M en US et celle du M en AZERTY,
+       que GLFW nomme GLFW_KEY_SEMICOLON) : la virgule d'un clavier AZERTY basculait
+       donc l'assistance elle aussi, et une troisième disposition n'aurait pas
+       fonctionné. */
+    if (app != nullptr && key == input::toucheImprimant('m')) {
+        app->m_assist.toggle();
+        return;
+    }
+
     switch (key) {
         case GLFW_KEY_ESCAPE: /* retour au menu de démarrage (et non plus quitter) */
             if (app != nullptr) {
@@ -150,12 +164,6 @@ void Application::keyCallback(
         case GLFW_KEY_L: /* fait défiler la livrée (origine, Gendarmerie, armée de terre) */
             if (app != nullptr) {
                 app->cycleLivery();
-            }
-            break;
-        case GLFW_KEY_M:         /* bascule le mode assisté (confort de pilotage) */
-        case GLFW_KEY_SEMICOLON: /* position de la touche "M" sur un clavier AZERTY */
-            if (app != nullptr) {
-                app->m_assist.toggle();
             }
             break;
         case GLFW_KEY_J: /* bascule l'atterrissage automatique vers le pad le plus proche */

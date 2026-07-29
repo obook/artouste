@@ -166,6 +166,27 @@ archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
 sont construites automatiquement par GitHub Actions à chaque version
 (voir `.github/workflows/release.yml`).
 
+<details>
+<summary>Publier une version (mémo)</summary>
+
+1. Écrire les notes dans `docs/RELEASE_NOTES.md`, bumper `VERSION` dans
+   `CMakeLists.txt`, commiter et pousser.
+2. Poser le tag et le pousser : la compilation des deux plateformes démarre et
+   prend une quinzaine de minutes.
+   ```bash
+   git tag -a v0.30.0 -m "Artouste v0.30.0" && git push origin v0.30.0
+   ```
+3. Pendant ce temps, créer la release depuis le même fichier :
+   ```bash
+   gh release create v0.30.0 --title "v0.30.0" --notes-file docs/RELEASE_NOTES.md
+   ```
+
+L'étape 3 n'est pas décorative : l'auteur d'une release est figé à sa création
+et ne se change plus ensuite. Sans elle, c'est l'action qui la crée, sous le
+compte du robot, qui apparaît alors parmi les contributeurs du projet. La CI se
+contente ensuite d'y attacher les deux archives.
+</details>
+
 ## Compilation (Linux)
 
 ```bash

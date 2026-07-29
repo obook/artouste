@@ -121,10 +121,24 @@ jobs:
         with:
           path: artefacts
 
-      # Le texte de la release vit dans docs/RELEASE_NOTES.md, écrit à la main
-      # AVANT de poser le tag et versionné avec le code qu'il décrit. Il part donc
-      # avec les archives, sans rien à coller après coup : l'action créant la
-      # release quand elle n'existe pas encore, elle naissait vide.
+      # RITUEL DE PUBLICATION, dans cet ordre :
+      #   1. écrire les notes dans docs/RELEASE_NOTES.md, bumper la version dans
+      #      CMakeLists.txt, commiter et pousser ;
+      #   2. poser le tag et le pousser (ce workflow démarre, une quinzaine de
+      #      minutes de compilation) ;
+      #   3. pendant ce temps, créer la release à la main depuis le même fichier :
+      #        gh release create vX.Y.Z --title "vX.Y.Z" --notes-file docs/RELEASE_NOTES.md
+      #
+      # L'étape 3 est ce qui donne à la release VOTRE nom : l'auteur d'une release
+      # est figé à sa création et ne se change plus ensuite. Sans elle, c'est
+      # l'action qui la crée, avec le compte du robot, qui apparaissait alors comme
+      # contributeur du projet.
+      #
+      # body_path reste néanmoins renseigné, comme filet : si l'étape 3 est oubliée,
+      # la release naîtra au moins avec son texte. Corollaire à connaître : ce texte
+      # est celui du FICHIER. Retoucher la description dans l'interface web pendant
+      # que la CI tourne serait annulé. Le fichier fait foi.
+      #
       # generate_release_notes reste à false : la liste plate des sujets de commits
       # n'apprend rien à un joueur.
       - name: Attacher les archives et le texte à la release

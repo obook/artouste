@@ -39,7 +39,11 @@ std::filesystem::path writeTemp(const std::string& name, const std::string& cont
     std::filesystem::remove_all(dossier);
     std::filesystem::create_directories(dossier);
     const std::filesystem::path path = dossier / "config.txt";
-    std::ofstream out(path);
+    /* Mode binaire : sans lui, Windows traduit chaque \n en \r\n à l'écriture, et
+       le fichier ne contient plus les octets que le test croit y avoir mis. Les
+       essais sur les fins de ligne, eux, doivent poser exactement ce qu'ils
+       annoncent. */
+    std::ofstream out(path, std::ios::binary);
     out << content;
     return path;
 }
@@ -107,7 +111,7 @@ std::filesystem::path preparerDossier(const std::string& nom,
     const std::filesystem::path dossier = std::filesystem::temp_directory_path() / nom;
     std::filesystem::remove_all(dossier);
     std::filesystem::create_directories(dossier);
-    std::ofstream modele(dossier / "config.default.txt");
+    std::ofstream modele(dossier / "config.default.txt", std::ios::binary);
     modele << "# terrain : carte chargée au lancement.\n"
               "terrain ossau\n"
               "\n"
@@ -115,7 +119,7 @@ std::filesystem::path preparerDossier(const std::string& nom,
               "# 0 pour ne rien demander au réseau.\n"
               "verifier_maj 1\n";
     modele.close();
-    std::ofstream perso(dossier / "config.txt");
+    std::ofstream perso(dossier / "config.txt", std::ios::binary);
     perso << configPersonnelle;
     return dossier;
 }

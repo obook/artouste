@@ -10,22 +10,13 @@ Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retro
 
 ![Alouette II en vol dans le simulateur Artouste](docs/artouste-en-vol.png)
 
-Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas sur cet appareil : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
+Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
 
 Écrit en C++ moderne et OpenGL, le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
 
 > [!IMPORTANT]
-> **Un PC, une manette de jeu, et vous volez. Il n'en faut pas plus.**
->
-> Rien à installer : on extrait l'archive, on lance l'exécutable, on décolle. Pas
-> de compte, pas de configuration, pas de contenu à télécharger ensuite -- les neuf
-> cartes sont déjà là. Une machine modeste suffit (Windows ou Linux, OpenGL 3.3), et
-> les réglages de `assets/config.txt` permettent de l'alléger encore.
->
-> La seule vraie exigence, c'est **la manette**. Le clavier fonctionne, mais n'est pas
-> recommandé : il ne donne que des commandes tout ou rien, alors que les sticks et les
-> gâchettes délivrent une valeur continue. Sur un appareil sans servo-commandes, où tout
-> se joue au dosage, ce n'est pas un confort mais une condition pour tenir un vol stable.
+> Un **PC** et **une manette de jeu** suffisent.
+> Aucune installation n'est nécessaire : on extrait l'archive, on lance le programme, on décolle !
 
 ## Histoire
 

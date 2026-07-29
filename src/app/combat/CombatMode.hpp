@@ -205,30 +205,36 @@ public:
     }
 
     /* Contact avec le sol, à la vitesse d'arrivée mesurée par la physique (voir
-       physics::FlightModel::consumeGroundImpact) : au-delà de la vitesse tolérée,
-       l'appareil encaisse des dégâts proportionnels à l'excès et fait le même
-       bruit qu'une boulette reçue. Sans effet hors combat, partie perdue, ou sous
-       le seuil : un posé normal ne coûte rien, et ne s'entend pas. À appeler après
-       update(), qui remet les événements sonores à zéro. */
-    void applyGroundImpact(float speedMs);
+       physics::FlightModel::consumeGroundImpact). Au-delà de la vitesse tolérée,
+       le choc fend le réservoir : il coûte du CARBURANT, proportionnellement à
+       l'excès de vitesse, et fait le même bruit qu'une boulette reçue. La vie de
+       l'appareil, elle, n'est entamée que par les zombies.
+
+       Rend les litres à retirer, que l'appelant applique au modèle de vol
+       (physics::FlightModel::drainFuel) : le combat décide du prix, la physique
+       tient le réservoir. Rend 0 hors combat, partie perdue, ou sous le seuil --
+       un posé normal ne coûte rien et ne s'entend pas. À appeler après update(),
+       qui remet les événements sonores à zéro. */
+    [[nodiscard]] float applyGroundImpact(float speedMs);
 
 private:
     static constexpr float PLAYER_HEALTH_MAX = 100.0f;
     /* Vitesse d'arrivée (m/s) en deçà de laquelle le contact est un posé et non
-       un choc, puis dégâts par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une
-       droite : les dégâts suivent alors l'énergie du choc, si bien qu'une touche
-       un peu ferme ne coûte presque rien (2 points à 5 m/s, 9 à 8 m/s) alors
-       qu'un vrai crash reste fatal (100 points à 20 m/s). Une droite faisait
-       perdre trop de vie à chaque contact. */
-    static constexpr float GROUND_IMPACT_FREE_MS      = 3.0f;
-    static constexpr float GROUND_IMPACT_DAMAGE_COEFF = 0.35f;
-    /* Dégâts en deçà desquels le contact ne compte pas : le HUD affiche la vie en
-       pourcentage entier (voir HudCombat.cpp), donc un demi-point est le plus
-       petit dégât qu'un joueur puisse VOIR. En dessous, on ne joue même pas le
-       bruit du choc -- un son sans effet visible se lit comme un bug, et fait
-       chercher la perte ailleurs. Avec le coefficient ci-dessus, cela repousse le
-       premier vrai choc à environ 4,2 m/s d'arrivée. */
-    static constexpr float GROUND_IMPACT_MIN_DAMAGE = 0.5f;
+       un choc, puis litres perdus par (m/s) d'excès AU CARRÉ. Le carré plutôt
+       qu'une droite : la fuite suit alors l'énergie du choc, si bien qu'une touche
+       un peu ferme se paie en minutes de vol (8 L à 5 m/s, 50 L à 8 m/s) alors
+       qu'un vrai crash vide le réservoir de 575 L et cloue l'appareil au sol
+       (578 L à 20 m/s). Une droite faisait fuir trop de kérosène à chaque
+       contact. */
+    static constexpr float GROUND_IMPACT_FREE_MS    = 3.0f;
+    static constexpr float GROUND_IMPACT_FUEL_COEFF = 2.0f;
+    /* Perte en deçà de laquelle le contact ne compte pas : le HUD affiche le
+       carburant en litres entiers (voir HudCorners.cpp), donc un demi-litre est la
+       plus petite fuite qu'un joueur puisse VOIR. En dessous, on ne joue même pas
+       le bruit du choc -- un son sans effet visible se lit comme un bug, et fait
+       chercher la perte ailleurs. Avec le coefficient ci-dessus, cela place le
+       premier vrai choc à 3,5 m/s d'arrivée. */
+    static constexpr float GROUND_IMPACT_MIN_LITERS = 0.5f;
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */

@@ -163,10 +163,12 @@ bool Application::mainLoop() {
             /* Contact avec le sol : la vitesse d'arrivée a été relevée par la
                physique, au pas fixe où elle s'est produite (ici, l'appareil est
                déjà posé, vitesse annulée). On la consomme à chaque image, même
-               hors combat, pour qu'un vieux contact ne vienne pas blesser
-               l'appareil au lancement de la partie suivante. Après update(), qui
-               vide les événements sonores, et avant leur lecture ci-dessous. */
-            m_combat.applyGroundImpact(m_flight.consumeGroundImpact());
+               hors combat, pour qu'un vieux contact ne vienne pas percer le
+               réservoir au lancement de la partie suivante. Le mode zombie dit
+               combien de kérosène le choc a fait fuir, la physique le retire du
+               réservoir. Après update(), qui vide les événements sonores, et avant
+               leur lecture ci-dessous. */
+            m_flight.drainFuel(m_combat.applyGroundImpact(m_flight.consumeGroundImpact()));
 
             /* Sons ponctuels du mode zombie, déclenchés sur les événements de
                cette image (voir CombatMode::SoundEvents) : même principe que

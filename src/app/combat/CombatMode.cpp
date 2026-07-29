@@ -221,26 +221,23 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
     }
 }
 
-void CombatMode::applyGroundImpact(float speedMs) {
+float CombatMode::applyGroundImpact(float speedMs) {
     if (!m_active || m_gameOver || speedMs <= GROUND_IMPACT_FREE_MS) {
-        return;
+        return 0.0f;
     }
-    /* Seul l'excès de vitesse fait mal, et il fait mal au carré : les premiers
-       mètres par seconde au-delà du posé s'encaissent, les derniers non. */
+    /* Seul l'excès de vitesse compte, et il compte au carré : les premiers mètres
+       par seconde au-delà du posé passent dans les patins, les suivants ouvrent
+       le réservoir. */
     const float exces  = speedMs - GROUND_IMPACT_FREE_MS;
-    const float degats = exces * exces * GROUND_IMPACT_DAMAGE_COEFF;
-    /* Sous un demi-point, le HUD affiche encore le même nombre entier : le
-       joueur entendrait le choc sans rien voir bouger, et croirait le coup perdu
-       ailleurs -- dans le carburant, seul cadran qui descend tout seul. Un
-       contact aussi doux est un posé, pas un choc : ni dégât ni bruit. */
-    if (degats < GROUND_IMPACT_MIN_DAMAGE) {
-        return;
+    const float litres = exces * exces * GROUND_IMPACT_FUEL_COEFF;
+    /* Sous un demi-litre, la jauge affiche encore le même nombre entier : le
+       joueur entendrait le choc sans rien voir bouger. Un contact aussi doux est
+       un posé, pas un choc : ni fuite ni bruit. */
+    if (litres < GROUND_IMPACT_MIN_LITERS) {
+        return 0.0f;
     }
     m_events.impacted = true;
-    m_playerHealth    = std::max(0.0f, m_playerHealth - degats);
-    if (m_playerHealth <= 0.0f) {
-        m_gameOver = true;
-    }
+    return litres;
 }
 
 }  /* namespace artouste::app */

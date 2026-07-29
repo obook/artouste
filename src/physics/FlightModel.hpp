@@ -16,6 +16,8 @@
 #include "physics/Turbine.hpp"
 #include "physics/constants.hpp"
 
+#include <algorithm>
+
 namespace artouste::physics {
 
 class FlightModel {
@@ -82,6 +84,16 @@ public:
     /* Carburant restant, en litres (pour le HUD et le voyant d'alerte). */
     [[nodiscard]] float fuelLiters() const noexcept { return m_fuelLiters; }
 
+    /* Vide une quantité de carburant hors consommation de la turbine : une
+       cellule qui encaisse un choc perd du kérosène (voir le contact avec le sol
+       du mode zombie). Le réservoir ne descend jamais sous zéro, et une quantité
+       nulle ou négative ne fait rien. */
+    void drainFuel(float liters) noexcept {
+        if (liters > 0.0f) {
+            m_fuelLiters = std::max(0.0f, m_fuelLiters - liters);
+        }
+    }
+
     /* Intensité du vortex ring state (0 = aucun, 1 = plein), pour l'alerte HUD.
        Toujours 0 en mode assisté et en démo (physique réelle coupée). */
     [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
@@ -90,8 +102,8 @@ public:
        l'appelant la lit une fois et la consomme. Elle ne peut se mesurer QU'ICI,
        le contact annulant aussitôt la composante verticale (voir update) ; la
        boucle de jeu, qui tourne bien plus lentement que la simulation, ne verrait
-       plus qu'un appareil posé, vitesse nulle. Le mode zombie en tire les dégâts
-       d'un posé brutal. Vaut le maximum des contacts survenus depuis la dernière
+       plus qu'un appareil posé, vitesse nulle. Le mode zombie en tire le carburant
+       que fait fuir un posé brutal. Vaut le maximum des contacts survenus depuis la dernière
        lecture, et reste à 0 tant que l'appareil demeure au sol. */
     [[nodiscard]] float consumeGroundImpact() noexcept {
         const float v    = m_groundImpactMs;

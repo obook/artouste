@@ -1,7 +1,7 @@
 /*
  * ground_impact_tests.cpp
  * Contact de l'appareil avec le sol : mesure de la vitesse d'arrivée par le
- * modèle de vol (physics::FlightModel) et dégâts qu'en tire le mode zombie
+ * modèle de vol (physics::FlightModel) et carburant qu'en fait fuir le mode zombie
  * (app::CombatMode). Se teste sans contexte graphique.
  *
  * Auteur : O. Booklage
@@ -31,7 +31,7 @@ float solPlat(float, float) {
 }
 
 /* Dossier de carte minimal (un point d'apparition) : sans lui, le mode zombie
-   ne démarre pas et les dégâts n'auraient pas de vie à entamer. */
+   ne démarre pas et le contact au sol ne coûterait rien. */
 std::filesystem::path dossierCarteTemporaire(const std::string& nom) {
     const std::filesystem::path dir = std::filesystem::temp_directory_path() / nom;
     std::filesystem::create_directories(dir);
@@ -83,74 +83,70 @@ TEST_CASE("FlightModel : vitesse d'arrivée au contact du sol", "[physics][conta
     }
 }
 
-TEST_CASE("CombatMode : dégâts d'un contact avec le sol", "[combat][contact]") {
-    const auto  dir = dossierCarteTemporaire("artouste_contact_test");
-    CombatMode  combat;
+TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]") {
+    const auto dir = dossierCarteTemporaire("artouste_contact_test");
+    CombatMode combat;
     combat.start(dir, solPlat);
     REQUIRE(combat.active());
     REQUIRE(combat.healthPct() == Catch::Approx(1.0f));
 
     SECTION("un posé normal ne coûte rien") {
-        combat.applyGroundImpact(2.0f);
-        CHECK(combat.healthPct() == Catch::Approx(1.0f));
+        CHECK(combat.applyGroundImpact(2.0f) == Catch::Approx(0.0f));
         CHECK_FALSE(combat.soundEvents().impacted);
     }
 
+    SECTION("le choc fend le réservoir, il n'entame pas la vie") {
+        /* La vie ne se perd que face aux zombies. Un posé brutal se paie en
+           kérosène, donc en minutes de vol restantes. */
+        const float litres = combat.applyGroundImpact(10.0f);
+        CHECK(litres > 0.0f);
+        CHECK(combat.healthPct() == Catch::Approx(1.0f));
+        CHECK_FALSE(combat.gameOver());
+        CHECK(combat.soundEvents().impacted);
+    }
+
     SECTION("un contact trop doux pour se voir ne s'entend pas non plus") {
-        /* Le HUD affiche la vie en pourcentage entier : sous un demi-point, le
-           joueur entend le choc et ne voit rien bouger, ce qui se lit comme un
-           bug (il cherche alors la perte ailleurs, dans le carburant). Ces
-           vitesses dépassent pourtant le seuil du posé. */
-        for (const float vitesse : {3.2f, 3.5f, 4.0f}) {
+        /* La jauge affiche des litres entiers : sous un demi-litre, le joueur
+           entendrait le choc sans rien voir bouger, ce qui se lit comme un bug.
+           Ces vitesses dépassent pourtant le seuil du posé. */
+        for (const float vitesse : {3.1f, 3.3f}) {
             CombatMode doux;
             doux.start(dir, solPlat);
-            doux.applyGroundImpact(vitesse);
             INFO("arrivée à " << vitesse << " m/s");
-            CHECK(doux.healthPct() == Catch::Approx(1.0f));
+            CHECK(doux.applyGroundImpact(vitesse) == Catch::Approx(0.0f));
             CHECK_FALSE(doux.soundEvents().impacted);
         }
     }
 
-    SECTION("dès que le choc se voit, il s'entend") {
-        /* Réciproque : tout contact qui coûte au moins un demi-point doit faire du
-           bruit. Sans quoi le joueur perdrait de la vie sans savoir pourquoi. */
-        for (const float vitesse : {4.5f, 6.0f, 12.0f}) {
+    SECTION("dès que la fuite se voit, elle s'entend") {
+        /* Réciproque : toute fuite d'au moins un demi-litre doit faire du bruit,
+           sans quoi le carburant baisserait sans que le joueur sache pourquoi. */
+        for (const float vitesse : {3.6f, 6.0f, 12.0f}) {
             CombatMode dur;
             dur.start(dir, solPlat);
-            dur.applyGroundImpact(vitesse);
             INFO("arrivée à " << vitesse << " m/s");
-            CHECK(dur.healthPct() < 1.0f);
+            CHECK(dur.applyGroundImpact(vitesse) >= 0.5f);
             CHECK(dur.soundEvents().impacted);
         }
     }
 
-    SECTION("un choc entame la vie et fait du bruit") {
-        combat.applyGroundImpact(10.0f);
-        CHECK(combat.healthPct() < 1.0f);
-        CHECK(combat.healthPct() > 0.0f);
-        CHECK(combat.soundEvents().impacted);
-    }
-
     SECTION("plus le contact est rapide, plus il coûte") {
-        combat.applyGroundImpact(6.0f);
-        const float apresLeger = combat.healthPct();
-
+        const float leger = combat.applyGroundImpact(6.0f);
         CombatMode autre;
         autre.start(dir, solPlat);
-        autre.applyGroundImpact(12.0f);
-        CHECK(autre.healthPct() < apresLeger);
+        CHECK(autre.applyGroundImpact(12.0f) > leger);
     }
 
-    SECTION("un contact violent termine la partie") {
-        combat.applyGroundImpact(30.0f);
-        CHECK(combat.healthPct() == Catch::Approx(0.0f));
-        CHECK(combat.gameOver());
+    SECTION("un vrai crash vide le réservoir") {
+        /* 575 L de contenance : au-delà, l'appareil est cloué au sol, turbine
+           éteinte faute de carburant. C'est la sanction du crash, à la place de
+           l'ancienne mort instantanée. */
+        CHECK(combat.applyGroundImpact(20.0f) >= 575.0f);
     }
 
-    SECTION("partie perdue : plus rien à encaisser") {
-        combat.applyGroundImpact(30.0f);
-        REQUIRE(combat.gameOver());
-        combat.applyGroundImpact(30.0f); /* ne doit pas replonger dans les dégâts */
-        CHECK(combat.healthPct() == Catch::Approx(0.0f));
+    SECTION("hors combat, le sol ne coûte rien") {
+        CombatMode inactif;
+        CHECK(inactif.applyGroundImpact(30.0f) == Catch::Approx(0.0f));
+        CHECK_FALSE(inactif.soundEvents().impacted);
     }
 }

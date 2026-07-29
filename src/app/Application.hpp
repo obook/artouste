@@ -289,8 +289,10 @@ private:
     void advanceRotor(float rotorFraction, float frameDt);
 
     /* Émet un message radio (voix de synthèse Flite + sous-titre) 2 s après que la
-       turbine atteint son plein régime. Se réarme quand la turbine redescend. */
-    void updateRadioMessage(float turbineFraction, float frameDt);
+       turbine atteint son plein régime. Se réarme quand la turbine redescend. La
+       clairance est tirée parmi plusieurs formulations ; 't' (secondes écoulées
+       depuis le lancement) sert à en dater la salutation sur le cycle jour/nuit. */
+    void updateRadioMessage(float turbineFraction, float t, float frameDt);
 
     /* Réarme l'annonce de la tour pour la session qui commence. Le réarmement
        automatique attend que la turbine redescende sous la moitié du régime, ce

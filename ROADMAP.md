@@ -75,6 +75,30 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux) : fait, clé `radio_url` de config.txt, touche `K` et balance `-`/`+`
 
+- [x] Varier la clairance de décollage : six formulations tirées au sort dans `ApplicationRotorRadio.cpp`, sans jamais répéter celle du décollage précédent, avec salutation calée sur l'heure du cycle jour/nuit (`good morning`, `good afternoon`, `good evening`). Durée du sous-titre proportionnelle à la longueur du message.
+
+### Séquence radio ATC complète
+
+Aller au-delà de la simple clairance : un échange en plusieurs temps, conforme à la phraséologie OACI (Doc 9432), du contact initial au changement de fréquence, plus des phrases d'ambiance en vol.
+
+**Séquence visée**
+
+1. Contact initial du pilote au plein régime (`request take-off`).
+2. Clairance de la tour, 3 à 5 s plus tard (déjà en place, avec ses variantes).
+3. Readback du pilote, obligatoire en phraséologie OACI.
+4. Compte rendu `airborne` en montée, puis `frequency change approved` de la tour.
+5. Phrases d'ambiance espacées en vol (trafic signalé, QNH, message à toutes stations).
+
+**Points à trancher avant de commencer**
+
+- **Nom du terrain.** Des fichiers son figés diraient toujours le même terrain, alors que le nom vient de `helipads.txt` et change sur les neuf cartes. Piste retenue : garder la synthèse à l'exécution pour les phrases qui nomment la tour, et ne figer en WAV que les phrases neutres (readback, changement de fréquence, ambiance).
+- **Indicatif.** Le message actuel dit `Fox-Bravo`. Une immatriculation Gendarmerie (F-MJGN, indicatif `Gendarmerie Hotel November`) serait plus juste pour une Alouette II, mais il faudra la reprendre partout d'un coup.
+- **Verrou de rotor.** Le rotor reste bloqué jusqu'à la fin de l'annonce (`setRotorHold`). Avec trois échanges avant le décollage, l'attente au pad passerait à une dizaine de secondes : libérer plutôt dès la fin de la clairance, et laisser le readback se jouer pendant la montée en régime.
+- **Filtre radio.** `radioize()` applique déjà passe-bande, saturation, squelch et roger beep. Des WAV filtrés en amont devraient donc emprunter un autre chemin de lecture, comme les sons de combat, sous peine d'être filtrés deux fois.
+- **Voix.** Le jeu embarque la voix clustergen `cmu_us_slt` compilée dans le binaire. Toute phrase pré-enregistrée doit sortir de la même voix, sinon la tour change de timbre en cours d'échange.
+
+**Ce qu'il ne faut pas annoncer.** Le modèle de vol ignore le vent et le ciel est vide : une clairance qui annoncerait un vent établi, un trafic en approche ou une attente mentirait au pilote. S'en tenir à ce qui est simulé, ou simuler d'abord.
+
 ### Mode demo
 
 **Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :

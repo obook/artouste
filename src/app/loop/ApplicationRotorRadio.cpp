@@ -16,6 +16,8 @@
 
 #include <cmath>
 #include <cstddef>
+#include <iterator>
+#include <random>
 #include <string>
 
 namespace artouste::app {
@@ -39,6 +41,65 @@ constexpr float BLADE_SPACING   = 2.0944f;  /* 2*pi/3 rad ~ 120 degrés */
 constexpr float PARK_TAU        = 0.6f;
 constexpr float PARK_STEER_MIN  = 0.90f;
 constexpr float PARK_STEER_MAX  = 1.10f;
+
+/*
+ * Clairances de décollage de la tour.
+ *
+ * Le texte est synthétisé à la volée (Flite, voir AudioEngineRadio.cpp) plutôt
+ * que lu dans un fichier son : le nom du terrain vient de helipads.txt, donc la
+ * tour s'annonce juste sur les neuf cartes, y compris sur celles à venir. On
+ * fait varier la formule pour que deux décollages ne se ressemblent pas, sans
+ * jamais annoncer ce que le simulateur ne modélise pas : ni vent établi (le
+ * modèle de vol l'ignore), ni trafic en approche (le ciel est vide), ni consigne
+ * de cap (le pilote part où il veut). Le vent calme, lui, est exact.
+ *
+ * 'salutation' insère la formule d'usage calée sur l'heure simulée ; 'corps'
+ * ferme le message, après le nom de la tour.
+ */
+struct ClairanceRadio {
+    bool        salutation;
+    const char* corps;
+};
+
+constexpr ClairanceRadio CLAIRANCES[] = {
+    {false, "wind calm, cleared for take-off."},
+    {true, "wind calm, cleared for take-off."},
+    {false, "surface wind calm, pad clear, cleared for take-off."},
+    {true, "wind calm, QNH one zero one three, cleared for take-off."},
+    {false, "cleared for take-off, wind calm, caution downwash on the pad."},
+    {true, "surface wind calm, cleared for take-off at your discretion."},
+};
+
+/* Salutation d'usage, calée sur l'heure du cycle jour/nuit : la tour ne souhaite
+   pas le bonjour à deux heures du matin. */
+const char* salutationRadio(float heureSecondes) {
+    const float heure = heureSecondes / 3600.0f;
+    if (heure >= 5.0f && heure < 12.0f) {
+        return "good morning";
+    }
+    if (heure >= 12.0f && heure < 18.0f) {
+        return "good afternoon";
+    }
+    return "good evening";
+}
+
+/* Tire une clairance, en écartant celle du décollage précédent : répétée deux
+   fois d'affilée, la même formulation s'entend immédiatement. L'état tient dans
+   des variables statiques car le tirage n'a qu'un appelant, dans la boucle
+   principale, donc sur un seul fil. */
+const ClairanceRadio& tirerClairance() {
+    constexpr std::size_t NB = std::size(CLAIRANCES);
+    static std::mt19937   rng{std::random_device{}()};
+    static std::size_t    precedente = NB; /* NB = aucun tirage encore */
+
+    std::uniform_int_distribution<std::size_t> tirage(0, NB - 1);
+    std::size_t i = tirage(rng);
+    if (i == precedente) {
+        i = (i + 1) % NB;
+    }
+    precedente = i;
+    return CLAIRANCES[i];
+}
 
 }  /* namespace */
 
@@ -95,7 +156,7 @@ void Application::resetRadioMessage() noexcept {
     m_radioMsg.clear();
 }
 
-void Application::updateRadioMessage(float turbineFraction, float frameDt) {
+void Application::updateRadioMessage(float turbineFraction, float t, float frameDt) {
     /* Mode zombie : pas d'annonce de la tour. On entre en combat turbine et rotor
        déjà au régime, face à une horde : une autorisation de décollage n'aurait
        pas de sens. Le verrou de rotor qui l'accompagne saute avec elle, sans quoi
@@ -139,10 +200,20 @@ void Application::updateRadioMessage(float turbineFraction, float frameDt) {
             if (paren != std::string::npos) {
                 station = station.substr(0, paren);
             }
-            m_radioMsg = station.empty()
-                             ? "Fox-Bravo, tower, wind calm, cleared for take-off."
-                             : "Fox-Bravo, " + station + " tower, wind calm, cleared for take-off.";
-            m_radioMsgShow = 7.0f;
+            const ClairanceRadio& clairance = tirerClairance();
+            m_radioMsg = station.empty() ? "Fox-Bravo, tower, " : "Fox-Bravo, " + station + " tower, ";
+            if (clairance.salutation) {
+                m_radioMsg += salutationRadio(timeOfDaySeconds(t));
+                m_radioMsg += ", ";
+            }
+            m_radioMsg += clairance.corps;
+
+            /* Durée du sous-titre proportionnelle à la longueur du message : les
+               clairances n'ont plus toutes la même taille, et un sous-titre figé
+               couperait les plus longues avant la fin de la voix. Le coefficient
+               est calé sur le débit de Flite (duration_stretch 0.82), la constante
+               laissant le temps de lire après la dernière syllabe. */
+            m_radioMsgShow = 3.0f + 0.065f * static_cast<float>(m_radioMsg.size());
             m_audio.playRadioMessage(m_radioMsg);
             m_radioMsgArmed = false;
             m_radioMsgDone  = true;

@@ -151,7 +151,7 @@ bool Application::mainLoop() {
         /* Message radio : armé à la turbine au plein régime, émis 2 s après.
            Figé en pause, comme le reste. */
         if (!frozen) {
-            updateRadioMessage(turbineFraction, frameDt);
+            updateRadioMessage(turbineFraction, t, frameDt);
             /* Mode zombie : tir (R3/Ctrl gauche) et avancement de la horde.
                Figé en pause comme le reste, pour ne pas laisser les zombies
                continuer d'agir ni la gâchette tirer pendant un panneau de

@@ -208,8 +208,8 @@ public:
        physics::FlightModel::consumeGroundImpact) : au-delà de la vitesse tolérée,
        l'appareil encaisse des dégâts proportionnels à l'excès et fait le même
        bruit qu'une boulette reçue. Sans effet hors combat, partie perdue, ou sous
-       le seuil : un posé normal ne coûte rien. À appeler après update(), qui
-       remet les événements sonores à zéro. */
+       le seuil : un posé normal ne coûte rien, et ne s'entend pas. À appeler après
+       update(), qui remet les événements sonores à zéro. */
     void applyGroundImpact(float speedMs);
 
 private:
@@ -222,6 +222,13 @@ private:
        perdre trop de vie à chaque contact. */
     static constexpr float GROUND_IMPACT_FREE_MS      = 3.0f;
     static constexpr float GROUND_IMPACT_DAMAGE_COEFF = 0.35f;
+    /* Dégâts en deçà desquels le contact ne compte pas : le HUD affiche la vie en
+       pourcentage entier (voir HudCombat.cpp), donc un demi-point est le plus
+       petit dégât qu'un joueur puisse VOIR. En dessous, on ne joue même pas le
+       bruit du choc -- un son sans effet visible se lit comme un bug, et fait
+       chercher la perte ailleurs. Avec le coefficient ci-dessus, cela repousse le
+       premier vrai choc à environ 4,2 m/s d'arrivée. */
+    static constexpr float GROUND_IMPACT_MIN_DAMAGE = 0.5f;
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */

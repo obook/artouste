@@ -229,8 +229,15 @@ void CombatMode::applyGroundImpact(float speedMs) {
        mètres par seconde au-delà du posé s'encaissent, les derniers non. */
     const float exces  = speedMs - GROUND_IMPACT_FREE_MS;
     const float degats = exces * exces * GROUND_IMPACT_DAMAGE_COEFF;
-    m_events.impacted  = true;
-    m_playerHealth     = std::max(0.0f, m_playerHealth - degats);
+    /* Sous un demi-point, le HUD affiche encore le même nombre entier : le
+       joueur entendrait le choc sans rien voir bouger, et croirait le coup perdu
+       ailleurs -- dans le carburant, seul cadran qui descend tout seul. Un
+       contact aussi doux est un posé, pas un choc : ni dégât ni bruit. */
+    if (degats < GROUND_IMPACT_MIN_DAMAGE) {
+        return;
+    }
+    m_events.impacted = true;
+    m_playerHealth    = std::max(0.0f, m_playerHealth - degats);
     if (m_playerHealth <= 0.0f) {
         m_gameOver = true;
     }

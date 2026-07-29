@@ -96,6 +96,34 @@ TEST_CASE("CombatMode : dégâts d'un contact avec le sol", "[combat][contact]")
         CHECK_FALSE(combat.soundEvents().impacted);
     }
 
+    SECTION("un contact trop doux pour se voir ne s'entend pas non plus") {
+        /* Le HUD affiche la vie en pourcentage entier : sous un demi-point, le
+           joueur entend le choc et ne voit rien bouger, ce qui se lit comme un
+           bug (il cherche alors la perte ailleurs, dans le carburant). Ces
+           vitesses dépassent pourtant le seuil du posé. */
+        for (const float vitesse : {3.2f, 3.5f, 4.0f}) {
+            CombatMode doux;
+            doux.start(dir, solPlat);
+            doux.applyGroundImpact(vitesse);
+            INFO("arrivée à " << vitesse << " m/s");
+            CHECK(doux.healthPct() == Catch::Approx(1.0f));
+            CHECK_FALSE(doux.soundEvents().impacted);
+        }
+    }
+
+    SECTION("dès que le choc se voit, il s'entend") {
+        /* Réciproque : tout contact qui coûte au moins un demi-point doit faire du
+           bruit. Sans quoi le joueur perdrait de la vie sans savoir pourquoi. */
+        for (const float vitesse : {4.5f, 6.0f, 12.0f}) {
+            CombatMode dur;
+            dur.start(dir, solPlat);
+            dur.applyGroundImpact(vitesse);
+            INFO("arrivée à " << vitesse << " m/s");
+            CHECK(dur.healthPct() < 1.0f);
+            CHECK(dur.soundEvents().impacted);
+        }
+    }
+
     SECTION("un choc entame la vie et fait du bruit") {
         combat.applyGroundImpact(10.0f);
         CHECK(combat.healthPct() < 1.0f);

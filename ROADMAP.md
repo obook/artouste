@@ -628,6 +628,23 @@ ou sortir de France.
   qui survit à l'extinction, et les deux modes d'affichage (quatre coins et
   superposé) en profitent, tous deux passant par `alarmeCarb`.
 
+### Démarrage refusé sur fond de réservoir
+
+- [x] Appuyer sur le démarreur avec moins de 2 litres (`FUEL_START_MIN_L`) ne fait
+  plus rien : ni séquence, ni son. La séquence dure une bonne minute et brûle près
+  de deux litres avant que le rotor ne prenne son régime ; en dessous, la turbine
+  s'éteignait en pleine montée, après avoir fait tout son bruit pour rien, et
+  l'appareil ne décollait pas.
+
+    Le cas le plus traître n'était pas le réservoir vide, coupé dès le premier pas
+  de simulation, mais le fond de réservoir : la jauge affichant des litres entiers,
+  "0 L" peut cacher un demi-litre, assez pour amorcer un démarrage voué à mourir.
+  Mesuré à 0,30 L : turbine à 0,63 après trente secondes, puis extinction.
+
+    Le garde-fou vit dans `FlightModel::toggleTurbine`, qui refuse un démarrage
+  mais accepte toujours une coupure ; la touche `T` et le bouton `Start` y passent
+  tous deux, au lieu d'appeler `Turbine::toggle` directement.
+
 ### Silence à la fin de partie
 
 - [x] La fin de partie fige le vol (`frozen` dans `mainLoop`) mais laissait tourner le

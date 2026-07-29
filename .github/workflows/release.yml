@@ -109,6 +109,13 @@ jobs:
     # Une release n'est créée que pour un tag, pas pour un lancement manuel.
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      # Ce job ne compile rien, mais il lui faut quand même le dépôt : le texte de
+      # la release est lu dans docs/RELEASE_NOTES.md ci-dessous. Sans ce checkout,
+      # body_path désignerait un fichier absent et l'action retomberait sur une
+      # description vide, sans échouer. En premier, car actions/checkout nettoie le
+      # répertoire de travail : après le téléchargement, il effacerait les archives.
+      - uses: actions/checkout@v4
+
       - name: Récupérer les artefacts
         uses: actions/download-artifact@v4
         with:
@@ -126,14 +133,19 @@ jobs:
           files: artefacts/**/artouste-*
           body_path: docs/RELEASE_NOTES.md
           generate_release_notes: false
+          # Un tag portant un tiret (v0.30.0-rc1, v0.0.0-essai) est un essai ou une
+          # version candidate : publié en pré-release, il ne devient pas la version
+          # que propose le bouton de téléchargement du dépôt.
+          prerelease: ${{ contains(github.ref_name, '-') }}
 
   page:
     name: Inscrire le tag dans la page
     needs: [release]
     runs-on: ubuntu-latest
-    # Même garde que la release : un lancement manuel ne publie rien, il n'y a
-    # donc pas de numéro à inscrire.
-    if: startsWith(github.ref, 'refs/tags/')
+    # Même garde que la release, plus une seconde : un lancement manuel ne publie
+    # rien, et un tag d'essai ou de version candidate (portant un tiret) ne doit pas
+    # inscrire son numéro dans la page vue par les visiteurs.
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, '-')
     steps:
       # Le tag est un état détaché ; la page, elle, est servie par GitHub Pages
       # depuis docs/ sur main. C'est donc main qu'on met à jour, et le push

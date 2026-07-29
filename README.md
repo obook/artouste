@@ -350,12 +350,7 @@ de problème : le jeu retombe sur l'orthophoto d'ensemble, comme avant.
 ## Contributions
 
 Le ciel réaliste et la vue d'orbite solaire proviennent d'une contribution de
-[CHAT-DISPARU](https://github.com/CHAT-DISPARU), proposée via une pull request. Elle
-refond le rendu du ciel, dont le dégradé passe désormais du plein jour aux teintes
-orangées du coucher puis à la nuit, avec le disque du soleil et son halo ; elle
-introduit aussi un soleil mobile et une nouvelle vue, l'orbite solaire, où la caméra
-se place face à l'astre. Le cycle jour/nuit réglable et l'horloge du HUD prolongent
-cette base.
+[CHAT-DISPARU](https://github.com/CHAT-DISPARU).
 
 ## Licence
 

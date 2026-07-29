@@ -353,3 +353,47 @@ TEST_CASE("Panne sèche par consommation : la turbine s'éteint aussi",
     CHECK(model.fuelLiters() == 0.0f);
     CHECK(model.turbine().state() != artouste::physics::Turbine::State::Regime);
 }
+
+TEST_CASE("Fond de réservoir : le démarrage est refusé", "[flight][turbine][carburant]") {
+    /* La jauge affiche des litres entiers : "0 L" peut cacher un demi-litre, assez
+       pour amorcer une séquence de démarrage d'une minute qui s'éteindra juste
+       avant le régime de vol, après tout son bruit. On refuse franchement. */
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f); /* jauge : 0 L */
+
+    CHECK_FALSE(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Arret);
+
+    /* Et rien ne se met en route au fil des pas suivants. */
+    const Controls commandes{};
+    for (int i = 0; i < 240 * 5; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    CHECK(model.turbine().turbineFraction() == 0.0f);
+}
+
+TEST_CASE("Réservoir suffisant : le démarrage est accepté", "[flight][turbine][carburant]") {
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - artouste::physics::FUEL_START_MIN_L -
+                    1.0f);
+
+    CHECK(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Demarrage);
+}
+
+TEST_CASE("Couper la turbine reste toujours possible", "[flight][turbine][carburant]") {
+    /* Le garde-fou ne vaut que pour le démarrage : on doit pouvoir couper une
+       turbine qui tourne, même avec un fond de réservoir. */
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.turbine().forceRunning();
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f);
+
+    CHECK(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
+}

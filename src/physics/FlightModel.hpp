@@ -84,6 +84,26 @@ public:
     /* Carburant restant, en litres (pour le HUD et le voyant d'alerte). */
     [[nodiscard]] float fuelLiters() const noexcept { return m_fuelLiters; }
 
+    /* Démarre ou coupe la turbine, comme Turbine::toggle, mais en tenant compte du
+       réservoir : un démarrage est REFUSÉ sous FUEL_START_MIN_L, une coupure est
+       toujours acceptée. Rend vrai si l'état a changé.
+
+       Sans ce garde-fou, appuyer sur le démarreur à sec lançait la séquence et son
+       vacarme d'une minute, pour une extinction juste avant le régime de vol. Le
+       cas le plus traître n'est même pas le réservoir vide (coupé au premier pas de
+       simulation) mais le fond de réservoir : la jauge affiche des litres entiers,
+       donc "0 L" peut cacher un demi-litre, de quoi amorcer un démarrage
+       parfaitement inutile. */
+    bool toggleTurbine() noexcept {
+        const bool aLArret = m_turbine.state() == Turbine::State::Arret ||
+                             m_turbine.state() == Turbine::State::Extinction;
+        if (aLArret && m_fuelLiters < FUEL_START_MIN_L) {
+            return false; /* pas assez de carburant pour mener un démarrage à terme */
+        }
+        m_turbine.toggle();
+        return true;
+    }
+
     /* Vide une quantité de carburant hors consommation de la turbine : une
        cellule qui encaisse un choc perd du kérosène (voir le contact avec le sol
        du mode zombie). Le réservoir ne descend jamais sous zéro, et une quantité

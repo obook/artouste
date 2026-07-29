@@ -158,7 +158,9 @@ void Application::keyCallback(
             break;
         case GLFW_KEY_T: /* démarre ou coupe la turbine */
             if (app != nullptr) {
-                app->m_flight.turbine().toggle();
+                /* Passe par le modèle de vol et non par la turbine seule : un
+                   démarrage réservoir vide est refusé, sans bruit ni séquence. */
+                app->m_flight.toggleTurbine();
             }
             break;
         case GLFW_KEY_L: /* fait défiler la livrée (origine, Gendarmerie, armée de terre) */

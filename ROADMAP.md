@@ -575,32 +575,58 @@ ou sortir de France.
   (`addExplosion`) : purement visuelle, sans dégâts de zone ni trace au sol, puisque ce
   n'est pas un impact de roquette.
 
-### Dégâts au contact du sol
+### Carburant perdu au contact du sol
 
-- [x] En mode zombie, toucher le sol coûte désormais de la vie : rien en deçà de 3 m/s
-  (un posé), puis 0,35 point par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une droite,
-  qui faisait perdre trop de vie à chaque contact : les dégâts suivent l'énergie du choc,
-  si bien qu'une touche un peu ferme s'encaisse (1 point à 5 m/s, 9 à 8 m/s, 17 à 10 m/s)
-  alors qu'un vrai crash reste fatal (79 points à 18 m/s, la mort à 20). Le bruit
-  d'impact des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
+- [x] En mode zombie, toucher le sol fend le réservoir : rien en deçà de 3 m/s (un
+  posé), puis 2 litres par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une droite,
+  qui faisait fuir trop de kérosène à chaque contact : la fuite suit l'énergie du
+  choc, si bien qu'une touche un peu ferme se paie en minutes de vol (8 L à 5 m/s,
+  50 L à 8 m/s, 98 L à 10 m/s) alors qu'un vrai crash vide les 575 L du réservoir
+  (578 L à 20 m/s) et cloue l'appareil au sol, turbine éteinte. Le bruit d'impact
+  des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
   l'appareil comme les autres coups reçus.
 
-    Corrigé depuis : le son se déclenchait dès 3 m/s alors que les dégâts n'atteignaient
-  un demi-point qu'à 4,2 m/s. Entre les deux, le choc s'entendait sans que la vie affichée
-  (un pourcentage ENTIER, voir `HudCombat.cpp`) bouge d'un chiffre, et le seul cadran qui
-  descendait à ce moment-là étant le carburant, le joueur croyait le contact payé en
-  essence. Un contact qui coûte moins d'un demi-point est désormais un posé : ni dégât ni
-  bruit (`GROUND_IMPACT_MIN_DAMAGE`). Les tests vérifient les deux sens -- rien de visible
-  ne s'entend, rien d'audible ne passe inaperçu.
+    La vie, elle, ne se perd que face aux zombies. Le contact au sol l'entamait
+  dans une première version, à rebours de ce qui était voulu ; il ne touche plus
+  qu'au carburant, et ne peut donc plus terminer une partie d'un coup. La sanction
+  du crash n'est plus la mort mais l'immobilisation.
 
-    La vitesse ne peut se mesurer QUE dans la physique : le contact annule aussitôt la
-  composante verticale, si bien que la boucle de jeu, bien plus lente que la simulation à
-  pas fixe, ne verrait plus qu'un appareil posé, vitesse nulle. `FlightModel` relève donc
-  la vitesse complète au pas qui ENTRE en contact (rentrer dans un versant à
-  l'horizontale reste un contact) et la tient à disposition jusqu'à lecture
-  (`consumeGroundImpact`). Rester posé ne produit aucun nouveau contact, et repositionner
-  l'appareil oublie une valeur non lue, sans quoi la partie suivante encaisserait les
-  dégâts d'un posé qui n'a pas eu lieu.
+    Le seuil est calé sur ce que le joueur PEUT voir : la jauge affiche des litres
+  entiers, donc une fuite de moins d'un demi-litre ne bougerait rien à l'écran. En
+  dessous, on ne joue même pas le bruit du choc, un son sans effet visible se
+  lisant comme un bug. Le premier vrai choc tombe ainsi à 3,5 m/s.
+
+    La vitesse ne peut se mesurer QUE dans la physique : le contact annule aussitôt
+  la composante verticale, si bien que la boucle de jeu, bien plus lente que la
+  simulation à pas fixe, ne verrait plus qu'un appareil posé, vitesse nulle.
+  `FlightModel` relève donc la vitesse complète au pas qui ENTRE en contact (rentrer
+  dans un versant à l'horizontale reste un contact) et la tient à disposition
+  jusqu'à lecture (`consumeGroundImpact`). Rester posé ne produit aucun nouveau
+  contact, et repositionner l'appareil oublie une valeur non lue, sans quoi la
+  partie suivante paierait un posé qui n'a pas eu lieu. Le combat décide du prix
+  (`CombatMode::applyGroundImpact` rend des litres), la physique tient le réservoir
+  (`FlightModel::drainFuel`).
+
+### Panne sèche
+
+- [x] Réservoir à zéro : la turbine s'éteint, le rotor descend et s'arrête, comme
+  n'importe quelle extinction. Une minute environ sépare la panne de l'arrêt
+  complet, et un redémarrage tenté à sec s'amorce puis se coupe au pas suivant : il
+  ne reste qu'à quitter le vol.
+
+    Le test de panne vivait DANS la branche de consommation, gardée par
+  "carburant > 0". Il ne voyait donc que le réservoir vidé par la turbine
+  elle-même. Un réservoir tombé à zéro autrement, ce que fait désormais un choc au
+  sol qui le fend, laissait la turbine tourner indéfiniment à sec : mesuré à
+  turbine 1,00 et rotor 1,00 vingt secondes après la fuite. La vérification est
+  sortie de la branche et se fait à chaque pas.
+
+    Le voyant CARB s'éteignait au même instant : comme tous les cadrans, il suivait
+  "turbine arrêtée = planche hors tension", si bien que la panne sèche effaçait sa
+  propre explication. Il reste désormais ROUGE réservoir vide, quel que soit l'état
+  de la turbine, et la ligne du HUD passe de "BAS" à "PANNE". C'est la seule alarme
+  qui survit à l'extinction, et les deux modes d'affichage (quatre coins et
+  superposé) en profitent, tous deux passant par `alarmeCarb`.
 
 ### Silence à la fin de partie
 

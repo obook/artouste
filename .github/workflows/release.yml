@@ -114,12 +114,17 @@ jobs:
         with:
           path: artefacts
 
-      # La release et son texte sont créés à la main ; ici on ne fait qu'attacher
-      # les archives, sans toucher au corps de la release (pas de notes générées).
-      - name: Attacher les archives à la release
+      # Le texte de la release vit dans docs/RELEASE_NOTES.md, écrit à la main
+      # AVANT de poser le tag et versionné avec le code qu'il décrit. Il part donc
+      # avec les archives, sans rien à coller après coup : l'action créant la
+      # release quand elle n'existe pas encore, elle naissait vide.
+      # generate_release_notes reste à false : la liste plate des sujets de commits
+      # n'apprend rien à un joueur.
+      - name: Attacher les archives et le texte à la release
         uses: softprops/action-gh-release@v2
         with:
           files: artefacts/**/artouste-*
+          body_path: docs/RELEASE_NOTES.md
           generate_release_notes: false
 
   page:
@@ -159,8 +164,12 @@ jobs:
             echo "La page porte déjà le numéro $GITHUB_REF_NAME."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Identité de l'auteur du dépôt, et non celle du robot : ce commit est
+          # celui de la release que vous venez de poser, pas la contribution d'un
+          # tiers. Signer avec le compte du robot le faisait apparaître dans la
+          # liste des contributeurs du projet.
+          git config user.name "Olivier Booklage"
+          git config user.email "obooklage@free.fr"
           git add docs/index.html
           git commit -m "docs(page): Version $GITHUB_REF_NAME"
           git push

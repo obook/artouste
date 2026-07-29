@@ -245,6 +245,7 @@ const std::set<std::string>& clesConnues() {
                                                "turbine_demarree",
                                                "demo",
                                                "arbres",
+                                               "souffle",
                                                "verifier_maj",
                                                "radio_url",
                                                "soleil_vitesse",
@@ -507,6 +508,10 @@ Config loadConfig(const std::filesystem::path& path) {
             /* Défaut à vrai : seule une valeur explicitement négative désactive les
                arbres (toute autre valeur, dont "1"/"oui"/"true", les garde). */
             cfg.trees = !(value == "0" || value == "non" || value == "false");
+        } else if (key == "souffle") {
+            /* Défaut à vrai, même logique que "arbres" : seule une valeur
+               explicitement négative coupe la poussière du souffle rotor. */
+            cfg.rotorWash = !(value == "0" || value == "non" || value == "false");
         } else if (key == "verifier_maj") {
             /* Défaut à vrai : seule une valeur explicitement négative coupe la
                recherche de mise à jour (même logique que "arbres"). */

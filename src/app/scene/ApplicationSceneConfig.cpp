@@ -57,6 +57,15 @@ void Application::initSceneConfig() {
         m_treesEnabled = false;
     }
 
+    /* Souffle rotor : clé "souffle" de la configuration, forcée à faux par la
+       variable d'environnement ARTOUSTE_NO_SOUFFLE (prioritaire). Le nuage n'est
+       ni semé ni dessiné quand elle est fausse ; les ressources graphiques, elles,
+       ont déjà été créées par initSceneShaders (voir m_souffleFx). */
+    m_souffleEnabled = config.rotorWash;
+    if (std::getenv("ARTOUSTE_NO_SOUFFLE") != nullptr) {
+        m_souffleEnabled = false;
+    }
+
     /* Budget d'arbres : clé "arbres_max" de la config, surchargée par la variable
        d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
        loadTerrain. C'est le principal levier de performance (poste de rendu le plus

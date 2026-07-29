@@ -65,6 +65,7 @@ add_executable(artouste
     app/CycleJourNuit.cpp
     app/DemoPilot.cpp
     app/LandingAutopilot.cpp
+    app/SouffleRotor.cpp
     app/MiseAJour.cpp
     app/combat/CombatMode.cpp
     app/combat/ZombieHorde.cpp
@@ -110,6 +111,7 @@ add_executable(artouste
     render/combat/ExplosionFx.cpp
     render/combat/Projectiles.cpp
     render/combat/ZombieEyes.cpp
+    render/SouffleFx.cpp
     render/Clouds.cpp
     render/HelicopterModel.cpp
     render/Skybox.cpp

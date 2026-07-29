@@ -52,6 +52,18 @@ demo 0
 # ARTOUSTE_NO_TREES, si définie, force la désactivation quelle que soit cette clé.
 arbres 1
 
+# souffle : 1 = souffle rotor activé (défaut) -- sous une quinzaine de mètres, le
+# rotor soulève un nuage de poussière qui s'écarte en anneau puis retombe autour
+# de l'appareil, d'autant plus dense qu'on est près du sol et que le rotor tourne
+# vite : au contact et plein pas, c'est un nuage ; à cinq mètres, un voile ; à dix,
+# une trace.
+# Sa couleur est prise sur l'orthophoto du terrain, donc ocre sur une piste, grise
+# sur un éboulis, blanche sur la neige, et les embruns remplacent la poussière
+# au-dessus de l'eau. 0 = pas de poussière (le nuage coûte quelques centaines de
+# billboards, c'est peu, mais autant le dire). La variable d'environnement
+# ARTOUSTE_NO_SOUFFLE, si définie, force la désactivation.
+souffle 1
+
 # verifier_maj : 1 = recherche d'une mise à jour au lancement (défaut). Le
 # simulateur demande, dans un fil séparé qui ne retarde rien, le numéro de la
 # dernière version publiée. S'il y en a une plus récente que la vôtre, le menu de

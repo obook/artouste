@@ -213,6 +213,10 @@ bool Application::mainLoop() {
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);
         advanceRotor(rotorFraction, frameDt);
 
+        /* Souffle rotor : poussière soulevée au ras du sol. Pas de temps nul en
+           pause, ce qui fige le nuage en place au lieu de le faire disparaître. */
+        updateSouffle(base, rotorFraction, controls.collective, frozen ? 0.0f : frameDt);
+
         /* Tuiles fines : la fenêtre de détail suit la caméra, et non l'appareil,
            parce que c'est elle qui décide de ce qui est à l'écran (vue orbite
            lointaine comprise). Hors du test de pause, à dessein : le

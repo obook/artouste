@@ -13,12 +13,14 @@
 
 #include "app/AppConstants.hpp"
 #include "app/Application.hpp"
+#include "render/LoadedHelicopter.hpp"
 #include "render/Mesh.hpp"
 #include "render/Model.hpp"
 #include "render/ModelLoader.hpp"
 #include "render/Primitives.hpp"
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
+#include "render/SouffleFx.hpp"
 #include "render/Texture.hpp"
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/Projectiles.hpp"
@@ -61,6 +63,15 @@ constexpr std::size_t PROJECTILE_CAPACITY = 64;
  */
 constexpr std::size_t ZOMBIE_EYES_CAPACITY = ZOMBIE_CAPACITY * 2;
 
+/*
+ * Nombre maximal de bouffées de poussière vivantes sous l'appareil (souffle
+ * rotor). C'est le seul plafond de coût de l'effet : 600 billboards translucides
+ * de quelques mètres, dessinés en un appel, restent négligeables devant la
+ * végétation. La simulation et le tampon GPU partagent cette valeur, le second
+ * ne devant jamais être plus petit que la première.
+ */
+constexpr std::size_t SOUFFLE_CAPACITY = 600;
+
 } /* namespace */
 
 void Application::initSceneShaders() {
@@ -94,7 +105,18 @@ void Application::initSceneShaders() {
                                                          assets / "shaders" / "explosion.frag");
     m_zombieEyesShader = std::make_unique<render::Shader>(assets / "shaders" / "zombie_eyes.vert",
                                                           assets / "shaders" / "zombie_eyes.frag");
+    m_souffleShader = std::make_unique<render::Shader>(assets / "shaders" / "souffle.vert",
+                                                       assets / "shaders" / "souffle.frag");
     m_sky = std::make_unique<render::Skybox>();
+
+    /* Souffle rotor : poussière soulevée près du sol. Les ressources sont
+       toujours créées (un programme et un petit tampon), c'est m_souffleEnabled,
+       calculé plus tard par initSceneConfig, qui décide de faire vivre ou non le
+       nuage. Le rayon du rotor vient du modèle de l'appareil : c'est lui qui
+       fixe l'anneau d'émission au sol et la hauteur au-delà de laquelle le
+       souffle ne soulève plus rien. */
+    m_souffle = SouffleRotor(render::LoadedHelicopter::MAIN_ROTOR_RADIUS, SOUFFLE_CAPACITY);
+    m_souffleFx = std::make_unique<render::SouffleFx>(SOUFFLE_CAPACITY);
 
     /* Mode zombie : pack de personnages skinnés (marche + bras animés) chargé une
        seule fois (indépendant de la carte), voir CREDITS.md pour l'attribution.

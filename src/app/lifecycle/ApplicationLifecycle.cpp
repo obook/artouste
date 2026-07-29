@@ -32,6 +32,7 @@
 #include "render/Model.hpp"
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
+#include "render/SouffleFx.hpp"
 #include "render/Terrain.hpp"
 #include "render/Texture.hpp"
 #include "render/combat/ExplosionFx.hpp"

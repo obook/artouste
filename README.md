@@ -115,6 +115,13 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
 * Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
+* Souffle du rotor au ras du sol : sous une quinzaine de mètres, l'appareil soulève
+  un nuage de poussière qui s'écarte en anneau puis remonte autour de lui, d'autant
+  plus dense qu'il est près du sol, que le rotor tourne vite et que le pas est fort :
+  un nuage au contact, un voile à cinq mètres, une trace à dix. Sa
+  couleur est prise sur la photo aérienne du terrain, donc ocre sur une piste,
+  grise sur un éboulis, et remplacée par des embruns au-dessus de l'eau. La clé
+  `souffle` de la configuration l'éteint.
 * Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
 ## Commandes

@@ -152,6 +152,9 @@ Application::optionsEffectives(const std::filesystem::path& dossierCarte) const 
 
 void Application::loadTerrain(const std::string& name) {
     m_terrainName = name;
+    /* Le nuage de poussière porte des coordonnées monde : gardé d'une carte à
+       l'autre, il réapparaîtrait n'importe où sur la nouvelle. */
+    m_souffle.vider();
     /* Le terrain qu'on va bâtir reflétera le disque tel qu'il est maintenant,
        tuiles comprises : ce qu'a pu faire le gestionnaire de cartes est donc pris
        en compte, et le drapeau qui le signalait n'a plus lieu d'être. */

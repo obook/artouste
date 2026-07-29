@@ -16,6 +16,7 @@
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
 #include "app/MiseAJour.hpp"
+#include "app/SouffleRotor.hpp"
 #include "app/cartes/FabriqueTuiles.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
@@ -50,6 +51,7 @@ class SkinnedZombies;
 class ExplosionFx;
 class Projectiles;
 class ZombieEyes;
+class SouffleFx;
 } /* namespace artouste::render */
 
 namespace artouste::input {
@@ -393,6 +395,13 @@ private:
        à la sortie de la turbine, d'intensité croissante avec le régime). */
     void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
 
+    /* Souffle rotor : avance le nuage de poussière soulevé près du sol (émission
+       sous l'axe du mât, que 'base' situe dans le monde) puis le dessine. Un pas
+       de temps nul fige le nuage sans le faire disparaître (pause).
+       Définies dans ApplicationRenderEffects.cpp. */
+    void updateSouffle(const mat4& base, float rotorFraction, float collective, float dt);
+    void drawSouffle(const RenderContext& ctx);
+
     /* --- HUD -------------------------------------------------------------------- */
 
     /* Remplit les données instrumentales du HUD (altitude, vitesse, cap, régimes...)
@@ -493,6 +502,8 @@ private:
         m_explosionShader; /* mode zombie : explosion 3D animée (émissive) */
     std::unique_ptr<render::Shader>
         m_zombieEyesShader; /* mode zombie : lueur des yeux (billboard additif) */
+    std::unique_ptr<render::Shader>
+        m_souffleShader; /* souffle rotor : poussière en billboards instanciés */
     std::unique_ptr<render::Skybox> m_sky;
     std::unique_ptr<render::Mesh> m_shadowDisc;
     std::unique_ptr<render::Mesh> m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -507,6 +518,16 @@ private:
     std::unique_ptr<render::Buildings> m_buildings;   /* bâtiments 3D (BD TOPO extrudée) */
     std::unique_ptr<render::Vegetation> m_vegetation; /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds> m_clouds;         /* nuages en billboards (prototype) */
+
+    /* --- Souffle rotor -------------------------------------------------------------
+       Poussière soulevée au ras du sol : la simulation (app::SouffleRotor) est
+       indépendante du rendu (render::SouffleFx), qui n'existe que si l'effet est
+       activé (clé "souffle" de la configuration). */
+
+    SouffleRotor m_souffle;
+    std::unique_ptr<render::SouffleFx> m_souffleFx;
+    bool m_souffleEnabled = true;
+
     /* --- Mode zombie -------------------------------------------------------------- */
 
     std::unique_ptr<render::SkinnedZombies>

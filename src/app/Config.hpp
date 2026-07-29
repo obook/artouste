@@ -46,6 +46,13 @@ struct Config {
        d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
     bool trees = true;
 
+    /* Souffle rotor : si vrai (défaut), l'appareil soulève un nuage de poussière
+       quand il vole à moins d'une douzaine de mètres du sol, teinté de la couleur
+       du terrain sous lui. Mettre "souffle 0" dans config.txt pour s'en passer ;
+       la variable d'environnement ARTOUSTE_NO_SOUFFLE, si définie, force la
+       désactivation. */
+    bool rotorWash = true;
+
     /* Recherche de mise à jour : si vrai (défaut), le simulateur demande au
        lancement, dans un fil séparé, le numéro de la dernière version publiée et
        propose au menu d'aller la chercher sur la page du projet. Rien n'est

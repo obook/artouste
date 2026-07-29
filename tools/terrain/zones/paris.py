@@ -78,4 +78,14 @@ ZONE = {
         ("Hôpital Lariboisière", 2.3531, 48.8829),
         ("Hôpital de la Pitié-Salpêtrière", 2.3653, 48.8371),
     ],
+    # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
+    # media/gt_installation_hapi.pdf) sur le pad de départ, l'héliport de Paris.
+    # Azimut = cap de départ (90°, approche vers l'est) : c'est le seul axe
+    # dégagé, le terrain ouvert de l'héliport s'étendant à l'ouest de l'aire,
+    # alors que les tours du Front de Seine et le périphérique bordent l'est et
+    # le nord. Ce n'est pas un relevé des trouées publiées, qui suivent la Seine.
+    # Pente 6 % : valeur usuelle pour une hélistation.
+    "hapi": [
+        ("Héliport de Paris (Issy-les-Moulineaux)", 2.274772, 48.833076, 90, 6),
+    ],
 }

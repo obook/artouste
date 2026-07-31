@@ -605,7 +605,7 @@ Trois points à contrôler sur chacun :
    son emprise photographiée.
 
 - [x] Tour Eiffel
-- [ ] Arc de Triomphe
+- [x] Arc de Triomphe
 - [ ] Sacré-Coeur
 - [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
 - [ ] Panthéon -- imparfait, voir le point 10

@@ -46,6 +46,18 @@
 # sommet, d'où deux facteurs plutôt qu'un.
 2.294512 48.858256 sol 44 1.029 1.119 90 paris/TourEiffel-ba.ac Tour Eiffel
 
+# Arc de Triomphe.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO (idx unique, 7 points, 46,2 m) :
+# 2,295045 / 48,873774, ses deux façades de 45 m courant à 26 deg modulo 180 et
+# ses deux flancs de 22 m à 116. Le modèle présente ses façades selon X, soit un
+# cap de 90 : il faut donc le tourner de 116 pour les amener sur 26.
+#
+# Échelles : l'arc du modèle mesure 47,3 x 25,0 m pour 44,9 m de haut, contre
+# 45 x 22 pour 49,5 en vrai. Il est donc trop LARGE, là où la tour Eiffel était
+# trop étroite : ces modèles n'ont pas d'échelle commune, chacun se mesure.
+2.295045 48.873774 sol 116 0.951 1.102 45 paris/ArcDeTriomphe-ba.ac Arc de Triomphe
+
 # Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
 # 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
 # pose unique ne pouvait satisfaire ensemble. Découpé avec

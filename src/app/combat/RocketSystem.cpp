@@ -52,11 +52,65 @@ constexpr float EXPLOSION_DURATION_S = 1.2f;
 
 /* Durée de vie d'une trace de brûlure au sol (s) : s'estompe progressivement. */
 constexpr float SCORCH_DURATION_S = 300.0f;  /* 5 minutes */
+
+/* Forme et taille de la trace au sol (voir RocketSystem::ScorchView).
+
+   Taille : rayon de base à bout portant, puis élargissement avec la portée du
+   tir (une roquette partie de loin arrive plus vite et plus bas), plafonné pour
+   qu'un tir à travers toute l'arène ne laisse pas un cratère absurde. Ces
+   valeurs ne changent RIEN à la zone létale, qui reste EXPLOSION_RADIUS_M : la
+   trace est un décalque, pas une hitbox. */
+constexpr float SCORCH_BASE_RADIUS_M = 3.0f;
+constexpr float SCORCH_MAX_RADIUS_M  = 5.0f;
+constexpr float SCORCH_RANGE_REF_M   = 150.0f;  /* portée à laquelle le gain est atteint */
+constexpr float SCORCH_RANGE_GAIN    = 0.5f;    /* +50 % de rayon à cette portée */
+
+/* Forme : rapport grand axe / petit axe. Un cône qui frappe le sol sous
+   l'incidence i y projette une tache de rapport 1/sin(i), mais cette loi diverge
+   à l'horizontale : appliquée telle quelle, elle saturerait son plafond pour
+   presque tous les tirs réels (canon fixe, nez à peine piqué, donc incidence
+   d'arrivée souvent sous 20 degrés) et toutes les traces se ressembleraient. On
+   garde donc la même tendance -- plus l'arrivée est rasante, plus la tache
+   s'allonge -- sur une interpolation bornée, qui étale les cas de jeu entre le
+   rond et l'allongement maximal. */
+constexpr float SCORCH_ELONGATION_GAIN = 1.6f;  /* allongement maximal : 1 + ce gain */
 /* Filet de sécurité : au-delà, on retire la plus ancienne trace. Un tir
    quasi continu pendant les 5 minutes de vie d'une trace produirait bien plus
    d'impacts que ce plafond (des centaines) ; dans ce cas les plus anciennes
    disparaissent avant terme plutôt que de multiplier les décalques à l'écran. */
 constexpr std::size_t MAX_SCORCHES = 400;
+
+/* Forme et taille de la trace laissée par une roquette qui vient d'exploser :
+   'velocity' est sa vitesse à la détonation, 'rangeM' la distance horizontale
+   parcourue depuis le canon. Voir RocketSystem::ScorchView pour le raisonnement.
+   Une roquette sans vitesse exploitable (cas dégénéré) laisse une trace ronde. */
+struct ScorchShape {
+    float radius;
+    float elongation;
+    float yaw;
+};
+
+ScorchShape scorchShapeFor(const vec3& velocity, float rangeM) noexcept {
+    const float speed = glm::length(velocity);
+    if (speed < 1e-4f) {
+        return ScorchShape{SCORCH_BASE_RADIUS_M, 1.0f, 0.0f};
+    }
+    const vec3 dir = velocity / speed;
+
+    /* Sinus de l'incidence : 1 pour une chute verticale, 0 en rasant le sol. */
+    const float sinIncidence = saturate(-dir.y);
+    const float elongation   = 1.0f + SCORCH_ELONGATION_GAIN * (1.0f - sinIncidence);
+
+    const float growth = 1.0f + SCORCH_RANGE_GAIN * std::min(1.0f, rangeM / SCORCH_RANGE_REF_M);
+    const float radius = std::min(SCORCH_MAX_RADIUS_M, SCORCH_BASE_RADIUS_M * growth);
+
+    /* Direction horizontale du tir : grand axe de la tache. Une roquette
+       parfaitement verticale n'a pas de direction au sol, mais son élongation
+       vaut alors 1 et l'orientation n'a plus d'effet visible. */
+    const float yaw = std::atan2(dir.x, dir.z);
+
+    return ScorchShape{radius, elongation, yaw};
+}
 }  /* namespace */
 
 void RocketSystem::spawn(const vec3& origin, const vec3& dir) noexcept {
@@ -66,6 +120,7 @@ void RocketSystem::spawn(const vec3& origin, const vec3& dir) noexcept {
     Rocket r;
     r.position  = origin;
     r.velocity  = dir * ROCKET_SPEED_MS;
+    r.origin    = origin;
     r.lifetimeS = ROCKET_LIFETIME_S;
     m_rockets.push_back(r);
 }
@@ -102,9 +157,12 @@ RocketSystem::UpdateResult RocketSystem::update(
                     if (z.state != ZombieHorde::State::Alive) {
                         continue;
                     }
-                    const vec3 c = z.position + vec3{0.0f, DIRECT_HIT_HEIGHT_M, 0.0f};
+                    /* Sphère mise à l'échelle du zombie : un largueur
+                       (ZombieHorde::BROOD_SCALE) est une cible plus haute et
+                       plus large, comme sa silhouette le laisse attendre. */
+                    const vec3 c = z.position + vec3{0.0f, DIRECT_HIT_HEIGHT_M * z.scale, 0.0f};
                     const physics::RaySphereHit hit =
-                        physics::raySphere(prevPos, dir, c, DIRECT_HIT_RADIUS_M);
+                        physics::raySphere(prevPos, dir, c, DIRECT_HIT_RADIUS_M * z.scale);
                     if (hit.hit && hit.distance <= segLen) {
                         detonate = true;
                         center   = prevPos + dir * hit.distance;
@@ -137,11 +195,17 @@ RocketSystem::UpdateResult RocketSystem::update(
         ++res.explosions;
         m_explosions.push_back(Explosion{center, 0.0f});
         res.explosionPositions.push_back(center);
-        /* Trace de brûlure persistante au sol (s'estompe en ~45 s). */
+        /* Trace de brûlure persistante au sol (s'estompe en ~45 s), de forme et
+           de taille propres à cet impact : angle d'arrivée et portée du tir
+           (voir scorchShapeFor). Figées ici une fois pour toutes, la roquette
+           n'existant plus ensuite. */
         if (m_scorches.size() >= MAX_SCORCHES) {
             m_scorches.erase(m_scorches.begin());  /* retire la plus ancienne */
         }
-        m_scorches.push_back(Scorch{center, 0.0f});
+        const float rangeM =
+            glm::length(vec2{center.x - r.origin.x, center.z - r.origin.z});
+        const ScorchShape shape = scorchShapeFor(r.velocity, rangeM);
+        m_scorches.push_back(Scorch{center, 0.0f, shape.radius, shape.elongation, shape.yaw});
 
         int                                killsHere = 0;
         std::vector<ZombieHorde::Zombie>& zombies   = horde.zombies();
@@ -196,6 +260,10 @@ std::vector<RocketSystem::RocketView> RocketSystem::rockets() const {
     return out;
 }
 
+void RocketSystem::addExplosion(const vec3& center) {
+    m_explosions.push_back(Explosion{center, 0.0f});
+}
+
 std::vector<RocketSystem::ExplosionView> RocketSystem::explosions() const {
     std::vector<ExplosionView> out;
     out.reserve(m_explosions.size());
@@ -215,7 +283,10 @@ std::vector<RocketSystem::ScorchView> RocketSystem::scorches() const {
         ScorchView v;
         v.center = s.center;
         /* Pleine au début puis fondu linéaire jusqu'a 0 sur la durée de vie. */
-        v.alpha  = 1.0f - s.age / SCORCH_DURATION_S;
+        v.alpha      = 1.0f - s.age / SCORCH_DURATION_S;
+        v.radius     = s.radius;
+        v.elongation = s.elongation;
+        v.yaw        = s.yaw;
         out.push_back(v);
     }
     return out;

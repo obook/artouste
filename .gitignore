@@ -35,6 +35,7 @@ core.*
 # Editors / IDEs
 # On ignore .vscode sauf la configuration de compilation partagee du projet.
 .vscode/*
+!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/c_cpp_properties.json

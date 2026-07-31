@@ -84,6 +84,30 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Prévoir dans le fichier de configuration une URL pour un flux radio + commandes radio on/off et mixage Heli/Music (balance entre les deux) : fait, clé `radio_url` de config.txt, touche `K` et balance `-`/`+`
 
+- [x] Varier la clairance de décollage : six formulations tirées au sort dans `ApplicationRotorRadio.cpp`, sans jamais répéter celle du décollage précédent, avec salutation calée sur l'heure du cycle jour/nuit (`good morning`, `good afternoon`, `good evening`). Durée du sous-titre proportionnelle à la longueur du message.
+
+### Séquence radio ATC complète
+
+Aller au-delà de la simple clairance : un échange en plusieurs temps, conforme à la phraséologie OACI (Doc 9432), du contact initial au changement de fréquence, plus des phrases d'ambiance en vol.
+
+**Séquence visée**
+
+1. Contact initial du pilote au plein régime (`request take-off`).
+2. Clairance de la tour, 3 à 5 s plus tard (déjà en place, avec ses variantes).
+3. Readback du pilote, obligatoire en phraséologie OACI.
+4. Compte rendu `airborne` en montée, puis `frequency change approved` de la tour.
+5. Phrases d'ambiance espacées en vol (trafic signalé, QNH, message à toutes stations).
+
+**Points à trancher avant de commencer**
+
+- **Nom du terrain.** Des fichiers son figés diraient toujours le même terrain, alors que le nom vient de `helipads.txt` et change sur les neuf cartes. Piste retenue : garder la synthèse à l'exécution pour les phrases qui nomment la tour, et ne figer en WAV que les phrases neutres (readback, changement de fréquence, ambiance).
+- **Indicatif.** Le message actuel dit `Fox-Bravo`. Une immatriculation Gendarmerie (F-MJGN, indicatif `Gendarmerie Hotel November`) serait plus juste pour une Alouette II, mais il faudra la reprendre partout d'un coup.
+- **Verrou de rotor.** Le rotor reste bloqué jusqu'à la fin de l'annonce (`setRotorHold`). Avec trois échanges avant le décollage, l'attente au pad passerait à une dizaine de secondes : libérer plutôt dès la fin de la clairance, et laisser le readback se jouer pendant la montée en régime.
+- **Filtre radio.** `radioize()` applique déjà passe-bande, saturation, squelch et roger beep. Des WAV filtrés en amont devraient donc emprunter un autre chemin de lecture, comme les sons de combat, sous peine d'être filtrés deux fois.
+- **Voix.** Le jeu embarque la voix clustergen `cmu_us_slt` compilée dans le binaire. Toute phrase pré-enregistrée doit sortir de la même voix, sinon la tour change de timbre en cours d'échange.
+
+**Ce qu'il ne faut pas annoncer.** Le modèle de vol ignore le vent et le ciel est vide : une clairance qui annoncerait un vent établi, un trafic en approche ou une attente mentirait au pilote. S'en tenir à ce qui est simulé, ou simuler d'abord.
+
 ### Mode demo
 
 **Route de la démo** (parcours du pilote automatique ; corriger l'ordre et les altitudes ici, c'est la référence) :
@@ -677,7 +701,7 @@ Trois points à contrôler sur chacun :
   Même brume que le terrain / les bâtiments ;
   test alpha (pas de mélange), donc l'ordre de dessin n'importe pas. Chaque maille
   de la grille de semis donne au plus un arbre, donc l'espacement fixe la densité
-  (1 arbre / espacement^2). Un budget global (~1,6 M, clé `tree_max` de config.txt ou
+  (1 arbre / espacement^2). Un budget global (~1,6 M, clé `arbres_max` de config.txt ou
   la variable `ARTOUSTE_TREE_MAX`) éclaircit ensuite le semis de façon uniforme sur les
   grandes cartes très boisées (Bordeaux passe de ~4,9 M à ~1,6 M) pour limiter le
   surdessin des billboards croisés ; le baisser (500 000, voire 300 000) allège la charge
@@ -721,6 +745,252 @@ Trois points à contrôler sur chacun :
   ombres portées au sol ; approche volumétrique (ray marching) pour un plus grand
   réalisme, bien plus lourde.
 
+## Mode zombie
+
+### Largueur (boss) et yeux lumineux
+
+- [x] Une manche sur cinq est désormais une manche de boss (`WaveManager::isBossWave`,
+  `BOSS_WAVE_INTERVAL`). Un largueur (`ZombieHorde::Type::Brood`) y apparaît dès
+  l'ouverture, escorté de la moitié seulement des marcheurs habituels, puis lâche
+  un marcheur toutes les trois secondes autour de lui tant qu'il tient debout. La
+  manche ne peut donc pas se gagner en patientant : l'anti-blocage de 90 secondes est
+  suspendu tant qu'il vit. Il encaisse cinq roquettes (5000 PV contre 100 pour un
+  marcheur), avance à 45 % de la vitesse d'un marcheur, et son modèle comme sa sphère
+  de collision sont agrandis 3,2 fois, soit près de six mètres de haut (un seul champ
+  `scale` pour les deux, afin que la silhouette et la cible ne divergent pas).
+  Neutralisé : 500 points, annonce `LARGUEUR NEUTRALISÉ !` et jauge de vie au HUD
+  tout le combat. Le râle `rale.wav`, jusqu'ici inutilisé,
+  annonce son apparition (non spatial comme l'annonce de vague : il apparaît à
+  quelques centaines de mètres, un son spatialisé y serait inaudible).
+
+- [x] Yeux lumineux : deux billboards additifs par zombie (`render::combat::ZombieEyes`,
+  `assets/shaders/zombie_eyes.*`), verts pour un marcheur et rouges pour un largueur,
+  ce qui signale le boss avant même qu'on distingue sa silhouette. Ils sont calés sur la
+  matrice d'instance du corps (`ZombieHorde::buildEyes`), pas sur l'os du cou animé par
+  le squelette : à distance de jeu, l'écart ne se voit pas, et cela évite de poser une
+  pose par instance. La lueur s'éteint pendant l'animation de chute, et grossit avec
+  la distance pour rester repérable depuis l'hélicoptère.
+
+    Ce grossissement a demandé deux essais. Viser une taille apparente constante
+  (rayon proportionnel à la distance) rendait les yeux parfaitement lisibles de loin,
+  mais donnait à moyenne portée des lueurs d'un mètre de large, bien plus grosses que
+  la tête qui les porte : des boules vertes flottantes plutôt que des yeux. La loi
+  retenue croît en racine de la distance, plafonnée à cinq fois le rayon de près
+  (atteint vers 200 m) : la taille apparente diminue toujours quand on s'éloigne, mais
+  moins vite que la perspective, et la lueur reste solidaire de la silhouette. Le
+  plafond a été arrêté à mi-chemin entre les deux essais, la première loi donnant des
+  lueurs trop grosses et la deuxième trop discrètes : à 100 m, le rayon vaut environ
+  46 cm, contre 60 et 38 cm pour les deux essais.
+
+### Sons de combat et sphère de collision de l'appareil
+
+- [x] Deux défauts liés, signalés en jeu : le bruit d'impact d'un pneu sur l'appareil
+  ne s'entendait pas, et le bruit de lancer saturait à courte distance. Le lancer
+  utilise un échantillon de sept secondes alors que le geste est instantané : une horde
+  qui lance en rafale empilait une dizaine de queues de son, dont la somme saturait la
+  sortie et masquait le reste. Les instances simultanées d'un même son sont désormais
+  plafonnées (trois en général, deux pour le lancer), le lancer est passé de 0,6 à 0,35
+  de volume, et l'impact de 0,8 à plein volume, son échantillon étant le plus discret
+  du lot (une quinzaine de décibels sous les autres) alors qu'il porte l'information la
+  plus utile au joueur.
+
+    Seconde cause pour l'impact : la sphère de collision de l'appareil ne faisait que
+  2,5 m de rayon, soit la bulle de la cabine, sur une Alouette II qui mesure près de dix
+  mètres poutre de queue comprise. Un pneu qui passait visiblement dans la machine la
+  traversait sans rien déclencher, ni dégâts ni bruit. Portée à 4 m.
+
+### Traces d'impact des roquettes
+
+- [x] Chaque impact laisse désormais une trace de forme et de taille propres, au lieu
+  du même rond de 3,5 m pour tous. La FORME vient de l'angle d'arrivée : une roquette
+  qui tombe à la verticale creuse un rond, une roquette rasante étire sa tache le long
+  de sa trajectoire (orientée par `ScorchView::yaw`, et décalée vers l'avant, la gerbe
+  partant devant le point d'impact). La TAILLE vient de la portée du tir : +50 % de
+  rayon à 150 m, plafonné à 5 m. L'ellipse conserve sa surface (grand axe multiplié par
+  la racine de l'allongement, petit axe divisé par elle), sans quoi une trace allongée
+  serait aussi une trace démesurée.
+
+    La loi physique exacte pour la forme (rapport 1/sin de l'incidence, la tache d'un
+  cône incliné) a été écartée : elle diverge à l'horizontale et, avec un canon fixe et
+  un nez à peine piqué, l'incidence d'arrivée reste souvent sous 20 degrés, si bien que
+  presque tous les tirs auraient saturé le plafond et que toutes les traces se seraient
+  de nouveau ressemblées. On garde la tendance sur une interpolation bornée, qui étale
+  les cas de jeu entre le rond et l'allongement maximal.
+
+    Rien ne change côté jeu : la zone létale reste `EXPLOSION_RADIUS_M`, la trace est
+  un décalque. La boule de feu, elle, garde son rayon fixe (elle pourrait suivre la même
+  logique).
+
+    Pistes pour aller plus loin : types de zombies (coureur, colosse, cracheur) plutôt
+  qu'une horde uniforme ; plafond toxique qui monte avec les manches ; ravitaillement
+  en munitions à récupérer en se posant ; manche bonus entre deux vagues.
+
+### Yeux qui flottaient devant le visage
+
+- [x] Défaut signalé en jeu : les lueurs vertes ne tenaient pas sur la tête. Elles
+  étaient posées à un point fixe du repère du modèle (1,62 m de haut, 11 cm en avant),
+  au motif qu'à distance de jeu l'écart avec l'os du cou ne se verrait pas. Mesure faite
+  sur le pack : le crâne s'écarte de ce point de 13 à 34 cm selon la variante et
+  l'instant du cycle, dérive de root motion déjà compensée, et il se déplace lui-même
+  dans une boule de 9 à 29 cm de rayon pendant la marche. Un crâne mesurant 26 cm, aucun
+  point fixe ne pouvait convenir : les neuf variantes du pack ne partagent même pas la
+  même position de tête au repos (jusqu'à 27 cm d'écart entre elles).
+
+    Les yeux sont donc calibrés au chargement sur l'os qui pilote le haut de la tête,
+  variante par variante (`SkinnedModel::eyePoints`) : on repère cet os par vote des
+  sommets de la tranche haute, puis on exprime les deux yeux DANS son repère. Le rendu
+  les relit sur la pose qu'il vient de dessiner (`SkinnedZombies::eyeAnchors`), au prix
+  de deux produits matrice-point par lot déjà posé. Vérifié sur les neuf variantes et
+  vingt-quatre instants du cycle : les ancrages restent tous dans la boîte du crâne.
+
+    Deux essais en vol ont ensuite recalé le placement, qui partait de la boîte du
+  crâne. "Sur les oreilles et trop gros de près" : cette boîte fait 18 à 29 cm de large
+  (oreilles et cheveux compris), si bien qu'un demi-écart pris sur elle visait les
+  oreilles, alors que l'écart entre pupilles vaut 6,4 cm quelle que soit la coiffure ;
+  et le rayon de base de 13 cm donnait une boule de 26 cm sur une tête de 26. Le repère
+  devient donc le NEZ, point le plus avancé du crâne, qui donne l'axe du visage, la
+  hauteur et l'avancée ; le rayon tombe à 3,2 cm, la croissance à distance étant
+  relancée (référence à 1 m, plafond à 15) pour garder le loin lisible : 32 cm de rayon
+  à 100 m contre 46 avant, mais quatre fois moins au contact.
+
+    "Sur le front" : le point le plus avancé n'est pas toujours le nez -- sur trois
+  variantes c'est le front ou une mèche, et le regard remontait. On retient désormais la
+  plus basse des deux estimations, celle tirée du nez et celle tirée de la taille de la
+  tête, bornée entre 11 et 18 cm sous le sommet du crâne. Mesuré après correction : 11,0
+  à 15,6 cm selon la variante, contre 8,0 à 13,6 avant.
+
+    Retenu en l'état après essai en vol : juste sur la plupart des variantes, approximatif
+  sur quelques-unes. Le pack ne donne pas de repère d'yeux, et ses neuf têtes ne partagent
+  ni la même proportion ni le même point le plus avancé ; aller plus loin demanderait un
+  ancrage saisi à la main, variante par variante.
+
+    La horde ne fournit plus que la couleur et le rayon (`buildEyeTints`), dans le même
+  ordre que les matrices et les `kind` : elle ignore où le squelette a posé la tête, ce
+  qui n'est pas son affaire.
+
+### Pas d'annonce de la tour en mode zombie
+
+- [x] Le mode zombie n'annonce plus rien : on entre en combat turbine et rotor déjà au
+  régime, face à une horde, et une autorisation de décollage n'y a pas sa place. Le
+  verrou de rotor qui accompagnait l'annonce saute avec elle, sans quoi l'appareil
+  resterait cloué au pad en attendant une réplique qui ne vient plus.
+
+    Deux effets de bord relevés en chemin, corrigés dans la foulée pour le vol libre.
+  D'abord la voix lisait "Dax-Seyresse (pad est) tower" : le nom d'hélipad porte une
+  précision entre parenthèses que la synthèse prononce telle quelle (Dax et Paris sont
+  concernés). Elle est retirée comme l'était déjà le préfixe "Aérodrome de" -- la tour
+  annonce le terrain, pas le pad. Ensuite l'annonce ne se réarmait qu'en voyant la
+  turbine redescendre sous la moitié du régime : deux vols lancés d'affilée turbine
+  chaude, et seul le premier était annoncé. `applyMenuSession` réarme désormais
+  explicitement (`resetRadioMessage`), sous-titre compris.
+
+### Le largueur emporte ce qu'il a lâché
+
+- [x] Abattre le largueur fait éclater sur place tous les marcheurs qu'il a lâchés :
+  une boule de feu et un cri par marcheur, et ils comptent comme des mises à mort, le
+  joueur les ayant gagnées en abattant le boss. Les marcheurs venus du bord de l'arène,
+  eux, continuent leur chemin. La manche de boss cesse ainsi de traîner : ce n'était plus
+  qu'un ménage de fin, sans enjeu, une fois le largueur tombé.
+
+    Ces marcheurs rapportent 25 points CHACUN, et non le barème du kill multiple utilisé
+  pour le souffle d'une roquette : celui-ci plafonne à trois têtes, ce qui convenait à une
+  explosion mais pas ici, où le largueur peut en avoir lâché quinze. Un largueur abattu
+  vaut donc 500 points de prime, plus la roquette qui l'achève, plus 25 par marcheur
+  emporté.
+
+    Un marcheur porte donc désormais son origine (`ZombieHorde::Zombie::fromBrood`, posé
+  par `spawnBroodling`), et ses yeux sont ROUGES comme ceux du largueur au lieu de verts.
+  La couleur prévient : tout ce qui luit rouge tombera avec le boss. On distingue le
+  largueur de sa portée à la taille de la lueur, trois fois plus large à son échelle.
+
+    Le `RocketSystem` accepte pour l'occasion une détonation qui ne vient d'aucun tir
+  (`addExplosion`) : purement visuelle, sans dégâts de zone ni trace au sol, puisque ce
+  n'est pas un impact de roquette.
+
+### Carburant perdu au contact du sol
+
+- [x] En mode zombie, toucher le sol fend le réservoir : rien en deçà de 3 m/s (un
+  posé), puis 2 litres par (m/s) d'excès AU CARRÉ. Le carré plutôt qu'une droite,
+  qui faisait fuir trop de kérosène à chaque contact : la fuite suit l'énergie du
+  choc, si bien qu'une touche un peu ferme se paie en minutes de vol (8 L à 5 m/s,
+  50 L à 8 m/s, 98 L à 10 m/s) alors qu'un vrai crash vide les 575 L du réservoir
+  (578 L à 20 m/s) et cloue l'appareil au sol, turbine éteinte. Le bruit d'impact
+  des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
+  l'appareil comme les autres coups reçus.
+
+    La vie, elle, ne se perd que face aux zombies. Le contact au sol l'entamait
+  dans une première version, à rebours de ce qui était voulu ; il ne touche plus
+  qu'au carburant, et ne peut donc plus terminer une partie d'un coup. La sanction
+  du crash n'est plus la mort mais l'immobilisation.
+
+    Le seuil est calé sur ce que le joueur PEUT voir : la jauge affiche des litres
+  entiers, donc une fuite de moins d'un demi-litre ne bougerait rien à l'écran. En
+  dessous, on ne joue même pas le bruit du choc, un son sans effet visible se
+  lisant comme un bug. Le premier vrai choc tombe ainsi à 3,5 m/s.
+
+    La vitesse ne peut se mesurer QUE dans la physique : le contact annule aussitôt
+  la composante verticale, si bien que la boucle de jeu, bien plus lente que la
+  simulation à pas fixe, ne verrait plus qu'un appareil posé, vitesse nulle.
+  `FlightModel` relève donc la vitesse complète au pas qui ENTRE en contact (rentrer
+  dans un versant à l'horizontale reste un contact) et la tient à disposition
+  jusqu'à lecture (`consumeGroundImpact`). Rester posé ne produit aucun nouveau
+  contact, et repositionner l'appareil oublie une valeur non lue, sans quoi la
+  partie suivante paierait un posé qui n'a pas eu lieu. Le combat décide du prix
+  (`CombatMode::applyGroundImpact` rend des litres), la physique tient le réservoir
+  (`FlightModel::drainFuel`).
+
+### Panne sèche
+
+- [x] Réservoir à zéro : la turbine s'éteint, le rotor descend et s'arrête, comme
+  n'importe quelle extinction. Une minute environ sépare la panne de l'arrêt
+  complet, et un redémarrage tenté à sec s'amorce puis se coupe au pas suivant : il
+  ne reste qu'à quitter le vol.
+
+    Le test de panne vivait DANS la branche de consommation, gardée par
+  "carburant > 0". Il ne voyait donc que le réservoir vidé par la turbine
+  elle-même. Un réservoir tombé à zéro autrement, ce que fait désormais un choc au
+  sol qui le fend, laissait la turbine tourner indéfiniment à sec : mesuré à
+  turbine 1,00 et rotor 1,00 vingt secondes après la fuite. La vérification est
+  sortie de la branche et se fait à chaque pas.
+
+    Le voyant CARB s'éteignait au même instant : comme tous les cadrans, il suivait
+  "turbine arrêtée = planche hors tension", si bien que la panne sèche effaçait sa
+  propre explication. Il reste désormais ROUGE réservoir vide, quel que soit l'état
+  de la turbine, et la ligne du HUD passe de "BAS" à "PANNE". C'est la seule alarme
+  qui survit à l'extinction, et les deux modes d'affichage (quatre coins et
+  superposé) en profitent, tous deux passant par `alarmeCarb`.
+
+### Démarrage refusé sur fond de réservoir
+
+- [x] Appuyer sur le démarreur avec moins de 2 litres (`FUEL_START_MIN_L`) ne fait
+  plus rien : ni séquence, ni son. La séquence dure une bonne minute et brûle près
+  de deux litres avant que le rotor ne prenne son régime ; en dessous, la turbine
+  s'éteignait en pleine montée, après avoir fait tout son bruit pour rien, et
+  l'appareil ne décollait pas.
+
+    Le cas le plus traître n'était pas le réservoir vide, coupé dès le premier pas
+  de simulation, mais le fond de réservoir : la jauge affichant des litres entiers,
+  "0 L" peut cacher un demi-litre, assez pour amorcer un démarrage voué à mourir.
+  Mesuré à 0,30 L : turbine à 0,63 après trente secondes, puis extinction.
+
+    Le garde-fou vit dans `FlightModel::toggleTurbine`, qui refuse un démarrage
+  mais accepte toujours une coupure ; la touche `T` et le bouton `Start` y passent
+  tous deux, au lieu d'appeler `Turbine::toggle` directement.
+
+### Silence à la fin de partie
+
+- [x] La fin de partie fige le vol (`frozen` dans `mainLoop`) mais laissait tourner le
+  son : turbine, rotor et radio continuaient derrière le bandeau, sur un appareil
+  abattu. La fin de partie suit désormais le même chemin que la pause
+  (`AudioEngine::setPaused`), qui garde la position des boucles : la partie suivante les
+  reprend là où elles s'étaient tues.
+
+    Les sons ponctuels du combat ne passent pas par là (ils ne sont pas des boucles) et
+  leur purge s'arrête avec `update()`, faute d'appel une fois le jeu figé : un râle ou
+  une queue d'explosion se serait poursuivi seul. D'où `stopCombatSounds`, qui les coupe
+  et les libère, appelé à chaque image de fin de partie plutôt que sur le front de
+  `gameOver` (sans effet une fois la liste vide, et rien à retenir entre deux images).
+
 ## Quelques observations à traiter
 
 - [ ] FUEL_BURN_MAX_LPH = 194.0f : nos fiches indiquent 155 kg/h à puissance maxi. Avec kérosène à 0,8 kg/L, cela donne environ 194 L/h. La conversion est juste.
@@ -742,6 +1012,47 @@ Trois points à contrôler sur chacun :
 - [X] Fournir un PDF propre et automatiquement à jour du readme dans les artéfacts Linux et Windows (.tar.gz et .zip) issu du README.md afin de guider l'utilisateur sur le fonctionnement.
 
 ## Interface
+
+- [x] Nuit deux fois plus rapide que le jour (clé `lune_vitesse` de `config.txt`,
+  défaut 2) : la vitesse du temps de `soleil_vitesse` est multipliée par ce facteur
+  entre le coucher (18 h) et le lever (6 h). Avec les valeurs par défaut, un cycle
+  complet dure un quart d'heure, dix minutes de jour et cinq de nuit. Le calcul est
+  sorti de l'Application (`src/app/CycleJourNuit.cpp`) : fonction pure, sans fenêtre
+  ni contexte graphique, donc vérifiable -- huit cas couvrent la durée du cycle, la
+  continuité au coucher et au lever, le départ de nuit, le temps figé, la marche
+  arrière et un facteur absurde.
+
+- [x] Configuration personnelle entretenue toute seule (`src/app/Config.cpp`), pour
+  qu'un `config.txt` écrit par une version ancienne ne se périme jamais :
+  - **option nouvelle** ajoutée à la fin du fichier avec sa documentation, valeur
+    du modèle ; les réglages existants ne sont jamais réécrits ;
+  - **option renommée** renommée sur place, valeur et mise en page conservées, via
+    la table `clesRenommees()` (une entrée ne s'en retire jamais). Réécriture par
+    fichier intermédiaire puis remplacement, pour ne jamais laisser une
+    configuration tronquée ;
+  - **modèle effacé ou abîmé** réécrit depuis la copie embarquée dans l'exécutable
+    (`ConfigModele.hpp`, fabriquée par CMake depuis `assets/config.default.txt`) ;
+    un modèle valide mais adapté volontairement n'est jamais touché.
+  Les tests verrouillent la cohérence entre les trois listes (clés du chargeur, du
+  modèle et de la table de renommage) : ajouter une option oblige à toucher les
+  trois, sinon ils tombent.
+
+- [x] Recherche de mise à jour au lancement (clé `verifier_maj` de `config.txt`,
+  activée par défaut, coupée par `ARTOUSTE_NO_MAJ`). Le tag de la dernière release
+  est demandé à l'API de GitHub dans un fil séparé (`src/app/MiseAJour.cpp`), donc
+  sans jamais retarder la fenêtre ni le vol ; s'il est plus récent que
+  `ARTOUSTE_VERSION_SEMVER` (le champ `VERSION` du projet), le menu de démarrage
+  l'annonce et propose la page <https://obook.github.io/artouste/>, ouverte par le
+  bouton `Télécharger` ou la touche `M`. La page affiche elle aussi ce numéro,
+  mais sans rien demander à personne : il est écrit en clair dans `docs/index.html`
+  (liens de classe `release-tag` et champ `softwareVersion`), remplacé à chaque
+  release par le job `page` de `.github/workflows/release.yml`, qui commite le tag
+  sur `main` -- ce qui reconstruit la page. Sans libcurl à la
+  compilation, la vérification n'a pas lieu, comme la radio. Reste à faire : rien
+  de bloquant ; à surveiller,
+  le quota anonyme de l'API GitHub (60 requêtes par heure et par adresse IP), qui
+  ne gêne qu'un réseau derrière lequel beaucoup de joueurs partageraient la même
+  sortie -- l'échec est alors silencieux, sans conséquence pour le vol.
 
 - [x] Menu de démarrage dans la fenêtre (ImGui), en remplacement de `launch.bat` :
   choix de la carte et du démarrage immédiat de la turbine, utilisable souris / clavier

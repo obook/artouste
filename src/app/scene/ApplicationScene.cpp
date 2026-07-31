@@ -13,13 +13,13 @@
  */
 
 #include "app/Application.hpp"
-
-#include <GLFW/glfw3.h>
 #include "render/Buildings.hpp"
 #include "render/Clouds.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Terrain.hpp"
 #include "render/Vegetation.hpp"
+
+#include <GLFW/glfw3.h>
 
 #include <cmath>
 #include <cstdio>
@@ -55,16 +55,16 @@ constexpr float ROTOR_PARK_JITTER = 0.26f; /* ~15 degrés */
  * fichier se comporte exactement comme avant.
  */
 struct OptionsLues {
-    bool arbresDefinis    = false;
-    bool arbres           = true;
+    bool arbresDefinis = false;
+    bool arbres = true;
     bool batimentsDefinis = false;
-    bool batiments        = true;
+    bool batiments = true;
     /* Tuiles de détail : éteindre sans effacer. Elles pèsent des gigaoctets sur
        le disque et une centaine de mégaoctets de mémoire vidéo ; sur une machine
        à l'étroit, on veut pouvoir renoncer aux secondes sans renoncer aux
        premiers, et les rallumer sans tout retélécharger. */
     bool tuilesDefinies = false;
-    bool tuiles         = true;
+    bool tuiles = true;
 };
 
 [[nodiscard]] bool valeurOui(const std::string& valeur) {
@@ -88,13 +88,13 @@ struct OptionsLues {
             break;
         }
         if (cle == "arbres") {
-            options.arbres        = valeurOui(valeur);
+            options.arbres = valeurOui(valeur);
             options.arbresDefinis = true;
         } else if (cle == "batiments") {
-            options.batiments        = valeurOui(valeur);
+            options.batiments = valeurOui(valeur);
             options.batimentsDefinis = true;
         } else if (cle == "tuiles") {
-            options.tuiles        = valeurOui(valeur);
+            options.tuiles = valeurOui(valeur);
             options.tuilesDefinies = true;
         }
         /* Clé inconnue : ignorée, un options.txt écrit par une version plus
@@ -142,18 +142,21 @@ std::filesystem::path Application::racineTuiles() const {
 Application::OptionsCarte
 Application::optionsEffectives(const std::filesystem::path& dossierCarte) const {
     const OptionsLues lues = lireOptionsCarte(dossierCarte);
-    OptionsCarte      effectives;
+    OptionsCarte effectives;
     /* ARTOUSTE_NO_TREES garde le dernier mot : c'est l'interrupteur de secours,
        il doit couper les arbres même sur une carte qui les réclame. */
     effectives.arbres = (std::getenv("ARTOUSTE_NO_TREES") == nullptr) &&
                         (lues.arbresDefinis ? lues.arbres : m_treesEnabled);
     effectives.batiments = !lues.batimentsDefinis || lues.batiments;
-    effectives.tuiles    = !lues.tuilesDefinies || lues.tuiles;
+    effectives.tuiles = !lues.tuilesDefinies || lues.tuiles;
     return effectives;
 }
 
 void Application::loadTerrain(const std::string& name) {
     m_terrainName = name;
+    /* Le nuage de poussière porte des coordonnées monde : gardé d'une carte à
+       l'autre, il réapparaîtrait n'importe où sur la nouvelle. */
+    m_souffle.vider();
     /* Le terrain qu'on va bâtir reflétera le disque tel qu'il est maintenant,
        tuiles comprises : ce qu'a pu faire le gestionnaire de cartes est donc pris
        en compte, et le drapeau qui le signalait n'a plus lieu d'être. */
@@ -166,10 +169,10 @@ void Application::loadTerrain(const std::string& name) {
        montagne et des bâtiments en ville. Lues AVANT le terrain : la fenêtre de
        tuiles se décide à sa construction. Mémorisées, pour savoir au retour du
        menu si elles ont changé et s'il faut recharger. */
-    m_optionsChargees       = optionsEffectives(terrainDir);
-    const bool arbresIci    = m_optionsChargees.arbres;
+    m_optionsChargees = optionsEffectives(terrainDir);
+    const bool arbresIci = m_optionsChargees.arbres;
     const bool batimentsIci = m_optionsChargees.batiments;
-    const bool tuilesIci    = m_optionsChargees.tuiles;
+    const bool tuilesIci = m_optionsChargees.tuiles;
     std::printf("[scène] options de la carte : arbres %s, bâtiments %s, tuiles %s\n",
                 arbresIci ? "oui" : "non",
                 batimentsIci ? "oui" : "non",
@@ -194,8 +197,8 @@ void Application::loadTerrain(const std::string& name) {
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien
        n'est dessiné. */
-    m_buildings = batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain)
-                               : nullptr;
+    m_buildings =
+        batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain) : nullptr;
 
     /* Végétation en billboards : arbres semés d'après l'orthophoto, posés sur le
        relief. Activée par défaut ; désactivable par la clé "arbres 0" de config.txt
@@ -262,7 +265,7 @@ void Application::loadTerrain(const std::string& name) {
 }
 
 void Application::applySunSchedule() {
-    /* Cycle jour/nuit : vitesse du temps (clé `sun_time_scale` de la config, 1 =
+    /* Cycle jour/nuit : vitesse du temps (clé `soleil_vitesse` de la config, 1 =
        temps réel). m_sunBaseSeconds est l'heure d'origine du soleil (s depuis
        minuit), voir Application::sunDirection :
          - en temps réel (échelle 1) on part de l'heure locale du PC ;
@@ -270,6 +273,11 @@ void Application::applySunSchedule() {
            lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une échelle nulle,
            le soleil reste donc figé à midi. */
     m_sunTimeScale = m_config.sunTimeScale;
+    /* Nuit accélérée (clé `lune_vitesse`) : la course du soleil garde la vitesse
+       ci-dessus le jour et la multiplie par ce facteur entre le coucher et le
+       lever, de sorte qu'une nuit dure deux fois moins longtemps qu'un jour avec
+       la valeur par défaut (voir timeOfDaySeconds, ApplicationSun.cpp). */
+    m_nightSpeedFactor = m_config.nightSpeedFactor;
     if (m_sunTimeScale == 1.0f) {
         const std::time_t now = std::time(nullptr);
         std::tm local{};
@@ -290,8 +298,11 @@ void Application::applySunSchedule() {
         if (m_sunTimeScale == 0.0f) {
             std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
         } else {
-            std::printf("[scène] cycle jour/nuit : temps accéléré (x%g), départ à midi.\n",
-                        static_cast<double>(m_sunTimeScale));
+            std::printf(
+                "[scène] cycle jour/nuit : temps accéléré (x%g le jour, x%g la nuit), départ "
+                "à midi.\n",
+                static_cast<double>(m_sunTimeScale),
+                static_cast<double>(m_sunTimeScale * m_nightSpeedFactor));
         }
     }
 

@@ -74,6 +74,10 @@ void Application::renderScene(const mat4& base,
     renderHelicopter(
         ctx, base, rotorAngle, rudder, cyclicLong, cyclicLat, collective, rotorFraction);
 
+    /* Souffle rotor : la poussière passe devant les patins et le bas du fuselage,
+       elle vient donc après l'appareil. */
+    drawSouffle(ctx);
+
     /* Lueurs moteur (strombo + tuyère), dessinées en dernier car translucides. */
     drawEngineEffects(base, turbineFraction, timeSeconds);
 }

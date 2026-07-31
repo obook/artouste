@@ -62,19 +62,26 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* Carburant : la turbine consomme dès qu'elle tourne, d'autant plus que le
      * collectif demande de la puissance. À sec, on coupe la turbine (panne). */
     const float turbineFraction = m_turbine.turbineFraction();
-    if (turbineFraction > 0.0f && m_fuelLiters > 0.0f) {
+    if (m_fuelLiters > 0.0f && turbineFraction > 0.0f) {
         const float burnLph =
             (FUEL_BURN_MIN_LPH + (FUEL_BURN_MAX_LPH - FUEL_BURN_MIN_LPH) * collective) *
             turbineFraction;
         m_fuelLiters -= burnLph * (dt / 3600.0f);
-        if (m_fuelLiters <= 0.0f) {
+        if (m_fuelLiters < 0.0f) {
             m_fuelLiters = 0.0f;
-            /* Panne sèche : on déclenche l'extinction si la turbine tournait. */
-            if (m_turbine.state() != Turbine::State::Arret &&
-                m_turbine.state() != Turbine::State::Extinction) {
-                m_turbine.toggle();
-            }
         }
+    }
+    /* Panne sèche, vérifiée À CHAQUE PAS et non pas seulement dans la branche de
+       consommation ci-dessus : le réservoir peut tomber à zéro autrement qu'en
+       brûlant, par exemple quand un choc au sol le fend (voir drainFuel et le mode
+       zombie). Le test d'origine, logé dans la branche gardée par "carburant > 0",
+       ne voyait jamais ce cas : la turbine tournait indéfiniment à sec.
+
+       Vaut aussi pour un redémarrage tenté réservoir vide : la séquence s'amorce,
+       puis s'éteint au pas suivant. Rien ne repart sans carburant. */
+    if (m_fuelLiters <= 0.0f && m_turbine.state() != Turbine::State::Arret &&
+        m_turbine.state() != Turbine::State::Extinction) {
+        m_turbine.toggle();
     }
 
     const float baseThrust  = (MASS * G / COLL_HOVER) * collective * rotorFraction * densiteRelative;
@@ -177,11 +184,20 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
 
     /* Contact avec le sol : l'appareil ne descend pas sous le relief. */
     if (m_body.position.y < m_groundHeight) {
+        /* Vitesse d'arrivée, relevée AVANT d'annuler la composante verticale --
+           après, il n'en reste rien. On prend la vitesse complète et non le seul
+           taux de chute : rentrer dans un versant à l'horizontale reste un
+           contact avec le sol. Seul le pas qui ENTRE en contact compte, sans quoi
+           un appareil posé se blesserait à chaque pas de simulation. */
+        if (!m_inGroundContact) {
+            m_groundImpactMs = std::max(m_groundImpactMs, glm::length(m_body.velocity));
+        }
         m_body.position.y = m_groundHeight;
         if (m_body.velocity.y < 0.0f) {
             m_body.velocity.y = 0.0f;
         }
     }
+    m_inGroundContact = m_body.position.y <= m_groundHeight;
 
     /* Posé sur les patins : tant que la poussée ne dépasse pas le poids, l'appareil
      * reste collé au sol, sans glisser ni tourner. Dès que le collectif suffit à

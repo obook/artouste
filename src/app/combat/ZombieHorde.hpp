@@ -40,6 +40,27 @@ public:
 
     enum class State { Alive, Dying, Dead };
 
+    /* Nature d'un zombie. Le largueur (Brood) est le boss des manches multiples
+       de cinq (voir WaveManager) : même modèle et même IA de marche que les
+       autres, mais agrandi, très résistant, plus lent, et surtout il fait
+       apparaître des marcheurs autour de lui tant qu'il vit -- c'est le
+       gestionnaire de vagues qui pilote ces apparitions, la horde ne fait que
+       porter l'état. */
+    enum class Type { Walker, Brood };
+
+    /* Vie d'un largueur : la roquette inflige 1000 de dégâts de zone
+       (RocketSystem::BLAST_DAMAGE), il faut donc cinq impacts pour l'abattre,
+       là où un marcheur (100 PV) tombe du premier. */
+    static constexpr float BROOD_HEALTH = 5000.0f;
+    /* Facteur d'échelle du modèle et de sa sphère de collision : une silhouette
+       qu'on repère de loin (près de six mètres de haut, le modèle étant
+       normalisé à 1,80 m), et une cible plus facile à toucher en compensation du
+       nombre de roquettes nécessaires. */
+    static constexpr float BROOD_SCALE = 3.2f;
+    /* Le largueur avance nettement moins vite qu'un marcheur : sa menace est ce
+       qu'il largue, pas sa course. */
+    static constexpr float BROOD_SPEED_FACTOR = 0.45f;
+
     struct Zombie {
         vec3  position{0.0f};        /* centre au sol (monde) */
         float yaw           = 0.0f;  /* orientation (rad), pour varier les silhouettes */
@@ -49,17 +70,52 @@ public:
         State state         = State::Alive;
         float stateTimer    = 0.0f;   /* durée avant despawn une fois Dying */
         float hitFlashTimer = 0.0f;   /* décompte du flash de coup touché (voir applyDamage) */
+        Type  type          = Type::Walker;
+        /* Échelle du modèle ET de la sphère de collision (voir RocketSystem) :
+           1 pour un marcheur, BROOD_SCALE pour un largueur. Un seul champ pour
+           les deux, sans quoi la silhouette et la cible finiraient par diverger. */
+        float scale         = 1.0f;
         /* Entier tiré à l'apparition : le rendu skinné en déduit, de façon
            stable, la variante de personnage et le groupe de phase de marche
            (voir render::SkinnedZombies). La horde reste ignorante de leur
            nombre. */
         unsigned int kind = 0;
+        /* Marcheur lâché par le largueur, et non venu du bord de l'arène : il ne
+           lui survit pas (voir killBroodlings). */
+        bool fromBrood = false;
     };
 
     /* Fait apparaître un zombie à la position donnée. yaw/phase varient
        l'orientation et le déphasage de l'oscillation d'attente entre zombies
        (sans quoi ils seraient tous parfaitement synchronisés). */
     void spawn(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
+
+    /* Fait apparaître un largueur (le boss, voir Type) à la position donnée.
+       Un seul à la fois en pratique : le gestionnaire de vagues n'en lance
+       qu'un par manche de boss, et les accesseurs ci-dessous renvoient le
+       premier trouvé. */
+    void spawnBrood(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
+
+    /* Un largueur est-il encore debout (Alive, ni en train de tomber ni
+       mort) ? Le gestionnaire de vagues s'en sert pour larguer autour de lui
+       et pour retenir la fin de manche ; le HUD, pour afficher sa jauge. */
+    [[nodiscard]] bool broodAlive() const noexcept;
+    /* Position de ce largueur, ou l'origine s'il n'y en a plus (à lire
+       seulement quand broodAlive() est vrai). */
+    [[nodiscard]] vec3 broodPosition() const noexcept;
+    /* Vie restante de ce largueur (0..1), 0 s'il n'y en a plus. */
+    [[nodiscard]] float broodHealthPct() const noexcept;
+
+    /* Fait apparaître un marcheur LÂCHÉ par le largueur, à la position donnée :
+       même chose qu'un marcheur ordinaire, mais marqué comme sien (fromBrood). */
+    void spawnBroodling(const vec3& position, float yaw = 0.0f, float phase = 0.0f);
+
+    /* Tue d'un coup tous les marcheurs encore debout lâchés par le largueur, et
+       renvoie leurs positions -- à l'appelant d'y poser une explosion et un cri
+       (voir app::CombatMode). Sert quand le largueur tombe : ce qu'il a lâché ne
+       lui survit pas. Les marcheurs venus du bord de l'arène ne sont pas
+       touchés. */
+    [[nodiscard]] std::vector<vec3> killBroodlings() noexcept;
 
     /* Vide la horde (fin de partie, changement de carte...). */
     void clear() noexcept { m_zombies.clear(); }
@@ -109,11 +165,34 @@ public:
        et le groupe de phase de chaque instance. */
     [[nodiscard]] std::vector<int> buildKinds() const;
 
+    /* De quoi allumer les deux yeux d'un zombie (voir render::combat::ZombieEyes) :
+       couleur et taille, sans position -- la horde ignore où le squelette du
+       modèle a posé la tête à cette image. C'est le rendu qui place les lueurs,
+       sur l'os de tête de la variante (voir render::SkinnedZombies::eyeAnchors).
+       Type volontairement neutre (pas de type du module de rendu ici), converti
+       à l'image par l'adaptateur de rendu -- même principe que
+       RocketSystem::ExplosionView. */
+    struct EyeTint {
+        vec3  color{0.0f};    /* couleur ET intensité (elle s'éteint à la mort) */
+        float radius = 0.0f;  /* rayon de la lueur (m), avant grossissement à distance */
+    };
+
+    /* Une teinte par zombie encore affiché, MÊME ordre/filtrage que
+       buildInstanceMatrices/buildKinds. Verte pour un marcheur, rouge pour un
+       largueur ; couleur nulle quand le regard est éteint (fin de chute), ce
+       que le rendu prend pour "pas de lueur". */
+    [[nodiscard]] std::vector<EyeTint> buildEyeTints() const;
+
     [[nodiscard]] std::size_t count() const noexcept { return m_zombies.size(); }
     [[nodiscard]] std::vector<Zombie>&       zombies() noexcept { return m_zombies; }
     [[nodiscard]] const std::vector<Zombie>& zombies() const noexcept { return m_zombies; }
 
 private:
+    /* Matrice monde d'un zombie (translation, balancement d'attente ou bascule
+       de chute, orientation, échelle) : source unique de buildInstanceMatrices
+       et de buildEyes, pour que les lueurs ne puissent pas se décaler du corps. */
+    [[nodiscard]] mat4 instanceMatrix(const Zombie& z) const;
+
     std::vector<Zombie> m_zombies;
     float                m_time = 0.0f;  /* horloge locale de la horde (oscillation d'attente) */
     /* Cooldowns de jet désynchronisés entre zombies (voir update) : RNG dédié

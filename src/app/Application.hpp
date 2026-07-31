@@ -15,6 +15,8 @@
 #include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
+#include "app/MiseAJour.hpp"
+#include "app/SouffleRotor.hpp"
 #include "app/cartes/FabriqueTuiles.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
@@ -48,6 +50,8 @@ class Texture;
 class SkinnedZombies;
 class ExplosionFx;
 class Projectiles;
+class ZombieEyes;
+class SouffleFx;
 } /* namespace artouste::render */
 
 namespace artouste::input {
@@ -240,7 +244,7 @@ private:
     void loadTerrain(const std::string& name);
 
     /* (Re)règle l'heure/vitesse du soleil (m_sunTimeScale/m_sunBaseSeconds) : la
-       clé sun_time_scale de la config par défaut, sauf sur une arène dédiée au
+       clé soleil_vitesse de la config par défaut, sauf sur une arène dédiée au
        mode zombie (zombie_only.txt du terrain courant, ex. Happy DeathHour) où la
        nuit est figée en permanence. Appelée par initScene ET applyMenuSession
        (pas seulement au premier lancement) : sans quoi une session qui visite une
@@ -285,8 +289,16 @@ private:
     void advanceRotor(float rotorFraction, float frameDt);
 
     /* Émet un message radio (voix de synthèse Flite + sous-titre) 2 s après que la
-       turbine atteint son plein régime. Se réarme quand la turbine redescend. */
-    void updateRadioMessage(float turbineFraction, float frameDt);
+       turbine atteint son plein régime. Se réarme quand la turbine redescend. La
+       clairance est tirée parmi plusieurs formulations ; 't' (secondes écoulées
+       depuis le lancement) sert à en dater la salutation sur le cycle jour/nuit. */
+    void updateRadioMessage(float turbineFraction, float t, float frameDt);
+
+    /* Réarme l'annonce de la tour pour la session qui commence. Le réarmement
+       automatique attend que la turbine redescende sous la moitié du régime, ce
+       qui n'arrive jamais entre deux sessions lancées turbine chaude (mode
+       zombie) : sans cet appel, seule la première du processus est annoncée. */
+    void resetRadioMessage() noexcept;
 
     /* --- Rendu d'une image ------------------------------------------------------ */
 
@@ -395,6 +407,13 @@ private:
        à la sortie de la turbine, d'intensité croissante avec le régime). */
     void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
 
+    /* Souffle rotor : avance le nuage de poussière soulevé près du sol (émission
+       sous l'axe du mât, que 'base' situe dans le monde) puis le dessine. Un pas
+       de temps nul fige le nuage sans le faire disparaître (pause).
+       Définies dans ApplicationRenderEffects.cpp. */
+    void updateSouffle(const mat4& base, float rotorFraction, float collective, float dt);
+    void drawSouffle(const RenderContext& ctx);
+
     /* --- HUD -------------------------------------------------------------------- */
 
     /* Remplit les données instrumentales du HUD (altitude, vitesse, cap, régimes...)
@@ -494,6 +513,10 @@ private:
         m_projectileShader; /* mode zombie : boulettes toxiques (billboard) */
     std::unique_ptr<render::Shader>
         m_explosionShader; /* mode zombie : explosion 3D animée (émissive) */
+    std::unique_ptr<render::Shader>
+        m_zombieEyesShader; /* mode zombie : lueur des yeux (billboard additif) */
+    std::unique_ptr<render::Shader>
+        m_souffleShader; /* souffle rotor : poussière en billboards instanciés */
     std::unique_ptr<render::Skybox> m_sky;
     std::unique_ptr<render::Mesh> m_shadowDisc;
     std::unique_ptr<render::Mesh> m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
@@ -518,11 +541,23 @@ private:
     std::vector<MonumentInstance> m_monuments;        /* monuments 3D de la carte */
     std::unique_ptr<render::Vegetation> m_vegetation; /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds> m_clouds;         /* nuages en billboards (prototype) */
+
+    /* --- Souffle rotor -------------------------------------------------------------
+       Poussière soulevée au ras du sol : la simulation (app::SouffleRotor) est
+       indépendante du rendu (render::SouffleFx), qui n'existe que si l'effet est
+       activé (clé "souffle" de la configuration). */
+
+    SouffleRotor m_souffle;
+    std::unique_ptr<render::SouffleFx> m_souffleFx;
+    bool m_souffleEnabled = true;
+
     /* --- Mode zombie -------------------------------------------------------------- */
 
     std::unique_ptr<render::SkinnedZombies>
         m_zombiesRender; /* mode zombie : pack skinné animé, chargé une fois */
     std::unique_ptr<render::Projectiles> m_projectilesRender; /* mode zombie : boulettes toxiques */
+    std::unique_ptr<render::ZombieEyes>
+        m_zombieEyesRender; /* mode zombie : lueur des yeux, deux par zombie */
     std::unique_ptr<render::ExplosionFx>
         m_explosionFx;   /* mode zombie : explosions 3D à l'impact des roquettes */
     CombatMode m_combat; /* mode zombie : horde et état de session */
@@ -547,6 +582,10 @@ private:
     /* --- Cycle jour/nuit --------------------------------------------------------------- */
 
     float m_sunTimeScale = 1.0f; /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
+    /* Multiplicateur appliqué à la vitesse ci-dessus entre le coucher et le lever
+       (clé lune_vitesse, 2 par défaut) : la nuit passe donc deux fois plus vite que
+       le jour. Voir timeOfDaySeconds (ApplicationSun.cpp). */
+    float m_nightSpeedFactor = 2.0f;
     float m_sunBaseSeconds = 0.0f; /* heure locale du PC au lancement (s depuis minuit) */
     bool m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     bool m_demoUserView =
@@ -610,11 +649,17 @@ private:
        réutilisée ensuite par initScene (terrain, démo, végétation...). */
     app::Config m_config;
 
+    /* Recherche d'une version plus récente (clé "verifier_maj" de config.txt,
+       coupée par ARTOUSTE_NO_MAJ). Lancée dans run() avant l'ouverture de la
+       fenêtre, consultée par le menu de démarrage, qui propose alors d'ouvrir la
+       page du projet. */
+    app::MiseAJour m_maj;
+
     /* Végétation active (clé "arbres" de config.txt, vrai par défaut, forcée à faux
        par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
     bool m_treesEnabled = true;
 
-    /* Budget d'arbres effectif (clé "tree_max" de config.txt, surchargée par
+    /* Budget d'arbres effectif (clé "arbres_max" de config.txt, surchargée par
        ARTOUSTE_TREE_MAX), résolu dans initScene et passé à Vegetation par loadTerrain.
        0 = laisser Vegetation appliquer son défaut. */
     std::size_t m_treeBudget = 0;

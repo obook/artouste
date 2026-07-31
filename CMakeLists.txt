@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(Artouste
-    VERSION     0.28.0
+    VERSION     0.29.0
     DESCRIPTION "Simulateur 3D Alouette II"
     LANGUAGES   CXX C
 )
@@ -79,6 +79,39 @@ endif()
 # --- Dépendances tierces (FetchContent) -------------------------------------
 
 include(cmake/Dependencies.cmake)
+
+# --- Modèle de configuration embarqué ----------------------------------------
+# assets/config.default.txt est recopié dans l'exécutable sous forme de chaîne de
+# caractères. Le simulateur peut ainsi le réécrire sur le disque s'il a été
+# effacé, et compléter la configuration personnelle même sans lui (voir
+# src/app/Config.cpp). Le fichier reste l'unique source : l'en-tête n'en est
+# qu'une copie fabriquée, jamais éditée à la main ni versionnée.
+#
+# CMAKE_CONFIGURE_DEPENDS relance la configuration quand le modèle change, sans
+# quoi la copie embarquée resterait celle d'hier. file(GENERATE) ne réécrit
+# l'en-tête que si son contenu diffère : éditer un commentaire du modèle ne
+# recompile donc que ce qui en dépend.
+set(ARTOUSTE_MODELE_CONFIG ${CMAKE_SOURCE_DIR}/assets/config.default.txt)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${ARTOUSTE_MODELE_CONFIG})
+file(READ ${ARTOUSTE_MODELE_CONFIG} ARTOUSTE_MODELE_CONFIG_TEXTE)
+file(GENERATE
+    OUTPUT ${CMAKE_BINARY_DIR}/generated/app/ConfigModele.hpp
+    CONTENT "/*
+ * ConfigModele.hpp
+ * FICHIER FABRIQUÉ PAR CMAKE -- NE PAS ÉDITER, NE PAS VERSIONNER.
+ * Copie de assets/config.default.txt embarquée dans l'exécutable (voir la
+ * section \"Modèle de configuration embarqué\" du CMakeLists.txt racine).
+ * Modifiez le fichier .txt, pas celui-ci.
+ */
+
+#pragma once
+
+namespace artouste::app {
+
+inline constexpr char MODELE_CONFIG_INTEGRE[] = R\"ARTOUSTE(${ARTOUSTE_MODELE_CONFIG_TEXTE})ARTOUSTE\";
+
+} /* namespace artouste::app */
+")
 
 # --- Sous-répertoires --------------------------------------------------------
 

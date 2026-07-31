@@ -71,6 +71,13 @@ inline constexpr float FUEL_CAPACITY_L   = 575.0f;  /* contenance du réservoir 
 inline constexpr float FUEL_BURN_MIN_LPH = 112.0f;  /* turbine lancée, collectif au mini (L/h) */
 inline constexpr float FUEL_BURN_MAX_LPH = 194.0f;  /* pleine puissance (L/h) */
 inline constexpr float FUEL_LOW_L        = 15.0f;   /* seuil du voyant bas carburant (~4 gallons) */
+/* Carburant minimal pour AMORCER un démarrage. La séquence dure une bonne minute
+ * et brûle déjà près de deux litres avant que le rotor ne prenne son régime :
+ * en dessous, la turbine s'éteindrait en cours de montée, après avoir fait tout
+ * son bruit pour rien. La jauge affichant des litres entiers, "0 L" peut cacher
+ * un demi-litre, assez pour lancer un démarrage voué à mourir : ce seuil ferme
+ * la porte franchement plutôt que de laisser espérer. */
+inline constexpr float FUEL_START_MIN_L  = 2.0f;    /* de quoi mener un démarrage à terme */
 inline constexpr float FUEL_CAUTION_L    = 60.0f;   /* seuil de la LED jaune (~10 % du réservoir) */
 
 /* --- Traînée quadratique selon l'axe (repère corps) -------------------------- */

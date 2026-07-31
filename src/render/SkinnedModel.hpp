@@ -62,6 +62,10 @@ public:
         std::vector<int> boneNode;    /* index du noeud dans m_nodes, par os */
         std::vector<mat4> boneOffset; /* matrice de bind inverse, par os */
         mat4 localFix{1.0f};          /* recentrage + cm->m propre à la variante */
+        /* Ancrage des yeux (voir eyePoints) : os qui pilote la tête, -1 si la
+           calibration n'a rien trouvé, et les deux points dans SON repère. */
+        int  eyeBone = -1;
+        vec3 eyeLocal[2]{vec3(0.0f), vec3(0.0f)};
     };
 
     /* Charge le modèle depuis un glTF/.glb via Assimp. Définie dans
@@ -88,6 +92,16 @@ public:
        dans SkinnedModelAnim.cpp. */
     [[nodiscard]] std::vector<mat4> boneMatrices(std::size_t meshIndex,
                                                  const std::vector<mat4>& globals) const;
+
+    /* Les deux yeux d'une variante dans le repère du modèle (celui des matrices
+       d'os fournies), à l'instant que ces matrices décrivent. Calibrés au
+       chargement sur l'os qui pilote la tête, et non sur un point fixe du
+       modèle : la tête s'écarte de 13 à 34 cm d'un tel point selon la variante
+       et l'instant du cycle (soit plus qu'un crâne), ce qui faisait flotter les
+       lueurs devant le visage. Renvoie faux si la variante n'a pas d'ancrage.
+       Définie dans SkinnedModelAnim.cpp. */
+    [[nodiscard]] bool eyePoints(std::size_t meshIndex, const std::vector<mat4>& bones,
+                                 vec3& left, vec3& right) const;
 
     /* Décalage horizontal (X,Z en repère final) du centre de la variante a
        l'instant t, dû au "root motion" de l'animation (le personnage se déplace

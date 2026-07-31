@@ -57,7 +57,16 @@ void Application::initSceneConfig() {
         m_treesEnabled = false;
     }
 
-    /* Budget d'arbres : clé "tree_max" de la config, surchargée par la variable
+    /* Souffle rotor : clé "souffle" de la configuration, forcée à faux par la
+       variable d'environnement ARTOUSTE_NO_SOUFFLE (prioritaire). Le nuage n'est
+       ni semé ni dessiné quand elle est fausse ; les ressources graphiques, elles,
+       ont déjà été créées par initSceneShaders (voir m_souffleFx). */
+    m_souffleEnabled = config.rotorWash;
+    if (std::getenv("ARTOUSTE_NO_SOUFFLE") != nullptr) {
+        m_souffleEnabled = false;
+    }
+
+    /* Budget d'arbres : clé "arbres_max" de la config, surchargée par la variable
        d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
        loadTerrain. C'est le principal levier de performance (poste de rendu le plus
        coûteux sur GPU intégré). */
@@ -181,7 +190,10 @@ void Application::initSceneConfig() {
        cartes compatibles, voir ApplicationMenu.cpp) : démarre la session de combat sur
        le terrain qui vient d'être chargé. Sans effet si la carte n'a pas de
        zombies.txt (CombatMode::active() reste faux). */
-    if (m_menuCombat) {
+    /* ARTOUSTE_SHOT_ZOMBIE : arme le mode zombie sans passer par le menu, qui est
+       justement sauté en mode capture (voir ApplicationCapture) -- sans quoi
+       aucune capture ne pourrait montrer la horde. */
+    if (m_menuCombat || std::getenv("ARTOUSTE_SHOT_ZOMBIE") != nullptr) {
         m_combat.start(assets / "terrain" / m_terrainName,
                        [this](float x, float z) { return m_terrain->heightAt(x, z); });
         if (m_combat.active()) {

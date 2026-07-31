@@ -102,6 +102,17 @@ public:
     [[nodiscard]] float healthPct() const noexcept { return m_playerHealth / PLAYER_HEALTH_MAX; }
     [[nodiscard]] bool  gameOver() const noexcept { return m_gameOver; }
 
+    /* Largueur (boss des manches multiples de cinq, voir WaveManager) : présence
+       et vie restante (0..1), pour la jauge du HUD. */
+    [[nodiscard]] bool  broodActive() const noexcept { return m_horde.broodAlive(); }
+    [[nodiscard]] float broodHealthPct() const noexcept { return m_horde.broodHealthPct(); }
+
+    /* Couleur et taille des lueurs d'yeux de chaque zombie affiché (leur
+       position vient du rendu, qui seul connaît la pose de la tête). */
+    [[nodiscard]] std::vector<ZombieHorde::EyeTint> zombieEyeTints() const {
+        return m_horde.buildEyeTints();
+    }
+
     /* Vague en cours et durée totale de la session -- pour le HUD (étape 5). */
     [[nodiscard]] int   wave() const noexcept { return m_waves.waveNumber(); }
     [[nodiscard]] float elapsedS() const noexcept { return m_elapsedS; }
@@ -140,19 +151,27 @@ public:
            zombie lanceur). */
         std::vector<vec3> throwPositions;
 
-        bool impacted = false;  /* une boulette toxique a touché l'appareil (à sa position : distance nulle) */
+        /* L'appareil a encaissé un coup, boulette toxique ou contact avec le sol
+           (voir applyGroundImpact) : même bruit, joué à sa position, donc à
+           distance nulle. */
+        bool impacted = false;
 
-        /* Nouvelle vague : son non spatial, à volume fixe -- seule exception au
-           principe "volume selon la distance à l'hélico" (voir AudioEngine::playWaveStart). */
-        bool waveStart = false;
+        /* Nouvelle vague et apparition d'un largueur : sons non spatiaux, à
+           volume fixe -- seules exceptions au principe "volume selon la distance
+           à l'hélico" (voir AudioEngine::playWaveStart et playBroodSpawn). Une
+           manche de boss lève les deux le même pas : l'annonce de vague, puis le
+           râle par-dessus. */
+        bool waveStart   = false;
+        bool broodSpawned = false;
     };
     [[nodiscard]] const SoundEvents& soundEvents() const noexcept { return m_events; }
 
     /* Annonce affichée au HUD quand une même explosion fauche plusieurs zombies
-       d'un coup (voir killScoreForCount, même seuils que le score) : reste
-       affichée KILL_ANNOUNCE_DURATION_S après l'explosion qui l'a déclenchée,
+       d'un coup (voir killScoreForCount, même seuils que le score), ou quand la
+       le largueur tombe (Brood, qui prime sur un kill multiple simultané) : reste
+       affichée KILL_ANNOUNCE_DURATION_S après l'événement qui l'a déclenchée,
        puis retombe à None. */
-    enum class KillAnnouncement { None, Double, Triple, Carnage };
+    enum class KillAnnouncement { None, Double, Triple, Carnage, Brood };
     [[nodiscard]] KillAnnouncement killAnnouncement() const noexcept {
         return m_killAnnounceTimer > 0.0f ? m_killAnnounce : KillAnnouncement::None;
     }
@@ -185,16 +204,59 @@ public:
         return m_rockets.scorches();
     }
 
+    /* Contact avec le sol, à la vitesse d'arrivée mesurée par la physique (voir
+       physics::FlightModel::consumeGroundImpact). Au-delà de la vitesse tolérée,
+       le choc fend le réservoir : il coûte du CARBURANT, proportionnellement à
+       l'excès de vitesse, et fait le même bruit qu'une boulette reçue. La vie de
+       l'appareil, elle, n'est entamée que par les zombies.
+
+       Rend les litres à retirer, que l'appelant applique au modèle de vol
+       (physics::FlightModel::drainFuel) : le combat décide du prix, la physique
+       tient le réservoir. Rend 0 hors combat, partie perdue, ou sous le seuil --
+       un posé normal ne coûte rien et ne s'entend pas. À appeler après update(),
+       qui remet les événements sonores à zéro. */
+    [[nodiscard]] float applyGroundImpact(float speedMs);
+
 private:
     static constexpr float PLAYER_HEALTH_MAX = 100.0f;
+    /* Vitesse d'arrivée (m/s) en deçà de laquelle le contact est un posé et non
+       un choc, puis litres perdus par (m/s) d'excès AU CARRÉ. Le carré plutôt
+       qu'une droite : la fuite suit alors l'énergie du choc, si bien qu'une touche
+       un peu ferme se paie en minutes de vol (8 L à 5 m/s, 50 L à 8 m/s) alors
+       qu'un vrai crash vide le réservoir de 575 L et cloue l'appareil au sol
+       (578 L à 20 m/s). Une droite faisait fuir trop de kérosène à chaque
+       contact. */
+    static constexpr float GROUND_IMPACT_FREE_MS    = 3.0f;
+    static constexpr float GROUND_IMPACT_FUEL_COEFF = 2.0f;
+    /* Perte en deçà de laquelle le contact ne compte pas : le HUD affiche le
+       carburant en litres entiers (voir HudCorners.cpp), donc un demi-litre est la
+       plus petite fuite qu'un joueur puisse VOIR. En dessous, on ne joue même pas
+       le bruit du choc -- un son sans effet visible se lit comme un bug, et fait
+       chercher la perte ailleurs. Avec le coefficient ci-dessus, cela place le
+       premier vrai choc à 3,5 m/s d'arrivée. */
+    static constexpr float GROUND_IMPACT_MIN_LITERS = 0.5f;
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */
     static constexpr float MUZZLE_FWD_M = 6.0f;
     static constexpr float MUZZLE_UP_M  = 1.0f;
 
+    /* Points accordés en plus pour l'abattage d'un largueur, au-delà des points
+       de l'explosion qui l'a achevé : de l'ordre de vingt marcheurs, à la
+       mesure des cinq roquettes qu'il encaisse. */
+    static constexpr int BROOD_SCORE = 500;
+    /* Points par marcheur éclaté avec le largueur, comptés UN PAR UN et non au
+       barème du kill multiple : celui-ci plafonne à trois têtes, ce qui convient
+       au souffle d'une roquette mais pas ici, où le largueur peut en avoir lâché
+       quinze. Même valeur qu'un marcheur tué seul. */
+    static constexpr int BROODLING_SCORE = 25;
+
     bool             m_active        = false;
     bool             m_gameOver      = false;
+    /* Largueur debout à la fin de l'update précédent : sa disparition d'une
+       image à l'autre vaut mise à mort (même principe de comparaison d'état que
+       les événements sonores). */
+    bool             m_broodWasAlive = false;
     /* Force l'annonce sonore (waveStart) au tout premier update() suivant
        start() : la manche 1 est peuplée par start() lui-même, avant le
        premier update(), donc la comparaison de numéro de manche habituelle ne

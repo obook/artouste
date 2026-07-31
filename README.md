@@ -10,9 +10,13 @@ Ce n'est ni un jeu ni une reconstitution exhaustive, mais une tentative de retro
 
 ![Alouette II en vol dans le simulateur Artouste](docs/artouste-en-vol.png)
 
-Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas sur cet appareil : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
+Artouste modélise l'Alouette II SE.3130 avec une précision que FlightGear n'atteint pas : séquence de démarrage en six états calée sur la turbine Artouste IIC, roue libre simulée, sens de rotation du rotor et compensation anti-couple codés, mode assisté découplé de la physique.
 
-Écrit en C++ moderne et OpenGL, le pilotage est jouable au clavier ou à la manette. Le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
+Écrit en C++ moderne et OpenGL, le modèle de vol est simplifié mais reconnaissable, le rendu temps réel sans aucun moteur de jeu.
+
+> [!IMPORTANT]
+> Un **PC** et **une manette de jeu** suffisent.
+> Aucune installation n'est nécessaire : on extrait l'archive, on lance le programme, on décolle !
 
 ## Histoire
 
@@ -60,7 +64,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 * Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté, pendant la démo et pendant l'atterrissage automatique, où le vol reste facile et prévisible.
 * En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
 * Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
-* Entrées clavier et manette (détection automatique de la source). Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
+* Entrées manette (recommandée) et clavier, avec détection automatique de la source. Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
 * Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
 * Atterrissage automatique (touche `J` / `RB`) : engage le pilote automatique vers l'hélipad le plus proche (dans un rayon de 999 m, sinon la touche n'a aucun effet), qui rejoint la pente d'approche du HAPI (6 %), se pose en douceur et rend la main une fois le collectif ramené au sol. Une action franche sur le manche, le palonnier ou le collectif désengage l'atterrissage automatique et rend la main tout de suite.
 * Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
@@ -94,7 +98,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   du petit fenêtré au plein écran 4K, y compris en fenêtre étroite.
 * Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
-  La vitesse du temps se règle dans `assets/config.txt` (`sun_time_scale`) : par
+  La vitesse du temps se règle dans `assets/config.txt` (`soleil_vitesse`) : par
   défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
   temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
@@ -111,6 +115,13 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
 * Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
   la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
+* Souffle du rotor au ras du sol : sous une quinzaine de mètres, l'appareil soulève
+  un nuage de poussière qui s'écarte en anneau puis remonte autour de lui, d'autant
+  plus dense qu'il est près du sol, que le rotor tourne vite et que le pas est fort :
+  un nuage au contact, un voile à cinq mètres, une trace à dix. Sa
+  couleur est prise sur la photo aérienne du terrain, donc ocre sur une piste,
+  grise sur un éboulis, et remplacée par des embruns au-dessus de l'eau. La clé
+  `souffle` de la configuration l'éteint.
 * Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
 
 ## Commandes
@@ -137,6 +148,27 @@ archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
 `artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
 sont construites automatiquement par GitHub Actions à chaque version
 (voir `.github/workflows/release.yml`).
+
+<details>
+<summary>Publier une version (mémo)</summary>
+
+1. Écrire les notes dans `docs/RELEASE_NOTES.md`, bumper `VERSION` dans
+   `CMakeLists.txt`, commiter et pousser.
+2. Poser le tag et le pousser : la compilation des deux plateformes démarre et
+   prend une quinzaine de minutes.
+   ```bash
+   git tag -a v0.30.0 -m "Artouste v0.30.0" && git push origin v0.30.0
+   ```
+3. Pendant ce temps, créer la release depuis le même fichier :
+   ```bash
+   gh release create v0.30.0 --title "v0.30.0" --notes-file docs/RELEASE_NOTES.md
+   ```
+
+L'étape 3 n'est pas décorative : l'auteur d'une release est figé à sa création
+et ne se change plus ensuite. Sans elle, c'est l'action qui la crée, sous le
+compte du robot, qui apparaît alors parmi les contributeurs du projet. La CI se
+contente ensuite d'y attacher les deux archives.
+</details>
 
 ## Compilation (Linux)
 
@@ -226,10 +258,12 @@ elle, se télécharge depuis le jeu (voir le gestionnaire de cartes plus bas).
 Une carte ajoutée à la main dans `assets/terrain/` apparaît au menu au lancement
 suivant, sans rien configurer : le jeu recense ce dossier.
 
-Les terrains et bâtiments 3D sont générés hors-ligne depuis les données IGN
-(Licence Ouverte Etalab 2.0). Détails, configuration complète et régénération :
-[docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de terrain :
-[docs/TERRAIN.md](docs/TERRAIN.md).
+Les terrains et bâtiments 3D sont générés hors-ligne depuis les données de
+l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Détails, configuration
+complète et régénération : [docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de
+terrain : [docs/TERRAIN.md](docs/TERRAIN.md).
+
+<img src="docs/IGN_logo_2012.png" alt="IGN" width="64" />
 
 ### Première ouverture d'une carte
 
@@ -320,12 +354,7 @@ de problème : le jeu retombe sur l'orthophoto d'ensemble, comme avant.
 ## Contributions
 
 Le ciel réaliste et la vue d'orbite solaire proviennent d'une contribution de
-[CHAT-DISPARU](https://github.com/CHAT-DISPARU), proposée via une pull request. Elle
-refond le rendu du ciel, dont le dégradé passe désormais du plein jour aux teintes
-orangées du coucher puis à la nuit, avec le disque du soleil et son halo ; elle
-introduit aussi un soleil mobile et une nouvelle vue, l'orbite solaire, où la caméra
-se place face à l'astre. Le cycle jour/nuit réglable et l'horloge du HUD prolongent
-cette base.
+[CHAT-DISPARU](https://github.com/CHAT-DISPARU).
 
 ## Licence
 

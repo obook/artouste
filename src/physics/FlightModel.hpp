@@ -16,6 +16,8 @@
 #include "physics/Turbine.hpp"
 #include "physics/constants.hpp"
 
+#include <algorithm>
+
 namespace artouste::physics {
 
 class FlightModel {
@@ -35,6 +37,7 @@ public:
     void reset() noexcept {
         m_body      = RigidBody{};
         m_fuelLiters = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une altitude donnée, pratique pour tester loin du sol. */
@@ -42,6 +45,7 @@ public:
         m_body            = RigidBody{};
         m_body.position.y = altitude;
         m_fuelLiters      = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une position donnée (par exemple posé sur la côte). */
@@ -49,6 +53,7 @@ public:
         m_body          = RigidBody{};
         m_body.position = position;
         m_fuelLiters    = FUEL_CAPACITY_L;
+        clearGroundImpact();
     }
 
     /* Réinitialise à une position et un cap donnés (degrés boussole : 0 = nord,
@@ -79,17 +84,71 @@ public:
     /* Carburant restant, en litres (pour le HUD et le voyant d'alerte). */
     [[nodiscard]] float fuelLiters() const noexcept { return m_fuelLiters; }
 
+    /* Démarre ou coupe la turbine, comme Turbine::toggle, mais en tenant compte du
+       réservoir : un démarrage est REFUSÉ sous FUEL_START_MIN_L, une coupure est
+       toujours acceptée. Rend vrai si l'état a changé.
+
+       Sans ce garde-fou, appuyer sur le démarreur à sec lançait la séquence et son
+       vacarme d'une minute, pour une extinction juste avant le régime de vol. Le
+       cas le plus traître n'est même pas le réservoir vide (coupé au premier pas de
+       simulation) mais le fond de réservoir : la jauge affiche des litres entiers,
+       donc "0 L" peut cacher un demi-litre, de quoi amorcer un démarrage
+       parfaitement inutile. */
+    bool toggleTurbine() noexcept {
+        const bool aLArret = m_turbine.state() == Turbine::State::Arret ||
+                             m_turbine.state() == Turbine::State::Extinction;
+        if (aLArret && m_fuelLiters < FUEL_START_MIN_L) {
+            return false; /* pas assez de carburant pour mener un démarrage à terme */
+        }
+        m_turbine.toggle();
+        return true;
+    }
+
+    /* Vide une quantité de carburant hors consommation de la turbine : une
+       cellule qui encaisse un choc perd du kérosène (voir le contact avec le sol
+       du mode zombie). Le réservoir ne descend jamais sous zéro, et une quantité
+       nulle ou négative ne fait rien. */
+    void drainFuel(float liters) noexcept {
+        if (liters > 0.0f) {
+            m_fuelLiters = std::max(0.0f, m_fuelLiters - liters);
+        }
+    }
+
     /* Intensité du vortex ring state (0 = aucun, 1 = plein), pour l'alerte HUD.
        Toujours 0 en mode assisté et en démo (physique réelle coupée). */
     [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
 
+    /* Vitesse d'arrivée (m/s) du dernier contact avec le sol, puis remise à zéro :
+       l'appelant la lit une fois et la consomme. Elle ne peut se mesurer QU'ICI,
+       le contact annulant aussitôt la composante verticale (voir update) ; la
+       boucle de jeu, qui tourne bien plus lentement que la simulation, ne verrait
+       plus qu'un appareil posé, vitesse nulle. Le mode zombie en tire le carburant
+       que fait fuir un posé brutal. Vaut le maximum des contacts survenus depuis la dernière
+       lecture, et reste à 0 tant que l'appareil demeure au sol. */
+    [[nodiscard]] float consumeGroundImpact() noexcept {
+        const float v    = m_groundImpactMs;
+        m_groundImpactMs = 0.0f;
+        return v;
+    }
+
 private:
+    /* Repositionner l'appareil ne doit pas laisser derrière lui un contact non
+       lu : la partie suivante encaisserait les dégâts d'un posé qui n'a pas eu
+       lieu. On oublie aussi l'état "au sol", le nouveau point de départ pouvant
+       être en vol comme sur un pad. */
+    void clearGroundImpact() noexcept {
+        m_groundImpactMs  = 0.0f;
+        m_inGroundContact = false;
+    }
+
     RigidBody m_body;
     Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
     float     m_vrsIntensity  = 0.0f;          /* vortex ring state, 0..1 (alerte HUD) */
+    float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
+    bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
 };
 

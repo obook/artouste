@@ -65,7 +65,7 @@ void Application::handleActionButtons() {
 
     /* Bouton Start de la manette : démarre ou coupe la turbine, comme la touche T. */
     if (m_input->turbineTogglePressed()) {
-        m_flight.turbine().toggle();
+        m_flight.toggleTurbine(); /* refusé réservoir vide, comme la touche T */
     }
 
     /* Boutons manette équivalents aux touches clavier H, P, R et Échap, pour

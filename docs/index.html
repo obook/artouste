@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Artouste - Simulateur de vol Alouette II SE.3130</title>
-  <meta name="description" content="Artouste, simulateur de vol 3D consacré au pilotage de l'hélicoptère Aérospatiale Alouette II SE.3130. C++ moderne et OpenGL, jouable au clavier ou à la manette.">
+  <meta name="description" content="Artouste, simulateur de vol 3D consacré au pilotage de l'hélicoptère Aérospatiale Alouette II SE.3130. C++ moderne et OpenGL. Un PC et une manette de jeu suffisent pour décoller tout de suite.">
   <meta property="og:title" content="Artouste - Open-source helicopter flight simulator (Alouette II SE.3130)">
   <meta property="og:description" content="Open-source 3D helicopter simulator for the Alouette II SE.3130 with Turbomeca Artouste IIC turbine. C++20, OpenGL 3.3, Linux/Windows.">
   <meta property="og:image" content="https://obook.github.io/artouste/screenshots/mer-coucher-soleil.png">
@@ -19,6 +19,7 @@
     "description": "Open-source 3D helicopter flight simulator for the Alouette II SE.3130 with Turbomeca Artouste IIC turbine engine. C++20, OpenGL 3.3.",
     "applicationCategory": "Game",
     "operatingSystem": "Linux, Windows",
+    "softwareVersion": "0.29.0",
     "url": "https://obook.github.io/artouste/",
     "downloadUrl": "https://github.com/obook/artouste/releases",
     "codeRepository": "https://github.com/obook/artouste",
@@ -51,7 +52,7 @@
       <a href="#caracteristiques">Caractéristiques</a>
       <a href="#video">Vidéo</a>
       <a href="#galerie">Galerie</a>
-      <a href="https://github.com/obook/artouste">Code source</a>
+      <a href="https://github.com/obook/artouste">Code</a>
     </nav>
   </header>
 
@@ -60,14 +61,20 @@
       <div class="reveal">
         <p class="eyebrow">Simulateur de vol &middot; Alouette II</p>
         <h1>Artouste<span class="reg">AÉROSPATIALE SE.3130</span></h1>
-        <p class="tagline">Pilotez en 3D cet hélicoptère légendaire sans servo-commandes :
-          sa turbine Turboméca, son rotor tripale et son caractère exigeant sont restitués.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest/download/artouste-Windows-AMD64.zip">Télécharger<br>Windows</a>
-          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest/download/artouste-Linux-x86_64.tar.gz">Télécharger<br>Linux</a>
+        <p class="tagline">Pilotez en 3D cet hélicoptère légendaire sans servo-commandes.
+          Sa turbine Turboméca, son rotor tripale et son caractère exigeant sont restitués.</p>
+          <!-- Ce qu'il faut pour voler -->
+          <p class="release-line"> Un <b>PC</b> et <b>une manette de jeu</b> suffisent. Aucune installation n'est nécessaire : on extrait l'archive, on lance le programme, on décolle !</p>
+          <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest/download/artouste-Windows-AMD64.zip">Téléchargement<br>Windows</a>
+          <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest/download/artouste-Linux-x86_64.tar.gz">Téléchargement<br>Linux</a>
           <a class="btn btn-primary" href="notice.pdf">Notice</a>
-          <a class="btn btn-ghost" href="https://github.com/obook/artouste">Code source</a>
+          <a class="btn btn-ghost" href="https://github.com/obook/artouste">Code</a>
         </div>
+        <!-- Numéro de la dernière version publiée -->
+        <p class="release-line">Dernière version :
+          <a class="release-tag" href="https://github.com/obook/artouste/releases/latest">v0.29.0</a>
+        </p>
       </div>
 
       <aside class="plate reveal d2" aria-label="Caractéristiques de l'appareil">
@@ -166,9 +173,12 @@
       </div>
       <div class="card">
         <p class="klabel">Commandes <span class="key">C</span></p>
-        <h3>Clavier ou manette</h3>
-        <p>Entrées clavier et manette Xbox ou PlayStation, avec détection automatique
-          de la source active. Quatre vues : poursuite, cockpit, orbite et orbite
+        <h3>Manette de jeu</h3>
+        <p>Un PC, une manette Xbox ou PlayStation, et vous volez : rien à installer,
+          rien à configurer, rien à télécharger de plus. Le clavier fonctionne mais
+          n'est pas recommandé : ses touches ne connaissent que deux états, quand un
+          stick rend une valeur continue, seule façon de doser un appareil sans
+          servo-commandes. Quatre vues : poursuite, cockpit, orbite et orbite
           solaire ; HUD quatre coins, instruments superposés ou affichage masqué.</p>
       </div>
       <div class="card">
@@ -303,8 +313,16 @@
     </p>
     <p class="lead">
       Written in <strong>C++20</strong> with <strong>OpenGL 3.3</strong> and no
-      game engine. Controls: keyboard (AZERTY) or Xbox / PlayStation controller.
-      Runs on Linux and Windows. GPL v2 license.
+      game engine. Runs on Linux and Windows. GPL v2 license.
+    </p>
+    <p class="lead">
+      <strong>All you need is a PC and a game controller</strong> (Xbox or
+      PlayStation, USB or Bluetooth) and you are flying. Nothing to install,
+      nothing to configure, nothing else to download: unpack the archive, run the
+      executable, take off. A modest machine will do. A keyboard works but is not
+      recommended: its keys only know two states, while a stick or a trigger gives
+      a continuous value, and metering the controls is the whole point on a
+      helicopter without hydraulic servos.
     </p>
     <div class="cta-row">
       <a class="btn btn-primary" href="https://github.com/obook/artouste/releases/latest/download/artouste-Windows-AMD64.zip">Download<br>Windows</a>
@@ -312,6 +330,9 @@
       <a class="btn btn-primary" href="notice.pdf">Manual (French)</a>
       <a class="btn btn-ghost" href="https://github.com/obook/artouste">Source code</a>
     </div>
+    <p class="release-line">Latest release:
+      <a class="release-tag" href="https://github.com/obook/artouste/releases/latest">v0.29.0</a>
+    </p>
   </section>
 
   <footer>
@@ -319,6 +340,14 @@
       <span>Artouste &middot; simulateur de vol Alouette II SE.3130</span>
       <span>Auteur : Olivier Booklage</span>
       <span><a href="https://github.com/obook/artouste">github.com/obook/artouste</a> &middot; GPL v2</span>
+      <!-- Attribution des données géographiques : le relief et les orthophotos
+           viennent de l'IGN sous Licence Ouverte Etalab 2.0, qui demande de citer
+           la source. Le logo reste discret, en pied de page. -->
+      <span class="credit-ign">
+        <img src="IGN_logo_2012.png" alt="IGN" width="40" height="40">
+        Relief et orthophotos <a href="https://www.ign.fr/">IGN</a> &middot;
+        <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence">Licence Ouverte Etalab 2.0</a>
+      </span>
     </div>
   </footer>
 

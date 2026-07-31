@@ -111,6 +111,14 @@ inline GaugeLed alarmeVario(const HudData& d) noexcept {
 /* Carburant : jaune sous la réserve (~10 % du réservoir), rouge sous le seuil du
  * voyant bas carburant. */
 inline GaugeLed alarmeCarb(const HudData& d) noexcept {
+    /* Réservoir vide : rouge en toutes circonstances, turbine arrêtée comprise.
+     * C'est la seule alarme qui survit à l'extinction, et pour cause : la panne
+     * sèche EST la raison de cet arrêt. L'éteindre avec le reste de la planche
+     * effacerait l'explication au moment précis où le pilote la cherche, en le
+     * laissant devant des cadrans muets. */
+    if (d.fuelLiters <= 0.0f) {
+        return GaugeLed::Red;
+    }
     if (d.turbineRpm <= 0.0f) {  /* turbine à l'arrêt : voyant éteint, comme le reste
                                     de la planche hors tension */
         return GaugeLed::Off;

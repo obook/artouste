@@ -12,6 +12,7 @@
  */
 
 #include "app/Application.hpp"
+#include "app/CycleJourNuit.hpp"
 #include "render/Terrain.hpp"
 #include "ui/Hud.hpp"
 
@@ -99,7 +100,11 @@ void Application::fillHud(ui::HudData& hud,
        Le deux-points clignote à 1 Hz sur le temps réel écoulé (allumé une demi-seconde
        sur deux), comme une horloge digitale. */
     hud.timeOfDaySec = timeOfDaySeconds(t);
-    hud.timeScale = m_sunTimeScale;
+    /* Facteur affiché : celui qui s'applique à l'heure courante, donc multiplié par
+       lune_vitesse entre le coucher et le lever. Afficher m_sunTimeScale tel quel
+       annonçait x72 en pleine nuit pendant que l'horloge tournait à x144, ce qui
+       donnait à croire que la nuit n'était pas accélérée. */
+    hud.timeScale = vitesseCourante(m_sunTimeScale, m_nightSpeedFactor, hud.timeOfDaySec);
     hud.colonOn = (std::fmod(t, 1.0f) < 0.5f);
     /* Clignotement des LED d'alarme jaune/rouge : cadence rapide (~2 Hz, allumée un peu
        plus de la moitié du temps) pour accrocher l'oeil, distincte du deux-points à 1 Hz. */
@@ -147,10 +152,15 @@ void Application::fillHud(ui::HudData& hud,
             case KillAnnouncement::Carnage:
                 hud.combat.killAnnounceKind = 3;
                 break;
+            case KillAnnouncement::Brood:
+                hud.combat.killAnnounceKind = 4;
+                break;
             case KillAnnouncement::None:
                 hud.combat.killAnnounceKind = 0;
                 break;
         }
+        hud.combat.broodActive = m_combat.broodActive();
+        hud.combat.broodHealthPct = m_combat.broodHealthPct();
 
         /* Mire : projette un point loin devant l'appareil dans l'axe de tir
            (repère corps, canon fixe -- voir CombatMode::update, même axe que

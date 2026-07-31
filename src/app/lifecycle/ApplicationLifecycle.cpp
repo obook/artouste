@@ -32,11 +32,13 @@
 #include "render/Model.hpp"
 #include "render/Shader.hpp"
 #include "render/Skybox.hpp"
+#include "render/SouffleFx.hpp"
 #include "render/Terrain.hpp"
 #include "render/Texture.hpp"
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/SkinnedZombies.hpp"
 #include "render/combat/Projectiles.hpp"
+#include "render/combat/ZombieEyes.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -213,6 +215,13 @@ int Application::run() {
     /* Configuration lue avant l'ouverture de la fenêtre : le MSAA doit être connu à
        la création du contexte GLFW. Réutilisée ensuite par initScene. */
     m_config = loadConfig(resolveAssetDir() / "config.txt");
+    /* Recherche d'une version plus récente, lancée tout de suite et menée dans un
+       fil séparé : elle a ainsi le temps d'aboutir pendant l'ouverture de la
+       fenêtre, sans jamais la retarder. Le menu de démarrage lira le résultat et
+       proposera, le cas échéant, d'ouvrir la page du projet. */
+    if (m_config.checkUpdate && std::getenv("ARTOUSTE_NO_MAJ") == nullptr) {
+        m_maj.lancer();
+    }
     if (!initWindow()) {
         return EXIT_FAILURE;
     }

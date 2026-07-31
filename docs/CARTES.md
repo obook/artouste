@@ -32,11 +32,32 @@ Le fichier `assets/config.txt` règle le lancement. C'est un simple fichier text
 modifiable dans **n'importe quel éditeur**. Chaque ligne est une `clé valeur` ;
 une ligne qui commence par `#` est un commentaire (ignoré).
 
+> Rien de tout cela n'est obligatoire pour voler : **un PC et une manette de jeu
+> suffisent**, l'archive extraite se lance telle quelle. Ces clés servent à régler
+> le simulateur, pas à le faire fonctionner. Le clavier, lui, dépanne mais n'est pas
+> recommandé : il ne donne que du tout ou rien là où un stick rend une valeur
+> continue.
+
 Ce fichier est ta configuration personnelle et n'est donc pas versionné. S'il est
 absent au lancement, le simulateur le crée automatiquement en recopiant le modèle
 `assets/config.default.txt` (lui, versionné), puis charge cette copie. Tu peux ainsi
 modifier `assets/config.txt` à ta guise, ou le supprimer pour repartir des valeurs
-par défaut. Les clés disponibles :
+par défaut.
+
+Ton fichier suit ensuite les versions du jeu tout seul, sans que tu aies à le
+refaire :
+
+* **une option nouvelle** apparue dans une version plus récente est ajoutée à la
+  fin de ton `config.txt`, avec les commentaires qui l'expliquent et sa valeur par
+  défaut. Tes réglages ne sont jamais réécrits, on n'ajoute qu'à la fin ;
+* **une option renommée** l'est aussi chez toi, en gardant la valeur que tu avais
+  choisie et la place de la ligne. Sans cela, ton ancienne clé serait rejetée et
+  ton réglage repasserait en silence au défaut ;
+* **le modèle effacé ou abîmé** est réécrit à l'identique : le simulateur en porte
+  une copie. Un modèle valide que tu aurais adapté volontairement, lui, n'est
+  jamais touché.
+
+Les clés disponibles :
 
 * `terrain` : choisit la map chargée au démarrage (voir ci-dessous).
 * `turbine_demarree` : `1` pour démarrer avec la **turbine et le rotor déjà au
@@ -51,6 +72,17 @@ par défaut. Les clés disponibles :
   le menu, en sortir ramène au menu. Pendant la démo, la vue (`C` ou bouton `Y`), le
   HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
   actifs sans l'interrompre. La variable d'environnement `ARTOUSTE_DEMO` a la priorité.
+* `verifier_maj` : `1` (défaut) pour **rechercher une mise à jour** au lancement.
+  Le simulateur demande, dans un fil séparé qui ne retarde ni la fenêtre ni le vol,
+  le numéro de la dernière version publiée. S'il existe plus récent que la version
+  installée, le menu de démarrage l'annonce en bas et propose d'aller la chercher
+  sur <https://obook.github.io/artouste/> : bouton `Télécharger`, ou touche `M`, qui
+  ouvre le navigateur du système. Rien n'est envoyé au passage : c'est une simple
+  lecture, sans identifiant ni statistique, et un réseau absent ou lent ne change
+  rien au lancement. `0` pour ne rien demander au réseau ; la variable
+  d'environnement `ARTOUSTE_NO_MAJ` coupe aussi la recherche. Comme la radio, la
+  vérification a besoin de libcurl à la compilation : sans elle, elle n'a
+  simplement pas lieu.
 * `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
@@ -60,15 +92,23 @@ par défaut. Les clés disponibles :
   `RADIO` s'affiche dans le HUD tant que le flux joue, suivi de la part de la radio
   dans le mixage. Les touches `-` et `+` règlent la **balance radio/hélico** (un
   crossfade : monter la radio atténue d'autant le son de l'hélico, et inversement).
-* `sun_time_scale` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
+* `soleil_vitesse` : règle la **vitesse du temps** du cycle jour/nuit, c'est-à-dire
   la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
-  `86400 / sun_time_scale` secondes. La valeur `72` (défaut) fait défiler une journée
+  `86400 / soleil_vitesse` secondes. La valeur `72` (défaut) fait défiler une journée
   entière en vingt minutes ; `144` la réduit à dix minutes ; `1` correspond au temps
   réel, le soleil partant de l'heure locale du PC ; `0` fige le temps à midi (le soleil
   ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à midi, afin
   d'ouvrir sur une belle lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE`
   du panneau supérieur droit.
-* `tree_max` : **budget de végétation**, soit le nombre maximum d'arbres soumis à la
+* `lune_vitesse` : **multiplicateur de la vitesse du temps pendant la nuit**, du
+  coucher (18 h) au lever (6 h). `2` (défaut) fait passer la nuit deux fois plus vite
+  que le jour : voler une demi-journée dans le noir n'apporte pas grand-chose, alors
+  qu'un ciel qui bascule du crépuscule à l'aube pendant qu'on rentre, si. `1` rétablit
+  une nuit aussi longue que le jour, `4` l'expédie. Avec les valeurs par défaut
+  (`soleil_vitesse 72`, `lune_vitesse 2`), un cycle complet dure un quart d'heure :
+  dix minutes de jour et cinq de nuit. Sans effet quand le temps est figé
+  (`soleil_vitesse 0`).
+* `arbres_max` : **budget de végétation**, soit le nombre maximum d'arbres soumis à la
   carte graphique. Au-delà, le semis est éclairci uniformément. C'est le poste de
   rendu le plus lourd quand les arbres sont actifs (clé `arbres` ; `arbres 0` les
   coupe). La valeur par défaut est `1600000` ; sur une machine modeste ou une tablette,

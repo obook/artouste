@@ -277,6 +277,15 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         std::printf(".\n");
     }
 
+    /* Souffle rotor : le nuage de poussière se construit au fil de la boucle de
+       vol, qu'une capture ne fait pas tourner. On l'amorce donc ici sur deux
+       secondes simulées, sans quoi une capture au ras du sol montrerait un
+       appareil parfaitement propre. Au-dessus du plafond, cette boucle ne coûte
+       rien : rien ne se lève. */
+    for (int i = 0; i < 120; ++i) {
+        updateSouffle(base, 1.0f, shotCollective, 1.0f / 60.0f);
+    }
+
     for (int i = 0; i < 3; ++i) {
         /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
            0,1 s tombe dans la phase allumée du flash). */

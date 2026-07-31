@@ -1,8 +1,9 @@
 /*
  * zombie_horde_tests.cpp
  * Tests du cycle de vie d'un zombie (ZombieHorde) : dégâts, mort et despawn,
- * puis marche vers le joueur et jets de boulettes toxiques. Se teste sans
- * contexte graphique (ni render::Zombies ni CombatMode ne sont nécessaires).
+ * marche vers le joueur, jets de boulettes toxiques, et cas du largueur
+ * (boss). Se teste sans contexte graphique (ni render::Zombies ni CombatMode
+ * ne sont nécessaires).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -113,5 +114,91 @@ TEST_CASE("ZombieHorde : marche vers le joueur et jets de boulettes toxiques",
         /* Le cooldown est réarmé : un appel immédiat suivant ne relance pas. */
         const auto requests2 = horde.update(0.01f, vec3{95.0f, 0.0f, 0.0f}, 0.0f, 1.0f, flatGround);
         CHECK(requests2.empty());
+    }
+}
+
+TEST_CASE("ZombieHorde : largueur (boss)", "[combat][zombie][boss]") {
+    ZombieHorde horde;
+
+    SECTION("un largueur est repérable, très résistant et plus lent") {
+        horde.spawnBrood(vec3{100.0f, 0.0f, 0.0f});
+        REQUIRE(horde.broodAlive());
+        CHECK(horde.zombies()[0].type == ZombieHorde::Type::Brood);
+        CHECK(horde.zombies()[0].health == Catch::Approx(ZombieHorde::BROOD_HEALTH));
+        CHECK(horde.broodHealthPct() == Catch::Approx(1.0f));
+
+        /* Un marcheur parti du même point avance plus loin sur le même pas de temps. */
+        ZombieHorde marcheurs;
+        marcheurs.spawn(vec3{100.0f, 0.0f, 0.0f});
+        const vec3 player{0.0f, 0.0f, 0.0f};
+        horde.update(1.0f, player, 100.0f, 1.0f, flatGround);
+        marcheurs.update(1.0f, player, 100.0f, 1.0f, flatGround);
+        CHECK(horde.zombies()[0].position.x > marcheurs.zombies()[0].position.x);
+    }
+
+    SECTION("une roquette ne suffit pas : il en faut cinq") {
+        horde.spawnBrood(vec3{0.0f, 0.0f, 0.0f});
+        for (int i = 0; i < 4; ++i) {
+            horde.applyDamage(0, 1000.0f); /* RocketSystem::BLAST_DAMAGE */
+            CHECK(horde.broodAlive());
+        }
+        horde.applyDamage(0, 1000.0f);
+        CHECK_FALSE(horde.broodAlive());
+        CHECK(horde.broodHealthPct() == Catch::Approx(0.0f));
+    }
+
+    SECTION("une teinte d'yeux par zombie, rouge pour le largueur") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});
+        horde.spawnBrood(vec3{50.0f, 0.0f, 0.0f});
+        const auto tints = horde.buildEyeTints();
+        /* Même ordre et même filtrage que les matrices et les "kind" : le rendu
+           indexe les trois tableaux ensemble pour poser les lueurs. */
+        REQUIRE(tints.size() == horde.buildInstanceMatrices().size());
+        REQUIRE(tints.size() == 2);
+        /* Marcheur : dominante verte. Largueur : rouge, et une lueur plus
+           large, à l'échelle de sa silhouette. */
+        CHECK(tints[0].color.g > tints[0].color.r);
+        CHECK(tints[1].color.r > tints[1].color.g);
+        CHECK(tints[1].radius > tints[0].radius);
+    }
+
+    SECTION("les marcheurs lâchés par le largueur ont aussi les yeux rouges") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});           /* venu du bord : vert */
+        horde.spawnBroodling(vec3{10.0f, 0.0f, 0.0f}); /* lâché : rouge */
+        const auto tints = horde.buildEyeTints();
+        REQUIRE(tints.size() == 2);
+        CHECK(tints[0].color.g > tints[0].color.r);
+        CHECK(tints[1].color.r > tints[1].color.g);
+        /* Rouge comme le largueur, mais la lueur garde la taille d'un marcheur. */
+        CHECK(tints[1].radius == Catch::Approx(tints[0].radius));
+    }
+
+    SECTION("le largueur abattu emporte ce qu'il a lâché, et lui seul") {
+        horde.spawnBrood(vec3{0.0f, 0.0f, 0.0f});
+        horde.spawnBroodling(vec3{3.0f, 0.0f, 0.0f});
+        horde.spawnBroodling(vec3{6.0f, 0.0f, 0.0f});
+        horde.spawn(vec3{60.0f, 0.0f, 0.0f}); /* venu du bord : épargné */
+
+        const auto eclates = horde.killBroodlings();
+        REQUIRE(eclates.size() == 2);
+        CHECK(eclates[0].x == Catch::Approx(3.0f));
+        CHECK(eclates[1].x == Catch::Approx(6.0f));
+        CHECK(horde.zombies()[1].state == ZombieHorde::State::Dying);
+        CHECK(horde.zombies()[2].state == ZombieHorde::State::Dying);
+        CHECK(horde.zombies()[3].state == ZombieHorde::State::Alive);
+
+        /* Rien à tuer deux fois : un second appel ne renvoie plus personne. */
+        CHECK(horde.killBroodlings().empty());
+    }
+
+    SECTION("le regard s'éteint avec la chute") {
+        horde.spawn(vec3{0.0f, 0.0f, 0.0f});
+        horde.applyDamage(0, 100.0f);  /* passe en Dying : la lueur décroît */
+        REQUIRE(horde.zombies()[0].state == ZombieHorde::State::Dying);
+        const float debut = horde.buildEyeTints()[0].color.g;
+        horde.update(0.5f, vec3{1000.0f, 0.0f, 0.0f}, 100.0f, 1.0f, flatGround);
+        const auto tints = horde.buildEyeTints();
+        REQUIRE(tints.size() == 1);
+        CHECK(tints[0].color.g < debut);
     }
 }

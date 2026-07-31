@@ -1,0 +1,12 @@
+# Balises HAPI - Paris (tour Eiffel, Notre-Dame, Montmartre, Champs-Élysées) (un par ligne : lon lat azimut_deg pente_pct nom)
+# azimut_deg : cap d'approche suivi par le pilote (0 = nord).
+# pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).
+# Posée sur le pad de départ, l'héliport de Paris - Issy-les-Moulineaux, aux
+# coordonnées de l'aire de poser elle-même (voir helipads.txt).
+# Azimut 90 : approche vers l'est, reprise du cap de départ de la carte
+# (start_heading de terrain.txt). C'est le seul axe dégagé, l'imagerie fine
+# montrant le terrain ouvert de l'héliport à l'ouest de l'aire, tandis que les
+# tours du Front de Seine et le boulevard périphérique bordent l'est et le nord.
+# Ce n'est pas un relevé des trouées d'approche publiées, qui suivent la Seine.
+# Pente 6 % : valeur usuelle pour une hélistation, faute de relevé d'obstacles.
+2.274772 48.833076 90 6 Héliport de Paris (Issy-les-Moulineaux)

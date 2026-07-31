@@ -53,6 +53,9 @@ void Application::toggleAutoland() {
 void Application::resetToStart() {
     m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     m_input->reset();
+    /* L'appareil est téléporté au pad : la poussière qu'il soulevait là où il
+       était resterait suspendue en l'air, loin derrière lui. */
+    m_souffle.vider();
     /* On remet aussi à zéro les états qui gardent une mémoire du collectif : les
        dernières commandes (réutilisées pendant un panneau figé, assistance OFF) et
        l'état lissé de l'assistance (assistance ON). Sans cela, le collectif mémorisé

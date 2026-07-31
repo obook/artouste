@@ -286,3 +286,114 @@ TEST_CASE("le reset avec cap oriente l'appareil à la boussole", "[flight]") {
     avant = model.body().orientation * artouste::vec3{1.0f, 0.0f, 0.0f};
     REQUIRE(avant.z < -0.999f);
 }
+
+TEST_CASE("Réservoir vidé d'un coup : la turbine s'éteint", "[flight][turbine][carburant]") {
+    /* Le réservoir peut tomber à zéro autrement qu'en brûlant : un choc au sol le
+       fend (mode zombie, voir CombatMode::applyGroundImpact). La panne sèche doit
+       alors couper la turbine comme n'importe quelle extinction. Ce cas passait au
+       travers : le test de panne vivait dans la branche de consommation, gardée par
+       "carburant > 0", et l'appareil volait indéfiniment à sec. */
+    FlightModel model;
+    model.reset(500.0f);
+    model.turbine().forceRunning();
+    Controls commandes{};
+    commandes.collective = 0.5f;
+    for (int i = 0; i < 240; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    REQUIRE(model.turbine().turbineFraction() > 0.9f);
+
+    model.drainFuel(2.0f * artouste::physics::FUEL_CAPACITY_L);
+    REQUIRE(model.fuelLiters() == 0.0f);
+
+    /* Un pas suffit à déclencher l'extinction... */
+    model.update(commandes, SIM_DT);
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
+
+    /* ... et une minute plus tard, turbine et rotor sont arrêtés pour de bon. */
+    for (int i = 0; i < 240 * 60; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    CHECK(model.turbine().turbineFraction() == 0.0f);
+    CHECK(model.turbine().rotorFraction() == 0.0f);
+    CHECK_FALSE(model.turbine().turning());
+}
+
+TEST_CASE("Réservoir vide : la turbine ne redémarre pas", "[flight][turbine][carburant]") {
+    /* Sans carburant, appuyer sur la touche de démarrage amorce la séquence, qui
+       s'éteint aussitôt : il n'y a plus rien à faire que de quitter le vol. */
+    FlightModel model;
+    model.reset(500.0f);
+    model.drainFuel(2.0f * artouste::physics::FUEL_CAPACITY_L);
+    REQUIRE(model.fuelLiters() == 0.0f);
+
+    model.turbine().toggle(); /* le pilote tente un redémarrage */
+    const Controls commandes{};
+    for (int i = 0; i < 240 * 5; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    CHECK(model.turbine().turbineFraction() == 0.0f);
+    CHECK(model.turbine().rotorFraction() == 0.0f);
+}
+
+TEST_CASE("Panne sèche par consommation : la turbine s'éteint aussi",
+          "[flight][turbine][carburant]") {
+    /* Le chemin d'origine, celui du réservoir vidé par la turbine elle-même, doit
+       continuer de fonctionner : on part avec de quoi tenir quelques secondes. */
+    FlightModel model;
+    model.reset(500.0f);
+    model.turbine().forceRunning();
+    Controls commandes{};
+    commandes.collective = 1.0f; /* pleine puissance : 194 L/h */
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.2f); /* 0,2 L, ~4 s de vol */
+
+    for (int i = 0; i < 240 * 10; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    CHECK(model.fuelLiters() == 0.0f);
+    CHECK(model.turbine().state() != artouste::physics::Turbine::State::Regime);
+}
+
+TEST_CASE("Fond de réservoir : le démarrage est refusé", "[flight][turbine][carburant]") {
+    /* La jauge affiche des litres entiers : "0 L" peut cacher un demi-litre, assez
+       pour amorcer une séquence de démarrage d'une minute qui s'éteindra juste
+       avant le régime de vol, après tout son bruit. On refuse franchement. */
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f); /* jauge : 0 L */
+
+    CHECK_FALSE(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Arret);
+
+    /* Et rien ne se met en route au fil des pas suivants. */
+    const Controls commandes{};
+    for (int i = 0; i < 240 * 5; ++i) {
+        model.update(commandes, SIM_DT);
+    }
+    CHECK(model.turbine().turbineFraction() == 0.0f);
+}
+
+TEST_CASE("Réservoir suffisant : le démarrage est accepté", "[flight][turbine][carburant]") {
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - artouste::physics::FUEL_START_MIN_L -
+                    1.0f);
+
+    CHECK(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Demarrage);
+}
+
+TEST_CASE("Couper la turbine reste toujours possible", "[flight][turbine][carburant]") {
+    /* Le garde-fou ne vaut que pour le démarrage : on doit pouvoir couper une
+       turbine qui tourne, même avec un fond de réservoir. */
+    FlightModel model;
+    model.reset(0.0f);
+    model.setGroundHeight(0.0f);
+    model.turbine().forceRunning();
+    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f);
+
+    CHECK(model.toggleTurbine());
+    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
+}

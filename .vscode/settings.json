@@ -1,0 +1,29 @@
+{
+    // Dossier de compilation réservé à l'extension CMake Tools, distinct du
+    // "build/" que pilotent le terminal, build.sh et les tâches de tasks.json.
+    //
+    // Sans ce réglage, l'extension configure "build/" avec son propre générateur
+    // (Ninja) alors qu'il a été écrit par Unix Makefiles. Les sous-projets créés
+    // par FetchContent (build/_deps/<nom>-subbuild, un cache CMake chacun)
+    // refusent ce changement : la configuration échoue sur la première
+    // dépendance, mais le cache principal a déjà été réécrit en Ninja/Debug.
+    // "build/" devient alors inutilisable depuis un terminal, et ses objets
+    // Release cohabitent avec une configuration Debug.
+    //
+    // Chacun son dossier, chacun son générateur, plus de conflit. Les tâches
+    // (Ctrl+Maj+B) et le débogage (F5) continuent d'utiliser "build/", comme
+    // avant. La première compilation lancée depuis l'extension remplit
+    // "build-vscode" de zéro, dépendances tierces comprises : c'est long, et
+    // c'est normal. Le dossier est ignoré par git (motif "build-*/").
+    "cmake.buildDirectory": "${workspaceFolder}/build-vscode",
+
+    // Pas de configuration automatique à l'ouverture du dossier. Elle ne sert à
+    // rien ici, puisque la compilation passe par tasks.json et par le terminal,
+    // et elle coûte cher : les dépendances tierces sont récupérées par
+    // FetchContent, dont les étapes de téléchargement s'exécutent PENDANT la
+    // configuration. Ouvrir le projet clonait donc assimp, glfw, imgui, Catch2 et
+    // Flite, plusieurs minutes et un demi-gigaoctet, sans compiler une seule
+    // ligne. Les boutons de l'extension restent utilisables : ils configurent
+    // alors à la demande.
+    "cmake.configureOnOpen": false
+}

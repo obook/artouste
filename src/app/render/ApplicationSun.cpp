@@ -10,7 +10,7 @@
  */
 
 #include "app/Application.hpp"
-
+#include "app/CycleJourNuit.hpp"
 #include "util/Math.hpp"
 
 #include <cmath>
@@ -19,13 +19,12 @@ namespace artouste::app {
 
 float Application::timeOfDaySeconds(float t) const {
     /* On part de l'heure locale du PC au lancement (m_sunBaseSeconds), puis on
-       avance à m_sunTimeScale fois le temps réel (1 = temps réel, 0 = figé). */
-    constexpr float DAY = 86400.0f;  /* secondes dans une journée */
-    float secondsOfDay = std::fmod(m_sunBaseSeconds + t * m_sunTimeScale, DAY);
-    if (secondsOfDay < 0.0f) {
-        secondsOfDay += DAY;  /* échelle négative : on reste dans [0, 86400[ */
-    }
-    return secondsOfDay;
+       avance à m_sunTimeScale fois le temps réel (1 = temps réel, 0 = figé). La
+       nuit, elle, défile plus vite : m_nightSpeedFactor multiplie l'échelle entre
+       le coucher et le lever (clé lune_vitesse, 2 par défaut). Le calcul lui-même
+       est dans CycleJourNuit.cpp : c'est une fonction pure, que les tests
+       vérifient sans avoir à ouvrir de fenêtre. */
+    return heureDuJour(m_sunBaseSeconds, t, m_sunTimeScale, m_nightSpeedFactor);
 }
 
 vec3 Application::sunDirection(float t) const {
@@ -39,4 +38,4 @@ vec3 Application::sunDirection(float t) const {
     return glm::normalize(vec3{std::cos(angle), std::sin(angle), 0.35f});
 }
 
-}  /* namespace artouste::app */
+} /* namespace artouste::app */

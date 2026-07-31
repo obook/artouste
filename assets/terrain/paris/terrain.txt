@@ -14,6 +14,6 @@ lat_max 48.902
 ortho_width 5001
 ortho_height 2688
 sea 0
-start_x -5926.4
-start_z 3214.1
+start_x -5290.0
+start_z 2830.2
 start_heading 90

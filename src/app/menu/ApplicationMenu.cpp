@@ -119,6 +119,7 @@ bool Application::runStartupMenu() {
     glfwPollEvents();
     lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvZombie, pvQuit);
     bool pvCartes = glfwGetKey(m_window, input::toucheImprimant('c')) == GLFW_PRESS;
+    bool pvMaj    = glfwGetKey(m_window, input::toucheImprimant('m')) == GLFW_PRESS;
 
     while (glfwWindowShouldClose(m_window) == GLFW_FALSE && !lancer) {
         glfwPollEvents();
@@ -171,6 +172,15 @@ bool Application::runStartupMenu() {
             glfwPollEvents();
             lireEntrees(pvUp, pvDown, pvValid, pvTurb, pvDemo, pvZombie, pvQuit);
             pvCartes = glfwGetKey(m_window, input::toucheImprimant('c')) == GLFW_PRESS;
+            pvMaj    = glfwGetKey(m_window, input::toucheImprimant('m')) == GLFW_PRESS;
+        }
+        /* Touche M : ouvrir la page du projet dans le navigateur, seulement quand
+           une version plus récente y attend le pilote (voir MiseAJour.hpp). Au
+           clavier et à la souris seulement : lire une page web n'est pas une
+           manoeuvre qu'on demande à la manette. */
+        const bool majDemandee = glfwGetKey(m_window, input::toucheImprimant('m')) == GLFW_PRESS;
+        if (edge(majDemandee, pvMaj) && m_maj.disponible()) {
+            MiseAJour::ouvrirPage();
         }
 
         int fbw = 0;
@@ -252,6 +262,22 @@ bool Application::runStartupMenu() {
             ImGui::TextDisabled("Z / LB : mode zombie");
         }
         ImGui::TextDisabled("%s", ARTOUSTE_VERSION_STRING);
+        /* Version plus récente publiée : on la signale sans rien imposer -- le vol
+           part comme d'habitude, la proposition attend en bas du menu (voir
+           MiseAJour.hpp). Le bouton ouvre le navigateur ; l'adresse reste écrite
+           en clair pour qui préfère la saisir lui-même. */
+        if (m_maj.disponible()) {
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(1.0f, 0.82f, 0.30f, 1.0f),
+                               "Version %s disponible (vous avez %s).",
+                               m_maj.versionPubliee().c_str(),
+                               ARTOUSTE_VERSION_SEMVER);
+            if (ImGui::Button("Télécharger", ImVec2(ui::hud_widgets::sc(140.0f), 0.0f))) {
+                MiseAJour::ouvrirPage();
+            }
+            ImGui::SameLine();
+            ImGui::TextDisabled("M : ouvrir %s", PAGE_PROJET);
+        }
         ImGui::End();
 
         ImGui::Render();
@@ -345,10 +371,15 @@ void Application::applyMenuSession() {
         m_flight.turbine().stopNow();
     }
 
-    /* On repart d'un état neutre : ni pause, ni panneau de confirmation. */
+    /* On repart d'un état neutre : ni pause, ni panneau de confirmation, et une
+       annonce de la tour à émettre. Ce dernier point compte surtout pour le mode
+       zombie, lancé turbine chaude : le réarmement automatique attend que la
+       turbine redescende sous la moitié du régime, ce qui n'arrive pas entre deux
+       parties, si bien que seule la première du processus était annoncée. */
     m_paused = false;
     m_confirmReset = false;
     m_confirmDemo = false;
+    resetRadioMessage();
 
     /* Démo demandée au menu : on lance la démonstration (elle repose l'appareil, force
        le démarrage rapide de la turbine et joue la chorégraphie). En sortir ramènera au

@@ -28,6 +28,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <utility>
 #include <vector>
 
 namespace artouste::render {
@@ -60,8 +61,33 @@ public:
        l'horloge d'animation (secondes, bouclée en interne). */
     void draw(Shader& shader, float timeSeconds);
 
+    /* Position des deux yeux d'un zombie de ce "kind", dans le repère du modèle
+       (à multiplier par sa matrice d'instance pour obtenir le repère monde).
+       Suit l'os de tête de la variante, donc la pose réellement dessinée : les
+       lueurs restent sur le visage au lieu de flotter devant (voir
+       SkinnedModel::eyePoints).
+
+       Lit la pose du dernier draw() : à appeler APRÈS lui dans l'image, sans
+       quoi les yeux retardent d'une image. Avant le premier draw(), renvoie la
+       pose de repos, calibrée au chargement. Faux si la variante n'a pas
+       d'ancrage d'yeux. */
+    [[nodiscard]] bool eyeAnchors(int kind, vec3& left, vec3& right) const;
+
 private:
     void release() noexcept;
+
+    /* Lot (variante, groupe de phase) d'un "kind" : même répartition pour les
+       instances dessinées et pour les ancrages d'yeux, sans quoi les lueurs
+       suivraient une autre pose que le corps. */
+    [[nodiscard]] std::size_t bucketIndex(int kind) const noexcept;
+
+    /* Matrices d'os d'une variante à l'instant tg, root motion compensé : la
+       pose effectivement dessinée, dont on tire aussi les ancrages d'yeux. */
+    [[nodiscard]] std::vector<mat4> posedBones(std::size_t variant,
+                                               const std::vector<mat4>& globals, float tg) const;
+
+    /* Range les deux yeux de cette variante (repère du modèle) pour ce lot. */
+    void storeEyePoints(std::size_t bucket, std::size_t variant, const std::vector<mat4>& bones);
 
     struct Part {
         unsigned int vao         = 0;
@@ -79,6 +105,10 @@ private:
        chaque lot = 17 flottants par instance (mat4 + flash). Réutilisé d'une
        image à l'autre (clear conserve la capacité). */
     std::vector<std::vector<float>> m_buckets;
+    /* Yeux gauche/droit par lot, dans le repère du modèle : rafraîchis par
+       draw() pour chaque lot posé, à partir des mêmes matrices d'os (dérive de
+       root motion comprise). Même indexation que m_buckets. */
+    std::vector<std::pair<vec3, vec3>> m_eyePoints;
     std::size_t                     m_capacity    = 0;
     int                             m_phaseGroups = 1;
     bool                            m_built       = false;

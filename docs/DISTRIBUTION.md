@@ -107,7 +107,9 @@ point traité plus bas.
 ## Le paquet initial
 
 Objectif : être jouable et beau sans rien télécharger de plus, sur les neuf
-cartes.
+cartes. Côté joueur, le matériel demandé se résume à **un PC et une manette de
+jeu** : le clavier suffit à survoler le simulateur, pas à le piloter, ses touches
+ne rendant qu'un tout ou rien là où un stick donne une valeur continue.
 
 Composition au 28/07/2026, environ 140 Mo compressés :
 

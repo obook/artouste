@@ -136,6 +136,17 @@ a:focus-visible, button:focus-visible {
 .btn-ghost { border: 1px solid var(--rule); color: var(--alu); }
 .btn-ghost:hover { border-color: var(--amber); color: var(--alu); transform: translateY(-2px); }
 
+/* Numéro de la dernière version publiée, sous les boutons de téléchargement
+   (texte renseigné par index.js). */
+.release-line {
+  margin: 14px 0 0; font-size: 0.86rem; letter-spacing: 0.02em;
+}
+.release-line a {
+  font-family: "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  color: var(--amber);
+}
+.release-line a:hover { text-decoration: underline; }
+
 /* Signature : plaque constructeur rivetée */
 .plate {
   position: relative;
@@ -325,6 +336,19 @@ footer .inner {
   color: var(--muted); font-size: 0.82rem;
   font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace; letter-spacing: 0.03em;
 }
+
+/* Attribution des données géographiques : logo posé sur la ligne du texte, en
+   retrait. Il doit se voir sans prendre la place du reste.
+   Le logo IGN est en gris foncé sur fond transparent, illisible sur le pied de
+   page sombre. On le pose donc sur une pastille claire plutôt que de le
+   recolorer, ce qu'une charte de marque n'autorise pas. */
+.credit-ign { display: inline-flex; align-items: center; gap: 10px; }
+.credit-ign img {
+  width: 34px; height: auto;
+  background: #fff; padding: 5px; border-radius: 3px;
+  opacity: 0.9; transition: opacity 0.12s ease;
+}
+.credit-ign img:hover { opacity: 1; }
 
 /* --------------------------------------------------------------------------
    Animation d'apparition (classe .reveal, discrète à l'arrivée sur la page)

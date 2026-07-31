@@ -1,7 +1,8 @@
 /*
  * wave_manager_tests.cpp
  * Tests de l'orchestration des vagues du mode zombie (WaveManager) : première
- * vague, escalade de difficulté et score. Se teste sans contexte graphique.
+ * vague, escalade de difficulté, score et manches de boss (largueur). Se teste
+ * sans contexte graphique.
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -11,8 +12,10 @@
 #include "app/combat/WaveManager.hpp"
 #include "app/combat/ZombieHorde.hpp"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 
@@ -75,6 +78,76 @@ TEST_CASE("WaveManager : première vague, escalade et score", "[combat][waves]")
         REQUIRE(waves.start(dir, horde));
         waves.update(95.0f, horde); /* > WAVE_MAX_DURATION_S (90 s), anti-blocage */
         CHECK(waves.waveNumber() == 2);
+    }
+
+    std::filesystem::remove_all(dir);
+}
+
+namespace {
+/* Enchaîne les manches jusqu'à celle demandée en vidant la horde à chaque fois
+   (extermination immédiate), puis draine le spawn échelonné de la manche
+   atteinte. */
+void avanceJusqua(WaveManager& waves, ZombieHorde& horde, int wave) {
+    while (waves.waveNumber() < wave) {
+        horde.clear();
+        waves.update(0.1f, horde);
+    }
+    for (int i = 0; i < 60; ++i) {
+        waves.update(0.6f, horde);
+    }
+}
+} /* namespace */
+
+TEST_CASE("WaveManager : manches de boss (largueur)", "[combat][waves][boss]") {
+    const auto dir = writeTempSpawnDir("artouste_boss_test", "10 0\n20 0\n30 0\n");
+
+    SECTION("une manche sur cinq est une manche de boss") {
+        CHECK_FALSE(WaveManager::isBossWave(0)); /* avant la première manche */
+        CHECK_FALSE(WaveManager::isBossWave(1));
+        CHECK_FALSE(WaveManager::isBossWave(4));
+        CHECK(WaveManager::isBossWave(5));
+        CHECK(WaveManager::isBossWave(10));
+    }
+
+    SECTION("le largueur apparaît dès l'ouverture de la manche 5") {
+        WaveManager waves;
+        ZombieHorde horde;
+        REQUIRE(waves.start(dir, horde));
+        CHECK_FALSE(horde.broodAlive()); /* manche 1 : pas de boss */
+
+        /* Extermination des manches 1 à 4 : le largueur doit être debout dès
+           l'instant où la manche 5 s'ouvre, avant même son escorte. */
+        while (waves.waveNumber() < 5) {
+            horde.clear();
+            waves.update(0.1f, horde);
+        }
+        CHECK(waves.waveNumber() == 5);
+        CHECK(horde.broodAlive());
+        CHECK(horde.broodHealthPct() == Catch::Approx(1.0f));
+    }
+
+    SECTION("le largueur lâche des marcheurs tant qu'il est debout") {
+        WaveManager waves;
+        ZombieHorde horde;
+        REQUIRE(waves.start(dir, horde));
+        avanceJusqua(waves, horde, 5);
+        REQUIRE(horde.broodAlive());
+
+        const std::size_t avant = horde.count();
+        waves.update(3.5f, horde); /* > BROOD_SPAWN_INTERVAL_S (3 s) */
+        CHECK(horde.count() > avant);
+    }
+
+    SECTION("l'anti-blocage ne clôt pas une manche dont le largueur tient debout") {
+        WaveManager waves;
+        ZombieHorde horde;
+        REQUIRE(waves.start(dir, horde));
+        avanceJusqua(waves, horde, 5);
+        REQUIRE(horde.broodAlive());
+
+        waves.update(95.0f, horde); /* > WAVE_MAX_DURATION_S : sans effet ici */
+        CHECK(waves.waveNumber() == 5);
+        CHECK(horde.broodAlive());
     }
 
     std::filesystem::remove_all(dir);

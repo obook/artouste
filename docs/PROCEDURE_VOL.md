@@ -274,6 +274,11 @@ Chacune peut être mappée sur une touche clavier, un bouton ou un élément de 
 
 ### Mapping clavier minimal suggéré (à adapter selon moteur de jeu)
 
+> Rappel : Artouste se pilote **à la manette**, seul matériel requis avec un PC.
+> Le clavier ci-dessous est un dépannage, pas la voie normale : ses touches ne
+> connaissent que deux états, quand un stick ou une gâchette rend une valeur
+> continue, seule façon de doser un appareil sans servo-commandes.
+
 | Touche | Action |
 |---|---|
 | Z / S | Cyclique avant / arrière (tangage) |

@@ -151,7 +151,7 @@ bool Application::mainLoop() {
         /* Message radio : armé à la turbine au plein régime, émis 2 s après.
            Figé en pause, comme le reste. */
         if (!frozen) {
-            updateRadioMessage(turbineFraction, frameDt);
+            updateRadioMessage(turbineFraction, t, frameDt);
             /* Mode zombie : tir (R3/Ctrl gauche) et avancement de la horde.
                Figé en pause comme le reste, pour ne pas laisser les zombies
                continuer d'agir ni la gâchette tirer pendant un panneau de
@@ -159,6 +159,16 @@ bool Application::mainLoop() {
             m_combat.update(frameDt, body, m_input->fireHeld(), [this](float x, float z) {
                 return m_terrain->heightAt(x, z);
             });
+
+            /* Contact avec le sol : la vitesse d'arrivée a été relevée par la
+               physique, au pas fixe où elle s'est produite (ici, l'appareil est
+               déjà posé, vitesse annulée). On la consomme à chaque image, même
+               hors combat, pour qu'un vieux contact ne vienne pas percer le
+               réservoir au lancement de la partie suivante. Le mode zombie dit
+               combien de kérosène le choc a fait fuir, la physique le retire du
+               réservoir. Après update(), qui vide les événements sonores, et avant
+               leur lecture ci-dessous. */
+            m_flight.drainFuel(m_combat.applyGroundImpact(m_flight.consumeGroundImpact()));
 
             /* Sons ponctuels du mode zombie, déclenchés sur les événements de
                cette image (voir CombatMode::SoundEvents) : même principe que
@@ -195,10 +205,17 @@ bool Application::mainLoop() {
             if (combatEvents.waveStart) {
                 m_audio.playWaveStart();
             }
+            if (combatEvents.broodSpawned) {
+                m_audio.playBroodSpawn();
+            }
         }
 
         updateAudio(body, controls, airspeed, turbineFraction, rotorFraction, frameDt);
         advanceRotor(rotorFraction, frameDt);
+
+        /* Souffle rotor : poussière soulevée au ras du sol. Pas de temps nul en
+           pause, ce qui fige le nuage en place au lieu de le faire disparaître. */
+        updateSouffle(base, rotorFraction, controls.collective, frozen ? 0.0f : frameDt);
 
         /* Tuiles fines : la fenêtre de détail suit la caméra, et non l'appareil,
            parce que c'est elle qui décide de ce qui est à l'écran (vue orbite

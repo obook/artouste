@@ -16,8 +16,15 @@ namespace artouste::app {
 namespace {
 /* Rayon (m) de la sphère de collision de l'appareil pour les boulettes
    toxiques : englobant large plutôt qu'une forme précise, cohérent avec le
-   reste du mode (mitrailleuse elle aussi en sphères simples). */
-constexpr float HELI_HIT_RADIUS_M = 2.5f;
+   reste du mode (mitrailleuse elle aussi en sphères simples).
+
+   2,5 m ne couvrait que la bulle de la cabine, sur une Alouette II qui mesure
+   près de dix mètres poutre de queue comprise : un pneu qui passait
+   visiblement dans la machine la traversait sans rien déclencher, ni dégâts ni
+   bruit d'impact. 4 m englobe la cabine et une bonne part de la poutre, au prix
+   d'un englobant encore généreux sous le rotor -- moindre mal comparé à des
+   impacts visibles restés sans effet. */
+constexpr float HELI_HIT_RADIUS_M = 4.0f;
 /* Durée d'affichage du flash de bouche après un coup parti (s) : assez long
    pour rester visible à l'oeil même à pleine cadence (12 coups/s, un flash
    toutes les ~83 ms), sans jamais tout à fait s'éteindre entre deux coups. */
@@ -84,6 +91,7 @@ void CombatMode::start(const std::filesystem::path& terrainDir,
     m_score             = 0;
     m_killAnnounce      = KillAnnouncement::None;
     m_killAnnounceTimer = 0.0f;
+    m_broodWasAlive     = m_horde.broodAlive();
 }
 
 void CombatMode::stop() noexcept {
@@ -174,6 +182,35 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
         }
     }
 
+    /* Largueur neutralisé : prime de score et annonce dédiée, qui écrase un
+       éventuel kill multiple de la même explosion (l'événement marquant, c'est
+       le boss). Détecté après la mise à jour des roquettes, seule source de
+       dégâts capable de l'entamer. */
+    const bool broodAlive = m_horde.broodAlive();
+    if (m_broodWasAlive && !broodAlive) {
+        /* Ce que le largueur a lâché ne lui survit pas : ses marcheurs éclatent
+           sur place. Une boule de feu et un cri par marcheur, et ils comptent
+           comme des mises à mort -- le joueur les a bien gagnées en abattant le
+           boss. L'annonce, elle, reste celle du largueur : elle est posée après,
+           pour qu'un éventuel carnage simultané ne la vole pas. */
+        const std::vector<vec3> eclates = m_horde.killBroodlings();
+        for (const vec3& pos : eclates) {
+            m_rockets.addExplosion(pos);
+            m_events.explosionPositions.push_back(pos);
+            m_events.zombieDeathPositions.push_back(pos);
+        }
+        m_kills += static_cast<int>(eclates.size());
+        m_score += BROODLING_SCORE * static_cast<int>(eclates.size());
+
+        m_score += BROOD_SCORE;
+        m_killAnnounce      = KillAnnouncement::Brood;
+        m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
+    }
+    /* Apparition : le gestionnaire de vagues vient de la poser (manche de boss),
+       c'est le moment du râle. */
+    m_events.broodSpawned = !m_broodWasAlive && broodAlive;
+    m_broodWasAlive       = broodAlive;
+
     const float damage = m_projectiles.update(dt, body.position, HELI_HIT_RADIUS_M);
     if (damage > 0.0f) {
         m_events.impacted = true;
@@ -182,6 +219,25 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
             m_gameOver = true;
         }
     }
+}
+
+float CombatMode::applyGroundImpact(float speedMs) {
+    if (!m_active || m_gameOver || speedMs <= GROUND_IMPACT_FREE_MS) {
+        return 0.0f;
+    }
+    /* Seul l'excès de vitesse compte, et il compte au carré : les premiers mètres
+       par seconde au-delà du posé passent dans les patins, les suivants ouvrent
+       le réservoir. */
+    const float exces  = speedMs - GROUND_IMPACT_FREE_MS;
+    const float litres = exces * exces * GROUND_IMPACT_FUEL_COEFF;
+    /* Sous un demi-litre, la jauge affiche encore le même nombre entier : le
+       joueur entendrait le choc sans rien voir bouger. Un contact aussi doux est
+       un posé, pas un choc : ni fuite ni bruit. */
+    if (litres < GROUND_IMPACT_MIN_LITERS) {
+        return 0.0f;
+    }
+    m_events.impacted = true;
+    return litres;
 }
 
 }  /* namespace artouste::app */

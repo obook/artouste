@@ -109,15 +109,93 @@ jobs:
     # Une release n'est créée que pour un tag, pas pour un lancement manuel.
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      # Ce job ne compile rien, mais il lui faut quand même le dépôt : le texte de
+      # la release est lu dans docs/RELEASE_NOTES.md ci-dessous. Sans ce checkout,
+      # body_path désignerait un fichier absent et l'action retomberait sur une
+      # description vide, sans échouer. En premier, car actions/checkout nettoie le
+      # répertoire de travail : après le téléchargement, il effacerait les archives.
+      - uses: actions/checkout@v4
+
       - name: Récupérer les artefacts
         uses: actions/download-artifact@v4
         with:
           path: artefacts
 
-      # La release et son texte sont créés à la main ; ici on ne fait qu'attacher
-      # les archives, sans toucher au corps de la release (pas de notes générées).
-      - name: Attacher les archives à la release
+      # RITUEL DE PUBLICATION, dans cet ordre :
+      #   1. écrire les notes dans docs/RELEASE_NOTES.md, bumper la version dans
+      #      CMakeLists.txt, commiter et pousser ;
+      #   2. poser le tag et le pousser (ce workflow démarre, une quinzaine de
+      #      minutes de compilation) ;
+      #   3. pendant ce temps, créer la release à la main depuis le même fichier :
+      #        gh release create vX.Y.Z --title "vX.Y.Z" --notes-file docs/RELEASE_NOTES.md
+      #
+      # L'étape 3 est ce qui donne à la release VOTRE nom : l'auteur d'une release
+      # est figé à sa création et ne se change plus ensuite. Sans elle, c'est
+      # l'action qui la crée, avec le compte du robot, qui apparaissait alors comme
+      # contributeur du projet.
+      #
+      # body_path reste néanmoins renseigné, comme filet : si l'étape 3 est oubliée,
+      # la release naîtra au moins avec son texte. Corollaire à connaître : ce texte
+      # est celui du FICHIER. Retoucher la description dans l'interface web pendant
+      # que la CI tourne serait annulé. Le fichier fait foi.
+      #
+      # generate_release_notes reste à false : la liste plate des sujets de commits
+      # n'apprend rien à un joueur.
+      - name: Attacher les archives et le texte à la release
         uses: softprops/action-gh-release@v2
         with:
           files: artefacts/**/artouste-*
+          body_path: docs/RELEASE_NOTES.md
           generate_release_notes: false
+          # Un tag portant un tiret (v0.30.0-rc1, v0.0.0-essai) est un essai ou une
+          # version candidate : publié en pré-release, il ne devient pas la version
+          # que propose le bouton de téléchargement du dépôt.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  page:
+    name: Inscrire le tag dans la page
+    needs: [release]
+    runs-on: ubuntu-latest
+    # Même garde que la release, plus une seconde : un lancement manuel ne publie
+    # rien, et un tag d'essai ou de version candidate (portant un tiret) ne doit pas
+    # inscrire son numéro dans la page vue par les visiteurs.
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref_name, '-')
+    steps:
+      # Le tag est un état détaché ; la page, elle, est servie par GitHub Pages
+      # depuis docs/ sur main. C'est donc main qu'on met à jour, et le push
+      # déclenche la reconstruction de la page.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # Le numéro est écrit en clair dans la page, à deux endroits repérables :
+      # le contenu des liens de classe "release-tag" (un par langue, sous les
+      # boutons de téléchargement) et le champ softwareVersion des données
+      # structurées, qui lui s'écrit sans le "v" du tag. Rien à charger côté
+      # visiteur, et le numéro reste affiché sans JavaScript.
+      - name: Inscrire le tag dans docs/index.html
+        run: |
+          sed -i \
+            -e 's|\(<a class="release-tag"[^>]*>\)[^<]*\(</a>\)|\1'"$GITHUB_REF_NAME"'\2|g' \
+            -e 's|"softwareVersion": "[^"]*"|"softwareVersion": "'"${GITHUB_REF_NAME#v}"'"|' \
+            docs/index.html
+          grep -n 'release-tag\|softwareVersion' docs/index.html
+
+      # Rien à pousser si le numéro est déjà le bon (relance du workflow sur un
+      # tag déjà traité) : sans ce garde-fou, git commit échouerait sur un index
+      # vide et ferait échouer le job pour rien.
+      - name: Commiter le numéro s'il a changé
+        run: |
+          if git diff --quiet -- docs/index.html; then
+            echo "La page porte déjà le numéro $GITHUB_REF_NAME."
+            exit 0
+          fi
+          # Identité de l'auteur du dépôt, et non celle du robot : ce commit est
+          # celui de la release que vous venez de poser, pas la contribution d'un
+          # tiers. Signer avec le compte du robot le faisait apparaître dans la
+          # liste des contributeurs du projet.
+          git config user.name "Olivier Booklage"
+          git config user.email "obooklage@free.fr"
+          git add docs/index.html
+          git commit -m "docs(page): Version $GITHUB_REF_NAME"
+          git push

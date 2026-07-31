@@ -131,9 +131,21 @@ void Application::updateAudio(const physics::RigidBody& body,
     }
     m_closingSpeed += (targetClosing - m_closingSpeed) * (1.0f - std::exp(-frameDt / 0.25f));
 
-    /* En pause, on suspend les boucles sonores ; sinon on les module normalement. */
-    m_audio.setPaused(m_paused);
-    if (!m_paused) {
+    /* En pause, on suspend les boucles sonores ; sinon on les module normalement.
+     * La fin de partie du mode zombie fige le vol comme une pause (voir 'frozen'
+     * dans mainLoop) : le son se tait de la même façon, sans quoi turbine et
+     * rotor continuent de tourner sur un appareil abattu, derrière le bandeau de
+     * fin de partie. La reprise est automatique : setPaused garde la position des
+     * boucles, et la partie suivante les relance là où elles s'étaient tues. */
+    const bool audioFrozen = m_paused || m_combat.gameOver();
+    m_audio.setPaused(audioFrozen);
+    if (m_combat.gameOver()) {
+        /* Les sons ponctuels du combat ne passent pas par setPaused : on les
+           coupe à part, à chaque image de fin de partie (sans effet une fois la
+           liste vide), plutôt que de guetter le front de gameOver. */
+        m_audio.stopCombatSounds();
+    }
+    if (!audioFrozen) {
         m_audio.update(controls.collective,
                        airspeed,
                        turbineFraction,

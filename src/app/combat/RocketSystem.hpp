@@ -62,6 +62,12 @@ public:
     UpdateResult update(float dt, const std::function<float(float, float)>& terrainHeight,
                         ZombieHorde& horde) noexcept;
 
+    /* Ajoute une boule de feu qui ne vient d'aucun tir : le mode zombie s'en sert
+       pour faire éclater les marcheurs d'un largueur abattu. Purement visuel --
+       ni dégâts de zone, ni trace au sol (ce n'est pas un impact de roquette),
+       et l'appelant reste maître des morts et des sons. */
+    void addExplosion(const vec3& center);
+
     /* Roquette en vol, pour le rendu (traînée de feu tendue de tail à head). */
     struct RocketView {
         vec3 head{0.0f};  /* pointe de la roquette (monde) */
@@ -78,12 +84,27 @@ public:
     };
     [[nodiscard]] std::vector<ExplosionView> explosions() const;
 
-    /* Trace de brûlure laissée au sol par chaque impact, s'estompant en ~45 s :
-       point au sol et opacité courante (1 -> 0). Pour un décalque sombre (voir
-       Application::drawScorchMarks). */
+    /* Trace de brûlure laissée au sol par chaque impact : point au sol, opacité
+       courante (1 -> 0) et forme. Pour un décalque sombre (voir
+       Application::drawScorchMarks).
+
+       Deux impacts ne se ressemblent pas. La FORME vient de l'angle d'arrivée :
+       une roquette qui tombe à la verticale creuse un rond, une roquette qui
+       rase le sol étire sa trace le long de sa trajectoire, comme la tache
+       allongée que projette un cône incliné (rapport 1/sin de l'incidence).
+       yaw donne la direction de ce grand axe. La TAILLE vient de la portée : un
+       tir lointain a plus longtemps accéléré vers le bas et frappe plus fort, on
+       lui donne donc une trace plus large, plafonnée. */
     struct ScorchView {
         vec3  center{0.0f};
         float alpha = 0.0f;
+        /* Rayon ÉQUIVALENT (m) : l'ellipse conserve cette surface quelle que soit
+           sa forme, le grand axe valant radius * racine(elongation) et le petit
+           radius / racine(elongation). Sans cette conservation, une trace
+           allongée paraîtrait aussi une trace démesurée. */
+        float radius     = 0.0f;
+        float elongation = 1.0f;  /* rapport grand axe / petit axe (1 = rond) */
+        float yaw        = 0.0f;  /* direction du grand axe (rad, repère monde) */
     };
     [[nodiscard]] std::vector<ScorchView> scorches() const;
 
@@ -98,6 +119,7 @@ private:
     struct Rocket {
         vec3  position{0.0f};
         vec3  velocity{0.0f};
+        vec3  origin{0.0f};      /* point de départ, pour la portée de l'impact (voir ScorchView) */
         float lifetimeS = 0.0f;  /* despawn de sécurité (airburst) si rien touché */
     };
     struct Explosion {
@@ -106,7 +128,10 @@ private:
     };
     struct Scorch {
         vec3  center{0.0f};
-        float age = 0.0f;  /* s écoulées depuis l'impact (s'estompe sur ~45 s) */
+        float age        = 0.0f;  /* s écoulées depuis l'impact (s'estompe sur ~45 s) */
+        float radius     = 0.0f;  /* figés à la détonation, voir ScorchView */
+        float elongation = 1.0f;
+        float yaw        = 0.0f;
     };
 
     std::vector<Rocket>    m_rockets;

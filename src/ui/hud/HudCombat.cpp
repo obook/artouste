@@ -94,11 +94,29 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
                                                     : "HORS DE PORTEE DES ZOMBIES");
     ImGui::PopStyleColor();
 
+    /* Largueur : jauge de vie, visible seulement pendant une manche de boss et
+       tant qu'il tient debout. Sans elle, le joueur ne peut pas savoir s'il
+       progresse : cinq roquettes séparent l'apparition de la mise à mort, ce qui
+       est long sans retour. Dessinée DANS le panneau de combat plutôt qu'en
+       bandeau haut centré : là-haut, elle recouvrait le ruban de cap (tracé de
+       y = 30 à 72 dans le calque de premier plan, donc par-dessus toute fenêtre
+       ImGui, voir HudSuperOverlay et renderRadioSubtitle). Ici elle hérite du
+       placement déjà calculé plus haut pour les deux modes de HUD. */
+    if (data.combat.broodActive) {
+        ImGui::Separator();
+        ImGui::PushStyleColor(ImGuiCol_Text, HUD_RED);
+        ImGui::TextUnformatted("LARGUEUR");
+        ImGui::PopStyleColor();
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, HUD_RED);
+        ImGui::ProgressBar(data.combat.broodHealthPct, ImVec2(sc(200.0f), sc(12.0f)), "");
+        ImGui::PopStyleColor();
+    }
+
     ImGui::End();
 
-    /* Annonce de kill multiple (double/triple/carnage) : bandeau bref, haut de
-       l'écran, distinct du panneau permanent ci-dessus -- couleur et taille
-       montent avec la gravité, mêmes seuils que le score (voir
+    /* Annonce de kill multiple (double/triple/carnage) ou de largueur neutralisé :
+       bandeau bref, haut de l'écran, distinct du panneau permanent ci-dessus --
+       couleur et taille montent avec la gravité, mêmes seuils que le score (voir
        CombatMode::killScoreForCount). Rien à afficher (killAnnounceKind == 0)
        la plupart du temps : un kill simple ne mérite pas d'annonce. */
     if (data.combat.killAnnounceKind != 0) {
@@ -106,9 +124,10 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
         ImU32       couleur;
         float       echelle;
         switch (data.combat.killAnnounceKind) {
-            case 1:  texte = "DOUBLE KILL !"; couleur = HUD_GREEN; echelle = 1.3f; break;
-            case 2:  texte = "TRIPLE KILL !"; couleur = HUD_AMBER; echelle = 1.6f; break;
-            default: texte = "CARNAGE !";     couleur = HUD_RED;   echelle = 2.0f; break;
+            case 1:  texte = "DOUBLE KILL !";      couleur = HUD_GREEN; echelle = 1.3f; break;
+            case 2:  texte = "TRIPLE KILL !";      couleur = HUD_AMBER; echelle = 1.6f; break;
+            case 3:  texte = "CARNAGE !";          couleur = HUD_RED;   echelle = 2.0f; break;
+            default: texte = "LARGUEUR NEUTRALISÉ !"; couleur = HUD_RED; echelle = 2.0f; break;
         }
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.22f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.0f);

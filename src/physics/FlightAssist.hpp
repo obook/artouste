@@ -31,8 +31,20 @@ public:
     [[nodiscard]] float intensity() const noexcept { return m_intensity; }
 
     /* Remet l'état lissé au neutre (toutes commandes à zéro), par exemple lors d'un
-     * retour au pad, pour que le collectif mémorisé ne subsiste pas. */
+     * retour au pad, pour que le collectif mémorisé ne subsiste pas. NE TOUCHE PAS
+     * à l'interrupteur : une remise en place en vol (touches R et X) ne doit pas
+     * couper l'assistance sous les mains du pilote. */
     void reset() noexcept { syncTo(Controls{}); }
+
+    /* Éteint l'assistance et purge la transition en cours, sans progressivité :
+     * réservé au départ en vol depuis le menu, où l'on repart d'un état vierge.
+     * Sans cela l'interrupteur survivait au changement de carte, et l'on
+     * décollait assisté sans l'avoir demandé. */
+    void disable() noexcept {
+        m_active    = false;
+        m_intensity = 0.0f;
+        syncTo(Controls{});
+    }
 
 private:
     /* Recale l'état interne sur les commandes brutes, pour qu'une (ré)activation

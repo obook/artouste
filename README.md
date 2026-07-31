@@ -126,32 +126,17 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 
 ## Commandes
 
-Le simulateur se pilote **à la manette**. Le clavier est là pour dépanner : les
-touches du collectif et du cyclique ne connaissent que deux états, appuyé ou
-relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil
-sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
+La liste complète des commandes est dans la notice :
+**[notice.pdf](docs/notice.pdf)**. Elle couvre le vol, les vues, la livrée, le
+mode assisté, l'atterrissage automatique, le HUD, la radio, la démo, le
+gestionnaire de cartes et le mode zombie, en deux versions schéma à l'appui,
+manette Xbox puis manette PlayStation.
 
-| Action                  | Clavier        | Manette              |
-|-------------------------|----------------|----------------------|
-| Collectif +/-           | `Z` / `S`      | RT / LT              |
-| Cyclique                | flèches        | stick gauche         |
-| Recentrer le cyclique   | `Espace`       | -                    |
-| Palonniers              | `D` / `Q`      | stick droit (X)      |
-| Turbine (démarrer/couper) | `T`          | bouton `Start`       |
-| Vue (poursuite/cockpit/orbite/orbite solaire) | `C` | bouton `Y` (jaune) |
-| Livrée (blanche/Gendarmerie/armée de terre/Protection civile) | `L` | bouton `A` (vert) |
-| Mode assisté (confort)  | `M`            | `LB` (`L1` sur PS4/PS5) |
-| Atterrissage automatique (pad le plus proche) | `J` | `RB` (`R1` sur PS4/PS5) |
-| HUD (coins/superposé/aucun) | `H`        | bouton `B`           |
-| Plein écran (fenêtré/plein écran) | `F`  | -                    |
-| Pause                   | `P`            | bouton `Back`        |
-| Démo : lancer / sortir  | menu `Démo` (ou `D`) / `Échap` | lancer : bouton `Y` (menu) ; sortir : `Échap`/`B`, ou reprendre le manche |
-| Radio internet (allumer/couper) | `K`    | -                    |
-| Balance radio/hélico    | `-` / `+`      | -                    |
-| Reset position          | `R`            | bouton `X`           |
-| Retour au menu          | `Échap`        | `LB` + `RB`          |
+Elle n'est pas recopiée ici : deux listes à tenir finissent par diverger, et
+c'était déjà le cas (le tableau qui occupait cette place ignorait le mode
+zombie, le tir et le gestionnaire de cartes).
 
-Les boutons sont nommés à la Xbox, mais une manette PlayStation 4 (DualShock 4) ou PlayStation 5 (DualSense) branchée en USB ou en Bluetooth fonctionne aussi : le mappage GLFW/SDL fait correspondre `A`/`B`/`X`/`Y` à Croix/Rond/Carré/Triangle, `Start` à `Options` et `Back` à `Share`/`Create`.
+Une manette PlayStation 4 (DualShock 4) ou PlayStation 5 (DualSense) branchée en USB ou en Bluetooth fonctionne au même titre qu'une manette Xbox : le mappage GLFW/SDL fait correspondre `A`/`B`/`X`/`Y` à Croix/Rond/Carré/Triangle, `Start` à `Options` et `Back` à `Share`/`Create`.
 
 Cette reconnaissance étendue s'appuie sur la base communautaire SDL embarquée (`assets/gamecontrollerdb.txt`), chargée au démarrage. Elle couvre plusieurs centaines de manettes sur Linux, Windows et macOS, dont les modèles Xbox sans fil récents (Series X/S) en Bluetooth, absents de la base intégrée de GLFW. Pour rester à jour au fil des nouveaux modèles, il suffit de remplacer ce fichier par la dernière version publiée sur le dépôt [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB).
 
@@ -375,3 +360,11 @@ Le ciel réaliste et la vue d'orbite solaire proviennent d'une contribution de
 
 Ce projet est distribué sous licence **GPL v2** (voir `LICENSE`), comme le
 modèle 3D et les sons d'Emmanuel Baranger qu'il inclut.
+
+Les modèles 3D des monuments de Paris viennent de la scène FlightGear
+"Paris V2" du même auteur
+(<http://embaranger.free.fr/flightgear/scenery/ParisV2/ParisV2.htm>), placée
+sous **GPL v2** ; Emmanuel Baranger l'a confirmé par courriel le 28 juillet
+2026. Ils sont eux-mêmes tirés des scènes X-Plane de Bertrand Augras
+(<http://baugras.club.fr/xplane/Site/france.html>), que son `Read-Me.txt`
+crédite et que nous reprenons dans `assets/models/monuments/paris/`.

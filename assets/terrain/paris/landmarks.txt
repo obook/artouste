@@ -26,3 +26,12 @@
 2.4378 48.8422 Château de Vincennes
 2.347 48.8555 Île de la Cité
 2.3565 48.8514 Île Saint-Louis
+2.324460 48.870027 Église de la Madeleine
+2.235868 48.892569 Grande Arche de la Défense
+2.352527 48.856428 Hôtel de Ville
+2.375835 48.833639 Bibliothèque nationale de France
+2.345147 48.863407 Église Saint-Eustache
+2.334815 48.851007 Église Saint-Sulpice
+2.345028 48.855396 Sainte-Chapelle
+2.349100 48.858200 Tour Saint-Jacques
+2.283414 48.879450 Hôtel Concorde Lafayette

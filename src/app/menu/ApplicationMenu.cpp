@@ -336,11 +336,27 @@ void Application::applyMenuSession() {
         /* Un jeu de tuiles fabriqué ou supprimé ne se lit ni dans le nom de la
            carte ni dans son options.txt, alors qu'il change tout au chargement :
            le gestionnaire le signale par m_cartesRemaniees. */
-        if (carteChangee || optionsChangees || m_cartesRemaniees) {
+        /* monuments.txt retouché à la main pendant que la scène était en mémoire :
+           on compare sa date d'écriture à celle relevée au chargement. Caler une
+           trentaine de monuments demande de reprendre ce fichier des dizaines de
+           fois, et sans ce test il fallait relancer le simulateur à chaque essai
+           pour en voir l'effet. */
+        const bool monumentsChanges =
+            !carteChangee && !m_terrainName.empty() &&
+            dateMonuments(m_assetsDir / "terrain" / m_terrainName) != m_monumentsDate;
+        if (carteChangee || optionsChangees || m_cartesRemaniees || monumentsChanges) {
             loadTerrain(m_menuTerrain);  /* remet lui-même le drapeau à faux */
         }
     }
     resetToStart();
+
+    /* Assistance éteinte à chaque départ en vol. resetToStart ne peut pas s'en
+       charger : il sert aussi aux touches R et X, où couper l'assistance
+       surprendrait le pilote en plein vol. Sans cette ligne, l'interrupteur
+       survivait au retour au menu et l'on repartait assisté sans l'avoir
+       demandé. La démo n'est pas concernée, elle a son propre chemin (voir
+       setRealFlyPhysicsEnabled dans ApplicationLoop.cpp). */
+    m_assist.disable();
 
     /* Livrée de départ (armée de terre) : appliquée à chaque relance depuis le menu,
        le modèle 3D persistant gardant sinon la livrée du vol précédent. */

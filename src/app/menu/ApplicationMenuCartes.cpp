@@ -523,7 +523,7 @@ void Application::runGestionnaireCartes() {
         if (ImGui::BeginTable("cartes", 6,
                               ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableSetupColumn("Carte");
-            ImGui::TableSetupColumn("État");
+            ImGui::TableSetupColumn("Résolution");
             ImGui::TableSetupColumn("Socle");
             ImGui::TableSetupColumn("Tuiles");
             ImGui::TableSetupColumn("Bâtiments");

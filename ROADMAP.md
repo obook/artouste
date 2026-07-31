@@ -16,6 +16,15 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
 
+### Mode assisté conservé d'une carte à l'autre
+
+- [x] Le mode assisté restait allumé au démarrage d'une carte alors qu'il doit
+  repartir éteint. `resetToStart` appelait bien `m_assist.reset()`, mais celui-ci
+  ne fait que resynchroniser les commandes lissées et laissait l'interrupteur
+  intact. Corrigé par un `FlightAssist::disable()` appelé au départ en vol depuis
+  le menu (`applyMenuSession`), et non dans `resetToStart` qui sert aussi aux
+  touches `R` et `X` en vol, où couper l'assistance surprendrait le pilote.
+
 ### Lacet en approche (dérive à droite)
 
 - [ ] Dérive en lacet à droite en approche finale (réduction du collectif) :
@@ -292,16 +301,123 @@ ou sortir de France.
   à construire, sur le modèle du chargement de l'hélipad (charger le `.ac`,
   instancier au lon/lat voulu, poser sur `heightAt`).
 
+### Habiller les bâtiments extrudés selon leur région
+
+Les emprises et les hauteurs viennent de la BD TOPO, donc la SILHOUETTE des
+villes est juste. Ce qui l'est moins, c'est l'habillage : une seule façade et une
+seule palette de toits servent partout, et elles ont été dessinées pour la côte
+basque et les Landes. Sur Paris, cela donne une ville aux toits de tuile rouge,
+ce que trois secondes de survol suffisent à démentir. Deux chantiers distincts,
+qui peuvent se mener séparément.
+
+- [ ] **Façades haussmanniennes.** `assets/textures/facade.png`, produite par
+  `tools/facade/generer_facade.py`, est une tuile générique de 12 x 6 m : trois
+  travées de 4 m sur deux étages de 3 m, enduit clair grainé, fenêtres
+  rectangulaires à croisillon, bandeau de plancher, pilastres discrets. Elle est
+  répétée sur tous les murs de toutes les cartes.
+
+    Le vrai obstacle n'est pas le dessin mais la structure. Une façade
+  haussmannienne n'est pas un motif répétable, c'est une composition sur toute la
+  hauteur : rez-de-chaussée commerçant, entresol, deuxième étage noble à balcon
+  filant, troisième et quatrième plus sobres, cinquième à nouveau à balcon
+  filant, corniche, puis comble en zinc. Une tuile qui se répète tous les deux
+  étages ignore où elle se trouve dans la hauteur de l'immeuble et ne peut donc
+  pas rendre ce rythme.
+
+    Deux voies, par ordre de coût :
+
+    1. Ne changer que le dessin, sans toucher au moteur. Pierre de taille beige
+       à joints horizontaux marqués, fenêtres plus hautes et mieux
+       proportionnées, garde-corps en fonte à chaque étage. On n'aura pas les
+       balcons filants aux bons niveaux, mais le grain parisien plutôt que le
+       grain de pavillon, pour le prix d'un script réécrit.
+    2. Atlas en trois bandes verticales (socle, étage courant répétable,
+       couronnement) et sélection de la bande dans `building.frag` selon la
+       hauteur du fragment dans le mur. L'information nécessaire est déjà là :
+       `BuildingsMesh` calcule les UV verticaux en mètres réels depuis le sol du
+       bâtiment (`vTop = height / FACADE_TILE_H_M`). Il manque la logique de
+       choix et une texture en trois parties. C'est la seule voie qui rende
+       vraiment l'immeuble parisien.
+
+    Dans les deux cas, prévoir un jeu de textures PAR RÉGION plutôt qu'une seule
+  pour tout le dépôt, sur le principe des options par carte : une carte des
+  Landes ne doit pas hériter des façades de Paris.
+
+- [ ] **Toits de zinc.** `ROOF_PALETTE` (`src/render/buildings/BuildingsMesh.cpp`)
+  compte six teintes dont trois identiques de tuile terre cuite, pesée pour
+  dominer à 50 %, plus une tuile chaude, une tuile patinée et une ardoise. Le
+  commentaire du code l'assume : "couleurs régionales (côte basque et Landes)".
+  Une teinte est tirée par bâtiment, de façon stable mais SANS AUCUN RAPPORT avec
+  la photo qui se trouve juste dessous : un immeuble couvert de zinc gris se
+  retrouve coiffé de tuile rouge.
+
+    Paris, c'est le zinc. Bleu-gris clair quand il est neuf, virant au gris terne
+  en patinant, avec de l'ardoise plus sombre et plus bleue sur les édifices
+  anciens, et de la tuile qui ne reparaît qu'en périphérie. S'y ajoute une
+  difficulté de forme, pas seulement de couleur : le toit parisien est un comble
+  brisé (mansarde), là où l'extrusion pose un toit plat. La couleur seule ne fera
+  donc pas tout, mais elle corrigera l'essentiel de ce qui saute aux yeux.
+
+    Trois façons de s'y prendre :
+
+    1. Palette par carte, déclarée en donnée (clé d'`options.txt` ou fichier
+       dédié) : `toits zinc` pour Paris, `toits tuile` ailleurs. Simple, dans la
+       ligne des autres options par carte, et corrige immédiatement le défaut le
+       plus visible.
+    2. Teinter chaque toit d'après l'ORTHOPHOTO, en y lisant la couleur au centre
+       de l'emprise. Juste partout et sans donnée à saisir, puisque la photo
+       montre précisément le toit vu de dessus. `BuildingsMesh` charge déjà
+       l'orthophoto côté processeur pour le filtre des cabanes sur l'eau, il n'y
+       aurait qu'à l'étendre à toutes les cartes. Risque : reprendre la couleur
+       brute donnerait des toits ternes et salis d'ombres, il faudra sans doute
+       raviver la saturation.
+    3. Compromis : lire l'orthophoto mais s'aligner sur la teinte la plus proche
+       dans une palette propre. On garde des toits nets tout en devenant
+       régionalement juste.
+
+    La voie 1 est celle qui rapporte le plus vite, la voie 2 celle qui a le plus
+  d'avenir, et rien n'empêche de faire la première en attendant la seconde.
+
 ### Monuments de Paris en 3D
 
-- [ ] Poser les monuments parisiens en volume sur la carte `paris`, à partir des
+- [~] Poser les monuments parisiens en volume sur la carte `paris`, à partir des
   35 modèles d'helijah (Emmanuel Baranger, scène FlightGear "Paris V2", 2009),
   le même auteur que l'Alouette II du projet. Source :
-  `http://helijah.free.fr/flightgear/scenery/ParisV2/ParisV2.htm`, archive
-  `Paris_V2.zip` (24,5 Mo). Copie de secours si le lien tombe : dépôt GitHub
-  `FGMEMBERS-TERRAGIT/e000n40-objects`, sous-dossier `e002n48/`. L'archive
-  contient un `.ac` et sa texture par monument (`Models/Region-Paris/`) et les
-  positions dans `Scenery/Objects/e000n40/`.
+  `http://embaranger.free.fr/flightgear/scenery/ParisV2/ParisV2.htm`, archive
+  `ParisV2-25-06-2009.tar.gz` (24,5 Mo, à récupérer un cran plus haut :
+  `http://embaranger.free.fr/flightgear/scenery/ParisV2-25-06-2009.tar.gz`).
+  Attention, l'adresse `helijah.free.fr/flightgear/scenery/` renvoie 404 : la
+  page des scènes est sur `embaranger.free.fr`, seul le hangar des appareils
+  est resté sur `helijah.free.fr`. Copie de secours si le lien tombe : dépôt
+  GitHub `FGMEMBERS-TERRAGIT/e000n40-objects`, sous-dossier `e002n48/`.
+  L'archive contient un `.ac` et sa texture par monument
+  (`Models/Region-Paris/`) et les positions dans `Scenery/Objects/e000n40/`.
+
+    Fait le 28/07/2026 : le mécanisme est en place, quatre monuments sont posés
+  (tour Eiffel, Arc de Triomphe, Sacré-Coeur, Hôtel des Invalides, ce dernier en
+  deux morceaux et imparfait, voir le point 9).
+  Un `monuments.txt` facultatif par carte
+  (`lon lat altitude cap echelle_h echelle_v rayon_m fichier nom`, l'altitude
+  acceptant le mot-clé `sol`), lu par `Terrain::loadMonuments` dans
+  `render::Monument` ; l'exclusion des emprises BD TOPO sous un monument dans
+  `BuildingsMesh` ; un shader `monument.vert/frag` qui ajoute au rendu des
+  modèles le test alpha (sans lui, les ajours du treillis restent opaques) et la
+  brume du terrain. Le chargement recentre chaque modèle sur sa boîte
+  englobante, sans quoi la coordonnée du fichier ne voudrait rien dire de commun
+  d'un monument à l'autre : les auteurs de scène ne posent pas tous l'origine au
+  milieu de leur géométrie, celle du Sacré-Coeur en est à 70 m. Restent les 31
+  autres monuments.
+
+    MÉTHODE, tirée des quatre premiers. Le centre et le cap se mesurent sur les
+  emprises BD TOPO, qui sont vectorielles et exactes : cap par la direction
+  dominante des côtés pondérée par leur longueur, modulo 90, et non par le côté
+  le plus long, qu'une emprise très subdivisée rend trompeur. L'ÉCHELLE, elle,
+  ne se mesure PAS sur BD TOPO, qui simplifie les grands monuments en blocs
+  pleins sans percer les cours : la relever sur l'orthophoto, tuiles de détail
+  chargées, en rendant deux fois la même vue au nadir avec et sans le monument
+  et en comparant les silhouettes. Aucune échelle commune ne se dégage d'un
+  monument à l'autre (1,029, 0,951, 1,0 et 1,0 en plan pour les quatre premiers) :
+  chacun se mesure.
 
     État des lieux. La carte `assets/terrain/paris/` existe déjà (heightmap,
   ortho, `buildings.bin` de 14 Mo, `helipads.txt`, `options.txt` avec `arbres 0`)
@@ -318,14 +434,9 @@ ou sortir de France.
   les textures. Si certains monuments arrivent en `.rgb` (format SGI), stb_image
   ne sait pas les lire et il faut les convertir en PNG.
 
-    Mécanisme manquant, commun avec les phares de Capbreton ci-dessus : rien ne
-  permet aujourd'hui de poser un modèle ponctuel arbitraire à une coordonnée
-  donnée. À construire une seule fois pour les deux besoins, sous la forme d'un
-  fichier optionnel par carte, par exemple `monuments.txt`
-  (`lon lat altitude cap echelle fichier nom`), lu comme `landmarks.txt` et
-  `hapi.txt` le sont par `Terrain::loadPlaces` et `Terrain::loadHapiUnits`, puis
-  instancié au chargement sur le modèle de l'hélipad
-  (`assets/models/helipad/helipad.ac`).
+    Le mécanisme de pose d'un modèle ponctuel, qui manquait, sert aussi aux
+  phares de Capbreton ci-dessus : `monuments.txt` n'a rien de parisien, toute
+  carte peut en poser un.
 
     Coordonnées. Les positions exactes sont dans les fichiers `.stg` de
   l'archive, une ligne `OBJECT_STATIC fichier.ac lon lat altitude cap` par
@@ -335,21 +446,30 @@ ou sortir de France.
 
     Points durs identifiés :
 
-    1. Doublon avec les bâtiments. `buildings.bin` extrude déjà les emprises
-       BD TOPO de la Tour Eiffel, du Louvre ou de Notre-Dame ; poser le modèle
-       par-dessus donnerait deux géométries imbriquées. Il faut un mécanisme
-       d'exclusion d'emprises, sur le principe d'`exclusions.txt` qui ne sert
-       aujourd'hui qu'à la végétation, mais appliqué à `BuildingsMesh`.
-    2. Calage vertical. Le relief de Paris fait 1024 x 1024 pour 18 017 m sur
-       9 685 m, soit environ 17,6 m par cellule, trop lâche pour poser
-       proprement un socle. Prévoir une altitude explicite par monument dans le
-       fichier plutôt que le seul `heightAt`.
-    3. Orientation. Le cap des `.stg` suit la convention FlightGear et Assimp
-       réoriente les `.ac` au chargement (voir `fgToAssimp` et le commentaire de
-       `LoadedHelicopterInstruments.cpp`). La conversion vers la rotation Y du
-       moteur est à écrire, puis à vérifier monument par monument.
-    4. Échelle. Les modèles FlightGear sont en mètres, mais certains demandent
-       un ajustement : garder un facteur d'échelle par monument dans le fichier.
+    1. RÉGLÉ. Doublon avec les bâtiments. `buildings.bin` extrude déjà les
+       emprises BD TOPO de la Tour Eiffel, du Louvre ou de Notre-Dame ; poser le
+       modèle par-dessus donnait deux géométries imbriquées. `BuildingsMesh`
+       écarte maintenant les emprises sous un monument, dans le rayon que
+       déclare sa ligne (`rayon_m`), plus un test point-dans-polygone pour la
+       grande emprise qui l'englobe sans que son centre en soit proche. Quatre
+       emprises écartées sous la tour Eiffel, ses quatre volumes empilés.
+    2. RÉGLÉ. Calage vertical. Le relief de Paris fait 1024 x 1024 pour 18 017 m
+       sur 9 685 m, soit environ 17,6 m par cellule, trop lâche pour poser
+       proprement un socle. Le champ altitude accepte donc une valeur explicite,
+       le mot-clé `sol` rendant la main à `heightAt` là où le relief suffit
+       (c'est le cas du Champ de Mars, plat).
+    3. RÉGLÉ. Orientation. Les `.ac` de la scène arrivent déjà en Y vers le haut,
+       Assimp ne les réoriente pas : `fgToAssimp` ne concerne que les décalages
+       des fichiers d'assemblage FlightGear, pas la géométrie. Le cap du fichier
+       est un cap boussole appliqué en rotation autour de Y, cap 0 laissant le
+       modèle tel que son auteur l'a orienté.
+    4. RÉGLÉ, mais à surveiller. Échelle. Les modèles FlightGear sont en mètres,
+       et pourtant celui de la tour Eiffel n'est pas aux proportions de
+       l'édifice : 121,5 m de côté pour 268 m de haut, contre 125 et 300, ses
+       quatre planchers tombant à 52, 105, 240 et 268 m au lieu de 58, 116, 276
+       et 300. Régulièrement tassé, donc, pas amputé de son sommet. D'où deux
+       facteurs par monument, horizontal et vertical, et non un seul. À vérifier
+       monument par monument : rien ne dit que les autres soient justes.
     5. Culling et LOD. `render::Model` n'a ni découpage spatial ni niveau de
        détail, contrairement aux bâtiments. Trente-cinq modèles, c'est peu, mais
        ils seront dessinés en permanence.
@@ -362,11 +482,204 @@ ou sortir de France.
        Défense et l'héliport d'Issy-les-Moulineaux (LFPI) sont dans le cadre.
     8. Poids de l'archive. Environ 24,5 Mo de plus dans une release qui embarque
        déjà neuf cartes.
+    9. Hôtel des Invalides posé mais IMPARFAIT, à reprendre. Le modèle place
+       mal ses éléments les uns par rapport aux autres : aucune pose ne satisfait
+       à la fois le corps du complexe et l'église du Dôme, décalés d'une
+       quinzaine de mètres l'un de l'autre dans le fichier. Il est donc posé au
+       COMPROMIS, chacun fautif de 7 m.
 
-    Licence. Les modèles sont en GPL v2, comme le projet. Ajouter dans
-  `CREDITS.md`, à côté de l'entrée Alouette II du même auteur : "Modèles 3D des
-  monuments de Paris : helijah (Emmanuel Baranger), helijah.free.fr, scène
-  FlightGear Paris V2, GPL v2".
+       Une découpe en deux a été essayée puis ABANDONNÉE : la boîte de découpe
+       tranchait dans le bâti et laissait une façade décollée du côté du dôme.
+       Découper par une boîte ne marche que sur une pièce franchement détachée,
+       comme le Panthéon au milieu de ses immeubles voisins ; pas sur une pièce
+       soudée au reste. Si l'on veut vraiment séparer les deux ici, il faudra
+       passer par Blender et couper au bon endroit, pas par un rectangle.
+
+       Rien ne dit que les autres modèles soient exempts du même défaut de
+       placement interne : le vérifier avant de croire à un mauvais réglage de
+       pose.
+
+    10. Panthéon posé mais IMPARFAIT, accepté en l'état. Le cap (18,5) et la
+        position sont mesurés, mais la superposition à l'orthophoto reste
+        approximative. Un balayage conjoint échelle et décalage donne un optimum
+        vers 0,95 en plan plutôt que le 1,0 posé : à essayer si l'on y revient.
+    11. Notre-Dame posée mais IMPARFAITE, acceptée en l'état. Le calage sur
+        l'orthophoto y est moins sûr qu'ailleurs pour une raison qui tient à la
+        photo : la prise de vue IGN de cette carte montre la cathédrale EN
+        CHANTIER (entre 2020 et 2023, toiture déposée, grues, parvis en
+        travaux), donc les contours sur lesquels s'appuie le calage sont
+        brouillés et le maximum du balayage est large (0,87 à 0,93 se valent).
+        Le modèle, lui, représente la cathédrale intacte, ce qui correspond de
+        nouveau à la réalité depuis la réouverture de décembre 2024 : c'est la
+        photo qui est périmée. À reprendre le jour où la carte sera refabriquée
+        sur une ortho plus récente. Voir aussi le point suivant sur l'âge de
+        cette orthophoto, qui ne concerne pas que Notre-Dame.
+    12. Âge de l'orthophoto de la carte paris. Le chantier de Notre-Dame la date
+        d'entre 2020 et 2023. D'autres travaux parisiens de cette période y
+        figurent donc, et le même écart entre la photo et un modèle 3D actuel se
+        reposera ailleurs. Vérifier si la Géoplateforme propose une prise de vue
+        plus récente ; la refabrication imposerait de retuiler la carte.
+    13. Centre Pompidou : bande noire sur la façade est, non résolue. Sont
+        écartés : l'élimination des faces arrière (réactivée, bande identique),
+        la moitié nuit de l'atlas (tous les UV sont dans la moitié jour, même
+        après répétition), un objet sans texture (il n'en reste qu'un) et la
+        zone noire de l'atlas (un carré de 64 px qu'aucune des 6 222 faces ne
+        recouvre). Le rendu est pourtant du noir pur, donc un texel noir est
+        bien lu quelque part. Deux défauts du même modèle ont en revanche été
+        corrigés : le cap était retourné de 180 deg, et une couche coplanaire
+        parasite (objet "jour1", 252 sommets, entièrement contenue dans le
+        corps) provoquait un scintillement ; elle a été retirée du fichier.
+    14. Front de Seine (Beaugrenelle) : pose non résolue, reprise en cours.
+        Le modèle a d'abord été trouvé dans la Seine, cap à -109,5 alors qu'il
+        fallait environ 15 : la ligne de tours barrait le fleuve. Reposé au
+        centre des vingt-quatre tours de plus de 45 m relevées dans BD TOPO
+        (2,284600 / 48,850166) et au cap de leur axe principal (42,8 deg, soit
+        15,4 pour ce modèle), il tombe à peu près sur la rive gauche.
+
+        Reste un désaccord non tranché, relevé sur une paire de repères tracés
+        à l'écran sur un même bord de bâtiment : ce bord est à 439 m du centre
+        du modèle et devrait être à 559. Une rotation conservant les distances,
+        il manque 120 m, et UNE SEULE paire de repères ne permet pas de savoir
+        s'il faut translater le modèle ou l'agrandir de 1,27. La translation a
+        été essayée et renvoie les tours dans le fleuve, donc c'est
+        vraisemblablement l'échelle ou le point d'ancrage qui est en cause.
+
+        Ce qui rend le diagnostic incertain : l'étendue du modèle (884 m) colle
+        pourtant à celle des tours relevées (918 m), ce qui contredit un facteur
+        de 1,27. L'hypothèse la plus probable est que le centre de la boîte
+        englobante du modèle ne correspond pas au centre des tours réelles.
+
+        Marche à suivre : relever DEUX paires de repères sur deux bâtiments
+        éloignés, ce qui détermine exactement rotation, échelle et translation.
+        Si les tours du modèle ne correspondent à rien de reconnaissable dans la
+        photo, leur espacement interne est faux comme aux Invalides : écarter
+        alors ce modèle et laisser l'extrusion BD TOPO, juste par construction.
+
+    15. Antennes de la tour Eiffel, à modéliser sous Blender. Le modèle s'arrête
+       au sommet de la structure : après mise à l'échelle il culmine à 300 m,
+       alors que la tour atteint 330 m depuis que les antennes de radiodiffusion
+       la coiffent (1957, rehaussées depuis, 330 m après celle de la TNT en
+       2022). Ce n'est pas un facteur d'échelle qui manque, ce sont trente
+       mètres de géométrie absente : une aiguille à créer, à greffer sur le
+       campanile et à texturer dans le même atlas. À faire dans un `.ac` séparé
+       posé à la même coordonnée plutôt que dans `TourEiffel-ba.ac` : tant que la
+       licence du modèle d'origine n'est pas éclaircie (voir plus bas), mieux
+       vaut ne pas modifier le fichier d'un tiers, et un second monument dans
+       `monuments.txt` ne coûte qu'une ligne. Sans urgence : la silhouette est
+       déjà juste pour tout le reste.
+
+    Licence : GPL v2, comme le projet. L'archive d'origine ne l'annonçait nulle
+  part et son `Read-Me.txt` se bornait à créditer Bertrand AUGRAS, auteur des
+  scènes X-Plane dont les modèles sont tirés
+  (`http://baugras.club.fr/xplane/Site/france.html`). Emmanuel Baranger a
+  confirmé la licence par courriel le 28/07/2026. L'attribution figure dans
+  `CREDITS.md` et en bas du `README.md`.
+
+
+#### Monuments posés, à valider un par un en vol
+
+Trente-deux modèles sont posés sur la branche `paris`. Aucun n'était considéré
+comme validé au moment de la fusion : la carte a trop bougé depuis les premières
+poses. Le chargement ramène désormais le point le plus bas du modèle au sol et
+non son origine, ce qui a déplacé verticalement tout ce qui avait un socle
+décalé ; les rayons de dégagement ont été resserrés d'un bloc ; et vingt modèles
+sont passés par une chaîne automatique sans jamais avoir été regardés en vol.
+
+D'où la règle de fusion : `main` ne reçoit un monument qu'APRÈS son passage en
+vol. Une case cochée ci-dessous vaut donc "présent sur `main`", et un commit par
+monument ramène ensemble son modèle depuis `paris`, sa ligne dans
+`monuments.txt` et sa case. Les modèles non cochés n'existent que sur `paris`.
+
+Trois points à contrôler sur chacun :
+
+1. Le CAP. La mesure ne le donne que modulo 180 : une pose sur deux peut être
+   retournée bout pour bout. Le Centre Pompidou l'était, repéré parce que son
+   escalator se trouvait à l'est au lieu de l'ouest. Chercher un détail
+   dissymétrique et connu : façade principale, clocher, cour d'honneur.
+2. L'ÉCHELLE. Ne pas se fier aux emprises BD TOPO, qui simplifient les grands
+   monuments en blocs pleins sans percer les cours, ni aux cotes publiées, dont
+   le point de départ est souvent incertain. Comparer à l'orthophoto, tuiles de
+   détail chargées, et se méfier de la parallaxe au-delà d'une vingtaine de
+   mètres de hauteur.
+3. L'ASSISE ET LA POSITION. Le monument doit toucher le sol et se superposer à
+   son emprise photographiée.
+
+- [x] Tour Eiffel
+- [ ] Arc de Triomphe
+- [ ] Sacré-Coeur
+- [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
+- [ ] Panthéon -- imparfait, voir le point 10
+- [ ] Notre-Dame de Paris -- imparfait, voir le point 11
+- [ ] Opéra Garnier
+- [ ] Église de la Madeleine
+- [ ] Grande Arche de la Défense
+- [ ] Tour Montparnasse
+- [ ] Hôtel de Ville
+- [ ] Palais du Louvre
+- [ ] Bibliothèque nationale de France
+- [ ] Centre Pompidou -- bande noire non résolue, voir le point 13
+- [ ] Église Saint-Eustache
+- [ ] Église Saint-Sulpice
+- [ ] Sainte-Chapelle
+- [ ] Tour Saint-Jacques
+- [ ] Hôtel Concorde Lafayette
+- [ ] Grand Palais
+- [ ] Palais de Chaillot
+- [ ] Palais du Luxembourg
+- [ ] Assemblée nationale
+- [ ] École militaire
+- [ ] Palais omnisports de Bercy
+- [ ] Campus de Jussieu
+- [ ] Front de Seine -- EN COURS, voir le point 14
+- [x] Maison de la Radio
+- [ ] Quartier de la Défense
+- [ ] Opéra Bastille
+- [ ] Place Vendôme
+- [ ] Place de la Concorde
+
+À vérifier aussi, mais qui ne concerne pas un monument en particulier :
+
+- [ ] Rayons de dégagement. Ils écartent 830 emprises BD TOPO sous les
+  monuments. Trop petits, des immeubles percent le modèle ; trop grands, ils
+  effacent du bâti réel que le modèle ne remplace pas. La première série en
+  écartait 2 087 et rasait des quartiers entiers autour de La Défense et du
+  Front de Seine.
+
+Écartés, avec la raison :
+
+- [ ] Île de la Cité -- le modèle contient Notre-Dame et la Sainte-Chapelle,
+  déjà posées séparément : doublon garanti. À reprendre seulement si l'on
+  renonce aux deux poses individuelles.
+- [ ] Champ de Mars -- pure dalle de sol de 1 268 x 398 m, sans rien au-dessus
+  de 8 m : elle recouvrirait l'orthophoto des jardins sans rien apporter.
+- [ ] Ministère du Travail -- le modèle se trouve à 2,2 km de l'endroit que son
+  nom désigne. Identifier ce qu'il représente avant de le poser.
+- [ ] Invalidessol -- quadrilatère de 402 x 941 m qui plaque une photo de
+  l'esplanade au sol, doublon de notre orthophoto IGN.
+
+### Piste à explorer : le dépôt FlightGear de Benoît Laniel
+
+- [ ] Faire le tour de `http://blaniel.free.fr/pub/flightgear/`, repéré depuis la
+  page des scènes d'helijah. Inventaire au 28/07/2026 :
+
+    - `pyrenees/pyrenees.tar.bz2` (5,7 Mo). Le seul dossier qui touche au
+      territoire du projet, donc le premier à ouvrir.
+    - `paris/paris_photo.7z` (54,5 Mo) et `paris_dds.7z` (49,5 Mo). Le sol
+      photographique de Paris dont parle la page ParisV2, converti en DDS.
+      Vraisemblablement sans intérêt ici : notre orthophoto IGN fait déjà 3,6 m
+      par pixel sur l'ensemble de la carte, et 0,25 m sur la fenêtre de détail
+      tuilée.
+    - `brest/brest_photo.7z` (6,8 Mo), 6 m par pixel, hors de nos cartes.
+    - `corine/`, `water/`, `fgimport/`, `osgdem_terrain.7z` (41,7 Mo),
+      `find_elevation.cxx`. Outillage de fabrication de scènes plutôt que
+      données : à regarder pour la méthode, pas pour le contenu.
+
+    ATTENTION à la licence avant d'espérer quoi que ce soit. Le `README.txt` de
+  Brest annonce du Creative Commons Attribution NonCommercial ShareAlike 2.0.
+  La clause non commerciale est incompatible avec la GPL v2 du projet : ces
+  données ne pourraient pas voyager dans l'archive d'une version, même si
+  Artouste ne se vend pas. Vérifier la licence dossier par dossier, elle n'est
+  pas forcément la même partout.
 
 ### Végétation (arbres, forêts)
 

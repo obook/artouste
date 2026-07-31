@@ -21,6 +21,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -28,6 +29,7 @@
 #include <fstream>
 #include <random>
 #include <string>
+#include <utility>
 
 namespace artouste::app {
 
@@ -208,6 +210,11 @@ void Application::loadTerrain(const std::string& name) {
     } else {
         m_vegetation.reset();
     }
+
+    /* Monuments 3D déclarés par la carte (monuments.txt) : modèles ponctuels posés
+       à une coordonnée. Chargés après les bâtiments, dont ils ont fait dégager
+       l'emprise (voir BuildingsMesh et le champ rayon_m). */
+    loadMonuments();
 
     /* Nuages en billboards (prototype) : couche de cumulus épars au-dessus du relief.
        Partagent la texture de bouffée entre terrains. */

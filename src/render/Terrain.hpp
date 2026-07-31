@@ -39,6 +39,36 @@ struct Landmark {
     float lat = 0.0f;
 };
 
+/* Monument 3D posé sur la carte : un modèle ponctuel placé à une coordonnée
+   WGS84, lu de monuments.txt dans le dossier du terrain. Les bâtiments extrudés
+   de la BD TOPO décrivent déjà l'emprise de ces édifices ; clearRadiusM dit
+   quel rayon leur laisser libre pour ne pas empiler deux géométries. */
+struct Monument {
+    /* Chemin du modèle SOUS assets/models/monuments/, rangé par jeu d'origine
+       (paris/TourEiffel-ba.ac). Toujours relatif et sans remontée : voir le
+       filtrage de loadMonuments. */
+    std::string file;
+    std::string name;
+    float lon = 0.0f;
+    float lat = 0.0f;
+    /* Altitude du socle en mètres. Le relief de Paris tient une cellule tous les
+       17,6 m, trop lâche pour caler proprement un socle : une altitude explicite
+       vaut mieux que heightAt. onGround remet le modèle sur le relief quand le
+       fichier dit "sol" plutôt qu'un nombre. */
+    float altitudeM = 0.0f;
+    bool  onGround  = false;
+    float headingDeg = 0.0f; /* cap boussole (0 = nord, 90 = est) */
+    /* Échelles horizontale et verticale, séparées. Les modèles FlightGear sont
+       en mètres (1 par défaut), mais ils ne sont pas toujours aux proportions de
+       l'édifice : celui de la tour Eiffel est régulièrement tassé de 11 % en
+       hauteur pour 3 % en largeur, ce qu'un facteur unique ne peut pas
+       rattraper. Le rapport de la texture s'en trouve étiré d'autant, ce qui ne
+       se voit pas sur un treillis. */
+    float scaleH = 1.0f;
+    float scaleV = 1.0f;
+    float clearRadiusM = 0.0f;
+};
+
 class Terrain {
 public:
     /* Charge le terrain depuis un dossier contenant terrain.txt, heightmap.png
@@ -153,6 +183,9 @@ public:
     /* Balises HAPI propres à ce terrain. Vide si le terrain n'en fournit pas. */
     [[nodiscard]] const std::vector<HapiUnit>& hapiUnits() const noexcept { return m_hapiUnits; }
 
+    /* Monuments 3D propres à ce terrain. Vide si le terrain n'en fournit pas. */
+    [[nodiscard]] const std::vector<Monument>& monuments() const noexcept { return m_monuments; }
+
     /* Balise HAPI la plus proche de (lon, lat), si elle est à moins de maxDistM ;
        nullptr sinon. Sert à faire correspondre un hélipad à sa balise : une HAPI
        se trouve toujours à proximité immédiate de son pad (quelques mètres, voir
@@ -174,6 +207,10 @@ private:
     /* Charge un fichier de balises HAPI "lon lat azimut_deg pente_pct nom" (un par
        ligne) dans out. Fichier absent : out reste vide. */
     void loadHapiUnits(const std::filesystem::path& path, std::vector<HapiUnit>& out);
+    /* Charge un fichier de monuments
+       "lon lat altitude cap echelle_h echelle_v rayon_m fichier nom" (un par
+       ligne) dans out. Fichier absent : out reste vide. */
+    void loadMonuments(const std::filesystem::path& path, std::vector<Monument>& out);
     /* Aplanit le relief sous le point de départ (plateforme plate, pour que sol,
        disque et appareil posé soient à la même hauteur au spawn). */
     void flattenPads();
@@ -227,6 +264,7 @@ private:
     std::vector<Landmark> m_landmarks; /* lieux remarquables propres au terrain */
     std::vector<Landmark> m_helipads;  /* hélipads propres au terrain (hors départ) */
     std::vector<HapiUnit> m_hapiUnits; /* balises HAPI propres au terrain */
+    std::vector<Monument> m_monuments; /* monuments 3D propres au terrain */
 
     /* Plate-forme porteuse d'un hélipad : centre monde et hauteur du plateau. */
     struct PadPlatform {

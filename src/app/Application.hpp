@@ -331,6 +331,16 @@ private:
        Définie dans ApplicationRenderWorld.cpp. */
     void renderTerrainAndBuildings(const RenderContext& ctx);
 
+    /* Monuments 3D de la carte (modèles ponctuels posés à une coordonnée), après
+       les bâtiments extrudés. Ne dessine rien si la carte n'en déclare pas.
+       Définie dans ApplicationMonuments.cpp. */
+    void renderMonuments(const RenderContext& ctx);
+
+    /* Charge les modèles des monuments déclarés par la carte courante et calcule
+       leur matrice de pose. Appelée par loadTerrain ; définie dans
+       ApplicationMonuments.cpp. */
+    void loadMonuments();
+
     /* Végétation en billboards et nuages. Définie dans
        ApplicationRenderWorld.cpp. */
     void renderVegetationAndClouds(const RenderContext& ctx);
@@ -495,6 +505,7 @@ private:
     std::unique_ptr<render::Shader> m_flatShader;     /* couleur unie (lueurs) */
     std::unique_ptr<render::Shader> m_shadowShader;   /* ombre portée douce (dégradé) */
     std::unique_ptr<render::Shader> m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
+    std::unique_ptr<render::Shader> m_monumentShader; /* monuments 3D (test alpha + brume) */
     std::unique_ptr<render::Shader> m_vegetationShader; /* arbres en billboards instanciés */
     std::unique_ptr<render::Shader> m_cloudShader;      /* nuages en billboards (mélange alpha) */
     std::unique_ptr<render::Shader> m_zombieShader; /* mode zombie : modèle 3D skinné instancié */
@@ -518,6 +529,16 @@ private:
     std::unique_ptr<render::Mesh> m_sea;               /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain> m_terrain;
     std::unique_ptr<render::Buildings> m_buildings;   /* bâtiments 3D (BD TOPO extrudée) */
+    /* Monument 3D chargé pour la carte courante : le modèle et la matrice qui le
+       pose dans le monde (translation, cap, échelle). La matrice est calculée une
+       fois au chargement, en coordonnées monde ABSOLUES : le dessin la compose
+       avec le recalage d'origine de l'image (voir drawMonuments). */
+    struct MonumentInstance {
+        std::unique_ptr<render::Model> model;
+        mat4 transform{1.0f};
+        std::string name;
+    };
+    std::vector<MonumentInstance> m_monuments;        /* monuments 3D de la carte */
     std::unique_ptr<render::Vegetation> m_vegetation; /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds> m_clouds;         /* nuages en billboards (prototype) */
 
@@ -665,6 +686,19 @@ private:
        terrain : sans ce drapeau, des tuiles fraîchement téléchargées ne
        s'affichaient qu'au redémarrage du jeu. */
     bool m_cartesRemaniees = false;
+
+    /* Date de dernière écriture du monuments.txt de la carte chargée, relevée au
+       chargement. Comparée au retour du menu pour recharger la carte si le
+       fichier a bougé : caler trente monuments demande de retoucher ce fichier
+       des dizaines de fois, et sans ce test il fallait relancer le simulateur à
+       chaque essai. Vaut file_time_type{} si la carte n'en a pas. Définie dans
+       ApplicationMonuments.cpp (dateMonuments). */
+    std::filesystem::file_time_type m_monumentsDate{};
+
+    /* Date d'écriture du monuments.txt d'une carte, ou file_time_type{} s'il est
+       absent ou illisible. */
+    [[nodiscard]] std::filesystem::file_time_type
+    dateMonuments(const std::filesystem::path& dossierCarte) const;
 
     /* --- État de session (menu, pause, plein écran) ---------------------------------------- */
 

@@ -1,0 +1,58 @@
+# Monuments 3D posés sur la carte (un par ligne). Fichier facultatif : absent,
+# aucun monument n'est dessiné et les bâtiments extrudés restent seuls en place.
+#
+# Format : lon lat altitude cap echelle_h echelle_v rayon_m fichier nom
+#
+#   lon lat    position WGS84 du centre du modèle (degrés).
+#   altitude   altitude du socle en mètres, ou le mot-clé "sol" pour le poser sur
+#              le relief. Une valeur explicite vaut mieux là où la carte
+#              d'altitude est trop lâche pour tenir un socle (Paris : ~17,6 m par
+#              cellule).
+#   cap        cap boussole du modèle en degrés (0 = nord, 90 = est). Cap 0 laisse
+#              le modèle tel que son auteur l'a orienté.
+#   echelle_h  facteur horizontal, echelle_v facteur vertical. Deux réglages
+#   echelle_v  distincts parce qu'un modèle de scène n'est pas toujours aux
+#              proportions de l'édifice ; 1 et 1 le laissent tel quel.
+#   rayon_m    rayon dégagé autour du centre : aucun bâtiment BD TOPO n'y est
+#              extrudé, sinon les emprises se logeraient dans le monument.
+#   fichier    chemin du modèle SOUS assets/models/monuments/, séparateur "/".
+#              Les modèles sont rangés par jeu d'origine (paris/, capbreton/...) :
+#              une trentaine de fichiers par scène, plus leurs textures, ne
+#              tiennent pas à plat. Rien n'empêche deux cartes de désigner le
+#              même fichier, un phare par exemple.
+#   nom        reste de la ligne, espaces et accents permis.
+#
+# Attribution des modèles : voir le Read-Me.txt du dossier de chaque jeu (ici
+# assets/models/monuments/paris/Read-Me.txt) et CREDITS.md.
+#
+# Ce fichier se remplit UN MONUMENT À LA FOIS. Trente-deux modèles sont posés sur
+# la branche paris, mais un monument calé à l'écran n'est pas un monument juste :
+# le cap n'est mesuré que modulo 180, l'échelle se dément en vol, et l'assise
+# dépend d'un relief plus grossier que le modèle. Chacun n'arrive donc ici
+# qu'après un passage en vol, avec sa case cochée dans la ROADMAP et son modèle
+# ramené de la branche paris dans le même commit.
+
+# Tour Eiffel.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO de la tour (les quatre volumes
+# empilés donnent tous 2,294512 / 48,858256 et des côtés à 44 deg modulo 90). Le
+# fichier de placement de la scène FlightGear d'origine annonçait 2,297421 /
+# 48,861295 et un cap de 47 : décalé de près de 400 m sur cette carte.
+#
+# Échelles : le modèle mesure 121,5 m de côté pour 268 m de haut, alors que la
+# tour fait 125 m de côté et 300 m au sommet de la structure (sans les antennes,
+# que le modèle n'a pas). Ses quatre planchers tombent à 52, 105, 240 et 268 m
+# contre 58, 116, 276 et 300 : il est régulièrement tassé, pas amputé de son
+# sommet, d'où deux facteurs plutôt qu'un.
+2.294512 48.858256 sol 44 1.029 1.119 90 paris/TourEiffel-ba.ac Tour Eiffel
+
+# Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
+# 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
+# pose unique ne pouvait satisfaire ensemble. Découpé avec
+# tools/monuments/decouper_ac.py (région -220..0 sur X), en ne gardant que la
+# rive droite ; le Front de Seine, dans l'autre moitié, arrivera avec sa propre
+# ligne le jour où il aura été vérifié en vol. La coupe ne traversait aucune
+# géométrie, un vide de 49 m séparant les deux.
+# Cap relevé à l'écran sur la tour rectangulaire, échelle native confirmée par
+# l'union des emprises BD TOPO de l'anneau, qui donne 112 m.
+2.278472 48.852454 sol 5.2 1.0 1.0 95 paris/Radio-ba.ac Maison de la Radio

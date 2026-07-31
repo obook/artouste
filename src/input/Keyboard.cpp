@@ -36,6 +36,18 @@ int toucheImprimant(char lettre) {
             jetons[i] = GLFW_KEY_A + static_cast<int>(i);  /* repli : disposition US */
         }
         for (int jeton = GLFW_KEY_SPACE; jeton <= GLFW_KEY_GRAVE_ACCENT; ++jeton) {
+            /* La disposition du système n'a pas forcément une touche physique à
+               cette position : sur un clavier français, plusieurs positions que
+               GLFW nomme d'après le clavier américain n'existent pas. GLFW rend
+               alors un scancode de -1, et glfwGetKeyName le passe tel quel à
+               glfwGetScancodeName, qui signale GLFW_INVALID_VALUE. On écartait
+               bien le résultat (nom nul), mais après coup : le journal se
+               remplissait d'une salve de "Invalid scancode -1" au démarrage,
+               onze sur un AZERTY. Tester le scancode d'abord donne exactement
+               le même tableau, sans le bruit. */
+            if (glfwGetKeyScancode(jeton) < 0) {
+                continue;
+            }
             const char* nom = glfwGetKeyName(jeton, 0);
             if (nom == nullptr || nom[0] < 'a' || nom[0] > 'z' || nom[1] != '\0') {
                 continue;

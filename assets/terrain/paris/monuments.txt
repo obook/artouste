@@ -78,6 +78,52 @@
 # et l'Arc étaient trop bas d'autant. Troisième modèle, troisième échelle.
 2.343027 48.886751 sol 175.6 1.0 0.901 55 paris/Sacrecoeur-ba.ac Sacré-Coeur
 
+# Panthéon.
+#
+# Le modèle d'origine fait 263 x 132 m : il embarque un pâté de maisons voisin,
+# qui se serait plaqué sur l'orthophoto. Détaché avec
+# tools/monuments/decouper_ac.py, région X 14..145, Z -50..45 :
+#     decouper_ac.py pantheon-ba.ac reste.ac pantheon-decoupe.ac 14 145 -50 45
+# Le Panthéon seul fait alors 113,2 x 81,0 m pour 97,2 m de haut, contre
+# 110 x 84 pour 83 en réalité.
+#
+# ATTENTION, PIÈGE DE LA DÉCOUPE, découvert en vol le 31/07/2026. Une première
+# fenêtre, X 45..145, ne faisait que 100 m de large pour un monument de 110 m de
+# long : elle a emporté le portique. Il restait un Panthéon sans face avant, un
+# mur de façade nu là où doit se dresser la colonnade. Le défaut ne se voyait
+# sur aucune mesure, parce que la boîte englobante du modèle amputé servait
+# ensuite à en tirer l'échelle et la position : elle donnait 100 x 81 m, soit
+# précisément la largeur de la fenêtre, et personne ne s'en étonnait.
+#
+# CONTRÔLE À FAIRE après toute découpe : vérifier que la géométrie ne touche
+# aucun des quatre plans de coupe. Ici les marges sont de 4,3 m à l'ouest,
+# 13,5 m à l'est, 8,9 m au sud et 5,1 m au nord, donc le monument tient tout
+# entier dans sa fenêtre. Une marge nulle veut dire qu'on a coupé dans le bâti.
+# decouper_ac.py ne tranche jamais un polygone, il garde ou jette des surfaces
+# entières : un monument amputé ne laisse donc ni bord franc ni trou visible
+# dans le fichier, seulement des morceaux manquants.
+#
+# Échelles : 1,0 en plan, le modèle étant 3 % trop long et 3,6 % trop étroit,
+# deux écarts qui se compensent. 0,854 en hauteur, soit 83 / 97,2 : comme les
+# autres modèles du jeu, celui-ci est trop élancé.
+#
+# Cap 18,5, mesuré sur l'emprise BD TOPO 112349 (119 points, 117 x 87 m). Le
+# premier essai avait pris l'autre branche modulo 90 (-71,5) et posait le
+# monument en croix de travers : la nef court d'est en ouest, dans l'axe de la
+# rue Soufflot, pas du nord au sud. Le portique regarde donc l'ouest, vers la
+# place du Panthéon : c'est lui qui donne le sens, maintenant qu'il est là.
+#
+# Position : le centre de l'emprise BD TOPO, sur laquelle la boîte englobante du
+# modèle réparé (113,2 x 81,0 m) se cale à quelques mètres près. Le balayage sur
+# l'orthophoto qui avait servi à l'affiner, et qui réclamait une échelle de 0,95,
+# est caduc : il ajustait la silhouette d'un monument amputé.
+#
+# RESTE À FAIRE : un léger recentrage, constaté en vol le 31/07/2026 et remis à
+# plus tard. Le monument est accepté en l'état, seule sa position demande encore
+# quelques mètres. Ne pas reprendre le balayage sur l'orthophoto sans relire la
+# note ci-dessus : c'est lui qui avait masqué l'amputation du portique.
+2.346073 48.846167 sol 18.5 1.0 0.854 70 paris/pantheon-ba.ac Panthéon
+
 # Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
 # 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
 # pose unique ne pouvait satisfaire ensemble. Découpé avec

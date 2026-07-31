@@ -95,3 +95,23 @@ nv, ns = ecrire(dstA, entete, sommets, surfaces, [not d for d in dansRegion])
 print('  reste   : %4d sommets, %4d surfaces -> %s' % (nv, ns, dstA))
 nv, ns = ecrire(dstB, entete, sommets, surfaces, dansRegion)
 print('  region  : %4d sommets, %4d surfaces -> %s' % (nv, ns, dstB))
+
+# Marges aux quatre plans de coupe. Une marge nulle veut dire qu'on a coupé dans
+# le bâti : les surfaces dont le centre tombait juste dehors sont parties, et il
+# manque un morceau du monument. Comme on garde ou jette des surfaces entières,
+# le fichier obtenu reste bien formé et rien ne trahit l'amputation -- le
+# portique du Panthéon a ainsi disparu sans un mot, et n'a été vu qu'en vol.
+pris = [refs for k, (bloc, refs) in enumerate(surfaces) if dansRegion[k]]
+if pris:
+    px = [sommets[r[0]][0] - cx for refs in pris for r in refs]
+    pz = [sommets[r[0]][2] - cz for refs in pris for r in refs]
+    marges = [('X min', min(px) - x0), ('X max', x1 - max(px)),
+              ('Z min', min(pz) - z0), ('Z max', z1 - max(pz))]
+    print('  marges aux plans de coupe : ' +
+          ', '.join('%s %+.1f m' % (nom, m) for nom, m in marges))
+    serrees = [nom for nom, m in marges if m < 1.0]
+    if serrees:
+        print('  ATTENTION : la geometrie affleure %s. La fenetre est trop'
+              % ' et '.join(serrees))
+        print('  etroite, un morceau du monument est probablement reste dans %s.'
+              % dstA)

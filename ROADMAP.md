@@ -499,10 +499,39 @@ qui peuvent se mener séparément.
        placement interne : le vérifier avant de croire à un mauvais réglage de
        pose.
 
-    10. Panthéon posé mais IMPARFAIT, accepté en l'état. Le cap (18,5) et la
-        position sont mesurés, mais la superposition à l'orthophoto reste
-        approximative. Un balayage conjoint échelle et décalage donne un optimum
-        vers 0,95 en plan plutôt que le 1,0 posé : à essayer si l'on y revient.
+    10. Panthéon : le portique avait été emporté par la découpe. RÉPARÉ le
+        31/07/2026, et c'est la leçon la plus coûteuse de la série.
+
+        La première fenêtre, X 45..145, faisait 100 m de large pour un monument
+        de 110 m de long. Elle a jeté toutes les surfaces du portique, laissant
+        un Panthéon sans face avant : un mur de façade nu là où doit se dresser
+        la colonnade. Le défaut n'a été vu qu'en vol.
+
+        Ce qui le rendait invisible avant, c'est que la boîte englobante du
+        modèle amputé servait ensuite à tout : elle donnait 100 x 81 m, soit
+        exactement la largeur de la fenêtre, et cette mesure fausse a nourri
+        l'échelle, la position, et jusqu'au balayage sur l'orthophoto, qui
+        réclamait 0,95 en plan pour rattraper l'amputation. Une mesure prise sur
+        un modèle mutilé se propage à tous les réglages qu'on en tire.
+
+        CONTRÔLE désormais obligatoire après toute découpe : vérifier que la
+        géométrie ne touche aucun des quatre plans de coupe. Une marge nulle
+        veut dire qu'on a coupé dans le bâti. `decouper_ac.py` ne tranche jamais
+        un polygone, il garde ou jette des surfaces entières : un monument
+        amputé ne laisse donc ni bord franc ni trou dans le fichier, seulement
+        des morceaux manquants, ce qui ne se voit sur aucune statistique.
+
+        Nouvelle fenêtre X 14..145, Z -50..45, marges de 4,3 à 13,5 m. Le
+        Panthéon fait alors 113,2 x 81,0 m pour 97,2 m de haut, contre 110 x 84
+        pour 83 en réalité : échelle 1,0 en plan et 0,854 en hauteur.
+
+        La Maison de la Radio, l'autre modèle découpé, a été contrôlée au même
+        titre : elle tient dans 171 m à l'intérieur d'une fenêtre de 220 m et
+        n'affleure aucun plan. Elle est saine.
+
+        Reste un léger RECENTRAGE, vu en vol le 31/07/2026 et remis à plus tard.
+        Le monument est accepté et posé, seule sa position demande encore
+        quelques mètres.
     11. Notre-Dame posée mais IMPARFAITE, acceptée en l'état. Le calage sur
         l'orthophoto y est moins sûr qu'ailleurs pour une raison qui tient à la
         photo : la prise de vue IGN de cette carte montre la cathédrale EN
@@ -608,7 +637,7 @@ Trois points à contrôler sur chacun :
 - [x] Arc de Triomphe
 - [x] Sacré-Coeur
 - [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
-- [ ] Panthéon -- imparfait, voir le point 10
+- [x] Panthéon -- portique réparé le 31/07/2026, recentrage léger à faire, point 10
 - [ ] Notre-Dame de Paris -- imparfait, voir le point 11
 - [ ] Opéra Garnier
 - [ ] Église de la Madeleine

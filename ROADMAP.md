@@ -606,7 +606,7 @@ Trois points à contrôler sur chacun :
 
 - [x] Tour Eiffel
 - [x] Arc de Triomphe
-- [ ] Sacré-Coeur
+- [x] Sacré-Coeur
 - [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
 - [ ] Panthéon -- imparfait, voir le point 10
 - [ ] Notre-Dame de Paris -- imparfait, voir le point 11

@@ -58,6 +58,26 @@
 # trop étroite : ces modèles n'ont pas d'échelle commune, chacun se mesure.
 2.295045 48.873774 sol 116 0.951 1.102 45 paris/ArcDeTriomphe-ba.ac Arc de Triomphe
 
+# Sacré-Coeur.
+#
+# Centre et cap mesurés sur l'emprise BD TOPO du corps (257 points, très
+# subdivisée par les contreforts : le cap vient des moments d'ordre 2, pas du
+# plus long côté). Axe principal à 175,6 deg modulo 180, presque nord-sud, la
+# façade au sud et l'abside au nord. Le campanile est bien au nord (BD TOPO :
+# 48,887177 contre 48,886751 pour le corps).
+#
+# Ce modèle a servi à découvrir que l'origine d'un modèle n'est pas toujours en
+# son centre : la sienne est à 70 m de sa géométrie. Le chargement recentre
+# désormais sur la boîte englobante, donc lon/lat désigne bien le milieu du
+# monument (voir ApplicationMonuments.cpp).
+#
+# Échelles : en largeur le modèle tombe juste, 54,3 m contre 54 m mesurés sur
+# l'emprise BD TOPO, d'où 1,0. En hauteur il culmine à 92,7 m, dôme et
+# campanile atteignant tous deux ce niveau, alors que le dôme fait 83 m et le
+# campanile 84 : celui-ci est donc trop HAUT d'un dixième, quand la tour Eiffel
+# et l'Arc étaient trop bas d'autant. Troisième modèle, troisième échelle.
+2.343027 48.886751 sol 175.6 1.0 0.901 55 paris/Sacrecoeur-ba.ac Sacré-Coeur
+
 # Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
 # 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
 # pose unique ne pouvait satisfaire ensemble. Découpé avec

@@ -15,6 +15,7 @@
 #include "app/Config.hpp"
 #include "app/DemoPilot.hpp"
 #include "app/LandingAutopilot.hpp"
+#include "app/LigneCommande.hpp"
 #include "app/MiseAJour.hpp"
 #include "app/SouffleRotor.hpp"
 #include "app/cartes/FabriqueTuiles.hpp"
@@ -68,10 +69,21 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
+    /* Options de lancement lues sur la ligne de commande. À appeler AVANT run(),
+       qui les consulte dès le choix de la carte. */
+    void appliquerOptions(const OptionsLancement& options) { m_options = options; }
+
     /* Initialise tout, déroule la boucle, nettoie. Renvoie un code de sortie. */
     int run();
 
 private:
+    /* Résout le point d'apparition demandé sur la ligne de commande (--monument,
+       --lieu ou --lon/--lat) en coordonnées WGS84, sur le terrain courant.
+       Renvoie faux si rien n'a été demandé, si le terrain n'est pas géoréférencé
+       ou si le nom cherché est introuvable, auquel cas l'appareil reste au pad.
+       Définie dans ApplicationScene.cpp. */
+    [[nodiscard]] bool resoudrePointDapparition(float& lon, float& lat) const;
+
     /* --- Cycle de vie et initialisation -------------------------------------- */
 
     /* Vérifie que le dossier des ressources ("assets") est bien présent avant
@@ -648,6 +660,11 @@ private:
        avant l'ouverture de la fenêtre, car le MSAA doit être connu à sa création ;
        réutilisée ensuite par initScene (terrain, démo, végétation...). */
     app::Config m_config;
+
+    /* Options de ligne de commande (carte, point d'apparition, cap), posées par
+       appliquerOptions avant run(). Voir LigneCommande.hpp pour la priorité vis
+       à vis de la configuration, du menu et des variables d'environnement. */
+    OptionsLancement m_options;
 
     /* Recherche d'une version plus récente (clé "verifier_maj" de config.txt,
        coupée par ARTOUSTE_NO_MAJ). Lancée dans run() avant l'ouverture de la

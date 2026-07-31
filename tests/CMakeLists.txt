@@ -27,6 +27,7 @@ add_executable(artouste_tests
     ortho_tiles_tests.cpp
     fabrique_tuiles_tests.cpp
     souffle_rotor_tests.cpp
+    ligne_commande_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/CycleJourNuit.cpp
     # Compilé sans ARTOUSTE_HAS_CURL : seules les fonctions d'analyse (tag et
@@ -34,6 +35,7 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/app/MiseAJour.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/FabriqueTuiles.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/LigneCommande.cpp
     ${CMAKE_SOURCE_DIR}/src/app/SouffleRotor.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/CombatMode.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp

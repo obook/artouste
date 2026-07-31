@@ -239,8 +239,9 @@ int Application::run() {
 
     /* Menu de démarrage dans la fenêtre (remplace launch.bat, bloqué par le Contrôle
        intelligent des applications de Windows). Sauté en mode capture, quand la carte
-       est déjà imposée par une variable d'environnement (scripts, tests), ou sur
-       demande explicite (ARTOUSTE_NO_MENU). */
+       est déjà imposée par une variable d'environnement (scripts, tests) ou par une
+       option de ligne de commande (--carte, --monument...), ou sur demande explicite
+       (ARTOUSTE_NO_MENU). */
     /* ARTOUSTE_CARTES : ouvre directement le gestionnaire de cartes, sans passer
        par le menu. Sert à en faire le tour sans lancer de vol, et à le tester
        d'une seule commande. */
@@ -252,7 +253,8 @@ int Application::run() {
 
     const bool menuDemande = std::getenv("ARTOUSTE_SCREENSHOT") == nullptr &&
                              std::getenv("ARTOUSTE_TERRAIN") == nullptr &&
-                             std::getenv("ARTOUSTE_NO_MENU") == nullptr;
+                             std::getenv("ARTOUSTE_NO_MENU") == nullptr &&
+                             !m_options.sauteMenu();
     if (menuDemande) {
         m_hud.init(m_window);  /* initialise ImGui (idempotent) avant d'afficher le menu */
         if (!runStartupMenu()) {

@@ -258,6 +258,31 @@ elle, se télécharge depuis le jeu (voir le gestionnaire de cartes plus bas).
 Une carte ajoutée à la main dans `assets/terrain/` apparaît au menu au lancement
 suivant, sans rien configurer : le jeu recense ce dossier.
 
+### Reprendre un vol à un endroit précis
+
+Le simulateur accepte des options de lancement qui sautent le menu et posent
+l'appareil là où on en a besoin, au lieu de le faire convoyer depuis le pad.
+Pratique pour aller regarder un monument, un sommet ou un défaut de terrain sans
+refaire le trajet à chaque essai.
+
+```sh
+artouste --carte paris --monument "Pantheon" --alt 300
+artouste --carte paris --lieu "Tour Eiffel" --alt 200 --cap 270
+artouste --carte paris --lon 2.346073 --lat 48.846167 --alt 300
+```
+
+`--monument` cherche le nom dans le `monuments.txt` de la carte, `--lieu` dans
+son `landmarks.txt`. La recherche ignore la casse, les accents et la
+ponctuation, et un fragment suffit : `pantheon` trouve `Panthéon`. Nom
+introuvable, le vol commence au pad, avec un message.
+
+`--alt` est une hauteur **au-dessus du sol**, pas une altitude absolue ; 0 pose
+l'appareil sur le relief. Dès qu'un point d'apparition est demandé, la turbine et
+le rotor sont mis au régime : naître en vol moteur arrêté, c'est tomber.
+
+`artouste --aide` donne la liste complète. Les variables d'environnement
+`ARTOUSTE_*` restent lues et gardent la priorité sur les options équivalentes.
+
 Les terrains et bâtiments 3D sont générés hors-ligne depuis les données de
 l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Détails, configuration
 complète et régénération : [docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de

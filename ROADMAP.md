@@ -1047,6 +1047,34 @@ Trois points à contrôler sur chacun :
 
 ## Interface
 
+- [x] Options de lancement en ligne de commande (`src/app/LigneCommande.cpp`),
+  pour reprendre un vol à un endroit précis sans convoyer l'appareil depuis le
+  pad : `--carte`, `--monument`, `--lieu`, `--lon`/`--lat`, `--alt`, `--cap`,
+  `--aide`. Nées de la campagne de vérification des monuments de Paris, où
+  chaque contrôle coûtait plusieurs kilomètres de trajet.
+
+    `--monument` et `--lieu` cherchent le nom dans le `monuments.txt` ou le
+  `landmarks.txt` de la carte, sur des noms normalisés : casse, accents et
+  ponctuation ignorés, un fragment suffit, donc `pantheon` trouve `Panthéon`.
+  Nom introuvable, le vol commence au pad avec un message plutôt qu'ailleurs en
+  silence.
+
+    Trois points qui ne vont pas de soi :
+  - Le placement se fait APRÈS le calcul du pad, pas à sa place, donc le pad
+    reste défini : la touche `R` y ramène, l'atterrissage automatique le connaît
+    et la radio annonce la bonne station.
+  - `--alt` est une hauteur au-dessus du sol et non une altitude absolue, et
+    `--alt 0` se distingue de l'absence d'option, sans quoi on ne pourrait pas
+    demander une apparition posée ailleurs qu'au pad.
+  - Un point d'apparition force la turbine au régime. Ce n'est pas un confort :
+    naître à 300 m rotor arrêté, c'est tomber.
+
+    Une option l'emporte sur la configuration et sur le menu, mais pas sur la
+  variable d'environnement `ARTOUSTE_*` correspondante, qui garde le dernier mot
+  pour les scripts existants. Onze cas de test couvrent l'analyse, les erreurs
+  (option inconnue, valeur manquante, `--lon` sans `--lat`) et la normalisation
+  des noms, ligature `oe` comprise.
+
 - [x] Nuit deux fois plus rapide que le jour (clé `lune_vitesse` de `config.txt`,
   défaut 2) : la vitesse du temps de `soleil_vitesse` est multipliée par ce facteur
   entre le coucher (18 h) et le lever (6 h). Avec les valeurs par défaut, un cycle

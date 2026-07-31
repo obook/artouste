@@ -103,6 +103,9 @@ void Application::initSceneConfig() {
     if (!m_menuTerrain.empty()) { /* choix du menu de démarrage, au-dessus de la config */
         terrainName = m_menuTerrain;
     }
+    if (!m_options.carte.empty()) { /* option --carte, au-dessus du menu */
+        terrainName = m_options.carte;
+    }
     if (const char* env = std::getenv("ARTOUSTE_TERRAIN"); env != nullptr && env[0] != '\0') {
         terrainName = env; /* variable d'environnement : priorité maximale */
     }
@@ -121,6 +124,13 @@ void Application::initSceneConfig() {
     bool turbineRunning = config.turbineRunning;
     if (m_menuTurbine >= 0) { /* choix du menu de démarrage, au-dessus de la config */
         turbineRunning = (m_menuTurbine == 1);
+    }
+    /* Point d'apparition demandé sur la ligne de commande : la turbine doit
+       tourner. Apparaître à 300 m au-dessus d'un monument avec un rotor arrêté,
+       c'est entamer une chute, pas un vol. ARTOUSTE_TURBINE_DEMARREE reste lue
+       après, et peut donc encore l'éteindre pour qui le voudrait vraiment. */
+    if (m_options.aPointDapparition()) {
+        turbineRunning = true;
     }
     if (const char* env = std::getenv("ARTOUSTE_TURBINE_DEMARREE");
         env != nullptr && env[0] != '\0') {

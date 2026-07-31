@@ -261,7 +261,71 @@ void Application::loadTerrain(const std::string& name) {
         const float parkZ = START_Z - avant.z * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
         m_parkPos = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
         m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
+
+        /* Point d'apparition demandé sur la ligne de commande : on repose
+           l'appareil ailleurs, après le placement au pad et non à sa place. Le
+           pad reste ainsi défini (m_startPos, m_parkPos, m_homeStation), donc la
+           touche R y ramène, l'atterrissage automatique le connaît et la radio
+           annonce la bonne station. Seule la position de DÉPART change. */
+        float lon = 0.0f;
+        float lat = 0.0f;
+        if (resoudrePointDapparition(lon, lat)) {
+            float x = 0.0f;
+            float z = 0.0f;
+            m_terrain->worldAt(lon, lat, x, z);
+            /* Hauteur comptée au-dessus du sol : 300 m par défaut, de quoi voir
+               un monument en entier sans avoir à monter. */
+            const float agl = m_options.aAltitude ? m_options.altitude : 300.0f;
+            const float cap = m_options.aCap ? m_options.cap : m_terrain->startHeadingDeg();
+            m_flight.reset(vec3{x, m_terrain->heightAt(x, z) + agl, z}, cap);
+            std::printf("[scène] apparition à %.6f / %.6f, %.0f m sol, cap %.0f.\n",
+                        static_cast<double>(lon), static_cast<double>(lat),
+                        static_cast<double>(agl), static_cast<double>(cap));
+        }
     }
+}
+
+bool Application::resoudrePointDapparition(float& lon, float& lat) const {
+    if (!m_options.aPointDapparition() || m_terrain == nullptr || !m_terrain->hasGeo()) {
+        return false;
+    }
+    /* Coordonnées explicites : rien à chercher. */
+    if (m_options.aLonLat) {
+        lon = m_options.lon;
+        lat = m_options.lat;
+        return true;
+    }
+
+    /* Recherche par nom, sur les noms normalisés (casse et accents ignorés, un
+       fragment suffit) : taper "pantheon" au shell doit trouver "Panthéon". */
+    const bool parMonument = !m_options.monument.empty();
+    const std::string cherche =
+        normaliserNom(parMonument ? m_options.monument : m_options.lieu);
+    if (cherche.empty()) {
+        return false;
+    }
+    if (parMonument) {
+        for (const render::Monument& m : m_terrain->monuments()) {
+            if (normaliserNom(m.name).find(cherche) != std::string::npos) {
+                lon = m.lon;
+                lat = m.lat;
+                return true;
+            }
+        }
+        std::printf("[scène] monument \"%s\" introuvable sur cette carte : départ au pad.\n",
+                    m_options.monument.c_str());
+        return false;
+    }
+    for (const render::Landmark& l : m_terrain->landmarks()) {
+        if (normaliserNom(l.name).find(cherche) != std::string::npos) {
+            lon = l.lon;
+            lat = l.lat;
+            return true;
+        }
+    }
+    std::printf("[scène] lieu \"%s\" introuvable sur cette carte : départ au pad.\n",
+                m_options.lieu.c_str());
+    return false;
 }
 
 void Application::applySunSchedule() {

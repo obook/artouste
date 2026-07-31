@@ -66,6 +66,7 @@ add_executable(artouste
     app/CycleJourNuit.cpp
     app/DemoPilot.cpp
     app/LandingAutopilot.cpp
+    app/LigneCommande.cpp
     app/SouffleRotor.cpp
     app/MiseAJour.cpp
     app/combat/CombatMode.cpp

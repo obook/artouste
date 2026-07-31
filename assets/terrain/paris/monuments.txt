@@ -124,6 +124,62 @@
 # note ci-dessus : c'est lui qui avait masqué l'amputation du portique.
 2.346073 48.846167 sol 18.5 1.0 0.854 70 paris/pantheon-ba.ac Panthéon
 
+# Notre-Dame de Paris. IMPARFAIT mais accepté en l'état, voir la ROADMAP.
+#
+# Modèle jamais découpé, identique octet pour octet à celui de l'archive
+# d'origine : le piège du portique du Panthéon ne le concerne pas.
+#
+# Cap -64,5 : l'emprise BD TOPO 114871 (49 points, 107 x 63 m) donne 25,5 deg
+# modulo 90, et la nef court d'ouest en est, donc la branche 115,5. Le modèle
+# présente son axe selon Z, soit un cap de 180 : d'où -64,5. Bon du premier
+# coup, contrairement au Panthéon.
+#
+# Échelle 0,92 et position affinées par balayage conjoint sur l'orthophoto,
+# tuiles chargées. Le maximum est LARGE (0,87 à 0,93 se valent), pour une raison
+# qui tient à la photo et non au modèle : voir ci-dessous.
+#
+# LARGEUR, écart mesuré et accepté en vol le 31/07/2026. Le modèle fait
+# 69,0 x 138,4 m. À 0,92 cela donne 127,3 m de long, soit très exactement les
+# 128 m de la cathédrale, mais 63,5 m de large quand elle en fait une
+# cinquantaine au transept. Arcs-boutants et sacristie expliquent sans doute une
+# part de l'écart. La longueur seule avait servi au calage ; retenir que la
+# largeur n'a jamais été confrontée à une mesure, seulement jugée à l'oeil.
+#
+# ATTENTION, l'orthophoto de cette carte montre Notre-Dame EN CHANTIER. Prise de
+# vue IGN d'entre 2020 et 2023 : toiture de la nef déposée, voûtes à nu, deux
+# grues, parvis en travaux. Le modèle, lui, représente la cathédrale intacte, ce
+# qui correspond de nouveau à la réalité depuis la repose de la flèche et la
+# réouverture de décembre 2024. C'est donc la photo qui est périmée, pas la 3D,
+# et c'est aussi pourquoi le calage sur les contours photographiques est moins
+# sûr ici qu'ailleurs. À reprendre le jour où la carte sera refabriquée sur une
+# ortho plus récente.
+2.349905 48.853115 sol -64.5 0.92 0.92 75 paris/NotreDame-ba.ac Notre-Dame de Paris
+
+# Opéra Garnier.
+#
+# Modèle jamais découpé, identique octet pour octet à celui de l'archive
+# d'origine.
+#
+# Cap -15,9 : l'emprise BD TOPO 113411 (201 points) donne 74,1 deg modulo 90, et
+# la boîte fait 98 m est-ouest pour 142 m nord-sud, donc le grand axe est sur la
+# branche 164,1. Le modèle présente le sien selon Z, soit un cap de 180, d'où
+# -15,9. Vérification du sens : la cage de scène, partie la plus haute du
+# modèle, part bien au nord une fois tournée, comme dans la réalité, la façade
+# regardant la place au sud.
+#
+# Échelle 0,96, la seule des six à ne pas venir du balayage sur l'orthophoto :
+# celui-ci hésite entre 0,80 et 0,97 sans maximum franc, la place et les toits
+# voisins offrant trop de contours parasites. Elle vient donc des dimensions du
+# modèle lui-même, 129,7 x 180,3 m contre 125 x 173 en réalité, soit 0,963 et
+# 0,960 sur les deux axes : deux mesures indépendantes qui concordent, ce qui
+# vaut mieux qu'un balayage indécis. Mesures recontrôlées le 31/07/2026 sur le
+# fichier, elles tombent au dixième près.
+#
+# Hauteur au même facteur. Le modèle culmine à 49,7 m quand l'Opéra en fait
+# 73,6 : sa cage de scène est manifestement sous-modelée. On suit le modèle
+# plutôt que la cote publiée, comme aux Invalides.
+2.331544 48.872068 sol -15.9 0.96 0.96 90 paris/opera-ba.ac Opéra Garnier
+
 # Maison de la Radio. Le modèle d'origine contenait DEUX ensembles séparés de
 # 300 m, la Maison de la Radio et le Front de Seine sur l'autre rive, qu'aucune
 # pose unique ne pouvait satisfaire ensemble. Découpé avec

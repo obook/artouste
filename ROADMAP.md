@@ -638,8 +638,8 @@ Trois points à contrôler sur chacun :
 - [x] Sacré-Coeur
 - [ ] Hôtel des Invalides -- imparfait par construction, voir le point 9
 - [x] Panthéon -- portique réparé le 31/07/2026, recentrage léger à faire, point 10
-- [ ] Notre-Dame de Paris -- imparfait, voir le point 11
-- [ ] Opéra Garnier
+- [x] Notre-Dame de Paris -- imparfait, voir le point 11
+- [x] Opéra Garnier
 - [ ] Église de la Madeleine
 - [ ] Grande Arche de la Défense
 - [ ] Tour Montparnasse

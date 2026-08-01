@@ -56,8 +56,19 @@ inline constexpr float COLL_ALT_CLAMP  = 0.30f;   /* borne basse du terme d'alti
                                                      sur un grand écart, ex. 1000 m -> 30 m après la dune).
                                                      La montée, elle, n'est pas bornée. */
 inline constexpr float GAIN_V_DIST     = 0.14f;   /* vitesse visée (m/s) par mètre de distance à la cible */
-inline constexpr float GAIN_CYCLIQUE   = 0.08f;   /* cyclique par (m/s) d'écart de vitesse */
-inline constexpr float CYCLIQUE_MAX    = 0.45f;   /* cyclique maximal : borne l'inclinaison à une assiette réaliste */
+
+/* Cyclique longitudinal (tangage) et latéral (roulis) : deux gains distincts,
+ * car les deux axes n'ont plus la même autorité de couple depuis l'adoucissement
+ * du roulis manuel (ROLL_CTRL très inférieur à PITCH_CTRL, voir constants.hpp).
+ * Avec un seul gain isotrope, l'autopilote corrigeait le roulis bien plus
+ * mollement que le tangage -- gênant en montagne (couloir étroit, col) où la
+ * correction latérale doit pouvoir aller vite. Les valeurs latérales sont
+ * remises à l'échelle du ratio PITCH_CTRL/ROLL_CTRL pour retrouver le même
+ * budget de couple qu'avant ce changement. */
+inline constexpr float GAIN_CYCLIQUE_LON = 0.08f;   /* cyclique par (m/s) d'écart de vitesse, tangage */
+inline constexpr float CYCLIQUE_MAX_LON  = 0.45f;   /* cyclique maximal, tangage : assiette réaliste */
+inline constexpr float GAIN_CYCLIQUE_LAT = 0.18f;   /* cyclique par (m/s) d'écart de vitesse, roulis */
+inline constexpr float CYCLIQUE_MAX_LAT  = 1.00f;   /* cyclique maximal, roulis : pleine autorité disponible */
 inline constexpr float GAIN_ALT_RETOUR = 0.06f;   /* pente d'approche du retour : hauteur visée (m) par mètre de
                                                      distance au pad. 6 % = même pente que le HAPI (slopePercent
                                                      usuel des balises, voir Hapi.hpp) : reste dans le secteur

@@ -75,9 +75,9 @@ physics::Controls LandingAutopilot::update(float dt, const vec3& position, const
     const vec3  avant{std::cos(heading), 0.0f, -std::sin(heading)};
     const vec3  droite{std::sin(heading), 0.0f, std::cos(heading)};
     out.cyclicLongitudinal =
-        clamp(GAIN_CYCLIQUE * glm::dot(ecartV, avant), -CYCLIQUE_MAX, CYCLIQUE_MAX);
+        clamp(GAIN_CYCLIQUE_LON * glm::dot(ecartV, avant), -CYCLIQUE_MAX_LON, CYCLIQUE_MAX_LON);
     out.cyclicLateral =
-        clamp(GAIN_CYCLIQUE * glm::dot(ecartV, droite), -CYCLIQUE_MAX, CYCLIQUE_MAX);
+        clamp(GAIN_CYCLIQUE_LAT * glm::dot(ecartV, droite), -CYCLIQUE_MAX_LAT, CYCLIQUE_MAX_LAT);
 
     /* Collectif : hauteur d'approche proportionnelle à la distance, avec un taux de
        descente plafonné sous le seuil de l'alerte GPWS du HUD (collectifApprocheGpws,

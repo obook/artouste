@@ -158,9 +158,9 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
     const vec3  avant{std::cos(heading), 0.0f, -std::sin(heading)};  /* nez, au sol */
     const vec3  droite{std::sin(heading), 0.0f, std::cos(heading)};  /* flanc droit, au sol */
     out.controls.cyclicLongitudinal =
-        clamp(GAIN_CYCLIQUE * glm::dot(ecartV, avant), -CYCLIQUE_MAX, CYCLIQUE_MAX);
+        clamp(GAIN_CYCLIQUE_LON * glm::dot(ecartV, avant), -CYCLIQUE_MAX_LON, CYCLIQUE_MAX_LON);
     out.controls.cyclicLateral =
-        clamp(GAIN_CYCLIQUE * glm::dot(ecartV, droite), -CYCLIQUE_MAX, CYCLIQUE_MAX);
+        clamp(GAIN_CYCLIQUE_LAT * glm::dot(ecartV, droite), -CYCLIQUE_MAX_LAT, CYCLIQUE_MAX_LAT);
 
     /* Collectif : en croisière (points de passage), on suit la hauteur visée sans
        contrainte de taux de descente (collectifPour). Au retour vers le pad, le taux

@@ -41,6 +41,11 @@ void Application::toggleAutoland() {
     vec3 posePad{0.0f, 0.0f, 0.0f};
     if (padPlusProche(m_flight.body().position, posePad) != nullptr) {
         m_autoland.start(posePad, m_lastControls);
+        /* Engagement réussi : efface tout de suite un message d'échec resté à
+           l'écran (interruption précédente, aucun pad trouvé la fois d'avant),
+           sinon il reste affiché jusqu'à expiration de son délai alors que
+           l'atterrissage automatique est de nouveau actif. */
+        m_autolandMsgShow = 0.0f;
         return;
     }
     /* Aucun pad dans le rayon de recherche (voir padPlusProche) : rien à engager. Sans

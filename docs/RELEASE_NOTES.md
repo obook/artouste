@@ -1,23 +1,24 @@
-## v0.29.0 - 29 juillet 2026
+## v0.30.0 - 2 août 2026
 
 ### Nouvelles fonctionnalités
 
-- **Recherche de mise à jour au lancement** (clé `verifier_maj`, active par défaut) : le numéro de la dernière version publiée est demandé dans un fil séparé, sans retarder ni la fenêtre ni le vol. S'il existe plus récent, le menu de démarrage l'annonce et propose d'ouvrir la page du projet, par le bouton `Télécharger` ou la touche `M`. Rien n'est envoyé au passage.
-- **Nuit deux fois plus rapide que le jour** (clé `lune_vitesse`) : la vitesse du temps est multipliée entre le coucher et le lever. Avec les valeurs livrées, un cycle complet dure un quart d'heure, dix minutes de jour et cinq de nuit.
-- **Configuration personnelle entretenue toute seule** : les options nouvelles sont ajoutées à `config.txt` avec leur documentation, les options renommées y sont migrées en gardant la valeur choisie, et un modèle effacé ou abîmé est réécrit depuis la copie embarquée dans l'exécutable.
-- **Clés uniformisées en français** : `tree_max` devient `arbres_max`, `sun_time_scale` devient `soleil_vitesse`. Aucune action à faire, votre fichier est migré au premier lancement.
-- **Mode zombie** : toucher le sol fend le réservoir au lieu d'entamer la vie. Un posé ferme coûte quelques litres, un crash vide les 575 L et cloue l'appareil au sol.
+- **Monuments de Paris en volume** : Arc de Triomphe, Sacré-Coeur, Panthéon, Notre-Dame de Paris, Opéra Garnier et la Maison de la Radio posés sur la carte, avec rechargement automatique dès que `monuments.txt` change.
+- **Reprise de vol à un endroit précis** : possibilité de relancer un vol depuis une position donnée plutôt qu'au pad de départ.
+- **Souffle du rotor au ras du sol** : effet visuel du souffle du rotor sur le terrain proche.
+- **Clairance de décollage variable** : la tour ne délivre plus toujours le même message radio au décollage.
+- **Cycle jour/nuit démarré à 8h du matin** plutôt qu'à midi, hors temps réel.
 
 ### Corrections
 
-- **Panne sèche** : la turbine s'éteint dès que le réservoir est vide, quelle qu'en soit la cause. Elle pouvait auparavant tourner indéfiniment à sec.
-- **Démarrage refusé sur fond de réservoir** : sous deux litres, le démarreur ne lance plus une séquence d'une minute vouée à s'éteindre avant le régime de vol.
-- **Voyant carburant** maintenu en rouge réservoir vide, alors qu'il s'éteignait avec le reste de la planche au moment précis où il devenait utile. La ligne du HUD passe de `BAS` à `PANNE`.
-- **Mode assisté** : la touche `M` est résolue selon la disposition réelle du clavier. La virgule d'un clavier AZERTY ne bascule plus l'assistance, et les dispositions autres qu'US et AZERTY fonctionnent.
-- **Mode zombie** : un contact au sol trop doux pour se voir ne fait plus de bruit.
+- **Ressenti du vol adouci** : roulis et lacet moins vifs à pleine commande, mieux proportionnés à la masse de l'appareil ; le cyclique passe désormais par un léger retard physique (précession gyroscopique du rotor) avant de produire du couple.
+- **Atterrissage automatique** : le roulis retrouve toute son autorité (il avait perdu plus de la moitié de son couple face au tangage), l'engagement se fait en douceur au lieu de faire sauter le manche, une interruption garde le collectif où il était plutôt que de sauter sur la position du levier physique, le message d'échec s'efface dès qu'un nouvel engagement réussit, et la vitesse d'approche plafonne désormais vers 70 kt au lieu de rester quasi en croisière jusqu'à 350 m du pad.
+- **Carte de Paris** : position du pad de départ corrigée, balise HAPI manquante ajoutée, faces arrière des monuments qui restaient éclairées.
+- **Mode assisté** : ne reste plus actif au décollage d'un vol lancé depuis le menu alors qu'il ne l'était pas au moment du lancement.
+- **Erreurs GLFW au premier menu** : la salve de messages au lancement est désormais silencieuse.
+- **Heure du HUD** : affiche le facteur d'accélération de la nuit, pas seulement celui du jour.
 
 ### Documentation
 
-- Matériel requis précisé partout : **un PC et une manette de jeu suffisent**, rien à installer ni à configurer. Le clavier dépanne mais n'est pas recommandé.
-- Logo et attribution IGN ajoutés au README, aux crédits, à la notice PDF, à l'étude du terrain et à la page du projet.
-- Le numéro de version s'inscrit désormais tout seul dans la page du projet à chaque release.
+- Nombre de manettes reconnues précisé (2 242, via la base SDL_GameControllerDB) dans le README et sur la page du projet.
+- Licence GPL v2 des modèles de monuments et leurs crédits consignés.
+- Instructions de démarrage clarifiées dans le README et la page du projet.

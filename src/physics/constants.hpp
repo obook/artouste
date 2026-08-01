@@ -88,9 +88,17 @@ inline constexpr float KDRAG_VERT   = 5.0f;     /* N/(m/s)^2  axe vertical */
 inline constexpr float KDRAG_LAT    = 3.2f;     /* N/(m/s)^2  axe latéral */
 
 /* --- Autorité des commandes (couple obtenu à pleine commande) ---------------- */
-inline constexpr float ROLL_CTRL    = 3000.0f;  /* N.m  cyclique latéral */
+inline constexpr float ROLL_CTRL    = 1300.0f;  /* N.m  cyclique latéral */
 inline constexpr float PITCH_CTRL   = 3000.0f;  /* N.m  cyclique longitudinal */
-inline constexpr float YAW_CTRL     = 3500.0f;  /* N.m  palonniers */
+inline constexpr float YAW_CTRL     = 2100.0f;  /* N.m  palonniers */
+
+/* --- Réponse du rotor principal (retard gyroscopique) ------------------------- */
+/* Le plan des pales ne suit pas instantanément le manche : la précession
+ * gyroscopique retarde sa bascule d'une constante de temps caractéristique du
+ * rotor. Le rotor de queue, plus petit et beaucoup plus rapide, n'a pas cette
+ * inertie : le retard ne s'applique donc qu'au cyclique (roulis, tangage), pas
+ * au palonnier. */
+inline constexpr float ROTOR_LAG_TAU = 0.15f;  /* s : constante de temps du plan de pales */
 
 /* Le rotor principal exerce sur le fuselage un couple en sens inverse de sa
  * rotation. Sur l'Alouette II il tourne dans le sens horaire vu de dessus, donc ce

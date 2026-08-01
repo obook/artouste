@@ -30,6 +30,17 @@ float clampAbs(float v, float limit) noexcept {
     return v > limit ? limit : (v < -limit ? -limit : v);
 }
 
+/* Rapproche progressivement "current" de "target" : filtre passe-bas du premier
+ * ordre, utilisé ici pour le retard de bascule du plan de pales (voir
+ * ROTOR_LAG_TAU). */
+float approach(float current, float target, float dt, float tau) noexcept {
+    if (tau <= 0.0f) {
+        return target;
+    }
+    const float alpha = 1.0f - std::exp(-dt / tau);
+    return current + alpha * (target - current);
+}
+
 }  /* namespace */
 
 void FlightModel::update(const Controls& controls, float dt) noexcept {
@@ -157,9 +168,16 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         ? 1.0f - 0.5f * glm::smoothstep(SIDEWARD_V_MAX, SIDEWARD_V_MAX * 1.4f, vitesseCritique)
         : 1.0f;
 
+    /* Le plan des pales ne bascule pas instantanément avec le manche (précession
+     * gyroscopique) : le cyclique passe par un filtre passe-bas avant de produire
+     * du couple. Le palonnier, lui, agit sur le rotor de queue, trop petit et trop
+     * rapide pour avoir ce retard. */
+    m_cyclicLateralLagged      = approach(m_cyclicLateralLagged, controls.cyclicLateral, dt, ROTOR_LAG_TAU);
+    m_cyclicLongitudinalLagged = approach(m_cyclicLongitudinalLagged, controls.cyclicLongitudinal, dt, ROTOR_LAG_TAU);
+
     const vec3&     w = m_body.angularVelocity;
     vec3 torque;
-    torque.x = controls.cyclicLateral * ROLL_CTRL          /* roulis (autour de X) */
+    torque.x = m_cyclicLateralLagged * ROLL_CTRL           /* roulis (autour de X) */
                + LEVEL_GAIN * levelBody.x - DAMP_ROLL * w.x;
     /* Lacet (autour de Y). Sur l'Alouette II, le rotor tourne dans le sens horaire
      * vu de dessus : son couple de réaction fait partir le nez vers la gauche, et le
@@ -167,7 +185,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * avec le collectif, et le palonnier droit qui ramène le nez vers la droite. */
     torque.y = -controls.pedals * YAW_CTRL * facteurAnticouple
                + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction - DAMP_YAW * w.y;
-    torque.z = -controls.cyclicLongitudinal * PITCH_CTRL   /* tangage (autour de Z) */
+    torque.z = -m_cyclicLongitudinalLagged * PITCH_CTRL    /* tangage (autour de Z) */
                + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;
 
     const vec3 inertia{I_ROLL, I_YAW, I_PITCH};

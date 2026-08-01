@@ -38,6 +38,7 @@ public:
         m_body      = RigidBody{};
         m_fuelLiters = FUEL_CAPACITY_L;
         clearGroundImpact();
+        clearRotorLag();
     }
 
     /* Réinitialise à une altitude donnée, pratique pour tester loin du sol. */
@@ -46,6 +47,7 @@ public:
         m_body.position.y = altitude;
         m_fuelLiters      = FUEL_CAPACITY_L;
         clearGroundImpact();
+        clearRotorLag();
     }
 
     /* Réinitialise à une position donnée (par exemple posé sur la côte). */
@@ -54,6 +56,7 @@ public:
         m_body.position = position;
         m_fuelLiters    = FUEL_CAPACITY_L;
         clearGroundImpact();
+        clearRotorLag();
     }
 
     /* Réinitialise à une position et un cap donnés (degrés boussole : 0 = nord,
@@ -141,6 +144,14 @@ private:
         m_inGroundContact = false;
     }
 
+    /* Un repositionnement doit ramener le plan des pales au neutre : sinon
+       l'appareil hériterait, au pas suivant, d'un reliquat de bascule qui ne
+       correspond plus à la commande du pilote. */
+    void clearRotorLag() noexcept {
+        m_cyclicLateralLagged      = 0.0f;
+        m_cyclicLongitudinalLagged = 0.0f;
+    }
+
     RigidBody m_body;
     Turbine   m_turbine;
     float     m_lastThrust   = 0.0f;
@@ -150,6 +161,8 @@ private:
     float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
     bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
+    float     m_cyclicLateralLagged      = 0.0f;  /* bascule du plan de pales, retard gyroscopique */
+    float     m_cyclicLongitudinalLagged = 0.0f;
 };
 
 }  /* namespace artouste::physics */

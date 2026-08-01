@@ -66,6 +66,16 @@ private:
     physics::Controls  m_baseline{};
     vec3               m_target{0.0f};
 
+    /* Cyclique et palonnier lissés (voir ENGAGE_TAU, LandingAutopilot.cpp) : évite
+       qu'engager l'atterrissage automatique en pleine correction manuelle ne fasse
+       sauter les commandes d'un coup vers la valeur calculée par le guidage. Le
+       lissage ne dure que le temps de l'engagement (voir m_tempsEngagement) : le
+       reste de l'approche garde la pleine réactivité du guidage. */
+    float m_cyclicLongitudinalOut = 0.0f;
+    float m_cyclicLateralOut      = 0.0f;
+    float m_pedalsOut             = 0.0f;
+    float m_tempsEngagement       = 0.0f;  /* s écoulées depuis start() */
+
     /* Vrai dès le contact avec le pad : on ramène alors le collectif à zéro (au lieu
        de rendre la main directement) pour sortir de l'effet de sol, sans quoi le
        collectif de pose (proche de la sustentation) ferait redécoller l'appareil. */

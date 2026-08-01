@@ -151,7 +151,10 @@ DemoPilot::Output DemoPilot::update(float dt, const vec3& position, const vec3& 
        plus haut que la pente ne l'exige à cette distance (voir vitesseMinApproche) :
        sinon il s'immobiliserait au-dessus du pad avant d'avoir fini de descendre. */
     const float vNormeMin    = m_returning ? vitesseMinApproche(dist, agl) : 0.0f;
-    const float vNorme       = std::max(clamp(GAIN_V_DIST * dist, 0.0f, V_CROISIERE), vNormeMin);
+    /* Plafond de vitesse : croisière entre les points de passage, approche
+       (V_APPROCHE_MAX, plus lente) une fois le retour vers le pad entamé. */
+    const float vPlafond     = m_returning ? V_APPROCHE_MAX : V_CROISIERE;
+    const float vNorme       = std::max(clamp(GAIN_V_DIST * dist, 0.0f, vPlafond), vNormeMin);
     const vec3  versCible    = (dist > 0.001f) ? vec3{dx / dist, 0.0f, dz / dist} : vec3{0.0f};
     const vec3  vitesseCible = versCible * vNorme;
     const vec3  ecartV{vitesseCible.x - velocity.x, 0.0f, vitesseCible.z - velocity.z};

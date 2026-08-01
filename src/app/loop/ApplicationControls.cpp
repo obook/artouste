@@ -111,6 +111,13 @@ Application::computeControls(const physics::Controls& rawInput, float frameDt, f
         if (pilotInput > 0.15f) {
             m_autoland.stop();
             controls = m_assist.apply(rawInput, frameDt);
+            /* Le collectif reste où l'atterrissage automatique l'avait laissé,
+               pas où le levier réel se trouve : celui-ci n'a pas suivi pendant le
+               vol automatique (voir syncCollective) et sauterait sinon d'un coup
+               vers sa position d'avant l'engagement au moment de l'interruption. */
+            controls.collective = m_lastControls.collective;
+            m_input->syncCollective(controls.collective);
+            m_assist.reset();
             m_autolandMsg = "Atterrissage automatique interrompu";
             m_autolandMsgShow = 3.0f;
         } else {

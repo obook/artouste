@@ -100,7 +100,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
   l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
   La vitesse du temps se règle dans `assets/config.txt` (`soleil_vitesse`) : par
   défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
-  temps réel (heure du PC), un autre rythme, ou figer le temps à midi. La nuit, les deux
+  temps réel (heure du PC), un autre rythme, ou figer le temps à 8h du matin. La nuit, les deux
   feux de position avant s'allument, rouge à bâbord et vert à tribord.
 * Mode démo automatique (bouton `Démo` du menu de démarrage) : l'appareil joue seul,
   en boucle, un vol panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de

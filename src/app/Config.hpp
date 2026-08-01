@@ -71,8 +71,8 @@ struct Config {
        soleil part toujours de l'heure locale du PC au lancement. Durée réelle d'une
        journée complète = 86400 / sunTimeScale secondes.
          1   -> temps réel (défaut), départ à l'heure locale du PC
-         144 -> journée complète en 10 min (départ à midi)
-         0   -> temps figé à midi (le soleil ne bouge pas) */
+         144 -> journée complète en 10 min (départ à 8h du matin)
+         0   -> temps figé à 8h du matin (le soleil ne bouge pas) */
     float sunTimeScale = 1.0f;
 
     /* Nuit plus rapide que le jour : multiplicateur appliqué à sunTimeScale entre

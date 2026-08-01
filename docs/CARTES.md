@@ -96,8 +96,8 @@ Les clés disponibles :
   la rapidité de la course du soleil. La durée réelle d'une journée complète vaut
   `86400 / soleil_vitesse` secondes. La valeur `72` (défaut) fait défiler une journée
   entière en vingt minutes ; `144` la réduit à dix minutes ; `1` correspond au temps
-  réel, le soleil partant de l'heure locale du PC ; `0` fige le temps à midi (le soleil
-  ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à midi, afin
+  réel, le soleil partant de l'heure locale du PC ; `0` fige le temps à 8h du matin (le
+  soleil ne bouge plus). Pour toute valeur autre que `1`, le simulateur démarre à 8h, afin
   d'ouvrir sur une belle lumière. L'heure courante s'affiche dans le HUD, sur la ligne `HRE`
   du panneau supérieur droit.
 * `lune_vitesse` : **multiplicateur de la vitesse du temps pendant la nuit**, du

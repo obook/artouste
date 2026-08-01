@@ -333,9 +333,9 @@ void Application::applySunSchedule() {
        temps réel). m_sunBaseSeconds est l'heure d'origine du soleil (s depuis
        minuit), voir Application::sunDirection :
          - en temps réel (échelle 1) on part de l'heure locale du PC ;
-         - sinon (temps accéléré ou figé) on part de midi, pour démarrer sur une belle
-           lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une échelle nulle,
-           le soleil reste donc figé à midi. */
+         - sinon (temps accéléré ou figé) on part de 8h du matin, pour démarrer sur
+           une belle lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une
+           échelle nulle, le soleil reste donc figé à 8h. */
     m_sunTimeScale = m_config.sunTimeScale;
     /* Nuit accélérée (clé `lune_vitesse`) : la course du soleil garde la vitesse
        ci-dessus le jour et la multiplie par ce facteur entre le coucher et le
@@ -357,14 +357,14 @@ void Application::applySunSchedule() {
                     local.tm_hour,
                     local.tm_min);
     } else {
-        constexpr float NOON = 12.0f * 3600.0f; /* midi */
-        m_sunBaseSeconds = NOON;
+        constexpr float EIGHT_AM = 8.0f * 3600.0f; /* 8h du matin */
+        m_sunBaseSeconds = EIGHT_AM;
         if (m_sunTimeScale == 0.0f) {
-            std::printf("[scène] cycle jour/nuit : temps figé à midi.\n");
+            std::printf("[scène] cycle jour/nuit : temps figé à 8h00.\n");
         } else {
             std::printf(
                 "[scène] cycle jour/nuit : temps accéléré (x%g le jour, x%g la nuit), départ "
-                "à midi.\n",
+                "à 8h00.\n",
                 static_cast<double>(m_sunTimeScale),
                 static_cast<double>(m_sunTimeScale * m_nightSpeedFactor));
         }

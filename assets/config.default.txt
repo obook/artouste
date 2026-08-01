@@ -86,9 +86,9 @@ radio_url https://stream2.madein80.live/listen/madein80/playhd.mp3
 #   1   = temps réel : départ à l'heure locale du PC
 #   72  = journée complète en 20 min (défaut)
 #   144 = journée complète en 10 min
-#   0   = temps figé à midi (le soleil ne bouge pas)
+#   0   = temps figé à 8h du matin (le soleil ne bouge pas)
 # En temps réel (1) le soleil part de l'heure locale du PC ; pour toute autre valeur il
-# part de midi, pour démarrer sur une belle lumière. Avec 0, il reste figé à midi.
+# part de 8h du matin, pour démarrer sur une belle lumière. Avec 0, il reste figé à 8h.
 soleil_vitesse 72
 
 # lune_vitesse : multiplicateur de la vitesse ci-dessus pendant la nuit, du coucher

@@ -46,9 +46,10 @@ public:
     /* Charge la base communautaire de mappings SDL (gamecontrollerdb.txt) depuis
      * le dossier des ressources, pour reconnaître les manettes absentes de la base
      * intégrée de GLFW -- dont les modèles Xbox récents en Bluetooth (product 0B13),
-     * qui n'y figurent pas encore. À appeler une fois, juste après glfwInit.
-     * Silencieux si le fichier est absent : GLFW conserve alors sa base intégrée,
-     * qui couvre déjà les manettes les plus courantes. */
+     * qui n'y figurent pas encore. Charge ensuite gamecontrollerdb-extra.txt, qui
+     * corrige ou complète cette base sans la modifier (voir son entête). À appeler
+     * une fois, juste après glfwInit. Silencieux si un fichier est absent : GLFW
+     * conserve alors sa base intégrée, qui couvre déjà les manettes courantes. */
     static void loadMappings(const std::filesystem::path& assetDir) noexcept;
 
     /* Manette branchée ET reconnue (mapping SDL disponible) ? */
@@ -130,6 +131,11 @@ public:
     void primeButtons() noexcept;
 
 private:
+    /* Charge un fichier de mappings SDL s'il existe. Utilisée par loadMappings
+     * pour enchaîner la base communautaire puis les correctifs maison ; définie
+     * dans Gamepad.cpp. */
+    static void chargerFichierMappings(const std::filesystem::path& fichier) noexcept;
+
     /* Premier identifiant GLFW d'une manette reconnue (mapping SDL disponible),
      * ou -1 si aucune. Partagé par Gamepad.cpp, GamepadAxes.cpp et
      * GamepadButtons.cpp ; défini dans Gamepad.cpp. */

@@ -1,0 +1,40 @@
+# Correspondances SDL complémentaires propres à Artouste.
+#
+# Ce fichier est chargé APRÈS assets/gamecontrollerdb.txt et le remplace pour
+# les GUID qu'il redéfinit. Il sert à corriger ou à compléter la base
+# communautaire sans la modifier, pour que celle-ci reste remplaçable telle
+# quelle par la dernière version publiée sur SDL_GameControllerDB.
+#
+# Rappel de syntaxe (une manette par ligne) :
+#   GUID,Nom,a:b2,b:b1,x:b3,y:b0,leftx:a0,lefty:a1,...,platform:Linux,
+# où aN désigne un axe, bN un bouton et hN.M une direction de chapeau.
+#
+# ATTENTION : GLFW rejette une correspondance entière dès qu'elle cite un
+# élément absent de la manette (par exemple righty:a4 sur une manette qui n'a
+# que quatre axes). La manette est alors vue comme un simple joystick, sans
+# aucune commande reconnue. Il faut donc n'y faire figurer que des numéros
+# réellement présents.
+#
+# Pour relever ces numéros sur une manette non reconnue :
+#   ./build/bin/gamepad_probe
+# La sonde affiche le GUID, le nombre d'axes, de boutons et de chapeaux, et
+# l'état brut en direct : il suffit d'actionner chaque commande pour lire son
+# numéro.
+
+# DragonRise Inc. PC TWIN SHOCK (USB 0079:0006), distribuée par Free sous le nom
+# de Gamepad Freebox, et vendue ailleurs sous les noms "Microntek USB Joystick",
+# "USB Gamepad" ou "G-Shark GP-702".
+# La base intégrée de GLFW contient déjà ce GUID, mais avec righty:a4 : cette
+# manette n'expose que quatre axes (X, Y, Z et Rz), donc GLFW rejette la
+# correspondance et la manette reste inutilisable. La ligne ci-dessous reprend
+# la même disposition en plaçant le stick droit sur les axes existants a2 et a3,
+# ordre vérifié manette en main.
+#
+# ATTENTION, mode analogique obligatoire. Diode éteinte, la manette est en mode
+# numérique : le stick droit n'envoie pas d'axes mais recopie les quatre boutons
+# de face, donc le palonnier reste mort pendant que le stick coupe la turbine,
+# change de vue et remet l'appareil au départ. Appuyer sur le bouton ANALOG au
+# centre de la manette, la diode rouge doit s'allumer. Aucune correspondance SDL
+# ne peut rattraper ce mode, les codes émis étant ceux des boutons physiques.
+03000000790000000600000010010000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Linux,
+03000000790000000600000000000000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Windows,

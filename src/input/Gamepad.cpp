@@ -54,7 +54,14 @@ bool Gamepad::readState(GLFWgamepadstate& state) noexcept {
 }
 
 void Gamepad::loadMappings(const std::filesystem::path& assetDir) noexcept {
-    const std::filesystem::path fichier = assetDir / "gamecontrollerdb.txt";
+    /* L'ordre compte : le second fichier redéfinit les GUID déjà vus dans le
+     * premier. Les correctifs maison passent donc après la base communautaire,
+     * qui reste ainsi remplaçable telle quelle par sa dernière version. */
+    chargerFichierMappings(assetDir / "gamecontrollerdb.txt");
+    chargerFichierMappings(assetDir / "gamecontrollerdb-extra.txt");
+}
+
+void Gamepad::chargerFichierMappings(const std::filesystem::path& fichier) noexcept {
     std::ifstream in(fichier, std::ios::binary);
     if (!in) {
         /* Fichier absent : ce n'est pas une erreur. GLFW garde sa base intégrée,

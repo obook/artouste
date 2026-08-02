@@ -90,7 +90,7 @@ inline constexpr float KDRAG_LAT    = 3.2f;     /* N/(m/s)^2  axe latéral */
 /* --- Autorité des commandes (couple obtenu à pleine commande) ---------------- */
 inline constexpr float ROLL_CTRL    = 1300.0f;  /* N.m  cyclique latéral */
 inline constexpr float PITCH_CTRL   = 3000.0f;  /* N.m  cyclique longitudinal */
-inline constexpr float YAW_CTRL     = 2100.0f;  /* N.m  palonniers */
+inline constexpr float YAW_CTRL     = 3500.0f;  /* N.m  palonniers */
 
 /* --- Réponse du rotor principal (retard gyroscopique) ------------------------- */
 /* Le plan des pales ne suit pas instantanément le manche : la précession

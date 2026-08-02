@@ -279,9 +279,14 @@ int Application::run() {
         }
         /* Boucle menu <-> vol : la touche Échap en vol rend la main pour réafficher le
            menu (choix d'une autre carte, turbine à froid ou non). Échap ou "Quitter"
-           dans le menu -- comme la fermeture de la fenêtre -- termine l'application. */
+           dans le menu -- comme la fermeture de la fenêtre -- termine l'application. Le
+           curseur souris est masqué pendant le vol (immersion, inutile aux commandes
+           clavier/manette) et réaffiché dès le retour au menu (nécessaire aux clics
+           ImGui). */
         for (;;) {
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             const bool retourMenu = mainLoop();
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             if (!retourMenu) {
                 break;  /* fenêtre fermée : on quitte */
             }

@@ -99,13 +99,11 @@ void Application::setFullscreen(bool on) {
             glfwSetWindowMonitor(m_window, mon, 0, 0, mode->width, mode->height,
                                  mode->refreshRate);
         }
-        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
         m_fullscreen = true;
     } else {
         const int w = (m_winW > 0) ? m_winW : WINDOW_WIDTH;
         const int h = (m_winH > 0) ? m_winH : WINDOW_HEIGHT;
         glfwSetWindowMonitor(m_window, nullptr, m_winX, m_winY, w, h, 0);
-        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         m_fullscreen = false;
     }
 }

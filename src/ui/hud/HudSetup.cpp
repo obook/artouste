@@ -32,7 +32,8 @@ void Hud::init(GLFWwindow* window) {
     io.IniFilename = nullptr; /* pas de fichier de réglages sur disque */
     /* ImGui ne doit pas piloter le curseur : sans ce drapeau, son backend GLFW remet
        GLFW_CURSOR_NORMAL à chaque image (pour afficher les curseurs de survol), ce qui
-       annulerait le masquage du curseur qu'on impose en plein écran (setFullscreen). */
+       annulerait le masquage du curseur qu'on impose en vol (voir ApplicationLifecycle,
+       autour des appels à mainLoop). */
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     ImGui::StyleColorsDark();
     m_baseStyle = ImGui::GetStyle(); /* style de référence, remis à l'échelle dans updateScale */

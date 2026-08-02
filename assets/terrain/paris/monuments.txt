@@ -190,3 +190,103 @@
 # Cap relevé à l'écran sur la tour rectangulaire, échelle native confirmée par
 # l'union des emprises BD TOPO de l'anneau, qui donne 112 m.
 2.278472 48.852454 sol 5.2 1.0 1.0 95 paris/Radio-ba.ac Maison de la Radio
+
+# Église de la Madeleine.
+#
+# Le modèle le plus sain du jeu : origine centrée, socle à +0,33 m, 137 x 54 m
+# pour 35,6 m de haut, et rien d'autre que le monument dans le fichier.
+#
+# Cap -64,1 : l'emprise BD TOPO 123774 donne 25,9 deg modulo 90, et le grand axe
+# est bien sur cette branche et non sur 115,9. Vérification par le calcul : un
+# rectangle de 108 x 43 m (la Madeleine au nu des colonnes) tourné de 25,9 deg
+# donne une boîte de 85,9 x 115,9 m, quand BD TOPO en relève 86 x 113. Le modèle
+# présente son grand axe selon X, soit un cap de 90, d'où -64,1.
+#
+# Échelle 1,0, l'échelle native. Le balayage sur l'orthophoto est faible ici, la
+# place et le marché couvert donnant trop de contours parasites : deux pics
+# équivalents à 0,87 et 1,05, sans maximum franc. Comparer le modèle au relevé
+# BD TOPO suggérerait 0,79, mais c'est le piège déjà rencontré aux Invalides :
+# BD TOPO trace le bâtiment au nu des colonnes (108 x 43 m) quand le modèle
+# inclut le stylobate et ses marches, plus larges. À l'échelle native le
+# balayage ne réclame plus qu'un mètre de décalage, ce qui la conforte.
+2.324460 48.870027 sol -64.1 1.0 1.0 70 paris/madeleine-ba.ac Église de la Madeleine
+
+# Tour Montparnasse.
+#
+# Cap -47,8 : l'axe principal de l'emprise BD TOPO 56480 (82 points) est à
+# 42,2 deg, et le modèle présente le sien selon X, soit un cap de 90. L'axe vient
+# des MOMENTS et non de la direction des côtés : les petits côtés de la tour sont
+# courbes, donc leurs segments pointent dans toutes les directions.
+#
+# Échelles : 0,982 en plan (64,8 m relevés le long de l'axe contre 66,0 dans le
+# modèle) et 0,907 en hauteur (210 m connus, 207,4 relevés par BD TOPO, contre
+# 231,6 dans le modèle). Le modèle est donc proportionnellement trop élancé de
+# 8 %, ce qui se verrait sur la ligne d'horizon : chaque facteur garde sa mesure.
+#
+# Pas de balayage sur l'orthophoto : à 210 m de haut la parallaxe fausse tout,
+# voir la note de la Grande Arche.
+2.321980 48.842113 sol -47.8 0.982 0.907 60 paris/Montparnasse-ba.ac Tour Montparnasse
+
+# Grande Arche de la Défense.
+#
+# Centre relevé sur l'emprise BD TOPO 124054 (18 points, 116,4 m de haut).
+# L'Arche étant carrée, la mesure du cap sur cette emprise (32,0 deg) ne dit
+# rien de l'orientation de l'évidement : seule compte la direction où pointe le
+# passage, pas la boîte englobante. Le premier essai, à 32,0, posait le passage
+# en travers de l'axe historique ; corrigé à -58,0 (32,0 - 90) le 02/08/2026.
+#
+# POSITION ET CAP VÉRIFIÉS le 02/08/2026, par comparaison à la base du bâtiment
+# sur l'orthophoto, tuiles de détail chargées. Méthode : deux captures au nadir,
+# l'une avec le modèle APLATI (échelle verticale ramenée à 0,002, donc sa trace
+# au sol exacte), l'autre sans le monument ; leur différence donne l'emprise.
+# Position juste à 2,4 m près, et orientation des côtés à 0,5 et 0,2 deg des
+# bords relevés sur la photo.
+#
+# ÉCHELLE : le modèle n'est PAS un cube, contrairement au monument. Le fichier
+# mesure 126,0 x 126,0 x 118,1 m, donc il est écrasé de 6 % en profondeur, quand
+# l'Arche fait 110,9 m de large sur 112 de profond et 111,9 de haut. Aucun
+# facteur uniforme ne peut satisfaire les deux axes du plan : il faudrait 0,880
+# en largeur et 0,948 en profondeur, et le format ne prévoit qu'une seule
+# échelle horizontale.
+#
+# D'où le réglage retenu le 02/08/2026 : 0,914 en plan, moyenne géométrique des
+# deux, qui répartit l'erreur (115,1 m de large, 4,2 de trop, et 107,9 de
+# profond, 4,1 de moins) ; et 0,888 en vertical, qui donne la hauteur exacte.
+# Le réglage précédent, 0,873 partout, calait la largeur au mètre près mais
+# laissait la profondeur 8,9 m trop courte, ce qui se voyait en vol : le
+# bâtiment ne remplissait pas sa parcelle vers l'avant.
+#
+# NE PAS JUGER CE MONUMENT SUR SON TOIT. Vu à la verticale depuis 380 m, le plan
+# du toit est grossi de 1,407 fois par la perspective, soit D / (D - h) avec h la
+# hauteur du cube : il déborde donc du bâtiment photographié et fait croire à une
+# pose décalée d'une vingtaine de mètres alors que la base tombe juste. Le
+# bâtiment réel penche lui aussi dans l'orthophoto, l'IGN redressant sur le
+# relief du sol et non sur le bâti ; les deux biais se cumulent. C'est pour la
+# même raison que le balayage sur l'orthophoto a dû être ÉCARTÉ ici, seul cas de
+# la série : la méthode suppose un monument bas devant une caméra haute, et au
+# delà d'une vingtaine de mètres elle cherche à rétrécir le modèle pour le faire
+# tenir dans une silhouette que la parallaxe a agrandie.
+2.235868 48.892569 sol -58.0 0.914 0.888 90 paris/ArcheDefense-ba.ac Grande Arche de la Défense
+
+# Hôtel de Ville. IMPARFAIT (relief) mais accepté en l'état, voir la ROADMAP.
+#
+# Le relief mesuré sous l'emprise du bâtiment varie d'environ 5 m (pente vers
+# les quais de Seine tout proches), alors que le socle du modèle, posé au mot-
+# clé "sol", reste rigide et plat : il clippe dans le relief qui monte d'un
+# côté et flotte au-dessus de celui qui descend de l'autre. Constaté en vol le
+# 02/08/2026. Corriger demanderait d'aplanir le relief sous l'emprise, comme
+# pour les hélisurfaces (PadPlatform, Terrain.cpp) : un développement à part.
+#
+# Cap -162,4 : l'axe principal de l'emprise BD TOPO 68975 (515 points) est à
+# 17,6 deg, et le modèle présente son grand axe selon Z, soit un cap de 180.
+# Attention à la branche : un premier essai à -72,4 posait le bâtiment en
+# travers, ses deux cours perpendiculaires à ce qu'elles doivent être.
+#
+# Échelle 1,0, l'échelle native. Le balayage propose 0,80, soit 0,86 une fois
+# corrigé de la parallaxe (caméra à 800 m, monument à 53,8 m, grossissement
+# 1,072), mais son accord plafonne à 0,19 contre 0,40 à 0,48 sur les monuments
+# bien calés : à cette altitude les tuiles de détail ne se chargent plus et
+# l'orthophoto d'ensemble, à 3,6 m par pixel, ne donne plus de contours francs.
+# La superposition montre en revanche les deux cours du modèle tombant sur
+# celles de la photo, ce qui suffit à valider l'échelle native.
+2.352527 48.856428 sol -162.4 1.0 1.0 100 paris/hotel_de_ville-ba.ac Hôtel de Ville

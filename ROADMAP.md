@@ -597,6 +597,21 @@ qui peuvent se mener séparément.
        `monuments.txt` ne coûte qu'une ligne. Sans urgence : la silhouette est
        déjà juste pour tout le reste.
 
+    16. Hôtel de Ville : socle IMPARFAIT, accepté en l'état. Le relief mesuré
+        sur la carte d'altitude varie d'environ 5 m sous l'emprise du bâtiment
+        (place de l'Hôtel de Ville, pente vers les quais de Seine tout
+        proches), alors que le socle du modèle est rigide et plat. Posé au mot-
+        clé "sol", qui ne relève qu'un seul point au centre : le socle clippe
+        donc dans le relief qui monte d'un côté et flotte au-dessus de celui
+        qui descend de l'autre, constaté en vol le 02/08/2026.
+
+        Une altitude numérique ne changerait rien : "sol" calcule déjà cette
+        même valeur unique et la fige, comme le ferait un nombre écrit à la
+        main. La vraie correction demanderait d'aplanir le relief sous
+        l'emprise du bâtiment, comme cela existe déjà pour les hélisurfaces
+        (voir PadPlatform dans Terrain.cpp) mais pas encore pour les monuments :
+        un développement à part, pas un réglage de fichier.
+
     Licence : GPL v2, comme le projet. L'archive d'origine ne l'annonçait nulle
   part et son `Read-Me.txt` se bornait à créditer Bertrand AUGRAS, auteur des
   scènes X-Plane dont les modèles sont tirés
@@ -640,10 +655,10 @@ Trois points à contrôler sur chacun :
 - [x] Panthéon -- portique réparé le 31/07/2026, recentrage léger à faire, point 10
 - [x] Notre-Dame de Paris -- imparfait, voir le point 11
 - [x] Opéra Garnier
-- [ ] Église de la Madeleine
-- [ ] Grande Arche de la Défense
-- [ ] Tour Montparnasse
-- [ ] Hôtel de Ville
+- [x] Église de la Madeleine
+- [x] Grande Arche de la Défense
+- [x] Tour Montparnasse
+- [x] Hôtel de Ville -- imparfait (relief), accepté en l'état, point 16
 - [ ] Palais du Louvre
 - [ ] Bibliothèque nationale de France
 - [ ] Centre Pompidou -- bande noire non résolue, voir le point 13

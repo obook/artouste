@@ -138,7 +138,28 @@ zombie, le tir et le gestionnaire de cartes).
 
 Une manette PlayStation 4 (DualShock 4) ou PlayStation 5 (DualSense) branchée en USB ou en Bluetooth fonctionne au même titre qu'une manette Xbox : le mappage GLFW/SDL fait correspondre `A`/`B`/`X`/`Y` à Croix/Rond/Carré/Triangle, `Start` à `Options` et `Back` à `Share`/`Create`.
 
+### Manettes essayées
+
+Le simulateur en reconnaît bien davantage (voir plus bas), mais ces modèles-là ont été essayés manette en main :
+
+| Manette | Connexion | Remarque |
+|---|---|---|
+| Xbox 360, One, Series X/S | USB, Bluetooth | rien à faire |
+| PlayStation 4 (DualShock 4) | USB, Bluetooth | rien à faire |
+| PlayStation 5 (DualSense) | USB, Bluetooth | rien à faire |
+| Gamepad Freebox, et les autres manettes DragonRise PC TWIN SHOCK | USB | mode analogique obligatoire, diode rouge allumée |
+
 Cette reconnaissance étendue s'appuie sur la base communautaire SDL embarquée (`assets/gamecontrollerdb.txt`), chargée au démarrage. Elle couvre plus de 2 200 manettes (2 242 à ce jour) sur Linux, Windows et macOS, dont les modèles Xbox sans fil récents (Series X/S) en Bluetooth, absents de la base intégrée de GLFW. Pour rester à jour au fil des nouveaux modèles, il suffit de remplacer ce fichier par la dernière version publiée sur le dépôt [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB).
+
+Un second fichier, `assets/gamecontrollerdb-extra.txt`, est chargé juste après et prime sur le premier. Il corrige ou complète la base communautaire sans la modifier, pour que celle-ci reste remplaçable telle quelle. Il contient aujourd'hui la manette DragonRise PC TWIN SHOCK (USB `0079:0006`), vendue aussi sous les noms "Microntek USB Joystick" ou "USB Gamepad", et distribuée par Free sous le nom de Gamepad Freebox : les correspondances existantes la décrivaient avec cinq axes alors qu'elle n'en expose que quatre, ce qui suffisait à la faire rejeter en bloc et à la rendre inutilisable.
+
+Sur ce modèle, le mode analogique est obligatoire. Diode éteinte, le stick droit n'envoie pas d'axes mais recopie les quatre boutons de face : le palonnier reste mort pendant que le stick coupe la turbine, change de vue et remet l'appareil au point de départ. Un appui sur le bouton ANALOG au centre de la manette allume la diode rouge et rétablit les deux sticks.
+
+Si une manette n'est pas reconnue, l'outil `gamepad_probe` livré avec les sources affiche son GUID, le nombre d'axes, de boutons et de chapeaux, ainsi que leur état brut en direct. Il donne tout ce qu'il faut pour écrire la ligne correspondante ; le format est rappelé dans l'entête de `gamecontrollerdb-extra.txt`.
+
+```sh
+./build/bin/gamepad_probe
+```
 
 ## Téléchargement
 

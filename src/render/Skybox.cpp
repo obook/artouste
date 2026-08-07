@@ -18,10 +18,29 @@
 namespace artouste::render {
 
 Skybox::Skybox() {
+    /* Le triangle plein écran se calcule entièrement dans sky.vert à partir de
+       gl_VertexID, sans le moindre attribut de sommet : on pourrait donc se
+       contenter d'un VAO sans rien y attacher. Certains pilotes (Mesa V3D du
+       Raspberry Pi 5, confirmé en test) refusent pourtant de dessiner un VAO
+       sans aucun tableau de sommets actif (GL_INVALID_VALUE, rien ne s'affiche
+       -- et ni le ciel ni RIEN d'autre ensuite, tout le reste de la scène
+       sombre alors dans le noir). On attache donc un VBO factice, jamais lu
+       par le shader, à seule fin de satisfaire ces pilotes. */
     glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+    glGenBuffers(1, &m_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    constexpr float factice[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    glBufferData(GL_ARRAY_BUFFER, sizeof(factice), factice, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindVertexArray(0);
 }
 
 Skybox::~Skybox() {
+    if (m_vbo != 0) {
+        glDeleteBuffers(1, &m_vbo);
+    }
     if (m_vao != 0) {
         glDeleteVertexArrays(1, &m_vao);
     }

@@ -37,6 +37,7 @@ public:
 
 private:
     unsigned int m_vao = 0;
+    unsigned int m_vbo = 0;  /* factice : voir le constructeur */
 };
 
 }  /* namespace artouste::render */

@@ -34,8 +34,15 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     /* Ruban de cap qui défile, en haut de l'image. */
     headingTape(dl, w * 0.5f, sc(30.0f), sc(230.0f), sc(40.0f), data.headingDeg);
 
-    /* Ruban d'altitude vertical, à gauche de l'image, volontairement étroit. */
-    altitudeTape(dl, sc(24.0f), h * 0.5f, sc(44.0f), h * 0.22f, data.altitudeM);
+    /* Ruban d'altitude vertical, à droite de l'image (disposition demandée par un
+       pilote réel), volontairement étroit. Le cadran V/S (voir plus bas, sur la
+       ligne des instruments du bas), plus large que le ruban une fois son panneau
+       et sa LED comptés, fixe la marge de droite ; le ruban se cale sur sa colonne
+       et bascule son étiquette de valeur à gauche pour ne jamais déborder. */
+    const float vsR          = sc(38.0f);
+    const float vsCx         = w - sc(20.0f) - vsR - sc(8.0f);
+    const float altTapeLeft  = vsCx - sc(22.0f);
+    altitudeTape(dl, altTapeLeft, h * 0.5f, sc(44.0f), h * 0.22f, data.altitudeM, true);
 
     /* Valeurs pré-formatées (formats littéraux : pas de format dynamique). */
     char nr[16], turb[16], ias[16], vs[16], coll[16], tmp[16], fuel[16];
@@ -78,29 +85,45 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
         const char* text;
         GaugeLed    led;
     };
-    /* La turbine précède le NR : la chaîne mécanique (turbine -> roue libre ->
-       rotor) et la séquence de démarrage se lisent ainsi de gauche à droite, et
-       le NR, paramètre critique du vol, voisine avec l'IAS près du centre. */
-    const G gauges[] = {
-        {data.turbineRpm,    0.0f, 35000.0f, 33000.0f, 34000.0f, "TURBINE",   turb, ledTurb},
-        {data.rotorRpm,      0.0f, 420.0f,   340.0f,   380.0f,   "NR tr/min", nr,   ledNr},
-        {data.airspeedKmh,   0.0f, 260.0f,   176.0f,   195.0f,   "IAS km/h",  ias,  ledIas},
-        {data.varioMs,     -15.0f, 15.0f,    0.0f,     0.0f,     "V/S m/s",   vs,   ledVs},
-        {data.collectivePct, 0.0f, 100.0f,   0.0f,     0.0f,     "COLL %",    coll, GaugeLed::None},
-        {data.exhaustTempC,  0.0f, 550.0f,   400.0f,   480.0f,   "TMP C",     tmp,  ledTmp},
-        {data.fuelLiters,    0.0f, physics::FUEL_CAPACITY_L, physics::FUEL_LOW_L,
-         physics::FUEL_CAPACITY_L, "CARB L", fuel, ledCarb},
-    };
-    const int   n  = static_cast<int>(sizeof(gauges) / sizeof(gauges[0]));
     const float r  = sc(38.0f);
     const float dx = sc(98.0f);
-    const float x0 = w * 0.5f - dx * static_cast<float>(n - 1) * 0.5f;
-    const float y  = h - sc(70.0f);
-    for (int i = 0; i < n; ++i) {
-        gauge(dl, x0 + dx * static_cast<float>(i), y, r, gauges[i].value, gauges[i].vmin,
-              gauges[i].vmax, gauges[i].bandMin, gauges[i].bandMax, gauges[i].label,
-              gauges[i].text, gauges[i].led, data.alarmBlinkOn);
+
+    /* Groupe central, réduit à la chaîne mécanique et aux limites moteur (disposition
+       demandée par un pilote réel : Turbine, NR, TMP, CARB seuls, le reste ayant migré
+       ailleurs, voir plus bas). La turbine précède le NR : la chaîne mécanique
+       (turbine -> roue libre -> rotor) et la séquence de démarrage se lisent ainsi de
+       gauche à droite. */
+    const G centre[] = {
+        {data.turbineRpm,   0.0f, 35000.0f, 33000.0f, 34000.0f, "TURBINE",   turb, ledTurb},
+        {data.rotorRpm,     0.0f, 420.0f,   340.0f,   380.0f,   "NR tr/min", nr,   ledNr},
+        {data.exhaustTempC, 0.0f, 550.0f,   400.0f,   480.0f,   "TMP C",     tmp,  ledTmp},
+        {data.fuelLiters,   0.0f, physics::FUEL_CAPACITY_L, physics::FUEL_LOW_L,
+         physics::FUEL_CAPACITY_L, "CARB L", fuel, ledCarb},
+    };
+    const int   nCentre = static_cast<int>(sizeof(centre) / sizeof(centre[0]));
+    const float xCentre = w * 0.5f - dx * static_cast<float>(nCentre - 1) * 0.5f;
+    const float y       = h - sc(70.0f);
+    for (int i = 0; i < nCentre; ++i) {
+        gauge(dl, xCentre + dx * static_cast<float>(i), y, r, centre[i].value, centre[i].vmin,
+              centre[i].vmax, centre[i].bandMin, centre[i].bandMax, centre[i].label,
+              centre[i].text, centre[i].led, data.alarmBlinkOn);
     }
+
+    /* Collectif et IAS, en bas à gauche (disposition demandée par un pilote réel) :
+       même hauteur de rangée que le groupe central, décalés vers le coin pour
+       rester lisibles d'un même coup d'oeil, au-dessus des badges radio/assisté
+       qui s'empilent depuis ce même coin (voir plus bas). */
+    gauge(dl, m + r, y, r, data.collectivePct, 0.0f, 100.0f, 0.0f, 0.0f, "COLL %", coll,
+          GaugeLed::None, data.alarmBlinkOn);
+    gauge(dl, m + r + dx, y, r, data.airspeedKmh, 0.0f, 260.0f, 176.0f, 195.0f, "IAS km/h", ias,
+          ledIas, data.alarmBlinkOn);
+
+    /* Vario, sur la même ligne que les instruments du bas plutôt que sous le ruban
+       d'altitude : midAngleDeg=180 pour un zéro à l'horizontale plutôt qu'en haut,
+       comme le vrai VSI (demande d'un pilote réel -- l'aiguille part de 9 heures,
+       monte vers midi). */
+    gauge(dl, vsCx, y, vsR, data.varioMs, -15.0f, 15.0f, 0.0f, 0.0f, "V/S m/s", vs, ledVs,
+          data.alarmBlinkOn, 180.0f, /*zeroLine=*/true);
 
     /* Voyants d'alerte, empilés au-dessus du rang d'instruments (du plus bas au
      * plus haut). Orange = surveiller, rouge = limite franchie. */
@@ -129,8 +152,11 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
      * style que les instruments : panneau gris semi-transparent et texte vert. Le
      * voyant radio se place une ligne au-dessus du mode assisté. Empilement calculé
      * sur la hauteur réelle du texte (et non un écart fixe) : un écart fixe plus
-     * petit que la hauteur d'un carton fait chevaucher les deux panneaux. */
-    float nextBottom = h - sc(8.0f);
+     * petit que la hauteur d'un carton fait chevaucher les deux panneaux. Départ
+     * au-dessus des cadrans collectif/IAS (voir plus haut), qui occupent maintenant
+     * ce même coin jusqu'au bord de l'écran : sans ce décalage, les badges se
+     * superposeraient à leur valeur affichée. */
+    float nextBottom = y - r - sc(28.0f);
     const auto badge = [&](const char* txt) {
         const ImVec2 ts = ImGui::CalcTextSize(txt);
         const ImVec2 tp(m, nextBottom - sc(4.0f) - ts.y);

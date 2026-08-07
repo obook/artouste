@@ -81,12 +81,16 @@ inline void centeredText(ImDrawList* dl, float x, float y, ImU32 col, const char
 /* Cadran rond vert façon instrument : fond translucide, cercle, graduations,
  * éventuelle bande de régime nominal (vert plus vif), aiguille, libellé et valeur,
  * plus une LED d'alarme facultative en haut à droite dans l'instrument.
- * Le cadran balaie 270 degrés, ouverture en bas (comme un vrai instrument). */
+ * Le cadran balaie 270 degrés ; midAngleDeg place la valeur médiane (défaut 270 =
+ * tout en haut, ouverture en bas, comme la plupart des instruments). Le vario
+ * utilise 180 (médiane à l'horizontale à gauche, ouverture à droite) pour
+ * retrouver la lecture du vrai VSI : zéro à 9 heures, montée vers midi. */
 inline void gauge(ImDrawList* dl, float cx, float cy, float r, float value, float vmin,
                   float vmax, float bandMin, float bandMax, const char* label,
-                  const char* valueText, GaugeLed led = GaugeLed::None, bool ledBlinkOn = true) {
-    const float a0    = 2.3562f;  /* 135 deg : départ en bas à gauche */
-    const float sweep = 4.7124f;  /* 270 deg de balayage, ouverture en bas */
+                  const char* valueText, GaugeLed led = GaugeLed::None, bool ledBlinkOn = true,
+                  float midAngleDeg = 270.0f, bool zeroLine = false) {
+    const float sweep = 4.7124f;                                /* 270 deg de balayage */
+    const float a0    = (midAngleDeg - 135.0f) * 0.017453293f;  /* deg -> rad, médiane centrée */
 
     panelRect(dl, ImVec2(cx - r - sc(8.0f), cy - r - sc(18.0f)),
               ImVec2(cx + r + sc(8.0f), cy + r + sc(20.0f)), sc(6.0f));
@@ -114,6 +118,23 @@ inline void gauge(ImDrawList* dl, float cx, float cy, float r, float value, floa
         const float s = std::sin(a);
         hudLine(dl, ImVec2(cx + c * r * 0.82f, cy + s * r * 0.82f),
                  ImVec2(cx + c * r, cy + s * r), HUD_GREEN, sc(1.5f));
+    }
+
+    if (zeroLine) {  /* repère de la médiane (vario) : un rayon du centre jusqu'au bord,
+                         en pointillés fins, plutôt qu'un trait plein traversant tout
+                         le cadran (l'autre moitié retomberait dans l'ouverture, hors
+                         échelle) ; se distingue de l'aiguille, qui vient s'y superposer
+                         exactement à la valeur zéro. */
+        const float midA = a0 + sweep * 0.5f;
+        const float c    = std::cos(midA);
+        const float s    = std::sin(midA);
+        constexpr int DASHES = 16;
+        for (int i = 0; i < DASHES; i += 2) {
+            const float t0 = static_cast<float>(i) / DASHES;
+            const float t1 = static_cast<float>(i + 1) / DASHES;
+            hudLine(dl, ImVec2(cx + c * r * 0.9f * t0, cy + s * r * 0.9f * t0),
+                     ImVec2(cx + c * r * 0.9f * t1, cy + s * r * 0.9f * t1), HUD_GREEN, sc(1.0f));
+        }
     }
 
     if (bandMax > bandMin) {  /* bande de régime nominal */
@@ -201,12 +222,14 @@ inline void headingTape(ImDrawList* dl, float cx, float top, float halfWidth, fl
     centeredText(dl, cx, ty, HUD_BRIGHT, hbuf);
 }
 
-/* Ruban d'altitude vertical, à gauche de l'image : même principe que la boussole
- * mais en hauteur. L'échelle (en mètres) défile, l'altitude courante reste au centre
- * sous un repère, avec sa valeur chiffrée à droite du ruban. Graduations tous les
- * 10 m, libellé tous les 50 m. */
+/* Ruban d'altitude vertical : même principe que la boussole mais en hauteur.
+ * L'échelle (en mètres) défile, l'altitude courante reste au centre sous un
+ * repère, avec sa valeur chiffrée à côté du ruban (à droite par défaut, comme
+ * pour un ruban posé à gauche de l'image ; labelLeft=true la bascule à gauche
+ * du ruban, pour un ruban posé à droite de l'image sans déborder de l'écran).
+ * Graduations tous les 10 m, libellé tous les 50 m. */
 inline void altitudeTape(ImDrawList* dl, float left, float cy, float width, float halfHeight,
-                         float altitude) {
+                         float altitude, bool labelLeft = false) {
     const float  pxPerM    = sc(2.0f);
     const int    minorStep = 10;  /* m entre graduations */
     const int    majorStep = 50;  /* m entre libellés */
@@ -240,15 +263,25 @@ inline void altitudeTape(ImDrawList* dl, float left, float cy, float width, floa
     }
     dl->PopClipRect();
 
-    /* Repère central fixe (triangle pointant vers le ruban) et altitude courante. */
-    dl->AddTriangleFilled(ImVec2(br.x, cy - sc(7.0f)), ImVec2(br.x, cy + sc(7.0f)),
-                          ImVec2(br.x - sc(8.0f), cy), HUD_BRIGHT);
+    /* Repère central fixe (triangle pointant vers le ruban) et altitude courante,
+       du côté du ruban opposé à l'écran (à droite par défaut, à gauche si
+       labelLeft, pour ne jamais déborder du bord de l'écran). */
     char abuf[12];
     std::snprintf(abuf, sizeof(abuf), "%.0f", static_cast<double>(altitude));
     const ImVec2 sz = ImGui::CalcTextSize(abuf);
-    panelRect(dl, ImVec2(br.x + sc(4.0f), cy - halfVal - sc(2.0f)),
-              ImVec2(br.x + sc(12.0f) + sz.x, cy + halfVal + sc(2.0f)), sc(3.0f));
-    dl->AddText(ImVec2(br.x + sc(8.0f), cy - halfVal), HUD_BRIGHT, abuf);
+    if (!labelLeft) {
+        dl->AddTriangleFilled(ImVec2(br.x, cy - sc(7.0f)), ImVec2(br.x, cy + sc(7.0f)),
+                              ImVec2(br.x - sc(8.0f), cy), HUD_BRIGHT);
+        panelRect(dl, ImVec2(br.x + sc(4.0f), cy - halfVal - sc(2.0f)),
+                  ImVec2(br.x + sc(12.0f) + sz.x, cy + halfVal + sc(2.0f)), sc(3.0f));
+        dl->AddText(ImVec2(br.x + sc(8.0f), cy - halfVal), HUD_BRIGHT, abuf);
+    } else {
+        dl->AddTriangleFilled(ImVec2(tl.x, cy - sc(7.0f)), ImVec2(tl.x, cy + sc(7.0f)),
+                              ImVec2(tl.x + sc(8.0f), cy), HUD_BRIGHT);
+        panelRect(dl, ImVec2(tl.x - sc(12.0f) - sz.x, cy - halfVal - sc(2.0f)),
+                  ImVec2(tl.x - sc(4.0f), cy + halfVal + sc(2.0f)), sc(3.0f));
+        dl->AddText(ImVec2(tl.x - sc(8.0f) - sz.x, cy - halfVal), HUD_BRIGHT, abuf);
+    }
 }
 
 }  /* namespace artouste::ui::hud_widgets */

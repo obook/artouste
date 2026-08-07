@@ -183,6 +183,37 @@ TEST_CASE("Les palonniers commandent le lacet", "[flight]") {
     REQUIRE(std::fabs(model.body().angularVelocity.y) > 0.1f);
 }
 
+TEST_CASE("Le virage coordonné tourne le nez avec la vitesse, pas au stationnaire",
+          "[flight]") {
+    Controls hover;
+    hover.collective = artouste::physics::COLL_HOVER;
+
+    /* Stationnaire : le cyclique latéral incline seulement, ne tourne pas le nez
+       (retour d'un pilote réel : sinon virer sans vitesse serait déjà "coordonné",
+       alors que l'appareil doit partir en crabe, utile au posé). */
+    FlightModel hoverModel;
+    hoverModel.reset(50.0f);
+    hoverModel.turbine().forceRunning();
+    Controls bank = hover;
+    bank.cyclicLateral = 1.0f;
+    advance(hoverModel, bank, 1.0f);
+    REQUIRE(std::fabs(hoverModel.body().angularVelocity.y) < 0.02f);
+
+    /* Avec de la vitesse établie (même prise de vitesse que le test de l'ETL),
+       le même cyclique latéral doit maintenant tourner le nez, dans le sens de
+       l'inclinaison (comme un avion qui vire en inclinant). */
+    FlightModel cruiseModel;
+    cruiseModel.reset(50.0f);
+    cruiseModel.turbine().forceRunning();
+    Controls forward = hover;
+    forward.cyclicLongitudinal = 1.0f;
+    advance(cruiseModel, forward, 6.0f);
+    Controls bankAtSpeed = forward;
+    bankAtSpeed.cyclicLateral = 1.0f;
+    advance(cruiseModel, bankAtSpeed, 1.0f);
+    REQUIRE(std::fabs(cruiseModel.body().angularVelocity.y) > 0.05f);
+}
+
 TEST_CASE("Aucun NaN ni Inf sur entrées aléatoires bornées", "[flight][fuzz]") {
     FlightModel model;
     model.turbine().forceRunning();

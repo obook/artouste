@@ -92,6 +92,15 @@ inline constexpr float ROLL_CTRL    = 1300.0f;  /* N.m  cyclique latéral */
 inline constexpr float PITCH_CTRL   = 3000.0f;  /* N.m  cyclique longitudinal */
 inline constexpr float YAW_CTRL     = 3500.0f;  /* N.m  palonniers */
 
+/* Virage coordonné : avec de la vitesse, l'écoulement sur la dérive et le rotor de
+ * queue tend à aligner le nez sur l'inclinaison donnée au cyclique latéral (comme
+ * un avion qui vire en inclinant), plutôt que de seulement translater de côté.
+ * Au stationnaire (pas de vitesse), rien ne s'ajoute : le cyclique latéral se
+ * contente d'incliner l'appareil, qui part en crabe, pratique pour se décaler au
+ * posé. Gain à confirmer en vol (retour pilote réel, contact du 07/08/2026) ;
+ * la bascule progressive avec la vitesse réutilise ETL_V_LOW/ETL_V_HIGH ci-dessous. */
+inline constexpr float TURN_COORD_GAIN = 1800.0f;  /* N.m à pleine inclinaison, vitesse établie */
+
 /* --- Réponse du rotor principal (retard gyroscopique) ------------------------- */
 /* Le plan des pales ne suit pas instantanément le manche : la précession
  * gyroscopique retarde sa bascule d'une constante de temps caractéristique du

@@ -104,9 +104,12 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     const float groundEffect = 1.0f + GE_MAX * (1.0f - clamp(height / GE_HEIGHT, 0.0f, 1.0f));
 
     /* Effet de translation : la portance augmente avec la vitesse horizontale.
-     * Sans vent, la vitesse par rapport à l'air égale la vitesse horizontale au sol. */
-    const float airspeed         = glm::length(vec2{m_body.velocity.x, m_body.velocity.z});
-    const float translationalGain = 1.0f + ETL_MAX * glm::smoothstep(ETL_V_LOW, ETL_V_HIGH, airspeed);
+     * Sans vent, la vitesse par rapport à l'air égale la vitesse horizontale au sol.
+     * translationalLiftFactor sert aussi de bascule au virage coordonné ci-dessous
+     * (torque.y) : nulle au stationnaire, pleine une fois la vitesse établie. */
+    const float airspeed                = glm::length(vec2{m_body.velocity.x, m_body.velocity.z});
+    const float translationalLiftFactor = glm::smoothstep(ETL_V_LOW, ETL_V_HIGH, airspeed);
+    const float translationalGain       = 1.0f + ETL_MAX * translationalLiftFactor;
 
     /* Vortex ring state : réduction de portance en descente rapide à faible vitesse.
      * Trois conditions se cumulent : on descend assez vite, on n'avance presque pas,
@@ -182,9 +185,17 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     /* Lacet (autour de Y). Sur l'Alouette II, le rotor tourne dans le sens horaire
      * vu de dessus : son couple de réaction fait partir le nez vers la gauche, et le
      * pilote compense au palonnier droit. D'où le signe + sur l'anti-couple, qui croît
-     * avec le collectif, et le palonnier droit qui ramène le nez vers la droite. */
+     * avec le collectif, et le palonnier droit qui ramène le nez vers la droite.
+     *
+     * Virage coordonné (voir TURN_COORD_GAIN) : le même cyclique latéral qui
+     * incline l'appareil (torque.x, signe +) tourne aussi le nez dans le même sens
+     * une fois de la vitesse acquise, d'où le signe - (incliner à droite = torque.x
+     * positif = virer à droite = torque.y négatif, comme le palonnier droit
+     * ci-dessus). translationalLiftFactor coupe ce terme au stationnaire, où
+     * l'appareil doit seulement partir en crabe. */
     torque.y = -controls.pedals * YAW_CTRL * facteurAnticouple
-               + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction - DAMP_YAW * w.y;
+               + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction
+               - TURN_COORD_GAIN * m_cyclicLateralLagged * translationalLiftFactor - DAMP_YAW * w.y;
     torque.z = -m_cyclicLongitudinalLagged * PITCH_CTRL    /* tangage (autour de Z) */
                + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;
 

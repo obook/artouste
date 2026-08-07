@@ -137,10 +137,20 @@ bool Application::initWindow() {
        absentes de la base intégrée de GLFW, dont les Xbox récentes en Bluetooth. */
     input::Gamepad::loadMappings(resolveAssetDir());
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    /* Aucun indice de version OpenGL demandé : GLFW/le pilote donne alors son
+       contexte par défaut, le plus capable qu'il sache créer (testé : 4.6
+       compatibilité sur un poste NVIDIA, 3.1 sur le pilote V3D du Raspberry Pi
+       5, faute d'implémentation d'un profil supérieur). Demander une version
+       basse explicitement (essayé : 3.1, pour rester compatible avec le Pi)
+       s'est révélé pire que ne rien demander : sur NVIDIA, une demande de
+       contexte 3.1 nu restreint aussi les extensions exposées à ce que la
+       norme 3.1 propose elle-même, alors que glVertexAttribDivisor (ARB_
+       instanced_arrays, core seulement depuis 3.3) est utilisé par les effets
+       instanciés (SouffleFx, Vegetation, Clouds...) -- crash au premier appel,
+       le pointeur de fonction résolu par glad restant nul. Le moteur n'utilise
+       de toute façon rien au-delà de ce que GLSL 140 permet (voir les shaders
+       et cmake/Dependencies.cmake), donc le contexte par défaut de chaque
+       machine convient dans tous les cas, sans compromis de portabilité. */
     /* Anti-crénelage (MSAA) : clé "msaa" de config.txt (4x par défaut), surchargée par
        la variable d'environnement ARTOUSTE_MSAA (prioritaire). Le MSAA coûte cher en
        bande passante sur GPU intégré, d'où ce levier (0, 2, 4, 8). */
@@ -191,6 +201,19 @@ bool Application::initGL() {
     if (gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)) == 0) {
         std::fprintf(stderr, "Échec du chargement OpenGL via GLAD.\n");
         return false;
+    }
+
+    /* Repli glVertexAttribDivisor (rendu instancié : SouffleFx, Vegetation,
+       Clouds...) : core seulement depuis OpenGL 3.3, glad ne charge donc que
+       ce nom-là. Certains pilotes (Mesa V3D du Raspberry Pi, confirmé en test)
+       exposent l'extension ARB_instanced_arrays qui la précède mais seulement
+       sous son nom suffixé ARB, jamais sous le nom core, sur un contexte qui
+       ne se déclare pas lui-même en 3.3 -- signature identique, adresse de
+       repli. Sans ce repli, glad charge un pointeur nul et le premier effet
+       instancié plante au lancement. */
+    if (glVertexAttribDivisor == nullptr) {
+        glad_glVertexAttribDivisor = reinterpret_cast<PFNGLVERTEXATTRIBDIVISORPROC>(
+            glfwGetProcAddress("glVertexAttribDivisorARB"));
     }
 
     std::printf("OpenGL  : %s\n", glGetString(GL_VERSION));

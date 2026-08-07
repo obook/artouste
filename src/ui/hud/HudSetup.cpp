@@ -38,7 +38,7 @@ void Hud::init(GLFWwindow* window) {
     ImGui::StyleColorsDark();
     m_baseStyle = ImGui::GetStyle(); /* style de référence, remis à l'échelle dans updateScale */
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplOpenGL3_Init("#version 140");
     m_ready = true;
 }
 

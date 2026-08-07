@@ -1,4 +1,4 @@
-#version 410 core
+#version 140
 
 /*
  * souffle.frag

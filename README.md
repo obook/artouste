@@ -175,20 +175,21 @@ sont construites automatiquement par GitHub Actions à chaque version
 
 1. Écrire les notes dans `docs/RELEASE_NOTES.md`, bumper `VERSION` dans
    `CMakeLists.txt`, commiter et pousser.
-2. Poser le tag et le pousser : la compilation des deux plateformes démarre et
-   prend une quinzaine de minutes.
+2. Publier :
    ```bash
-   git tag -a v0.30.0 -m "Artouste v0.30.0" && git push origin v0.30.0
-   ```
-3. Pendant ce temps, créer la release depuis le même fichier :
-   ```bash
-   gh release create v0.30.0 --title "v0.30.0" --notes-file docs/RELEASE_NOTES.md
+   ./scripts/release.sh v0.30.0
    ```
 
-L'étape 3 n'est pas décorative : l'auteur d'une release est figé à sa création
-et ne se change plus ensuite. Sans elle, c'est l'action qui la crée, sous le
-compte du robot, qui apparaît alors parmi les contributeurs du projet. La CI se
-contente ensuite d'y attacher les deux archives.
+Le script pose le tag, le pousse (la compilation des deux plateformes démarre
+et prend une quinzaine de minutes) et crée aussitôt la release, avec le seul
+texte de cette version. La CI se contente ensuite d'y attacher les deux
+archives.
+
+Créer la release depuis le poste, et non depuis la CI, n'est pas décoratif :
+l'auteur d'une release est figé à sa création et ne se change plus ensuite.
+Créée par l'action, elle porte le compte du robot, qui apparaît alors parmi les
+contributeurs du projet. Tant que c'était une étape séparée, elle a été oubliée
+trois fois ; le workflow refuse désormais de créer une release lui-même.
 </details>
 
 ## Compilation (Linux)

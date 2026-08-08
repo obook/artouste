@@ -121,48 +121,33 @@ jobs:
         with:
           path: artefacts
 
-      # RITUEL DE PUBLICATION, dans cet ordre :
-      #   1. écrire les notes dans docs/RELEASE_NOTES.md, bumper la version dans
-      #      CMakeLists.txt, commiter et pousser ;
-      #   2. poser le tag et le pousser (ce workflow démarre, une quinzaine de
-      #      minutes de compilation) ;
-      #   3. pendant ce temps, créer la release à la main depuis le même fichier,
-      #      en n'en prenant QUE la section de cette version (le fichier est un
-      #      journal cumulatif, le donner entier y recopie tout l'historique) :
-      #        awk '/^## /{n++} n==1' docs/RELEASE_NOTES.md > /tmp/notes.md
-      #        gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/notes.md
+      # RITUEL DE PUBLICATION : tout est dans scripts/release.sh, à lancer après
+      # avoir écrit les notes dans docs/RELEASE_NOTES.md, bumpé la version dans
+      # CMakeLists.txt, commité et poussé :
       #
-      # L'étape 3 est ce qui donne à la release VOTRE nom : l'auteur d'une release
-      # est figé à sa création et ne se change plus ensuite. Sans elle, c'est
-      # l'action qui la crée, avec le compte du robot, qui apparaissait alors comme
-      # contributeur du projet.
+      #     ./scripts/release.sh vX.Y.Z
       #
-      # body_path reste néanmoins renseigné, comme filet : si l'étape 3 est oubliée,
-      # la release naîtra au moins avec son texte. Corollaire à connaître : ce texte
-      # est celui du FICHIER. Retoucher la description dans l'interface web pendant
-      # que la CI tourne serait annulé. Le fichier fait foi.
+      # Il pose le tag, le pousse (ce workflow démarre, une quinzaine de minutes
+      # de compilation) et crée aussitôt la release, avec le seul texte de cette
+      # version. Ce job ne fait plus qu'y attacher les archives, une fois prêtes.
       #
-      # generate_release_notes reste à false : la liste plate des sujets de commits
-      # n'apprend rien à un joueur.
-
-      # docs/RELEASE_NOTES.md est un journal cumulatif : la version publiée en
-      # tête, puis tout l'historique. Le donner entier à la release y recopiait
-      # les versions précédentes, si bien que v0.30.3 affichait aussi v0.30.2 et
-      # v0.30.1 : le lecteur ne savait plus ce qui était nouveau. On n'en prend
-      # donc que la première section (du premier titre "## " jusqu'au suivant).
-      - name: Extraire la section de cette version
-        run: awk '/^## /{n++} n==1' docs/RELEASE_NOTES.md > "$RUNNER_TEMP/notes.md"
-
-      - name: Attacher les archives et le texte à la release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artefacts/**/artouste-*
-          body_path: ${{ runner.temp }}/notes.md
-          generate_release_notes: false
-          # Un tag portant un tiret (v0.30.0-rc1, v0.0.0-essai) est un essai ou une
-          # version candidate : publié en pré-release, il ne devient pas la version
-          # que propose le bouton de téléchargement du dépôt.
-          prerelease: ${{ contains(github.ref_name, '-') }}
+      # Pourquoi la release est créée là-bas et pas ici : son auteur est figé à
+      # sa création et ne se change plus ensuite. Créée par ce workflow, elle
+      # porterait le compte du robot, qui apparaissait alors dans les auteurs du
+      # projet (c'est arrivé pour v0.25.0, v0.27.0 et v0.30.2, quand la création
+      # à la main était encore une étape séparée, oubliable). D'où le garde-fou
+      # ci-dessous : plutôt échouer que créer la release ici.
+      - name: Attacher les archives à la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME absente : créez-la avec scripts/release.sh," >&2
+            echo "puis relancez ce workflow. Elle n'est pas créée ici, pour que son" >&2
+            echo "auteur reste le vôtre et non le compte du robot." >&2
+            exit 1
+          fi
+          gh release upload "$GITHUB_REF_NAME" artefacts/*/artouste-* --clobber
 
   page:
     name: Inscrire le tag dans la page

@@ -598,7 +598,13 @@ private:
        (clé lune_vitesse, 2 par défaut) : la nuit passe donc deux fois plus vite que
        le jour. Voir timeOfDaySeconds (ApplicationSun.cpp). */
     float m_nightSpeedFactor = 2.0f;
-    float m_sunBaseSeconds = 0.0f; /* heure locale du PC au lancement (s depuis minuit) */
+    float m_sunBaseSeconds = 0.0f; /* heure de départ du soleil (s depuis minuit) */
+    /* Valeur de m_animTime au moment où l'heure de départ a été fixée. Le temps
+       d'animation, lui, court depuis le lancement du programme et ne repart jamais
+       de zéro : sans cette origine, la deuxième carte d'une session reprenait son
+       heure de départ AUGMENTÉE de tout le temps déjà joué, soit une nuit noire
+       après un quart d'heure de vol à la vitesse par défaut. */
+    float m_sunOriginSeconds = 0.0f;
     bool m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
     bool m_demoUserView =
         false; /* en démo : l'utilisateur a repris la main sur la vue (touche C) */

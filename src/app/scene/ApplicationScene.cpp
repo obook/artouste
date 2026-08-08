@@ -337,6 +337,11 @@ void Application::applySunSchedule() {
            une belle lumière plutôt qu'en pleine nuit selon l'heure du PC. Avec une
            échelle nulle, le soleil reste donc figé à 8h. */
     m_sunTimeScale = m_config.sunTimeScale;
+    /* Le temps du soleil repart d'ici : l'heure fixée plus bas est celle qu'il sera
+       MAINTENANT, et non celle qu'il aurait fallu au lancement du programme (voir
+       m_sunOriginSeconds). Chaque carte lancée dans la session commence donc à son
+       heure de départ, et pas au milieu de la nuit. */
+    m_sunOriginSeconds = m_animTime;
     /* Nuit accélérée (clé `lune_vitesse`) : la course du soleil garde la vitesse
        ci-dessus le jour et la multiplie par ce facteur entre le coucher et le
        lever, de sorte qu'une nuit dure deux fois moins longtemps qu'un jour avec

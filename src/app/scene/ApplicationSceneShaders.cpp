@@ -111,10 +111,8 @@ void Application::initSceneShaders() {
                                                        assets / "shaders" / "souffle.frag");
     m_sky = std::make_unique<render::Skybox>();
 
-    /* Souffle rotor : poussière soulevée près du sol. Les ressources sont
-       toujours créées (un programme et un petit tampon), c'est m_souffleEnabled,
-       calculé plus tard par initSceneConfig, qui décide de faire vivre ou non le
-       nuage. Le rayon du rotor vient du modèle de l'appareil : c'est lui qui
+    /* Souffle rotor : poussière soulevée près du sol, toujours active. Le rayon
+       du rotor vient du modèle de l'appareil : c'est lui qui
        fixe l'anneau d'émission au sol et la hauteur au-delà de laquelle le
        souffle ne soulève plus rien. */
     m_souffle = SouffleRotor(render::LoadedHelicopter::MAIN_ROTOR_RADIUS, SOUFFLE_CAPACITY);

@@ -46,13 +46,6 @@ struct Config {
        d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
     bool trees = true;
 
-    /* Souffle rotor : si vrai (défaut), l'appareil soulève un nuage de poussière
-       quand il vole à moins d'une douzaine de mètres du sol, teinté de la couleur
-       du terrain sous lui. Mettre "souffle 0" dans config.txt pour s'en passer ;
-       la variable d'environnement ARTOUSTE_NO_SOUFFLE, si définie, force la
-       désactivation. */
-    bool rotorWash = true;
-
     /* Recherche de mise à jour : si vrai (défaut), le simulateur demande au
        lancement, dans un fil séparé, le numéro de la dernière version publiée et
        propose au menu d'aller la chercher sur la page du projet. Rien n'est
@@ -74,6 +67,16 @@ struct Config {
          144 -> journée complète en 10 min (départ à 8h du matin)
          0   -> temps figé à 8h du matin (le soleil ne bouge pas) */
     float sunTimeScale = 1.0f;
+
+    /* Brume atmosphérique : distances, en mètres, où le terrain commence à se
+       fondre dans la teinte du ciel et où il y disparaît tout à fait. Réglable
+       parce que c'est affaire de goût et de carte : trop peu, le bord du terrain
+       se voit comme une coupure à l'horizon sur les petites cartes ; trop, une
+       carte entière vire à la dalle blanche vue d'en haut, et les sommets
+       lointains d'une carte de montagne s'effacent. Les valeurs par défaut sont
+       un compromis essayé en vol ; les monter rend l'air plus limpide. */
+    float fogStartM = 3000.0f;
+    float fogEndM = 15000.0f;
 
     /* Nuit plus rapide que le jour : multiplicateur appliqué à sunTimeScale entre
        le coucher (18 h) et le lever (6 h). 2 (défaut) fait passer la nuit deux fois

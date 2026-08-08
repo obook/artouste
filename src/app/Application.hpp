@@ -556,12 +556,12 @@ private:
 
     /* --- Souffle rotor -------------------------------------------------------------
        Poussière soulevée au ras du sol : la simulation (app::SouffleRotor) est
-       indépendante du rendu (render::SouffleFx), qui n'existe que si l'effet est
-       activé (clé "souffle" de la configuration). */
+       indépendante du rendu (render::SouffleFx). L'effet est toujours actif ; il a
+       eu un interrupteur de configuration, retiré en août 2026, son coût de
+       quelques centaines de billboards ne le justifiant pas. */
 
     SouffleRotor m_souffle;
     std::unique_ptr<render::SouffleFx> m_souffleFx;
-    bool m_souffleEnabled = true;
 
     /* --- Mode zombie -------------------------------------------------------------- */
 
@@ -590,6 +590,12 @@ private:
 
     std::filesystem::path m_musicPath; /* musique jouée pendant la démo (assets/music/demo.mp3) */
     std::string m_radioUrl; /* URL du flux radio résolue au démarrage (touche K l'allume/coupe) */
+
+    /* Brume de ce lancement, lue dans la configuration (clés brume_debut et
+       brume_fin) : distances où le terrain commence à se fondre dans le ciel et
+       où il y disparaît. Voir FOG_COLOR dans AppConstants.hpp pour la teinte. */
+    float m_fogStart = 3000.0f;
+    float m_fogEnd = 15000.0f;
 
     /* --- Cycle jour/nuit --------------------------------------------------------------- */
 

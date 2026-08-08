@@ -49,21 +49,20 @@ void Application::initSceneConfig() {
         demoEnabled = (env[0] != '0');
     }
 
+    /* Brume : clés "brume_debut" et "brume_fin" de la configuration. Retenue dans
+       des membres, les shaders la recevant à chaque image (voir m_fogStart). */
+    m_fogStart = config.fogStartM;
+    m_fogEnd = config.fogEndM;
+    std::printf("[scène] brume : de %.0f m à %.0f m.\n",
+                static_cast<double>(m_fogStart),
+                static_cast<double>(m_fogEnd));
+
     /* Végétation : clé "arbres" de la configuration, forcée à faux par la variable
        d'environnement ARTOUSTE_NO_TREES (prioritaire). Retenue dans un membre car
        c'est loadTerrain (appelé ici puis à chaque changement de carte) qui sème. */
     m_treesEnabled = config.trees;
     if (std::getenv("ARTOUSTE_NO_TREES") != nullptr) {
         m_treesEnabled = false;
-    }
-
-    /* Souffle rotor : clé "souffle" de la configuration, forcée à faux par la
-       variable d'environnement ARTOUSTE_NO_SOUFFLE (prioritaire). Le nuage n'est
-       ni semé ni dessiné quand elle est fausse ; les ressources graphiques, elles,
-       ont déjà été créées par initSceneShaders (voir m_souffleFx). */
-    m_souffleEnabled = config.rotorWash;
-    if (std::getenv("ARTOUSTE_NO_SOUFFLE") != nullptr) {
-        m_souffleEnabled = false;
     }
 
     /* Budget d'arbres : clé "arbres_max" de la config, surchargée par la variable

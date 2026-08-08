@@ -245,17 +245,29 @@ const std::set<std::string>& clesConnues() {
                                                "turbine_demarree",
                                                "demo",
                                                "arbres",
-                                               "souffle",
                                                "verifier_maj",
                                                "radio_url",
                                                "soleil_vitesse",
                                                "lune_vitesse",
+                                               "brume_debut",
+                                               "brume_fin",
                                                "arbres_max",
                                                "tuiles_fenetre_px",
                                                "tuiles_dossier",
                                                "relief_sommets_max",
                                                "msaa"};
     return cles;
+}
+
+/* Options qui ont existé puis ont été retirées du jeu. Elles ne sont plus lues,
+   mais leur ligne survit dans le config.txt de qui les avait : on l'ignore en
+   silence plutôt que de crier à la clé inconnue. Une entrée ajoutée ici ne s'en
+   retire jamais, comme pour les renommages.
+     souffle (août 2026) : le souffle rotor est désormais toujours actif, son coût
+     ne justifiait pas un interrupteur (quelques centaines de billboards). */
+const std::set<std::string>& clesRetirees() {
+    static const std::set<std::string> retirees = {"souffle"};
+    return retirees;
 }
 
 const std::map<std::string, std::string>& clesRenommees() {
@@ -508,10 +520,6 @@ Config loadConfig(const std::filesystem::path& path) {
             /* Défaut à vrai : seule une valeur explicitement négative désactive les
                arbres (toute autre valeur, dont "1"/"oui"/"true", les garde). */
             cfg.trees = !(value == "0" || value == "non" || value == "false");
-        } else if (key == "souffle") {
-            /* Défaut à vrai, même logique que "arbres" : seule une valeur
-               explicitement négative coupe la poussière du souffle rotor. */
-            cfg.rotorWash = !(value == "0" || value == "non" || value == "false");
         } else if (key == "verifier_maj") {
             /* Défaut à vrai : seule une valeur explicitement négative coupe la
                recherche de mise à jour (même logique que "arbres"). */
@@ -525,6 +533,16 @@ Config loadConfig(const std::filesystem::path& path) {
                 cfg.sunTimeScale = std::stof(value);
             } catch (const std::exception&) {
                 std::fprintf(stderr, "[Config] soleil_vitesse invalide : %s\n", value.c_str());
+            }
+        } else if (key == "brume_debut" || key == "brume_fin") {
+            try {
+                /* Bornes larges mais non absurdes : une brume qui commence à zéro
+                   noierait le cockpit, une fin plus courte que le début inverserait
+                   le fondu. La cohérence des deux est vérifiée après la lecture. */
+                const float metres = std::clamp(std::stof(value), 100.0f, 100000.0f);
+                (key == "brume_debut" ? cfg.fogStartM : cfg.fogEndM) = metres;
+            } catch (const std::exception&) {
+                std::fprintf(stderr, "[Config] %s invalide : %s\n", key.c_str(), value.c_str());
             }
         } else if (key == "lune_vitesse") {
             try {
@@ -566,11 +584,28 @@ Config loadConfig(const std::filesystem::path& path) {
             } catch (const std::exception&) {
                 std::fprintf(stderr, "[Config] msaa invalide : %s\n", value.c_str());
             }
+        } else if (clesRetirees().count(key) != 0) {
+            /* Option supprimée depuis : le fichier de l'utilisateur la porte encore,
+               on la passe SANS RIEN DIRE. La signaler comme inconnue ferait croire à
+               un défaut alors que c'est nous qui l'avons retirée. */
         } else {
             std::fprintf(stderr, "[Config] clé inconnue ignorée : %s\n", key.c_str());
         }
     }
     in.close();
+
+    /* Brume à l'envers (fin avant début) : le fondu s'inverserait, le lointain
+       redevenant net et le proche disparaissant. On rétablit un ordre valide
+       plutôt que d'ignorer les deux valeurs, l'intention restant lisible. */
+    if (cfg.fogEndM <= cfg.fogStartM) {
+        std::fprintf(stderr,
+                     "[Config] brume_fin (%.0f) doit dépasser brume_debut (%.0f) : "
+                     "fin portée à %.0f.\n",
+                     static_cast<double>(cfg.fogEndM),
+                     static_cast<double>(cfg.fogStartM),
+                     static_cast<double>(cfg.fogStartM * 2.0f));
+        cfg.fogEndM = cfg.fogStartM * 2.0f;
+    }
 
     /* Fichier écrit par une version plus ancienne : on y ajoute les options
        apparues depuis, pour que l'utilisateur les voie et puisse les régler. Les

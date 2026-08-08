@@ -46,8 +46,8 @@ void Application::renderCombatEntities(const RenderContext& ctx, float timeSecon
         m_zombieShader->setVec3("u_lightDir", ctx.lightDir);
         m_zombieShader->setVec3("u_camPos", ctx.camPosRel);
         m_zombieShader->setVec3("u_fogColor", ctx.fogColor);
-        m_zombieShader->setFloat("u_fogStart", FOG_START);
-        m_zombieShader->setFloat("u_fogEnd", FOG_END);
+        m_zombieShader->setFloat("u_fogStart", m_fogStart);
+        m_zombieShader->setFloat("u_fogEnd", m_fogEnd);
         m_zombieShader->setInt("u_texture", 0);
         m_zombiesRender->updateInstances(
             m_combat.zombieTransforms(), m_combat.zombieHitFlashes(), m_combat.zombieKinds());

@@ -225,7 +225,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
 }
 
 void Application::updateSouffle(const mat4& base, float rotorFraction, float collective, float dt) {
-    if (!m_souffleEnabled || !m_terrain) {
+    if (!m_terrain) {
         return;
     }
     /* Origine du souffle : l'axe du mât, en avant du centre de l'appareil (le
@@ -239,7 +239,7 @@ void Application::updateSouffle(const mat4& base, float rotorFraction, float col
 }
 
 void Application::drawSouffle(const RenderContext& ctx) {
-    if (!m_souffleEnabled || !m_souffleFx || !m_souffleShader) {
+    if (!m_souffleFx || !m_souffleShader) {
         return;
     }
     const std::vector<SouffleRotor::Bouffee>& bouffees = m_souffle.bouffees();
@@ -264,8 +264,8 @@ void Application::drawSouffle(const RenderContext& ctx) {
     m_souffleShader->setVec3("u_lightDir", ctx.lightDir);
     m_souffleShader->setVec3("u_camPos", ctx.camPosRel);
     m_souffleShader->setVec3("u_fogColor", ctx.fogColor);
-    m_souffleShader->setFloat("u_fogStart", FOG_START);
-    m_souffleShader->setFloat("u_fogEnd", FOG_END);
+    m_souffleShader->setFloat("u_fogStart", m_fogStart);
+    m_souffleShader->setFloat("u_fogEnd", m_fogEnd);
     m_souffleShader->setInt("u_ortho", 0);
 
     /* Couleur du sol : le shader prélève l'orthophoto sous chaque bouffée. Le

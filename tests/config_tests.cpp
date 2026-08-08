@@ -387,6 +387,17 @@ TEST_CASE("toute option du chargeur est documentée dans le modèle", "[config]"
     }
 }
 
+TEST_CASE("brume : une fin avant le début est rétablie", "[config]") {
+    /* Une brume qui finirait avant de commencer inverserait le fondu : le lointain
+       redeviendrait net et le proche disparaîtrait. Le chargeur rétablit un ordre
+       valide plutôt que d'ignorer les deux valeurs. */
+    const auto path = writeTemp("artouste_cfg_brume.txt", "brume_debut 8000\nbrume_fin 2000\n");
+    const Config cfg = loadConfig(path);
+    CHECK(cfg.fogStartM == 8000.0f);
+    CHECK(cfg.fogEndM > cfg.fogStartM);
+    effacerTemp(path);
+}
+
 TEST_CASE("chaque option annoncée est réellement lue", "[config]") {
     /* Troisième garde-fou : app::clesConnues() pourrait annoncer une clé que le
        chargeur a oublié de traiter. On vérifie donc, clé par clé, qu'une valeur
@@ -402,7 +413,6 @@ TEST_CASE("chaque option annoncée est réellement lue", "[config]") {
          {"turbine_demarree 1", [](const Config& c) { return c.turbineRunning; }}},
         {"demo", {"demo 1", [](const Config& c) { return c.demo; }}},
         {"arbres", {"arbres 0", [](const Config& c) { return !c.trees; }}},
-        {"souffle", {"souffle 0", [](const Config& c) { return !c.rotorWash; }}},
         {"verifier_maj", {"verifier_maj 0", [](const Config& c) { return !c.checkUpdate; }}},
         {"radio_url",
          {"radio_url https://exemple.test/f.mp3",
@@ -411,6 +421,9 @@ TEST_CASE("chaque option annoncée est réellement lue", "[config]") {
          {"soleil_vitesse 144", [](const Config& c) { return c.sunTimeScale == 144.0f; }}},
         {"lune_vitesse",
          {"lune_vitesse 3", [](const Config& c) { return c.nightSpeedFactor == 3.0f; }}},
+        {"brume_debut",
+         {"brume_debut 2000", [](const Config& c) { return c.fogStartM == 2000.0f; }}},
+        {"brume_fin", {"brume_fin 9000", [](const Config& c) { return c.fogEndM == 9000.0f; }}},
         {"arbres_max",
          {"arbres_max 500000", [](const Config& c) { return c.treeBudget == 500000; }}},
         {"tuiles_fenetre_px",

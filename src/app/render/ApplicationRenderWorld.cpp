@@ -55,8 +55,8 @@ void Application::renderSkyAndSea(const RenderContext& ctx, float timeSeconds) {
         m_seaShader->setVec3("u_lightDir", ctx.lightDir);
         m_seaShader->setVec3("u_camPos", ctx.camPosRel);
         m_seaShader->setVec3("u_fogColor", ctx.fogColor);
-        m_seaShader->setFloat("u_fogStart", FOG_START);
-        m_seaShader->setFloat("u_fogEnd", FOG_END);
+        m_seaShader->setFloat("u_fogStart", m_fogStart);
+        m_seaShader->setFloat("u_fogEnd", m_fogEnd);
         glDepthMask(GL_FALSE);
         m_sea->draw();
         glDepthMask(GL_TRUE);
@@ -78,8 +78,8 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
         m_terrainShader->setVec3("u_camPos", ctx.camPosRel);
         m_terrainShader->setVec3("u_fogColor", ctx.fogColor);
-        m_terrainShader->setFloat("u_fogStart", FOG_START);
-        m_terrainShader->setFloat("u_fogEnd", FOG_END);
+        m_terrainShader->setFloat("u_fogStart", m_fogStart);
+        m_terrainShader->setFloat("u_fogEnd", m_fogEnd);
         m_terrainShader->setInt("u_texture", 0);
         m_terrainShader->setInt("u_detail", 1);
         m_terrainShader->setVec2("u_originXZ", vec2{m_renderOrigin.x, m_renderOrigin.z});
@@ -138,8 +138,8 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_buildingShader->setVec3("u_lightDir", ctx.lightDir);
         m_buildingShader->setVec3("u_camPos", ctx.camPosRel);
         m_buildingShader->setVec3("u_fogColor", ctx.fogColor);
-        m_buildingShader->setFloat("u_fogStart", FOG_START);
-        m_buildingShader->setFloat("u_fogEnd", FOG_END);
+        m_buildingShader->setFloat("u_fogStart", m_fogStart);
+        m_buildingShader->setFloat("u_fogEnd", m_fogEnd);
         m_buildingShader->setInt("u_facade", 0);
         if (m_buildingFacade) {
             m_buildingFacade->bind(0);
@@ -165,8 +165,8 @@ void Application::renderVegetationAndClouds(const RenderContext& ctx) {
         m_vegetationShader->setVec3("u_lightDir", ctx.lightDir);
         m_vegetationShader->setVec3("u_camPos", ctx.camPosRel);
         m_vegetationShader->setVec3("u_fogColor", ctx.fogColor);
-        m_vegetationShader->setFloat("u_fogStart", FOG_START);
-        m_vegetationShader->setFloat("u_fogEnd", FOG_END);
+        m_vegetationShader->setFloat("u_fogStart", m_fogStart);
+        m_vegetationShader->setFloat("u_fogEnd", m_fogEnd);
         m_vegetationShader->setInt("u_texture", 0);
         /* Alpha-to-coverage : le bord du feuillage est tramé sur les sous-échantillons
            (MSAA déjà actif), pour des contours doux plutôt qu'un seuil net. Sans
@@ -189,8 +189,8 @@ void Application::renderVegetationAndClouds(const RenderContext& ctx) {
         m_cloudShader->setVec3("u_lightDir", ctx.lightDir);
         m_cloudShader->setVec3("u_camPos", ctx.camPosRel);
         m_cloudShader->setVec3("u_fogColor", ctx.fogColor);
-        m_cloudShader->setFloat("u_fogStart", FOG_START);
-        m_cloudShader->setFloat("u_fogEnd", FOG_END);
+        m_cloudShader->setFloat("u_fogStart", m_fogStart);
+        m_cloudShader->setFloat("u_fogEnd", m_fogEnd);
         m_cloudShader->setInt("u_texture", 0);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

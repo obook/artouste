@@ -162,8 +162,8 @@ void Application::renderMonuments(const RenderContext& ctx) {
     m_monumentShader->setVec3("u_lightDir", ctx.lightDir);
     m_monumentShader->setVec3("u_camPos", ctx.camPosRel);
     m_monumentShader->setVec3("u_fogColor", ctx.fogColor);
-    m_monumentShader->setFloat("u_fogStart", FOG_START);
-    m_monumentShader->setFloat("u_fogEnd", FOG_END);
+    m_monumentShader->setFloat("u_fogStart", m_fogStart);
+    m_monumentShader->setFloat("u_fogEnd", m_fogEnd);
     m_monumentShader->setInt("u_texture", 0);
     /* Seuil du test alpha : la moitié. Les textures des monuments FlightGear sont
        franches (18 % de pixels tout à fait transparents pour la tour Eiffel, 75 %

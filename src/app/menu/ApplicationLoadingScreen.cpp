@@ -79,10 +79,17 @@ void Application::renderLoadingScreen(const char* message, float progression) {
     /* Affiche du jeu en fond. Chargée au premier écran d'attente et gardée
        ensuite : elle resservira à chaque changement de carte, et la charger au
        démarrage retarderait justement le moment où l'on peut afficher quelque
-       chose. Absente, on garde le fond neutre. */
+       chose. Absente, on garde le fond neutre.
+
+       Le tout premier appel a lieu juste après le menu, avant initScene() :
+       m_assetsDir n'est pas encore renseigné (même piège qu'ApplicationScene.cpp
+       et ApplicationMenuCartes.cpp, même contournement). Sans lui, cette toute
+       première tentative échouait sur un chemin relatif ("textures/..." au lieu
+       de "assets/textures/..."), et comme l'image ne se charge qu'une fois, l'échec
+       restait pour le reste de la session même une fois m_assetsDir renseigné. */
     if (!m_loadingImage) {
-        m_loadingImage =
-            std::make_unique<render::Texture>(m_assetsDir / "textures" / "chargement.jpg");
+        const std::filesystem::path assets = m_assetsDir.empty() ? resolveAssetDir() : m_assetsDir;
+        m_loadingImage = std::make_unique<render::Texture>(assets / "textures" / "chargement.jpg");
     }
     if (m_loadingImage->valid() && m_loadingImage->height() > 0) {
         dessinerFondCouvrant(m_loadingImage->id(), static_cast<float>(fbw),

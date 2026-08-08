@@ -37,6 +37,7 @@ ZONE = {
         ("Pont Vieux", -1.0541, 43.7125),
         ("Les Arènes de Dax", -1.0498, 43.7131),
         ("Aérodrome de Dax-Seyresse", -1.0692, 43.6884),
+        ("Tour de contrôle de Dax-Seyresse", -1.069514, 43.690724),  # signalée par un pilote
         ("Musée de l'ALAT", -1.0635, 43.6922),
         ("Saint-Paul-lès-Dax", -1.0511, 43.7250),  # mairie : centre-ville réel
         ("Les Thermes de Dax", -1.0649, 43.7290),  # Thermes de Christus, le plus grand établissement

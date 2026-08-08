@@ -6,6 +6,7 @@
 -1.0541 43.7125 Pont Vieux
 -1.0498 43.7131 Les Arènes de Dax
 -1.0692 43.6884 Aérodrome de Dax-Seyresse
+#-1.069514 43.690724 Tour de contrôle de Dax-Seyresse
 -1.0635 43.6922 Musée de l'ALAT
 -1.0511 43.725 Saint-Paul-lès-Dax
 -1.0649 43.729 Les Thermes de Dax

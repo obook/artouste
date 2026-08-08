@@ -4,6 +4,11 @@
 
 - **Trois monuments de Paris de plus** : Tour Saint-Jacques, Sainte-Chapelle et palais du Louvre, chacun posé après vérification visuelle. Position du Louvre approximative, comme les Invalides ou le Front de Seine.
 
+### Corrections
+
+- **Panneau combat du mode zombie** : recouvrait le ruban d'altitude et le cadran V/S en Super HUD depuis leur passage à droite (v0.30.2). Déplacé en haut à droite, seul coin encore libre.
+- **Fond du premier écran de chargement** : ne se chargeait jamais, un chemin relatif utilisé avant que le dossier des ressources soit connu.
+
 ## v0.30.2 - 2 août 2026
 
 ### Nouvelles fonctionnalités

@@ -53,13 +53,13 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
 
     /* Placement selon le mode de HUD, pour ne recouvrir aucun instrument :
        - HUD 4 coins (Corners) : bas de l'écran, centré, entre les quatre coins.
-       - HUD complet (Overlay) : le rang de cadrans ronds occupe justement le bas
-         au centre (voir HudSuperOverlay.cpp, y = h - 70). On cale alors la carte
-         sur le bord droit, à mi-hauteur, zone libre de ce mode (rubans en haut
-         et à gauche, cadrans en bas, voyants en bas à gauche). */
+       - HUD complet (Overlay) : depuis la réorganisation du Super HUD (ruban
+         d'altitude et cadran V/S passés à droite, à mi-hauteur), le seul coin
+         encore libre est en haut à droite : minimap en haut à gauche, ruban de
+         cap en haut centré, cadrans ronds en bas, badges en bas à gauche. */
     if (mode == HudMode::Overlay) {
-        ImGui::SetNextWindowPos(ImVec2(w - sc(14.0f), h * 0.5f), ImGuiCond_Always,
-                                ImVec2(1.0f, 0.5f));
+        ImGui::SetNextWindowPos(ImVec2(w - sc(14.0f), sc(14.0f)), ImGuiCond_Always,
+                                ImVec2(1.0f, 0.0f));
     } else {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h - sc(90.0f)), ImGuiCond_Always,
                                 ImVec2(0.5f, 1.0f));

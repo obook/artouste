@@ -665,7 +665,7 @@ Trois points à contrôler sur chacun :
 - [ ] Église Saint-Eustache
 - [ ] Église Saint-Sulpice
 - [ ] Sainte-Chapelle
-- [ ] Tour Saint-Jacques
+- [x] Tour Saint-Jacques
 - [ ] Hôtel Concorde Lafayette
 - [ ] Grand Palais
 - [ ] Palais de Chaillot

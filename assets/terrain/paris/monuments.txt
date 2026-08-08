@@ -290,3 +290,17 @@
 # La superposition montre en revanche les deux cours du modèle tombant sur
 # celles de la photo, ce qui suffit à valider l'échelle native.
 2.352527 48.856428 sol -162.4 1.0 1.0 100 paris/hotel_de_ville-ba.ac Hôtel de Ville
+
+# Tour Saint-Jacques.
+#
+# Centre mesuré sur l'emprise BD TOPO (nature "Tour, donjon", idx unique,
+# 12 points, 151 m2) : 2,348931 / 48,857998. Emprise en croix à contreforts
+# d'angle, pas un simple rectangle ; son rectangle englobant minimal donne
+# 13,3 x 12,1 m à un cap de 111 (mesuré modulo 180 -- la base est presque
+# carrée, donc peu discriminante, à confirmer en vol).
+#
+# Échelles : le modèle mesure 13,11 x 13,13 m pour 51,64 m de haut, très
+# proche de la tour réelle (environ 13 m de côté, 52 m de haut à la
+# plateforme) : 0,970 à l'horizontale (moyenne des deux côtés), 1,007 à la
+# verticale, quasiment l'échelle native.
+2.348931 48.857998 sol 111 0.970 1.007 20 paris/tour_stjacques-ba.ac Tour Saint-Jacques

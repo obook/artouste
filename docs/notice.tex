@@ -455,4 +455,49 @@ Attribution 3.0 Non Transposé.}\normalsize
 \noindent
 \footnotesize\emph{Relief et orthophotos des cartes : \href{https://www.ign.fr/}{IGN}, sous Licence Ouverte Etalab 2.0.}\hfill\raisebox{-0.3\height}{\includegraphics[height=5ex]{IGN_logo_2012.png}}\normalsize
 
+\clearpage
+
+% ==================== Mise a jour (1 page, commune) ====================
+% Page valable quelle que soit la manette : elle repond a la question posee par
+% les joueurs qui ont deja telecharge des tuiles de detail et craignent de les
+% perdre en installant une nouvelle version. Compteur de page remis a 1, comme
+% les deux parties precedentes, chacune formant une notice a part entiere.
+\setcounter{section}{0}
+\setcounter{page}{1}
+\titrenotice
+
+\begin{center}\large\textbf{Mettre à jour le jeu}\end{center}
+
+\section*{La règle}
+Le jeu ne s'installe pas, il vit dans son dossier. Pour passer à une nouvelle version, extrayez la nouvelle archive \textbf{par-dessus l'ancien dossier} et acceptez de remplacer les fichiers existants.
+
+\section*{Vos tuiles ne bougent pas}
+Les tuiles de détail que vous avez téléchargées et votre fichier de configuration ne sont pas dans l'archive : ils restent en place. Il n'y a rien à retélécharger.
+
+\section*{Si vous installez ailleurs}
+Dans un dossier neuf, le jeu ne retrouve plus vos tuiles. Déplacez alors, de l'ancienne installation vers la nouvelle, les dossiers :
+
+\medskip
+\noindent
+\texttt{assets/terrain/<carte>/tuiles}
+
+\section*{Pour ne plus y penser}
+Il est astucieux de ranger les tuiles hors du jeu, sur un disque de données. Par exemple, pour les conserver sur un disque \texttt{D}, réglez la ligne suivante dans \texttt{assets/config.txt} :
+
+\medskip
+\noindent
+\texttt{tuiles\_dossier D:/artouste-tuiles} \quad (Windows)\\
+\texttt{tuiles\_dossier /media/moi/DISQUE/artouste-tuiles} \quad (Linux)
+
+\medskip
+\noindent
+Aucune mise à jour ne pourra plus les toucher.
+
+\section*{Vérifier}
+Au menu, touche \texttt{C} : le gestionnaire de cartes indique, carte par carte, les tuiles présentes et leur taille.
+
+\vfill
+\noindent
+\footnotesize\emph{Relief et orthophotos des cartes : \href{https://www.ign.fr/}{IGN}, sous Licence Ouverte Etalab 2.0.}\hfill\raisebox{-0.3\height}{\includegraphics[height=5ex]{IGN_logo_2012.png}}\normalsize
+
 \end{document}

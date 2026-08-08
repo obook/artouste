@@ -1,3 +1,9 @@
+## v0.30.3 - 8 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Trois monuments de Paris de plus** : Tour Saint-Jacques, Sainte-Chapelle et palais du Louvre, chacun posé après vérification visuelle. Position du Louvre approximative, comme les Invalides ou le Front de Seine.
+
 ## v0.30.2 - 2 août 2026
 
 ### Nouvelles fonctionnalités

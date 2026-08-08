@@ -220,6 +220,14 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
 }
 
 void Application::runGestionnaireCartes() {
+    /* Curseur visible le temps de cet écran, masqué en sortant : mêmes raisons que
+       dans runStartupMenu, qui commente le partage. */
+    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    struct RemasquerEnSortant {
+        GLFWwindow* fenetre;
+        ~RemasquerEnSortant() { glfwSetInputMode(fenetre, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); }
+    } remasquer{m_window};
+
     /* Cet écran s'ouvre depuis le menu de démarrage, donc AVANT le chargement de
        la scène : m_assetsDir n'est pas encore renseigné à ce moment-là, et il
        faut localiser les ressources soi-même, comme le fait runStartupMenu. */

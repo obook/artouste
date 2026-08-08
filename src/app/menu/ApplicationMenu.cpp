@@ -32,6 +32,17 @@
 namespace artouste::app {
 
 bool Application::runStartupMenu() {
+    /* Le curseur n'est visible QUE pendant un menu : partout ailleurs, y compris
+       sur les écrans de chargement, il est masqué (voir run, ApplicationLifecycle).
+       Il resurgissait au-dessus du chargement d'une carte, celui-ci s'étant allongé.
+       Le rétablir ici et le remasquer en sortant fait de ce menu son seul
+       propriétaire, plutôt que de compter sur l'entrée en vol pour le cacher. */
+    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    struct RemasquerEnSortant {
+        GLFWwindow* fenetre;
+        ~RemasquerEnSortant() { glfwSetInputMode(fenetre, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); }
+    } remasquer{m_window};
+
     const std::vector<MapEntry> cartes = recenserCartes(resolveAssetDir());
     if (cartes.empty()) {
         return true; /* aucune carte recensée : on laisse initScene décider (config/défaut) */

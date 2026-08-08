@@ -229,6 +229,13 @@ int Application::run() {
         return EXIT_FAILURE;
     }
 
+    /* Curseur masqué dès l'ouverture de la fenêtre. Seuls les menus le rétablissent,
+       le temps qu'ils sont affichés (voir runStartupMenu et runGestionnaireCartes) :
+       ailleurs il n'a rien à faire là, ni en vol ni sur un écran de chargement. Le
+       masquer seulement à l'entrée en vol le laissait traîner sur le chargement de la
+       carte, d'autant plus visible que celui-ci s'est allongé. */
+    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
     /* Plein écran sans bordure au lancement, sauf en mode capture (qui garde son
        1280x720 pour un cadrage reproductible) ou si ARTOUSTE_WINDOWED force le fenêtré
        (pratique en développement). La touche F bascule ensuite à volonté. */
@@ -280,13 +287,10 @@ int Application::run() {
         /* Boucle menu <-> vol : la touche Échap en vol rend la main pour réafficher le
            menu (choix d'une autre carte, turbine à froid ou non). Échap ou "Quitter"
            dans le menu -- comme la fermeture de la fenêtre -- termine l'application. Le
-           curseur souris est masqué pendant le vol (immersion, inutile aux commandes
-           clavier/manette) et réaffiché dès le retour au menu (nécessaire aux clics
-           ImGui). */
+           curseur souris, lui, est masqué partout sauf dans les menus, qui le
+           rétablissent eux-mêmes le temps de leur affichage (voir plus haut). */
         for (;;) {
-            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             const bool retourMenu = mainLoop();
-            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             if (!retourMenu) {
                 break;  /* fenêtre fermée : on quitte */
             }

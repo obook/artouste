@@ -1,0 +1,19 @@
+# Terrain Artouste - Pau (aéroport de Pau-Pyrénées et base ALAT d'Uzein, Gave de Pau)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 1024
+rows 1024
+width_m 17998.8
+height_m 18000.4
+elev_min 0.00
+elev_max 347.19
+lon_min -0.5024
+lon_max -0.2801
+lat_min 43.2561
+lat_max 43.4178
+ortho_width 9999
+ortho_height 10000
+sea 0
+start_x -1344.0
+start_z -4578.6
+start_heading 180

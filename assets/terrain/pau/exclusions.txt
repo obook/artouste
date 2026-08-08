@@ -1,0 +1,7 @@
+# Zones d'exclusion de végétation - Pau (aéroport de Pau-Pyrénées et base ALAT d'Uzein, Gave de Pau) (un cercle par ligne : lon lat rayon_m)
+# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
+-0.4332 43.3877 450   # Aéroport de Pau-Pyrénées (LFBP) 1/5
+-0.4268 43.3844 450   # Aéroport de Pau-Pyrénées (LFBP) 2/5
+-0.4204 43.3811 450   # Aéroport de Pau-Pyrénées (LFBP) 3/5
+-0.4140 43.3779 450   # Aéroport de Pau-Pyrénées (LFBP) 4/5
+-0.4076 43.3746 450   # Aéroport de Pau-Pyrénées (LFBP) 5/5

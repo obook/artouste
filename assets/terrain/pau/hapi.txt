@@ -1,0 +1,2 @@
+# Balises HAPI - Pau (aéroport de Pau-Pyrénées et base ALAT d'Uzein, Gave de Pau) (un par ligne : lon lat azimut_deg pente_pct nom)
+-0.407849 43.378080 125 6 Base ALAT de Pau-Uzein

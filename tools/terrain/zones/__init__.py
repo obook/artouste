@@ -31,6 +31,7 @@ from .cauterets import ZONE as _CAUTERETS
 from .cote_landes import ZONE as _COTE_LANDES
 from .dax import ZONE as _DAX
 from .ossau import ZONE as _OSSAU
+from .pau import ZONE as _PAU
 from .paris import ZONE as _PARIS
 
 ZONES = {
@@ -42,6 +43,7 @@ ZONES = {
     "bordeaux": _BORDEAUX,
     "dax": _DAX,
     "paris": _PARIS,
+    "pau": _PAU,
 }
 
 DEFAULT_ZONE = "ossau"

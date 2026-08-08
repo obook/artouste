@@ -1,0 +1,34 @@
+# Lieux remarquables - Pau (aéroport de Pau-Pyrénées et base ALAT d'Uzein, Gave de Pau) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+# Positions relevées sur OpenStreetMap le 08/08/2026 (centre de l'emprise pour
+# un bâtiment ou un équipement, noeud de la commune pour un village).
+-0.36857 43.29575 Pau
+-0.37558 43.29480 Château de Pau
+-0.36975 43.29147 Gare de Pau
+-0.36438 43.29774 Musée des Beaux-Arts
+-0.36047 43.29723 Parc Beaumont
+-0.42020 43.37914 Aéroport de Pau-Pyrénées
+-0.41909 43.37156 Base ALAT de Pau-Uzein
+-0.42011 43.35517 Chapelle Mémorial de l'Aviation
+-0.38709 43.34618 Musée des Parachutistes
+-0.39314 43.34761 Camp Aspirant André Zirnheld
+-0.37300 43.33622 Hippodrome du Pont-Long
+-0.31690 43.30953 Stade du Hameau
+-0.36491 43.33560 Zénith Pyrénées
+-0.34717 43.32615 Centre hospitalier de Pau
+-0.36785 43.28381 Haras National de Gelos
+-0.43573 43.33338 Lescar
+-0.40976 43.31541 Lons
+-0.39056 43.30300 Billère
+-0.38964 43.28718 Jurançon
+-0.37095 43.28519 Gelos
+-0.35314 43.28880 Bizanos
+-0.31175 43.29108 Idron
+-0.43309 43.39904 Uzein
+-0.35420 43.38619 Serres-Castet
+-0.35027 43.36828 Montardon
+-0.38589 43.40440 Sauvagnon
+-0.35647 43.27855 Mazères-Lezons
+-0.47005 43.35099 Poey-de-Lescar
+-0.47267 43.32014 Artiguelouve
+-0.44268 43.30570 Laroin

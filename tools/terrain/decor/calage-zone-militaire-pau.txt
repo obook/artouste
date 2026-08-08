@@ -1,0 +1,6 @@
+Découpe de assets/terrain/pau/ortho.jpg
+coin haut-gauche dans l'ortho : 2269 1452 ; taille 3000 x 2600 pixels
+lon = -0.4519550855 + x * 0.0000222322
+lat = 43.3943211600 - y * 0.0000161700
+échelle : 1.799 m par pixel en longitude, 1.800 en latitude
+emprise : lon -0.45196 a -0.38526, lat 43.35228 a 43.39432, soit 5397 x 4680 m

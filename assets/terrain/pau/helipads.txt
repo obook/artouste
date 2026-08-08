@@ -1,0 +1,8 @@
+# Helipads - Pau (aéroport de Pau-Pyrénées et base ALAT d'Uzein, Gave de Pau)
+# Un par ligne : lon lat [cap] nom
+# cap : orientation du H, en degrés (0 = nord, axe des montants). Facultatif.
+# Relevés sur OpenStreetMap, vérifiés sur l'orthophoto à 25 cm, puis position
+# et cap arrêtés par l'utilisateur le 08/08/2026.
+-0.407849 43.378080 306 Base ALAT de Pau-Uzein
+-0.417500 43.383530 Dragon 64 (Sécurité civile)
+-0.350714 43.327953 135 Centre hospitalier de Pau

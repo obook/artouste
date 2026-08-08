@@ -659,7 +659,7 @@ Trois points à contrôler sur chacun :
 - [x] Grande Arche de la Défense
 - [x] Tour Montparnasse
 - [x] Hôtel de Ville -- imparfait (relief), accepté en l'état, point 16
-- [ ] Palais du Louvre
+- [x] Palais du Louvre
 - [ ] Bibliothèque nationale de France
 - [ ] Centre Pompidou -- bande noire non résolue, voir le point 13
 - [ ] Église Saint-Eustache

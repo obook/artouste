@@ -337,3 +337,32 @@
 # -27,3 deg par les deux méthodes, cohérentes. 33 - 26 = 7. Rayon de mesure
 # court (~30 px) : reste moins sûr qu'un repère plus loin du centre.
 2.345031 48.855388 sol 7 1.040 1.0 35 paris/ste_chapelle-ba.ac Sainte-Chapelle
+
+# Palais du Louvre -- POSITION APPROXIMATIVE, comme les Invalides et le Front
+# de Seine (voir ROADMAP.md, points 9 et 14) : le modèle couvre tout le
+# complexe (689 x 316 m, 68,6 m de haut, mesuré sur le fichier), pas un seul
+# bâtiment. Contrairement à l'Arc de Triomphe, la BD TOPO n'y donne aucune
+# emprise unique : une dizaine d'ailes séparées. Leurs rectangles englobants
+# s'alignent tous sur un cap proche de 20-25 deg (batiment.5805036 : 24,6 ;
+# batiment.5805039 : 24,8 ; batiment.6961293 : 18,4), cohérent avec l'axe
+# historique de 26 deg déjà validé sur l'Arc de Triomphe -- retenu tel quel.
+#
+# Centre posé initialement sur le centroïde de la plus grande aile trouvée
+# (batiment.6961293, 27 329 m2, secteur cour Carrée) : 2,338095 / 48,860525.
+# Une tentative d'agrégation de plusieurs ailes pour retrouver le centre du
+# complexe entier a donné un résultat incohérent (emprise perpendiculaire à
+# l'axe plus grande que l'emprise le long de l'axe) : pas assez fiable pour
+# trancher sans carte sous les yeux. Échelles laissées à 1,0 (natives), aucune
+# mesure fiable de la taille réelle du complexe entier n'a pu être établie.
+#
+# Repositionné le 08/08/2026 sur un repère marqué en vol (le pavillon d'angle
+# au coin nord-est de la cour Carrée, toit vitré du modèle contre toit réel
+# sur capture verticale ARTOUSTE_SHOT_*) : décalage mesuré de +92 m nord,
+# -213 m est (soit -213 m ouest), converti via 111 320 m/deg.
+#
+# Cap ajusté le 08/08/2026 sur deux repères de rotation marqués sur la même
+# capture (segment le long du socle de la pyramide, paire de points sur un
+# pavillon d'angle) : -6,3 deg et -5,3 deg, cohérents, moyenne -5,8 deg
+# appliquée à l'axe historique de 26 deg (Arc de Triomphe) -> 20,2 deg. Pas de
+# centre à donner : le moteur tourne toujours autour du point de pose ci-dessous.
+2.335185 48.861352 sol 20.2 1.0 1.0 350 paris/louvre-ba.ac Palais du Louvre

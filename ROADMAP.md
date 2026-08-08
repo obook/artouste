@@ -667,11 +667,11 @@ Trois points à contrôler sur chacun :
 - [x] Sainte-Chapelle
 - [x] Tour Saint-Jacques
 - [ ] Hôtel Concorde Lafayette
-- [ ] Grand Palais
-- [ ] Palais de Chaillot
-- [ ] Palais du Luxembourg
+- [x] Grand Palais
+- [x] Palais de Chaillot -- calé sur repères, modèle 7 % trop long, échelle native
+- [x] Palais du Luxembourg -- calé sur repères, échelle 0,90
 - [ ] Assemblée nationale
-- [ ] École militaire
+- [x] École militaire
 - [ ] Palais omnisports de Bercy
 - [ ] Campus de Jussieu
 - [ ] Front de Seine -- EN COURS, voir le point 14

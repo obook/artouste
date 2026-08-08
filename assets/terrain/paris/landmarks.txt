@@ -35,3 +35,7 @@
 2.345028 48.855396 Sainte-Chapelle
 2.349100 48.858200 Tour Saint-Jacques
 2.283414 48.879450 Hôtel Concorde Lafayette
+2.312580 48.866170 Grand Palais
+2.288500 48.862600 Palais de Chaillot
+2.337100 48.848500 Palais du Luxembourg
+2.305600 48.851600 École militaire

@@ -366,3 +366,62 @@
 # appliquée à l'axe historique de 26 deg (Arc de Triomphe) -> 20,2 deg. Pas de
 # centre à donner : le moteur tourne toujours autour du point de pose ci-dessous.
 2.335185 48.861352 sol 20.2 1.0 1.0 350 paris/louvre-ba.ac Palais du Louvre
+
+# ---------------------------------------------------------------------------
+# Quatre grands ensembles repris de la branche paris le 08/08/2026, POSE À
+# VALIDER. Méthode d'origine (voir monuments.txt de cette branche) : le centre
+# du bâti est amené à la position connue du monument, le cap vient de l'axe
+# principal de la plus grande emprise BD TOPO voisine, l'échelle reste native.
+# Ce cap n'est connu que modulo 180 : le premier point à contrôler sur chacun
+# est donc qu'il ne soit pas retourné bout pour bout.
+# ---------------------------------------------------------------------------
+# Grand Palais. Le modèle porte trois ensembles : la nef du Grand Palais, le
+# Petit Palais à l'est, et le pont Alexandre III qui descend vers la Seine. Cap
+# et position d'origine repris de la branche paris (-180,0 / 2.312445 /
+# 48.866478), puis mesurés le 08/08/2026 : silhouette du modèle obtenue par
+# différence de deux captures verticales (modèle présent, modèle réduit à
+# 0,001), puis calée par corrélation sur les emprises BD TOPO du quartier
+# (celles qui dépassent 8 m). Le modèle était retourné bout pour bout, le cas
+# annoncé plus haut : cap 5,0, et 23 m est / 190 m sud. Le recouvrement passe
+# de 0,12 à 0,65. Le pont tombant sur le pont réel confirme la pose.
+2.312759 48.864771 sol 5.0 1.0 1.0 200 paris/Grdpalais-ba.ac Grand Palais
+# Palais de Chaillot. Le calage automatique sur les emprises BD TOPO échoue ici,
+# contrairement au Grand Palais : la BD TOPO découpe le palais en 65 morceaux
+# pour 30 000 m2 au lieu d'une emprise franche, et la silhouette du modèle est
+# presque isotrope (allongement 1,11, les deux ailes courbes l'étalent autant en
+# largeur qu'en longueur). Le meilleur score plafonne à 0,35 et part se caler
+# 400 m à l'ouest sur des îlots haussmanniens.
+# Position remise sur le lieu connu du palais (2,2885 / 48,8626) le 08/08/2026,
+# puis pose mesurée en deux passes sur des repères marqués à l'écran par
+# l'utilisateur (rouge le modèle, vert la photo) : d'abord deux rectangles, dont
+# les axes principaux donnent -68,9 deg, puis deux points aux extrémités des
+# ailes courbes, qui ajoutent 4,8 deg horaire et 62 m est / 104 m sud.
+#
+# Ces deux points donnent aussi le rapport des longueurs : 0,93, le modèle est
+# 7 % plus long que le palais photographié. Échelle laissée native, comme sur
+# les autres grands ensembles ; c'est ce qui reste du résidu de 15 m entre les
+# deux repères.
+2.289353 48.861663 sol -46.0 1.0 1.0 160 paris/Trocadero-ba.ac Palais de Chaillot
+# Palais du Luxembourg. Modèle texturé avec une photo aérienne : il se confond
+# avec l'orthophoto, si bien que le calage automatique par silhouette (différence
+# de deux captures) ne voit que les structures dont la texture diffère et donne
+# un résultat faux. Posé donc à l'oeil, sur des repères marqués à l'écran par
+# l'utilisateur le 08/08/2026, rouge le modèle, vert la photo : deux équerres
+# tracées sur la cour du palais.
+#
+# Leur écart donne les trois réglages d'un coup : rotation +2,2 deg, translation
+# +90 m est et +125 m nord, et surtout un rapport de tailles de 0,81 (0,79 en
+# largeur, 0,83 en longueur). Ce modèle est donc un quart trop grand, comme la
+# plupart de ce jeu ; d'où l'échelle 0,81 au lieu de la valeur native.
+#
+# Rayon de dégagement 140 m : il efface les volumes BD TOPO du palais, un pâté
+# informe mais bien placé. Un modèle mal posé laisse donc ici un trou plat, pas
+# un doublon.
+2.336464 48.849390 sol 2.5 0.90 0.90 140 paris/Luxembourg-ba.ac Palais du Luxembourg
+# École militaire. Posée à l'oeil le 08/08/2026, sur des repères marqués à
+# l'écran par l'utilisateur, en trois temps : deux lignes le long des ailes
+# donnent une rotation de +65,9 deg, reprise de 5 deg à la vue suivante, puis un
+# demi-tour, le cap n'étant connu que modulo 180 comme annoncé plus haut. Enfin
+# deux points sur une même aile donnent 45 m est, sans décalage nord.
+# Échelle laissée native : les ailes du modèle couvrent celles de la photo.
+2.304826 48.851929 sol -132.9 1.0 1.0 180 paris/ecole_militaire-ba.ac École militaire

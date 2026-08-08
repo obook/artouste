@@ -2,21 +2,21 @@
 
 ### Nouvelles fonctionnalités
 
-- **Couleur des toitures lue dans l'orthophoto** : chaque bâtiment prend la teinte du toit photographié sous lui, au lieu d'une palette de tuiles codée en dur qui couvrait Paris de terre cuite. Le zinc parisien, la tuile landaise et les toits plats des zones d'activité sortent maintenant tels quels, sans rien déclarer carte par carte. La lecture n'a lieu que si l'emprise du bâtiment couvre au moins deux pixels d'orthophoto, les cartes allant de 0,85 m par pixel (Dax) à 9,8 (Arcachon) ; en dessous, un pixel mélange la maison, le jardin et les arbres, et la palette d'origine reprend la main. Les valeurs sont étalées d'autant plus que la photo est grise, une orthophoto de ville étant souvent presque achromatique.
-- **Quatre monuments de Paris de plus** : Grand Palais (avec le Petit Palais et le pont Alexandre III), palais de Chaillot, palais du Luxembourg et École militaire, chacun calé sur l'orthophoto puis vérifié.
-- **Cap du marquage H des hélipads** : `helipads.txt` accepte un cap facultatif avant le nom, qui oriente l'axe des montants du H. Le pad d'Hossegor regarde désormais l'ouest ; les autres, sans cap, gardent leur orientation nord-sud.
-- **Brume réglable** : deux clés nouvelles de `assets/config.txt`, `brume_debut` et `brume_fin`, donnent les distances où le terrain commence à se fondre dans le ciel et où il y disparaît. C'est affaire de goût et de carte : trop peu de brume et le bord du terrain se voit comme une coupure à l'horizon sur les petites cartes, trop et une carte entière vire au blanc vue d'en haut. Les valeurs par défaut (3 000 et 15 000 m) épaississent un peu l'air par rapport aux versions précédentes.
-- **Page "Mettre à jour le jeu" dans la notice** : que faire quand on a déjà téléchargé des tuiles de détail et qu'une nouvelle version sort. En résumé, extraire par-dessus l'ancien dossier ; ni les tuiles ni la configuration ne voyagent dans l'archive.
+- **Couleur des toitures lue dans l'orthophoto** : le zinc parisien, la tuile landaise et la tôle des hangars sortent tels quels, au lieu d'une palette de tuiles unique qui couvrait Paris de terre cuite.
+- **Quatre monuments de Paris de plus** : Grand Palais, palais de Chaillot, palais du Luxembourg et École militaire.
+- **Cap du marquage H des hélipads**, facultatif, dans `helipads.txt`. Le pad d'Hossegor regarde désormais l'ouest.
+- **Brume réglable** par les clés `brume_debut` et `brume_fin` de `config.txt`.
+- **Notice** : une page sur la mise à jour du jeu, et ce que deviennent les tuiles déjà téléchargées.
 
 ### Changements
 
-- **Option `souffle` retirée** : le souffle rotor est désormais toujours actif. Son interrupteur ne se justifiait pas, le nuage ne coûtant que quelques centaines de billboards. Un `config.txt` qui porte encore cette ligne est accepté sans un mot.
+- **Option `souffle` retirée** : le souffle rotor est toujours actif.
 
 ### Corrections
 
-- **Curseur de la souris sur les écrans de chargement** : il n'était masqué qu'à l'entrée en vol et traînait donc pendant tout le chargement d'une carte. Il l'est maintenant dès l'ouverture de la fenêtre, et seuls les menus le rétablissent le temps de leur affichage.
-- **Heure de départ des cartes suivantes** : l'heure était bien remise à 8h au chargement, mais comptée depuis le lancement du programme. La deuxième carte d'une session reprenait donc 8h plus tout le temps déjà joué, soit la nuit noire après un quart d'heure de vol. Chaque carte commence maintenant à son heure de départ.
-- **Hélipad de départ dessiné deux fois** : le pad du point de départ et celui que la carte déclare au même endroit se superposaient. Sans conséquence tant qu'ils étaient identiques, mais deux H de caps différents se seraient croisés.
+- **Curseur de la souris** visible pendant le chargement d'une carte.
+- **Heure de départ** : la deuxième carte d'une session partait à 8h plus tout le temps déjà joué, soit en pleine nuit.
+- **Hélipad de départ** dessiné deux fois quand la carte en déclarait un au même endroit.
 
 ## v0.30.3 - 8 août 2026
 

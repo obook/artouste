@@ -304,3 +304,36 @@
 # plateforme) : 0,970 à l'horizontale (moyenne des deux côtés), 1,007 à la
 # verticale, quasiment l'échelle native.
 2.348931 48.857998 sol 111 0.970 1.007 20 paris/tour_stjacques-ba.ac Tour Saint-Jacques
+
+# Sainte-Chapelle.
+#
+# Centre mesuré sur l'emprise BD TOPO (nature "Chapelle", idx unique,
+# 105 points, 538 m2) : 2,345031 / 48,855388. Trois emprises "Tour, donjon"
+# voisines écartées : ce sont les tours de la Conciergerie, un autre édifice
+# du même site, pas les tourelles de la Sainte-Chapelle. Rectangle englobant
+# minimal : 42,0 x 16,9 m à un cap de 123 (modulo 180, à confirmer en vol).
+#
+# Échelles : le modèle mesure 40,41 x 28,68 m pour 79,97 m de haut. La
+# longueur colle (42,0 contre 40,41), d'où l'échelle horizontale 1,040
+# calée dessus, mais la largeur du modèle dépasse largement l'emprise
+# (28,68 contre 16,9) : contreforts ou arcs-boutants surdimensionnés dans le
+# modèle FlightGear, à surveiller au sol. Hauteur : les 23,4 m de la BD TOPO
+# ne couvrent que la toiture, pas la flèche (reconstruite par Viollet-le-Duc,
+# hauteur totale non retrouvée dans une source mesurée) ; échelle verticale
+# laissée à 1,0 faute de référence fiable, à recaler en vol.
+#
+# Cap corrigé le 08/08/2026 : la mesure BD TOPO donnait le cap de l'emprise
+# réelle, pas forcément celui de l'axe long du modèle -- ici le modèle avait
+# sa façade selon un axe local à 90 deg de celui supposé (même piège que
+# l'Arc de Triomphe, voir plus haut dans ce fichier). Repéré sur deux arcs
+# marqués sur une capture verticale (rebord arrondi du modèle contre la
+# même forme réelle visible sous lui) : -92,6 deg et -87,3 deg par deux
+# méthodes indépendantes, moyenne -90 deg tout rond. 123 - 90 = 33.
+#
+# Deuxième passe le 08/08/2026 : un pignon marqué en rouge (modèle) et vert
+# (même pignon réel, visible sous lui) sur une nouvelle capture -- sommet de
+# chaque triangle retrouvé par intersection des deux bras (pas le pixel le
+# plus haut, trop sensible au trait), cap depuis le point de pose : -25,4 et
+# -27,3 deg par les deux méthodes, cohérentes. 33 - 26 = 7. Rayon de mesure
+# court (~30 px) : reste moins sûr qu'un repère plus loin du centre.
+2.345031 48.855388 sol 7 1.040 1.0 35 paris/ste_chapelle-ba.ac Sainte-Chapelle

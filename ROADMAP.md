@@ -664,7 +664,7 @@ Trois points à contrôler sur chacun :
 - [ ] Centre Pompidou -- bande noire non résolue, voir le point 13
 - [ ] Église Saint-Eustache
 - [ ] Église Saint-Sulpice
-- [ ] Sainte-Chapelle
+- [x] Sainte-Chapelle
 - [x] Tour Saint-Jacques
 - [ ] Hôtel Concorde Lafayette
 - [ ] Grand Palais

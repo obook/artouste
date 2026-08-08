@@ -1,3 +1,17 @@
+## v0.31.0 - 8 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Couleur des toitures lue dans l'orthophoto** : chaque bâtiment prend la teinte du toit photographié sous lui, au lieu d'une palette de tuiles codée en dur qui couvrait Paris de terre cuite. Le zinc parisien, la tuile landaise et les toits plats des zones d'activité sortent maintenant tels quels, sans rien déclarer carte par carte. La lecture n'a lieu que si l'emprise du bâtiment couvre au moins deux pixels d'orthophoto, les cartes allant de 0,85 m par pixel (Dax) à 9,8 (Arcachon) ; en dessous, un pixel mélange la maison, le jardin et les arbres, et la palette d'origine reprend la main. Les valeurs sont étalées d'autant plus que la photo est grise, une orthophoto de ville étant souvent presque achromatique.
+- **Quatre monuments de Paris de plus** : Grand Palais (avec le Petit Palais et le pont Alexandre III), palais de Chaillot, palais du Luxembourg et École militaire, chacun calé sur l'orthophoto puis vérifié.
+- **Cap du marquage H des hélipads** : `helipads.txt` accepte un cap facultatif avant le nom, qui oriente l'axe des montants du H. Le pad d'Hossegor regarde désormais l'ouest ; les autres, sans cap, gardent leur orientation nord-sud.
+- **Page "Mettre à jour le jeu" dans la notice** : que faire quand on a déjà téléchargé des tuiles de détail et qu'une nouvelle version sort. En résumé, extraire par-dessus l'ancien dossier ; ni les tuiles ni la configuration ne voyagent dans l'archive.
+
+### Corrections
+
+- **Heure de départ des cartes suivantes** : l'heure était bien remise à 8h au chargement, mais comptée depuis le lancement du programme. La deuxième carte d'une session reprenait donc 8h plus tout le temps déjà joué, soit la nuit noire après un quart d'heure de vol. Chaque carte commence maintenant à son heure de départ.
+- **Hélipad de départ dessiné deux fois** : le pad du point de départ et celui que la carte déclare au même endroit se superposaient. Sans conséquence tant qu'ils étaient identiques, mais deux H de caps différents se seraient croisés.
+
 ## v0.30.3 - 8 août 2026
 
 ### Nouvelles fonctionnalités

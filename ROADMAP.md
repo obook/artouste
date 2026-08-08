@@ -343,13 +343,36 @@ qui peuvent se mener séparément.
   pour tout le dépôt, sur le principe des options par carte : une carte des
   Landes ne doit pas hériter des façades de Paris.
 
-- [ ] **Toits de zinc.** `ROOF_PALETTE` (`src/render/buildings/BuildingsMesh.cpp`)
-  compte six teintes dont trois identiques de tuile terre cuite, pesée pour
-  dominer à 50 %, plus une tuile chaude, une tuile patinée et une ardoise. Le
-  commentaire du code l'assume : "couleurs régionales (côte basque et Landes)".
-  Une teinte est tirée par bâtiment, de façon stable mais SANS AUCUN RAPPORT avec
-  la photo qui se trouve juste dessous : un immeuble couvert de zinc gris se
-  retrouve coiffé de tuile rouge.
+- [x] **Toits de zinc.** Réglé le 08/08/2026, mais pas comme prévu ci-dessous :
+  plutôt que des palettes par région, la couleur est LUE dans l'orthophoto, au
+  centre de l'emprise de chaque bâtiment. Une prise de vue au nadir montre le
+  toit lui-même à cet endroit, si bien que le zinc parisien, la tuile landaise et
+  la tôle des hangars sortent tels quels, sans rien déclarer par carte. Deux
+  garde-fous : la lecture n'a lieu qu'à partir de deux pixels d'emprise (les
+  cartes vont de 0,85 à 9,8 m par pixel, et au pied de cette échelle un pixel
+  mélange la maison, le jardin et les pins), et les valeurs sont étalées d'autant
+  plus que la photo est grise, une orthophoto de ville étant souvent presque
+  achromatique (Paris : saturation moyenne 0,028). `ROOF_PALETTE` ne sert plus
+  que de repli.
+
+    RESTE À FAIRE, la part de forme : le toit parisien est un comble brisé
+  (mansarde) là où l'extrusion pose un toit plat. La couleur corrigeait
+  l'essentiel de ce qui saute aux yeux, pas la silhouette.
+
+    C'est la solution 2 de la liste ci-dessous qui a été retenue, et le risque
+  qu'elle annonçait s'est vérifié tel quel : la couleur brute donnait une nappe
+  de toits ternes, d'où l'étalement des valeurs. La solution 1 (palette déclarée
+  par carte) garde son intérêt le jour où une ville lointaine arrivera avec une
+  orthophoto trop grossière pour être lue, puisque c'est alors la palette
+  landaise qui reprend la main.
+
+    L'analyse d'origine, conservée : `ROOF_PALETTE` comptait six teintes dont
+  trois identiques de tuile terre cuite, pesée pour dominer à 50 %, plus une
+  tuile chaude, une tuile patinée et une ardoise. Le commentaire du code
+  l'assumait : "couleurs régionales (côte basque et Landes)". Une teinte était
+  tirée par bâtiment, de façon stable mais SANS AUCUN RAPPORT avec la photo qui
+  se trouve juste dessous : un immeuble couvert de zinc gris se retrouvait coiffé
+  de tuile rouge.
 
     Paris, c'est le zinc. Bleu-gris clair quand il est neuf, virant au gris terne
   en patinant, avec de l'ardoise plus sombre et plus bleue sur les édifices

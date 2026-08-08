@@ -3,6 +3,7 @@
 ### Nouvelles fonctionnalités
 
 - **Trois monuments de Paris de plus** : Tour Saint-Jacques, Sainte-Chapelle et palais du Louvre, chacun posé après vérification visuelle. Position du Louvre approximative, comme les Invalides ou le Front de Seine.
+- **Tour de contrôle de Dax-Seyresse** : nouveau lieu remarquable, signalé par un pilote.
 
 ### Corrections
 

@@ -126,8 +126,11 @@ jobs:
       #      CMakeLists.txt, commiter et pousser ;
       #   2. poser le tag et le pousser (ce workflow démarre, une quinzaine de
       #      minutes de compilation) ;
-      #   3. pendant ce temps, créer la release à la main depuis le même fichier :
-      #        gh release create vX.Y.Z --title "vX.Y.Z" --notes-file docs/RELEASE_NOTES.md
+      #   3. pendant ce temps, créer la release à la main depuis le même fichier,
+      #      en n'en prenant QUE la section de cette version (le fichier est un
+      #      journal cumulatif, le donner entier y recopie tout l'historique) :
+      #        awk '/^## /{n++} n==1' docs/RELEASE_NOTES.md > /tmp/notes.md
+      #        gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/notes.md
       #
       # L'étape 3 est ce qui donne à la release VOTRE nom : l'auteur d'une release
       # est figé à sa création et ne se change plus ensuite. Sans elle, c'est
@@ -141,11 +144,20 @@ jobs:
       #
       # generate_release_notes reste à false : la liste plate des sujets de commits
       # n'apprend rien à un joueur.
+
+      # docs/RELEASE_NOTES.md est un journal cumulatif : la version publiée en
+      # tête, puis tout l'historique. Le donner entier à la release y recopiait
+      # les versions précédentes, si bien que v0.30.3 affichait aussi v0.30.2 et
+      # v0.30.1 : le lecteur ne savait plus ce qui était nouveau. On n'en prend
+      # donc que la première section (du premier titre "## " jusqu'au suivant).
+      - name: Extraire la section de cette version
+        run: awk '/^## /{n++} n==1' docs/RELEASE_NOTES.md > "$RUNNER_TEMP/notes.md"
+
       - name: Attacher les archives et le texte à la release
         uses: softprops/action-gh-release@v2
         with:
           files: artefacts/**/artouste-*
-          body_path: docs/RELEASE_NOTES.md
+          body_path: ${{ runner.temp }}/notes.md
           generate_release_notes: false
           # Un tag portant un tiret (v0.30.0-rc1, v0.0.0-essai) est un essai ou une
           # version candidate : publié en pré-release, il ne devient pas la version

@@ -60,10 +60,16 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
     /* Rendu relatif à la caméra : la vue reçue est déjà relative à m_renderOrigin ;
        on retranche donc la même origine des positions monde et de u_camPos. */
     const vec3 camPosRel = m_camera.position() - m_renderOrigin;
-    const auto drawPad = [&](float x, float z) {
+    const auto drawPad = [&](float x, float z, float capDeg) {
         const float padTop = m_terrain->heightAt(x, z);
-        const mat4 padModel = glm::translate(
-            mat4(1.0f), vec3{x - m_renderOrigin.x, padTop + 0.08f, z - m_renderOrigin.z});
+        /* Cap du marquage : le H sort du maillage montants selon Z, soit l'axe
+           nord-sud, ce qui correspond au cap 0. Une rotation de -cap autour de la
+           verticale met donc ses montants sur l'axe demandé (le H étant symétrique
+           d'un demi-tour, cap et cap + 180 donnent la même figure). */
+        const mat4 padModel =
+            glm::rotate(glm::translate(mat4(1.0f), vec3{x - m_renderOrigin.x, padTop + 0.08f,
+                                                        z - m_renderOrigin.z}),
+                        glm::radians(-capDeg), vec3{0.0f, 1.0f, 0.0f});
         /* Jupe sous le disque : sur un pad perché, le plateau surplombe le relief ;
            la paroi cylindrique habille la tranche (sa partie enterrée est cachée
            par le test de profondeur). Vraie géométrie : elle écrit la profondeur,
@@ -103,21 +109,31 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         }
     };
 
-    /* Hélipad de départ. */
-    drawPad(m_startPos.x, m_startPos.z);
-
     /* Hélipads du terrain, convertis de lon/lat en position monde et ignorés
        s'ils tombent hors de l'emprise courante. */
     const float halfW = m_terrain->halfWidth();
     const float halfH = m_terrain->halfHeight();
     const float origX = m_terrain->originX();
     const float origZ = m_terrain->originZ();
+    /* Le départ est calé sur l'hélipad le plus proche du repère de la carte (voir
+       initScene) : quand la carte en déclare, le pad de départ est donc l'un d'eux,
+       et le tracer une seconde fois croiserait deux H de caps différents. */
+    bool departCouvert = false;
     for (const render::Landmark& pad : m_terrain->helipads()) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(pad.lon, pad.lat, x, z);
         if (std::fabs(x - origX) <= halfW && std::fabs(z - origZ) <= halfH) {
-            drawPad(x, z);
+            drawPad(x, z, pad.headingDeg);
         }
+        const float dx = x - m_startPos.x, dz = z - m_startPos.z;
+        if (dx * dx + dz * dz < 1.0f) {
+            departCouvert = true;
+        }
+    }
+
+    /* Hélipad de départ, seulement si la carte n'en a pas déclaré un à cet endroit. */
+    if (!departCouvert) {
+        drawPad(m_startPos.x, m_startPos.z, 0.0f);
     }
 
     glDisable(GL_POLYGON_OFFSET_FILL);

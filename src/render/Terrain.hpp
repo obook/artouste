@@ -37,6 +37,11 @@ struct Landmark {
     std::string name;
     float lon = 0.0f;
     float lat = 0.0f;
+    /* Cap du marquage, en degrés (0 = nord), facultatif : il oriente l'axe des
+       montants du H d'un hélipad, que le pilote suit à l'approche. Zéro, la valeur
+       par défaut, laisse le H montants nord-sud, comme avant l'existence du champ.
+       Ignoré pour un lieu remarquable, qui n'a pas de marquage au sol. */
+    float headingDeg = 0.0f;
 };
 
 /* Monument 3D posé sur la carte : un modèle ponctuel placé à une coordonnée

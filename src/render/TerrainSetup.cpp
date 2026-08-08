@@ -29,8 +29,12 @@ namespace artouste::render {
 
 void Terrain::loadPlaces(const std::filesystem::path& path, std::vector<Landmark>& out,
                          const char* label) {
-    /* Format : un lieu par ligne "lon lat nom", le nom étant le reste de la ligne
-       (il peut contenir des espaces). Ligne vide ou commençant par # ignorée. */
+    /* Format : un lieu par ligne "lon lat [cap] nom", le nom étant le reste de la
+       ligne (il peut contenir des espaces). Ligne vide ou commençant par # ignorée.
+       Le cap est facultatif et n'a de sens que pour un hélipad (orientation du H,
+       voir Landmark::headingDeg) : un nombre à cette place est donc lu comme un
+       cap, et son absence laisse la valeur par défaut. Aucun lieu ne porte un nom
+       commençant par un chiffre, l'ambiguïté est théorique. */
     std::ifstream file(path);
     if (!file) {
         return;  /* fichier absent pour ce terrain : tableau vide */
@@ -41,6 +45,12 @@ void Terrain::loadPlaces(const std::filesystem::path& path, std::vector<Landmark
         Landmark           lm;
         if (!(iss >> lm.lon >> lm.lat)) {
             continue;  /* ligne vide, commentaire ou mal formée */
+        }
+        const std::istringstream::pos_type avantCap = iss.tellg();
+        if (!(iss >> lm.headingDeg)) {
+            lm.headingDeg = 0.0f;  /* pas de cap : le nom commence ici */
+            iss.clear();
+            iss.seekg(avantCap);
         }
         std::getline(iss, lm.name);
         const std::size_t first = lm.name.find_first_not_of(" \t\r\n");

@@ -126,8 +126,8 @@
   \draw[fill=gray!40] ( 1.26, 0.26) circle (0.55);
   \draw[fill=gray!60] ( 1.26, 0.26) circle (0.30);
 
-  % Croix directionnelle : aucune fonction dans le simulateur, donc dessinée
-  % mais volontairement laissée sans étiquette.
+  % Croix directionnelle : radio internet (droite) et balance radio / hélico
+  % (haut et bas). La gauche n'a pas de fonction.
   \draw[fill=gray!30] (-1.76, 0.11) rectangle (-0.76, 0.41);
   \draw[fill=gray!30] (-1.41, -0.24) rectangle (-1.11, 0.76);
 
@@ -147,6 +147,7 @@
   \draw[->] (-2.40, 3.18) -- (-7.2,  3.6) node[lbl,anchor=east] {LT : \textbf{Collectif} $-$};
   \draw[->] (-3.05, 2.70) -- (-7.2,  2.6) node[lbl,anchor=east] {LB : \textbf{Assisté} / Menu};
   \draw[->] (-2.46, 1.82) -- (-7.2,  1.5) node[lbl,anchor=east] {Stick gauche : \textbf{Cyclique}};
+  \draw[->] (-1.41, 0.26) -- (-7.2,  0.4) node[lbl,anchor=east] {Croix : \textbf{Radio} et balance};
   \draw[->] (-0.83, 1.57) -- (-2.0,  3.7) node[lbl,anchor=south] {\texttt{Back} : \textbf{Pause}};
   \draw[->] ( 0.83, 1.57) -- ( 2.0,  3.7) node[lbl,anchor=south] {\texttt{Start} : \textbf{Turbine}};
   \draw[->] ( 2.40, 3.18) -- ( 7.2,  3.6) node[lbl,anchor=west] {RT : \textbf{Collectif} $+$};
@@ -196,8 +197,8 @@
   \draw[fill=gray!40] ( 1.37, 0.00) circle (0.62);
   \draw[fill=gray!60] ( 1.37, 0.00) circle (0.34);
 
-  % Croix directionnelle : aucune fonction dans le simulateur, donc dessinée
-  % mais volontairement laissée sans étiquette.
+  % Croix directionnelle : radio internet (droite) et balance radio / hélico
+  % (haut et bas). La gauche n'a pas de fonction.
   \draw[fill=gray!30] (-3.22, 1.05) rectangle (-2.22, 1.35);
   \draw[fill=gray!30] (-2.87, 0.70) rectangle (-2.57, 1.70);
 
@@ -215,6 +216,7 @@
 
   \draw[->] (-2.28, 2.95) -- (-7.2,  3.4) node[lbl,anchor=east] {L2 : \textbf{Collectif} $-$};
   \draw[->] (-2.90, 2.72) -- (-7.2,  2.4) node[lbl,anchor=east] {L1 : \textbf{Assisté} / Menu};
+  \draw[->] (-2.87, 1.20) -- (-7.2,  0.6) node[lbl,anchor=east] {Croix : \textbf{Radio} et balance};
   \draw[->] (-1.37, 0.00) -- (-7.2, -1.2) node[lbl,anchor=east] {Stick gauche : \textbf{Cyclique}};
   \draw[->] (-1.75, 2.14) -- (-2.4,  3.5) node[lbl,anchor=south] {\texttt{Share} : \textbf{Pause}};
   \draw[->] ( 1.75, 2.14) -- ( 2.4,  3.5) node[lbl,anchor=south] {\texttt{Options} : \textbf{Turbine}};
@@ -263,7 +265,7 @@
 Ce document décrit les commandes disponibles pour piloter le simulateur Artouste avec une manette de jeu \textbf{Xbox} USB ou Bluetooth.
 
 \noindent
-\textbf{Un PC, une manette, et vous volez.} Rien à installer ni à configurer : on extrait l'archive, on lance l'exécutable, on décolle, et les neuf cartes sont déjà là. Le clavier est indiqué ici pour dépanner, mais n'est pas recommandé : ses touches ne connaissent que deux états, appuyé ou relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
+\textbf{Un PC, une manette, et vous volez.} Rien à installer ni à configurer : on extrait l'archive, on lance le programme et on décolle, les neuf cartes sont déjà là. Le clavier est indiqué ici pour dépanner, mais n'est pas recommandé : ses touches ne connaissent que deux états, appuyé ou relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
 
 \manettexbox{\boutonxbox{xbox_Y_jaune}{black}{Y}}{\boutonxbox{xbox_X_bleu}{white}{X}}{\boutonxbox{xbox_B_rouge}{white}{B}}{\boutonxbox{xbox_A_vert}{black}{A}}
 
@@ -273,17 +275,17 @@ Ce document décrit les commandes disponibles pour piloter le simulateur Artoust
 \hline
 \textbf{Action} & \textbf{Clavier AZERTY} & \textbf{Manette Xbox} \\
 \hline
-Turbine (d\'emarrer / couper) & T & bouton \texttt{Start} \\
+Turbine (démarrer / couper) & T & bouton \texttt{Start} \\
 \hline
 Collectif +/- & Z (monter) / S (descendre) & RT / LT \\
 \hline
-Cyclique & Fl\`{e}ches directionnelles & stick gauche \\
+Cyclique & Flèches directionnelles & stick gauche \\
 \hline
 Recentrer le cyclique & Espace & - \\
 \hline
 Palonnier & D / Q & stick droit\\
 \hline
-Mode assist\'e (confort) & M & LB \\
+Mode assisté (confort) & M & LB \\
 \hline
 Pause & P & bouton \texttt{Back} \\
 \hline
@@ -300,35 +302,35 @@ Pause & P & bouton \texttt{Back} \\
 \hline
 \textbf{Action} & \textbf{Clavier AZERTY} & \textbf{Manette Xbox} \\
 \hline
-Vue (4 vues) & C & bouton \boutonxbox{xbox_Y_jaune}{black}{Y} \\
+Vue 3D (4 vues) & C & bouton \boutonxbox{xbox_Y_jaune}{black}{Y} \\
 \hline
-Livr\'ee & L & bouton \boutonxbox{xbox_A_vert}{black}{A} \\
+Regard du pilote & - & clic du stick gauche (L3) maintenu, puis stick droit \\
 \hline
-Mode assist\'e (confort) & M & LB \\
+Livrée & L & bouton \boutonxbox{xbox_A_vert}{black}{A} \\
+\hline
+Mode assisté & M & LB \\
 \hline
 Atterrissage automatique & J & RB \\
 \hline
-Mode Zombie (lancer, si carte compatible) & Z & LB \\
+Tir mode zombie & Ctrl gauche & clic du stick droit (R3) \\
 \hline
-Tir (mode zombie) & Ctrl gauche (maintenir) & R3 -- clic stick droit (maintenir) \\
+HUD 4 modes & H & bouton \boutonxbox{xbox_B_rouge}{white}{B} \\
 \hline
-HUD (3 modes) & H & bouton \boutonxbox{xbox_B_rouge}{white}{B} \\
-\hline
-Plein \'ecran (fen\^etr\'e / plein \'ecran) & F & - \\
+Plein écran / fenêtré & F & - \\
 \hline
 Pause & P & bouton \texttt{Back} \\
 \hline
-Radio internet (allumer / couper) & K & - \\
+Radio internet & K & croix directionnelle droite \\
 \hline
-Balance radio / h\'elico & - / + & - \\
+Volume radio / hélico & - / + & croix directionnelle haut (radio) et bas (hélico) \\
 \hline
-Reset position & R & bouton \boutonxbox{xbox_X_bleu}{white}{X} \\
+Position de départ & R & bouton \boutonxbox{xbox_X_bleu}{white}{X} \\
 \hline
 Gestionnaire de cartes (depuis le menu) & C au menu & - \\
 \hline
-D\'emo (lancer depuis le menu / en sortir) & D au menu ; \texttt{\'Echap} pour sortir & bouton \boutonxbox{xbox_Y_jaune}{black}{Y} au menu ; LB + RB pour sortir \\
+Démo (lancer depuis le menu / en sortir) & D au menu ; \texttt{Échap} pour sortir & bouton \boutonxbox{xbox_Y_jaune}{black}{Y} au menu ; LB + RB pour sortir \\
 \hline
-Retour au menu (quitter depuis le menu) & \texttt{\'Echap} & LB + RB \\
+Retour au menu (quitter depuis le menu) & \texttt{Échap} & LB + RB \\
 \hline
 \end{tabularx}
 
@@ -368,7 +370,7 @@ Creative Commons CC0 1.0.}\normalsize
 Ce document décrit les commandes disponibles pour piloter le simulateur Artouste avec les manettes de jeu \textbf{PlayStation 4 (DualShock 4)} ou \textbf{PlayStation 5 (DualSense)} USB ou Bluetooth.
 
 \noindent
-\textbf{Un PC, une manette, et vous volez.} Rien à installer ni à configurer : on extrait l'archive, on lance l'exécutable, on décolle, et les neuf cartes sont déjà là. Le clavier est indiqué ici pour dépanner, mais n'est pas recommandé : ses touches ne connaissent que deux états, appuyé ou relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
+\textbf{Un PC, une manette, et vous volez.} Rien à installer ni à configurer : on extrait l'archive, on lance le programme et on décolle, les neuf cartes sont déjà là. Le clavier est indiqué ici pour dépanner, mais n'est pas recommandé : ses touches ne connaissent que deux états, appuyé ou relâché, quand un stick ou une gâchette rend une valeur continue. Sur un appareil sans servo-commandes, ce dosage fait la différence entre un vol tenu et un vol subi.
 
 \manetteps{\symtriangle{}}{\symcarre{}}{\symrond{}}{\symcroix{}}
 
@@ -381,17 +383,17 @@ Ce document décrit les commandes disponibles pour piloter le simulateur Artoust
 \hline
 \textbf{Action} & \textbf{Clavier AZERTY} & \textbf{Manette PlayStation} \\
 \hline
-Turbine (d\'emarrer / couper) & T & bouton \texttt{Options} \\
+Turbine (démarrer / couper) & T & bouton \texttt{Options} \\
 \hline
 Collectif +/- & Z (monter) / S (descendre) & R2 / L2 \\
 \hline
-Cyclique & Fl\`{e}ches directionnelles & stick gauche \\
+Cyclique & Flèches directionnelles & stick gauche \\
 \hline
 Recentrer le cyclique & Espace & - \\
 \hline
 Palonnier & D / Q & stick droit\\
 \hline
-Mode assist\'e (confort) & M & L1 \\
+Mode assisté (confort) & M & L1 \\
 \hline
 Pause & P & bouton \texttt{Share} / \texttt{Create} \\
 \hline
@@ -408,35 +410,35 @@ Pause & P & bouton \texttt{Share} / \texttt{Create} \\
 \hline
 \textbf{Action} & \textbf{Clavier AZERTY} & \textbf{Manette PlayStation} \\
 \hline
-Vue (4 vues) & C & bouton \symtriangle{} \\
+Vue 3D (4 vues) & C & bouton \symtriangle{} \\
 \hline
-Livr\'ee & L & bouton \symcroix{} \\
+Regard du pilote & - & clic du stick gauche (L3) maintenu, puis stick droit \\
 \hline
-Mode assist\'e (confort) & M & L1 \\
+Livrée & L & bouton \symcroix{} \\
+\hline
+Mode assisté & M & L1 \\
 \hline
 Atterrissage automatique & J & R1 \\
 \hline
-Mode Zombie (lancer, si carte compatible) & Z & L1 \\
+Tir mode zombie & Ctrl gauche & clic du stick droit (R3) \\
 \hline
-Tir (mode zombie) & Ctrl gauche (maintenir) & R3 -- clic stick droit (maintenir) \\
+HUD 4 modes & H & bouton \symrond{} \\
 \hline
-HUD (3 modes) & H & bouton \symrond{} \\
-\hline
-Plein \'ecran (fen\^etr\'e / plein \'ecran) & F & - \\
+Plein écran / fenêtré & F & - \\
 \hline
 Pause & P & bouton \texttt{Share} / \texttt{Create} \\
 \hline
-Radio internet (allumer / couper) & K & - \\
+Radio internet & K & croix directionnelle droite \\
 \hline
-Balance radio / h\'elico & - / + & - \\
+Volume radio / hélico & - / + & croix directionnelle haut (radio) et bas (hélico) \\
 \hline
-Reset position & R & bouton \symcarre{} \\
+Position de départ & R & bouton \symcarre{} \\
 \hline
 Gestionnaire de cartes (depuis le menu) & C au menu & - \\
 \hline
-D\'emo (lancer depuis le menu / en sortir) & D au menu ; \texttt{\'Echap} pour sortir & bouton \symtriangle{} au menu ; L1 + R1 pour sortir \\
+Démo (lancer depuis le menu / en sortir) & D au menu ; \texttt{Échap} pour sortir & bouton \symtriangle{} au menu ; L1 + R1 pour sortir \\
 \hline
-Retour au menu (quitter depuis le menu) & \texttt{\'Echap} & L1 + R1 \\
+Retour au menu (quitter depuis le menu) & \texttt{Échap} & L1 + R1 \\
 \hline
 \end{tabularx}
 

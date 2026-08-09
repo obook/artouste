@@ -49,10 +49,10 @@ constexpr float CLEAR_R2 = 30.0f * 30.0f;
    forme du plan d'eau, quelle que soit sa taille. */
 constexpr float LAKE_FALLBACK_R2 = 120.0f * 120.0f;
 
-/* Nombre d'espèces de l'atlas trees_atlas.png (sapin, feuillu, mélèze). Doit
+/* Nombre d'espèces de l'atlas trees_atlas.png (sapin, feuillu, mélèze, pin). Doit
    correspondre à ATLAS_COUNT dans vegetation.vert. */
-constexpr int NUM_SPECIES = 3;
-static_assert(NUM_SPECIES == 3, "trees_atlas.png et ATLAS_COUNT (vegetation.vert) : 3 espèces");
+constexpr int NUM_SPECIES = 4;
+static_assert(NUM_SPECIES == 4, "trees_atlas.png et ATLAS_COUNT (vegetation.vert) : 4 espèces");
 
 /* Garde-fou : plafond du nombre d'arbres, pour éviter une explosion mémoire si
    la grille est réglée très fine (6 M x 20 octets ~ 120 Mo de tampon d'instances).
@@ -99,12 +99,28 @@ bool looksLikeForest(float r, float g, float b) {
     return g > 0.12f && g < 0.48f && g >= r * 0.97f && g >= b * 1.08f && b < 0.48f;
 }
 
+/* Sol minéral vu dans l'orthophoto : bitume, béton, gravier, sable, toiture. Sert
+   de VETO à l'intérieur d'une forêt cartographiée, pour rattraper ce que le
+   contour ne sait pas : une coupe rase récente, un pare-feu, une piste forestière,
+   un bâtiment isolé sous couvert. Mesuré sur cote-landes, la couleur ne sait PAS
+   séparer forêt et pelouse (les deux sont vertes, excès de vert médian 0,037 et
+   0,033) ; elle sépare en revanche nettement le végétal du minéral. Le veto reste
+   donc lâche exprès : il n'écarte que le franchement clair et le franchement gris,
+   soit environ 1 % des pixels de forêt, et épargne l'ombre profonde d'un versant
+   nord (où l'excès de vert s'effondre sans que la forêt disparaisse). */
+bool looksMineral(float r, float g, float b) {
+    const float lum  = 0.299f * r + 0.587f * g + 0.114f * b;
+    const float vert = g - 0.5f * (r + b);  /* excès de vert */
+    return lum > 0.58f || (vert < 0.0f && lum > 0.25f);
+}
+
 }  /* namespace */
 
 std::vector<float> Vegetation::scatterTrees(
     const Terrain& terrain, const unsigned char* ortho, int orthoW, int orthoH, float halfW,
     float halfH, float spacing, bool clear, float sx, float sz,
     const std::vector<unsigned char>& water, const std::vector<unsigned char>& building,
+    const std::vector<unsigned char>& forest, int forestW, int forestH,
     const std::vector<Exclusion>& exclusions,
     const std::vector<std::pair<float, float>>& fallbackLakes) const {
     /* Un arbre = centre (x, y, z) + largeur + espèce + azimut, empaqueté en six
@@ -113,6 +129,26 @@ std::vector<float> Vegetation::scatterTrees(
     const int cols = std::max(1, static_cast<int>((2.0f * halfW) / spacing));
     const int rows = std::max(1, static_cast<int>((2.0f * halfH) / spacing));
     instances.reserve(static_cast<std::size_t>(cols) * static_cast<std::size_t>(rows));
+
+    /* Couleur du sol moyennée sur le pixel et ses quatre voisins : une orthophoto
+       compressée en JPEG a des pixels isolés aberrants, et un seul d'entre eux ne
+       doit pas décider du sort d'un arbre. */
+    const auto couleurDuSol = [&](int ox, int oy, float& r, float& g, float& b) {
+        constexpr int dx[5] = {0, -1, 1, 0, 0};
+        constexpr int dy[5] = {0, 0, 0, -1, 1};
+        r = g = b = 0.0f;
+        for (int k = 0; k < 5; ++k) {
+            float cr = 0.0f, cg = 0.0f, cb = 0.0f;
+            orthoRGB(ortho, orthoW, std::clamp(ox + dx[k], 0, orthoW - 1),
+                     std::clamp(oy + dy[k], 0, orthoH - 1), cr, cg, cb);
+            r += cr;
+            g += cg;
+            b += cb;
+        }
+        r *= 0.2f;
+        g *= 0.2f;
+        b *= 0.2f;
+    };
 
     std::size_t count = 0;
     for (int r = 0; r < rows && count < MAX_TREES; ++r) {
@@ -178,11 +214,34 @@ std::vector<float> Vegetation::scatterTrees(
                 }
             }
 
-            /* Couleur du sol : on ne plante que sur du vert de forêt. */
+            /* Forêt cartographiée (masque IGN) sous le point, si la carte a son
+               masque. Elle tranche mieux que la couleur : celle-ci plante sur une
+               pelouse de stade, un hippodrome ou une ombre de versant, et rate une
+               forêt en plein soleil ou en couleurs d'automne. En France elle fait
+               autorité (rien d'autre n'est boisé) ; on ne retombe sur la couleur
+               qu'à l'étranger, où elle ne dit rien (versant espagnol d'une carte
+               frontalière). */
+            unsigned char classeForet = ForestHorsFrance;
+            if (!forest.empty()) {
+                int fx = 0, fy = 0;
+                toPixel(x, z, halfW, halfH, forestW, forestH, fx, fy);
+                classeForet = forest[static_cast<std::size_t>(fy)
+                                         * static_cast<std::size_t>(forestW)
+                                     + static_cast<std::size_t>(fx)];
+            }
+            if (classeForet == ForestNonBoise) {
+                continue;  /* en France, non boisé : aucun arbre */
+            }
             float cr = 0.0f, cg = 0.0f, cb = 0.0f;
-            orthoRGB(ortho, orthoW, ox, oy, cr, cg, cb);
-            if (!looksLikeForest(cr, cg, cb)) {
-                continue;
+            couleurDuSol(ox, oy, cr, cg, cb);
+            if (classeForet == ForestHorsFrance) {
+                /* Couleur du sol : on ne plante que sur du vert de forêt. */
+                if (!looksLikeForest(cr, cg, cb)) {
+                    continue;
+                }
+            } else if (looksMineral(cr, cg, cb)) {
+                continue;  /* forêt cartographiée, mais sol nu ici : coupe rase,
+                              pare-feu, piste forestière, toiture sous couvert */
             }
 
             /* Altitude : posé sur le relief. Au-dessus de la limite forestière, le
@@ -209,17 +268,26 @@ std::vector<float> Vegetation::scatterTrees(
             const float width = TREE_WIDTH_MIN
                               + unitOf(seed ^ 0x2545f491u) * (TREE_WIDTH_MAX - TREE_WIDTH_MIN);
 
-            /* Espèce selon l'altitude et le hasard : sapin (0) de plus en plus
-               fréquent en montant, mélèze (2) à l'étage supérieur, feuillu (1)
-               dominant plus bas. */
+            /* Espèce : l'essence dominante de la BD Forêt quand on l'a, sinon
+               l'altitude comme avant (résineux de plus en plus fréquent en
+               montant). Quatre planches à l'atlas : sapin (0), feuillu (1),
+               mélèze (2), pin (3). Les résineux autres que le pin se répartissent
+               entre sapin et mélèze selon l'étage. */
             const float t  = std::clamp((y - 1000.0f) / 700.0f, 0.0f, 1.0f);
             const float r1 = unitOf(seed ^ 0x27d4eb2fu);
             const float r2 = unitOf(seed ^ 0x165667b1u);
-            float       species = 1.0f;  /* feuillu par défaut */
-            if (r1 < 0.30f + 0.45f * t) {
-                species = 0.0f;          /* sapin */
-            } else if (t > 0.5f && r2 < 0.6f) {
-                species = 2.0f;          /* mélèze */
+            float       species = 1.0f;  /* feuillu */
+            bool        conifere = false;
+            switch (classeForet) {
+                case ForestFeuillu:  conifere = false; break;
+                case ForestPin:      species = 3.0f;   break;
+                case ForestConifere: conifere = true;  break;
+                case ForestMixte:    conifere = (r1 < 0.5f); break;
+                default:             conifere = (r1 < 0.30f + 0.45f * t); break;
+            }
+            if (conifere) {
+                /* Mélèze seulement à l'étage supérieur, et minoritaire face au sapin. */
+                species = (t > 0.5f && r2 < 0.35f) ? 2.0f : 0.0f;
             }
 
             /* Azimut de la croix : oriente les deux quads perpendiculaires, décorrélé

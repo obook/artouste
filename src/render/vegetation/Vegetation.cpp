@@ -118,13 +118,15 @@ Vegetation::Vegetation(const std::filesystem::path& terrainDir, const Terrain& t
         buildWaterMask(terrainDir, terrain, ortho, orthoW, orthoH, halfW, halfH, fallbackLakes);
     const std::vector<unsigned char> building =
         buildBuildingMask(terrainDir, terrain, orthoW, orthoH, halfW, halfH);
+    int                              forestW = 0, forestH = 0;
+    const std::vector<unsigned char> forest = buildForestMask(terrainDir, forestW, forestH);
     const std::vector<Exclusion> exclusions = loadExclusions(terrainDir, terrain);
 
     /* Placement sur la grille de semis et éclaircissement au budget. Voir
        VegetationScatter.cpp. */
     const std::vector<float> instances =
         scatterTrees(terrain, ortho, orthoW, orthoH, halfW, halfH, spacing, clear, sx, sz,
-                     water, building, exclusions, fallbackLakes);
+                     water, building, forest, forestW, forestH, exclusions, fallbackLakes);
 
     stbi_image_free(ortho);
 

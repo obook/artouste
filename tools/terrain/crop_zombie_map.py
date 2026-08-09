@@ -40,7 +40,10 @@ from terrain.meta import read_meta
 from terrain.ortho import fetch_ortho
 
 # Fichiers annexes en coordonnées monde ou lon/lat : copiés tels quels, sans
-# modification (voir le repère monde partagé, ci-dessus).
+# modification (voir le repère monde partagé, ci-dessus). forest.png n'en est
+# PAS : c'est une image calée sur l'emprise de la carte source, la copier la
+# décalerait. On la refait pour la carte recadrée avec
+# tools/fetch_forest.py <carte recadrée>, qui lit son propre terrain.txt.
 FICHIERS_ANNEXES = ["zombies.txt", "buildings.bin", "helipads.txt", "exclusions.txt",
                     "hapi.txt", "landmarks.txt"]
 

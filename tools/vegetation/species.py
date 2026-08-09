@@ -1,8 +1,8 @@
 """
 species.py
-Dessin procédural des trois espèces d'arbres de l'atlas de végétation (voir le
+Dessin procédural des quatre espèces d'arbres de l'atlas de végétation (voir le
 docstring de make_trees_atlas.py pour le principe général) : sapin (conifère
-sombre), feuillu et mélèze. Chaque fonction rend une espèce en grand (image
+sombre), feuillu, mélèze et pin. Chaque fonction rend une espèce en grand (image
 supersamplée W x H), réduite ensuite par atlas.finish().
 
 Auteur : O. Booklage
@@ -53,8 +53,11 @@ def grain(img, top_y, bottom_y, rnd, n=9000, amp=0.16):
                     max(0, min(255, int(b * (1 + s)))), a)
 
 
-def conifer(dark, light, trunk, seed):
-    """Sapin : étages de branches en dents de scie, élancé, ombré du bas vers le haut."""
+def conifer(dark, light, trunk, seed, tiers=9, foliage_bottom_frac=0.88,
+            trunk_top_frac=0.82, half_frac=0.40):
+    """Sapin : étages de branches en dents de scie, élancé, ombré du bas vers le haut.
+       Les quatre derniers réglages servent au pin (voir pine) : moins d'étages, plus
+       larges, et un tronc nu sur la moitié basse."""
     rnd = random.Random(seed)
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -62,14 +65,13 @@ def conifer(dark, light, trunk, seed):
     base_y = int(H * 0.93)
     top_y = int(H * 0.07)
     # Tronc
-    d.rectangle([cx - int(0.02 * W), int(H * 0.82), cx + int(0.02 * W), base_y],
+    d.rectangle([cx - int(0.02 * W), int(H * trunk_top_frac), cx + int(0.02 * W), base_y],
                 fill=trunk + (255,))
-    tiers = 9
-    foliage_bottom = int(H * 0.88)
+    foliage_bottom = int(H * foliage_bottom_frac)
     for k in range(tiers):
         t = k / (tiers - 1)                       # 0 bas -> 1 haut
         yb = int(foliage_bottom + (top_y - foliage_bottom) * (t * 0.86))
-        half = (0.40 * W) * (1.0 - 0.72 * t)
+        half = (half_frac * W) * (1.0 - 0.72 * t)
         col = shade(dark, dark, light, t, 0.0)
         # touffes le long de la branche (dents de scie), plus claires vers la pointe
         n = max(3, int(10 * (1.0 - 0.6 * t)))
@@ -110,6 +112,13 @@ def broadleaf(dark, light, trunk, seed):
         blob(d, bx, by, r, shade(dark, dark, light, t_vert, side))
     grain(img, int(H * 0.06), int(H * 0.70), rnd)
     return img
+
+
+def pine(dark, light, trunk, seed):
+    """Pin (maritime, sylvestre) : long tronc nu, houppier en quelques verticilles
+       larges au sommet -- la silhouette des Landes, très différente du sapin."""
+    return conifer(dark, light, trunk, seed, tiers=4, foliage_bottom_frac=0.52,
+                   trunk_top_frac=0.10, half_frac=0.36)
 
 
 def larch(dark, light, trunk, seed):

@@ -97,6 +97,7 @@ chaque étage facultatif et remplaçable :
 |-------|---------|---------|---------------|------|
 | 1. Socle | `terrain.txt`, relief, ortho d'ensemble, lieux, hélisurfaces | oui pour 3 cartes | 5 à 20 Mo | LR |
 | 2. Bâtiments | `buildings.bin` (BD TOPO extrudée) | avec le socle | 0,7 à 9 Mo | LR |
+| 2 bis. Forêt | `forest.png` (masque BD Forêt, semis des arbres) | avec le socle | 15 à 600 ko | LR |
 | 3. Tuiles, niveau large | ortho fine sur toute l'emprise, 0,25 m/px en général | non | 0,1 à 10 Go | HR |
 | 4. Tuiles, niveau serré | ortho à 0,20 m/px autour des posers | non | 0,3 à 1,5 Go | HR |
 

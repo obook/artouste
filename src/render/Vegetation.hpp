@@ -58,6 +58,19 @@ private:
         float x, z, r2;
     };
 
+    /* Codes du masque BD Forêt (voir VegetationForestMask.cpp). "Hors France"
+       n'est pas "pas de forêt" : la BD Forêt s'arrête à la frontière, le semis y
+       retombe donc sur la couleur de l'ortho. En France, au contraire, elle fait
+       autorité : ce qu'elle ne dessine pas est ForestNonBoise. */
+    enum ForestClass : unsigned char {
+        ForestHorsFrance = 0,
+        ForestNonBoise = 1,
+        ForestFeuillu = 2,
+        ForestPin = 3,
+        ForestConifere = 4,
+        ForestMixte = 5,
+    };
+
     /* Conversion d'une position monde (x est, z sud) en pixel de l'orthophoto
        (colonne 0 = ouest, rangée 0 = nord). Partagée par le masquage et le semis. */
     static void toPixel(float x,
@@ -98,6 +111,13 @@ private:
                                                  int orthoH,
                                                  float halfW,
                                                  float halfH) const;
+    /* Masque de forêt de la BD Forêt IGN (forest.png, facultatif), rendu à sa
+       propre résolution : forestW/forestH la renseignent. Vide si le fichier est
+       absent (le semis retombe alors sur la couleur de l'ortho, comme avant).
+       Voir VegetationForestMask.cpp. */
+    std::vector<unsigned char> buildForestMask(const std::filesystem::path& terrainDir,
+                                               int& forestW,
+                                               int& forestH) const;
     /* Zones d'exclusion (exclusions.txt, facultatif). Voir VegetationMasks.cpp. */
     std::vector<Exclusion> loadExclusions(const std::filesystem::path& terrainDir,
                                           const Terrain& terrain) const;
@@ -119,6 +139,9 @@ private:
                  float sz,
                  const std::vector<unsigned char>& water,
                  const std::vector<unsigned char>& building,
+                 const std::vector<unsigned char>& forest,
+                 int forestW,
+                 int forestH,
                  const std::vector<Exclusion>& exclusions,
                  const std::vector<std::pair<float, float>>& fallbackLakes) const;
 

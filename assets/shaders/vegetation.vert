@@ -35,9 +35,9 @@ uniform vec3  u_camPos;   /* position caméra (repère recalé), pour le fondu d
 uniform float u_fogStart;
 uniform float u_fogEnd;
 
-/* Atlas : 3 colonnes (espèces). Cellule 256x512 -> billboard deux fois plus haut que
+/* Atlas : 4 colonnes (espèces). Cellule 256x512 -> billboard deux fois plus haut que
    large (l'arbre est calé sur la base de sa cellule). */
-const float ATLAS_COUNT = 3.0;
+const float ATLAS_COUNT = 4.0;
 const float ASPECT      = 2.0;
 const float HALF_PI     = 1.5707963;
 const float INV_TWO_PI  = 0.1591549;

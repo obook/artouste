@@ -755,12 +755,19 @@ Trois points à contrôler sur chacun :
   le monde, orientés par un azimut d'instance) : il garde du volume vu du dessus, là
   où un simple panneau face caméra s'amincissait en trait (inspiré de FlightGear). La
   géométrie de base (deux quads) est dessinée des milliers de fois par instanciation
-  GPU, en puisant dans un atlas de 3 espèces (`assets/vegetation/trees_atlas.png` :
-  sapin, feuillu, mélèze), l'espèce étant choisie par altitude (sapin et mélèze en
-  montant, feuillu plus bas) et un tirage aléatoire. Transparence par ALPHA-TO-COVERAGE
+  GPU, en puisant dans un atlas de 4 espèces (`assets/vegetation/trees_atlas.png` :
+  sapin, feuillu, mélèze, pin), l'espèce étant choisie d'après l'essence dominante du
+  masque de forêt (`forest.png`, voir docs/CARTES.md) ; à défaut, par altitude (sapin et
+  mélèze en montant, feuillu plus bas) et un tirage aléatoire. Transparence par ALPHA-TO-COVERAGE
   (sur le MSAA déjà actif) : bords de feuillage doux et tramés, pas un seuil net. Les positions sont semées à la volée au
-  chargement du terrain d'après l'orthophoto : un arbre là où le sol est vert
-  (signature de couleur de la forêt) et sous la limite forestière -- progressive :
+  chargement du terrain d'après le MASQUE DE FORÊT (`forest.png`, fabriqué par
+  `tools/fetch_forest.py` en croisant trois couches IGN : contours de départements pour
+  savoir jusqu'où va la donnée, BD TOPO `zone_de_vegetation` pour le contour, BD Forêt
+  pour l'essence, puis une passe de gomme sur les chaussées, les terrains de sport et
+  les pistes d'aérodrome). Le semis ne retombe sur la couleur de l'orthophoto que hors
+  de France, où la donnée s'arrête ; à l'intérieur d'une forêt cartographiée, un veto de
+  couleur écarte le sol franchement minéral (coupe rase, pare-feu). Un arbre sous la
+  limite forestière -- progressive :
   couvert plein jusque ~1900 m, raréfaction jusqu'à ~2200 m, rien au-dessus (évite la
   ligne de coupure nette et pose des pins épars sur les hautes pentes). Posé sur le
   relief. On écarte aussi les ZONES CLAIRES (grève, gravier, roche/neige, chemin) par
@@ -793,11 +800,17 @@ Trois points à contrôler sur chacun :
   (les atlas FlightGear ont 4 saisons) ; plus de variétés par espèce (FlightGear en a
   8/4) ; pipeline hors-ligne `tools/fetch_vegetation.py` (positions précalculées ->
   `vegetation.bin`, sur le modèle de `fetch_buildings.py`) au lieu du semis au
-  chargement ; source de forêt plus fiable (BD Forêt IGN via WFS, ou OSM `landuse=forest`)
-  que la seule couleur
-  de l'ortho ; tri des prairies claires (qui attrapent encore quelques arbres) ;
-  niveaux de détail et culling autour de l'appareil ; clé de densité par carte dans
-  `terrain.txt` / `zones.py`.
+  chargement ; niveaux de détail et culling autour de l'appareil ; clé de densité par
+  carte dans `terrain.txt` / `zones.py` (la pignada des Landes demande un espacement
+  plus serré que la montagne : 6 m au lieu de 8, soit ~5,9 M d'arbres sur cote-landes,
+  à arbitrer avec le budget).
+
+    Détection des arbres : nettement meilleure depuis le masque de forêt (les pelouses
+  sombres, les estives et les ombres de versant ne sont plus plantées, les stades et les
+  couloirs routiers non plus). Défaut résiduel accepté en l'état : quelques arbres
+  subsistent par endroits sur l'A63, là où une haie de bord de route déborde d'un pixel
+  sur la chaussée. Descendre le masque sous 10 m/px règlerait le cas, au prix d'un
+  fichier quatre fois plus gros par carte.
 
 ### Ciel et nuages
 

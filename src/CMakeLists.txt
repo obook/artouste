@@ -105,6 +105,7 @@ add_executable(artouste
     render/vegetation/VegetationMasks.cpp
     render/vegetation/VegetationWaterMask.cpp
     render/vegetation/VegetationBuildingMask.cpp
+    render/vegetation/VegetationForestMask.cpp
     render/vegetation/VegetationScatter.cpp
     render/SkinnedModelLoad.cpp
     render/SkinnedModelAnim.cpp

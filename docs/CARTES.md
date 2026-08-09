@@ -22,7 +22,8 @@ Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
 ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
 ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
-`buildings.bin` (bâtiments 3D), `zombies.txt` et `zombie_only.txt` (mode
+`buildings.bin` (bâtiments 3D), `forest.png` (masque de forêt, voir
+ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
 zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
 
@@ -386,6 +387,47 @@ part par `tools/fetch_buildings.py`, qui interroge le service WFS et écrit
 tools/.venv/bin/python tools/fetch_buildings.py cote-landes
 tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
+
+## Masque de forêt (forest.png)
+
+Le semis d'arbres ne jugeait "c'est de la forêt" que sur la couleur du pixel
+d'orthophoto : il plantait sur une pelouse sombre, une haie ou une ombre de
+versant, et oubliait une forêt en plein soleil. `tools/fetch_forest.py` fabrique
+à la place `assets/terrain/<carte>/forest.png` (un pixel tous les 10 m) en
+croisant trois couches de l'IGN, chacune pour ce qu'elle sait faire :
+
+```bash
+tools/.venv/bin/python tools/fetch_forest.py ossau
+```
+
+* **contours de départements** (ADMIN EXPRESS) : jusqu'où va la donnée. En
+  France, l'absence de végétation cartographiée VAUT absence d'arbres, sans
+  avoir à recenser stades, hippodromes, aérodromes et prairies un par un. Hors de
+  France (versant espagnol d'Ossau ou de Cauterets), le semis retombe sur la
+  couleur de l'orthophoto, faute de mieux ;
+* **zone_de_vegetation** (BD TOPO) : le contour. Levé topographique sans seuil de
+  surface, il découpe les autoroutes, les aires de repos, les parkings et les
+  stades, et connaît les haies et les bosquets de ville que la BD Forêt ignore ;
+* **formation_vegetale** (BD Forêt V2) : l'essence dominante, que la BD TOPO ne
+  donne pas (elle dit "Bois", pas "pin maritime"). Elle généralise à 0,5 ha et
+  déborde donc sur les routes et les stades : elle ne sert qu'à COLORER
+  l'intérieur du contour BD TOPO, jamais à le tracer.
+
+Une dernière passe **gomme** les chaussées goudronnées (BD TOPO
+`troncon_de_route`, largeur de chaussée plus six mètres de chaque côté), les
+terrains de sport et les pistes d'aérodrome. Sans elle, les haies de bord de
+route, larges de trois mètres, gonflent d'un pixel à la rastérisation et
+débordent sur la chaussée : des arbres poussaient sur l'A63. Les chemins, les
+sentiers et les routes empierrées sont épargnés, eux passent sous le couvert en
+vraie forêt.
+
+Chaque essence a sa planche dans `assets/vegetation/trees_atlas.png` : feuillu,
+pin, autre conifère, et un tirage entre les deux pour les peuplements mixtes.
+
+Le fichier est facultatif : sans lui, le semis se fait entièrement à la couleur.
+Il est lu à sa propre résolution et couvre la même emprise que l'orthophoto ; il
+vaut donc aussi pour une carte recadrée, à condition de le regénérer pour elle
+(l'emprise vient de son `terrain.txt`).
 
 ## Mode zombie
 

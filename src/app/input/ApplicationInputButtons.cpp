@@ -17,6 +17,20 @@
 namespace artouste::app {
 
 void Application::handleActionButtons() {
+    /* Croix directionnelle : radio internet, comme les touches K et +/- du clavier.
+       Traitée avant tout le reste pour rester active en démo comme devant un panneau
+       de confirmation, exactement comme au clavier. Un cran de balance par appui. */
+    constexpr float PAS_BALANCE = 0.05f;
+    if (m_input->radioTogglePressed()) { /* croix droite : allume ou coupe la radio */
+        m_audio.toggleRadio(m_radioUrl);
+    }
+    if (m_input->radioMixUpPressed()) { /* croix haut : balance vers la radio */
+        m_audio.adjustRadioMix(PAS_BALANCE);
+    }
+    if (m_input->radioMixDownPressed()) { /* croix bas : balance vers l'hélico */
+        m_audio.adjustRadioMix(-PAS_BALANCE);
+    }
+
     /* Pendant la démo : B (HUD), Y (vue) et A (livrée) agissent comme les touches H, C
      * et L du clavier, sans couper la démo ; X coupe la démo et replace l'appareil au
      * pad (comme R). Les autres boutons sont ignorés pour ne pas perturber la

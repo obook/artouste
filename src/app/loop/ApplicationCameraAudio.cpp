@@ -12,6 +12,7 @@
 
 #include "app/AppConstants.hpp"
 #include "app/Application.hpp"
+#include "input/InputSystem.hpp"
 #include "render/Camera.hpp"
 #include "util/Math.hpp"
 
@@ -31,8 +32,63 @@ void Application::updateCamera(
         if (m_viewMode == 2) {
             m_orbitStart = t; /* début d'un segment orbite (pour le tour complet en démo) */
         }
+        /* On entre toujours en cockpit regard vers l'avant : sans cette remise à
+           zéro, quitter le cockpit tête tournée puis y revenir donnerait une vue de
+           côté surprenante. Le cut ci-dessus évite tout glissement. */
+        m_headYaw = 0.0f;
+        m_headPitch = 0.0f;
         m_prevCamView = m_viewMode;
     }
+
+    /* Regard du pilote (vue cockpit) : tant que L3 est tenu, la déflexion du stick
+       droit commande une VITESSE de rotation, pas un angle ; l'angle s'accumule
+       image après image et reste où il est dès que le stick revient au neutre (on
+       peut donc regarder de côté en ne tenant plus que L3). Le relâchement de L3
+       ramène la tête vers l'avant, à la même vitesse maximale et avec un lissage
+       qui adoucit l'arrivée dans l'axe. */
+    constexpr float HEAD_YAW_MAX = deg2rad(140.0f); /* presque par-dessus l'épaule */
+    /* Constante de temps du lissage, en secondes : sert au seul recentrage (l'aller
+       est déjà doux, l'intégration ne fait pas de saut). Monter cette valeur adoucit
+       encore l'arrivée dans l'axe, la descendre la rend plus franche. */
+    constexpr float HEAD_YAW_TAU = 0.5f;
+    /* Débattement vertical, dissymétrique comme celui d'un pilote assis sous une
+       verrière bulle : la vue est bien dégagée vers le haut, le plancher et la
+       console coupent le regard vers le bas. */
+    constexpr float HEAD_PITCH_MAX_HAUT = deg2rad(70.0f);
+    constexpr float HEAD_PITCH_MAX_BAS = deg2rad(45.0f);
+    /* Garde-fou : au-delà, l'axe de visée s'approcherait de la verticale appareil et
+       setLookAt se verrouillerait (fwd aligné avec up). Il ne mord pas sur les
+       valeurs ci-dessus, il protège une retouche trop généreuse. */
+    constexpr float HEAD_PITCH_LIMITE = deg2rad(80.0f);
+    /* Courbe des commandes de regard : on élève la déflexion au carré en gardant
+       son signe. Les petits écarts du stick donnent alors un regard lent et précis,
+       tandis que le plein débattement atteint toujours le débattement maximal. */
+    const auto courbe = [](float v) { return v * std::fabs(v); };
+    /* Vitesse de rotation à plein débattement du stick, recentrage compris. La
+       courbe quadratique garde les petites déflexions lentes pour le pointage fin. */
+    constexpr float HEAD_VITESSE_MAX = deg2rad(80.0f); /* rad/s */
+    const float pasMax = HEAD_VITESSE_MAX * frameDt;
+    if (m_viewMode == 1 && m_input->lookHeld()) {
+        /* Stick à droite = regard à droite, soit un angle négatif autour de up. */
+        m_headYaw = clamp(m_headYaw - courbe(m_input->lookAxis()) * pasMax,
+                          -HEAD_YAW_MAX,
+                          HEAD_YAW_MAX);
+        m_headPitch = clamp(m_headPitch + courbe(m_input->lookAxisVertical()) * pasMax,
+                            -HEAD_PITCH_MAX_BAS,
+                            HEAD_PITCH_MAX_HAUT);
+    } else {
+        /* Recentrage : même vitesse maximale qu'à l'aller, le lissage adoucissant
+           seulement l'arrivée dans l'axe. */
+        const auto recentrer = [&](float angle) {
+            return angle + clamp(lowPass(angle, 0.0f, frameDt, HEAD_YAW_TAU) - angle,
+                                 -pasMax,
+                                 pasMax);
+        };
+        m_headYaw = recentrer(m_headYaw);
+        m_headPitch = recentrer(m_headPitch);
+    }
+    /* Garde-fou de dernier recours sur le tangage (voir HEAD_PITCH_LIMITE). */
+    m_headPitch = clamp(m_headPitch, -HEAD_PITCH_LIMITE, HEAD_PITCH_LIMITE);
 
     /* Par défaut, pas de tremblement : seules les vues externes le laissent à zéro,
        la vue cockpit le réactive ci-dessous selon le régime rotor. */
@@ -41,8 +97,15 @@ void Application::updateCamera(
     const vec3 lookTarget = renderPos + vec3{0.0f, 1.2f, 0.0f};
     if (m_viewMode == 1) { /* cockpit */
         const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
-        const vec3 fwd = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
         const vec3 up = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
+        /* Axe de visée de base, puis lacet de la tête du pilote autour de la
+           verticale appareil (angle négatif = regard vers la droite). */
+        const vec3 fwdAvant = mat3(base) * glm::normalize(vec3{1.0f, -0.22f, 0.0f});
+        const vec3 fwdLacet = vec3(glm::rotate(mat4(1.0f), m_headYaw, up) * vec4(fwdAvant, 0.0f));
+        /* Axe droite du regard, pris après le lacet : le pilote tourne la tête, puis
+           la lève ou la baisse autour de cet axe (angle positif = vers le haut). */
+        const vec3 side = glm::normalize(glm::cross(fwdLacet, up));
+        const vec3 fwd = vec3(glm::rotate(mat4(1.0f), m_headPitch, side) * vec4(fwdLacet, 0.0f));
 
         /* Vibrations rotor : trois impulsions par tour (3/rev, ~18 Hz à 360 tr/min)
          * font légèrement trembler la cabine. On décale l'oeil dans le plan caméra,
@@ -53,7 +116,6 @@ void Application::updateCamera(
          * alors seul immobile). */
         const float rotorFraction = m_flight.turbine().rotorFraction();
         if (rotorFraction > 0.1f) {
-            const vec3 side = glm::normalize(glm::cross(fwd, up));
             const float freq = 3.0f * rotorFraction * 360.0f / 60.0f; /* Hz */
             const float phase = t * freq * TWO_PI;
             const float amp = COCKPIT_VIBRATION_AMPLITUDE * rotorFraction;

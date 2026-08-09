@@ -124,10 +124,9 @@ private:
     struct MapEntry {
         std::string dir;   /* nom du sous-dossier de assets/terrain (= nom du terrain) */
         std::string title; /* libellé lisible, tiré de la première ligne de terrain.txt */
-        bool zombieCapable = false; /* présence de zombies.txt : mode zombie proposé */
         /* Présence de zombie_only.txt : carte dédiée au mode zombie (ex. dax-arene),
            sans autre usage -- lancer normalement (Démarrer/Entrée/A) suffit à
-           démarrer le combat, pas besoin du bouton "Mode Zombie" ni de Z/LB. */
+           démarrer le combat. */
         bool zombieOnly = false;
     };
 
@@ -635,6 +634,13 @@ private:
        détecter le changement. */
     int m_prevCamView = -1;    /* vue précédente (caméra), -1 au départ */
     float m_orbitStart = 0.0f; /* instant d'entrée en vue orbite (démo : un tour complet) */
+    /* Lacet de la tête du pilote en vue cockpit (rad, 0 = regard vers l'avant).
+       Suit en douceur la commande de regard (L3 tenu + stick droit X) et revient à
+       zéro au relâchement comme au changement de vue. */
+    float m_headYaw = 0.0f;
+    /* Tangage de la tête du pilote en vue cockpit (rad, 0 = regard dans l'axe,
+       positif vers le haut). Même mécanique que m_headYaw. */
+    float m_headPitch = 0.0f;
     /* Temps d'animation : avance comme le temps réel, mais se fige en pause (et
        pendant les panneaux de confirmation). Pilote la démo, la caméra d'orbite et
        la vibration du cockpit pour qu'ils s'arrêtent vraiment en pause. */

@@ -2,8 +2,8 @@
  * GamepadButtons.cpp
  * Détection de front des boutons de la manette (vue, turbine, HUD, pause,
  * reset, retour au menu, livrée, mode assisté, atterrissage automatique) et
- * du tir maintenu (R3). Complète Gamepad.cpp (cycle de vie) et
- * GamepadAxes.cpp (axes de vol).
+ * des boutons maintenus (tir sur R3, regard du pilote sur L3). Complète
+ * Gamepad.cpp (cycle de vie) et GamepadAxes.cpp (axes de vol).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -141,6 +141,36 @@ bool Gamepad::autolandTogglePressed() noexcept {
     return nouvelAppui;
 }
 
+bool Gamepad::radioTogglePressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevDpadRight = false;
+        return false;
+    }
+    /* Croix directionnelle droite : allume ou coupe la radio (comme la touche K). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_RIGHT, m_prevDpadRight);
+}
+
+bool Gamepad::radioMixUpPressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevDpadUp = false;
+        return false;
+    }
+    /* Croix directionnelle haut : balance vers la radio (comme la touche +). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_UP, m_prevDpadUp);
+}
+
+bool Gamepad::radioMixDownPressed() noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        m_prevDpadDown = false;
+        return false;
+    }
+    /* Croix directionnelle bas : balance vers l'hélico (comme la touche -). */
+    return risingEdge(state, GLFW_GAMEPAD_BUTTON_DPAD_DOWN, m_prevDpadDown);
+}
+
 bool Gamepad::fireHeld() const noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
@@ -149,12 +179,21 @@ bool Gamepad::fireHeld() const noexcept {
     return state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] == GLFW_PRESS;
 }
 
+bool Gamepad::lookHeld() const noexcept {
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        return false;
+    }
+    return state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB] == GLFW_PRESS;
+}
+
 void Gamepad::primeButtons() noexcept {
     GLFWgamepadstate state;
     if (!readState(state)) {
         /* Pas de manette : rien à tenir, tous les fronts repartent au repos. */
         m_prevY = m_prevStart = m_prevB = m_prevBack = m_prevX = m_prevMenu = m_prevA =
-            m_prevLeftBumper = m_prevRightBumper = false;
+            m_prevLeftBumper = m_prevRightBumper = m_prevDpadRight = m_prevDpadUp =
+                m_prevDpadDown = false;
         return;
     }
     const auto down = [&](int b) { return state.buttons[b] == GLFW_PRESS; };
@@ -167,6 +206,11 @@ void Gamepad::primeButtons() noexcept {
     m_prevLeftBumper = down(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER);
     m_prevRightBumper = down(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
     m_prevMenu = m_prevLeftBumper && m_prevRightBumper;
+    /* La croix sert aussi à naviguer dans le menu : sans amorçage, la croix encore
+       tenue en entrant en vol changerait la radio dès la première image. */
+    m_prevDpadRight = down(GLFW_GAMEPAD_BUTTON_DPAD_RIGHT);
+    m_prevDpadUp = down(GLFW_GAMEPAD_BUTTON_DPAD_UP);
+    m_prevDpadDown = down(GLFW_GAMEPAD_BUTTON_DPAD_DOWN);
 }
 
 } /* namespace artouste::input */

@@ -76,6 +76,25 @@ public:
         return m_gamepad.fireHeld() || m_keyboard.fireHeld();
     }
 
+    /* La croix droite vient-elle d'être pressée ? (radio internet on/off, comme K) */
+    [[nodiscard]] bool radioTogglePressed() noexcept { return m_gamepad.radioTogglePressed(); }
+
+    /* La croix haut ou bas vient-elle d'être pressée ? (balance radio/hélico, comme +/-) */
+    [[nodiscard]] bool radioMixUpPressed() noexcept { return m_gamepad.radioMixUpPressed(); }
+    [[nodiscard]] bool radioMixDownPressed() noexcept { return m_gamepad.radioMixDownPressed(); }
+
+    /* Commande de regard du pilote (L3 tenu + stick droit X), manette uniquement :
+       le clavier n'y participe pas. */
+    [[nodiscard]] float lookAxis() const noexcept { return m_gamepad.lookAxis(); }
+
+    /* L3 est-il tenu ? (regard du pilote en cours : l'angle reste où il est, même
+       stick au neutre ; c'est le relâchement qui ramène la vue vers l'avant) */
+    [[nodiscard]] bool lookHeld() const noexcept { return m_gamepad.lookHeld(); }
+
+    /* Commande de regard vertical (L3 tenu + stick droit Y, haut = +1), manette
+       uniquement. */
+    [[nodiscard]] float lookAxisVertical() const noexcept { return m_gamepad.lookAxisVertical(); }
+
     [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:

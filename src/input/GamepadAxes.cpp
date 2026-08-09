@@ -67,7 +67,12 @@ physics::Controls Gamepad::poll(float dt) noexcept {
     controls.cyclicLateral = shapeAxis(axes[GLFW_GAMEPAD_AXIS_LEFT_X]);
     /* Stick vers le haut = Y négatif chez GLFW ; on inverse pour "avant = +1". */
     controls.cyclicLongitudinal = shapeAxis(-axes[GLFW_GAMEPAD_AXIS_LEFT_Y]);
-    controls.pedals = shapeAxis(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]);
+    /* Pendant le regard (L3 tenu), le stick droit sert à tourner la tête du pilote
+     * et non plus les palonniers : sans cette neutralisation, regarder à droite
+     * mettrait du pied à droite. Effet de bord voulu : la détection de reprise en
+     * main (démo, atterrissage automatique) somme les commandes brutes, donc
+     * regarder autour ne coupe ni la démo ni l'automatisme. */
+    controls.pedals = lookHeld() ? 0.0f : shapeAxis(axes[GLFW_GAMEPAD_AXIS_RIGHT_X]);
 
     /* Collectif en levier : la gâchette droite (RT) fait monter le levier, la
      * gauche (LT) le fait descendre, à une vitesse proportionnelle à l'appui.
@@ -82,6 +87,32 @@ physics::Controls Gamepad::poll(float dt) noexcept {
     controls.collective = m_collective;
 
     return controls;
+}
+
+float Gamepad::lookAxis() const noexcept {
+    if (!lookHeld()) {
+        return 0.0f;
+    }
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        return 0.0f;
+    }
+    /* Même mise en forme que les axes de vol : la zone morte évite qu'un stick usé
+     * fasse dériver le regard en permanence. */
+    return shapeAxis(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]);
+}
+
+float Gamepad::lookAxisVertical() const noexcept {
+    if (!lookHeld()) {
+        return 0.0f;
+    }
+    GLFWgamepadstate state;
+    if (!readState(state)) {
+        return 0.0f;
+    }
+    /* Stick vers le haut = Y négatif chez GLFW ; on inverse pour "haut = +1", comme
+     * pour le cyclique longitudinal. */
+    return shapeAxis(-state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]);
 }
 
 } /* namespace artouste::input */

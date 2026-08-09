@@ -10,11 +10,19 @@
  *   bouton B        -> affiche ou masque le HUD
  *   bouton X        -> replace l'appareil au point de départ
  *   bouton Back     -> met en pause ou reprend
+ *   croix droite    -> allume ou coupe la radio internet
+ *   croix haut/bas  -> balance radio / hélico (haut vers la radio, bas vers l'hélico)
  *   LB + RB         -> retour au menu (combinaison, pour éviter les retours accidentels)
  *   LB              -> bascule le mode assisté (L1 sur PS4/PS5), sauf combiné à RB
  *                       (retour au menu, voir plus haut)
  *   RB              -> bascule l'atterrissage automatique (R1 sur PS4/PS5), sauf
  *                       combiné à LB (retour au menu, voir plus haut)
+ *   L3 (clic stick gauche) -> regard du pilote en vue cockpit : tenir L3 et pousser
+ *                       le stick droit fait tourner la tête (gauche/droite) et la
+ *                       lever ou la baisser (haut/bas) ; la déflexion commande une
+ *                       vitesse de rotation, l'angle reste acquis stick au neutre.
+ *                       État maintenu, relâcher ramène la vue vers l'avant. Pendant
+ *                       le regard, le stick droit ne commande plus les palonniers.
  *   R3 (clic stick droit) -> tir (mitrailleuse), mode zombie uniquement -- état
  *                       maintenu (pas un front montant comme les autres boutons) ;
  *                       ancien déclencheur de l'atterrissage automatique, libéré
@@ -110,10 +118,38 @@ public:
      * (menuPressed). Définie dans GamepadButtons.cpp. */
     [[nodiscard]] bool autolandTogglePressed() noexcept;
 
+    /* Vrai une seule fois, au moment où la croix directionnelle droite vient d'être
+     * pressée (allume ou coupe la radio internet, comme la touche K).
+     * Définie dans GamepadButtons.cpp. */
+    [[nodiscard]] bool radioTogglePressed() noexcept;
+
+    /* Vrai une seule fois, au moment où la croix directionnelle haut (ou bas) vient
+     * d'être pressée : balance radio/hélico vers la radio (ou vers l'hélico), comme
+     * les touches + et -. Un cran par appui, comme au clavier (GLFW ne répète pas).
+     * Définies dans GamepadButtons.cpp. */
+    [[nodiscard]] bool radioMixUpPressed() noexcept;
+    [[nodiscard]] bool radioMixDownPressed() noexcept;
+
     /* R3 (clic du stick droit) est-il actuellement tenu ? État maintenu (pas un
        front montant) : le tir dure tant que le bouton est enfoncé, mode zombie
        uniquement (voir CombatMode/Weapon). Définie dans GamepadButtons.cpp. */
     [[nodiscard]] bool fireHeld() const noexcept;
+
+    /* L3 (clic du stick gauche) est-il actuellement tenu ? État maintenu comme
+       fireHeld : le regard dure tant que le bouton est enfoncé. Définie dans
+       GamepadButtons.cpp. */
+    [[nodiscard]] bool lookHeld() const noexcept;
+
+    /* Commande de regard : position du stick droit X (zone morte et expansion
+       comprises) tant que L3 est tenu, 0 sinon. Commande la vitesse de rotation en
+       lacet de la tête du pilote en vue cockpit. Définie dans GamepadAxes.cpp. */
+    [[nodiscard]] float lookAxis() const noexcept;
+
+    /* Commande de regard vertical : position du stick droit Y (zone morte et
+       expansion comprises, orientée "stick vers le haut = +1") tant que L3 est tenu,
+       0 sinon. Commande la vitesse de rotation en tangage de la tête du pilote.
+       Définie dans GamepadAxes.cpp. */
+    [[nodiscard]] float lookAxisVertical() const noexcept;
 
     /* Remet le levier de collectif à zéro. */
     void reset() noexcept { m_collective = 0.0f; }
@@ -161,6 +197,9 @@ private:
     bool m_prevA = false;           /* état du bouton A à l'image précédente */
     bool m_prevLeftBumper = false;  /* état de LB à l'image précédente */
     bool m_prevRightBumper = false; /* état de RB à l'image précédente */
+    bool m_prevDpadRight = false;   /* état de la croix droite à l'image précédente */
+    bool m_prevDpadUp = false;      /* état de la croix haut à l'image précédente */
+    bool m_prevDpadDown = false;    /* état de la croix bas à l'image précédente */
 };
 
 } /* namespace artouste::input */

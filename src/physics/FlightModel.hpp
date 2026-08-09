@@ -121,6 +121,12 @@ public:
        Toujours 0 en mode assisté et en démo (physique réelle coupée). */
     [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
 
+    /* Intensité du décrochage de pale reculante (0 = aucun, 1 = franc), montante à
+       l'approche de la VNE. Exposée comme le VRS pour qu'un jour le HUD puisse la
+       signaler, et pour que les tests l'observent sans intégrer la dynamique.
+       Toujours 0 en mode assisté et en démo (physique réelle coupée). */
+    [[nodiscard]] float retreatingStall() const noexcept { return m_retreatingStall; }
+
     /* Vitesse d'arrivée (m/s) du dernier contact avec le sol, puis remise à zéro :
        l'appelant la lit une fois et la consomme. Elle ne peut se mesurer QU'ICI,
        le contact annulant aussitôt la composante verticale (voir update) ; la
@@ -158,6 +164,7 @@ private:
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
     float     m_vrsIntensity  = 0.0f;          /* vortex ring state, 0..1 (alerte HUD) */
+    float     m_retreatingStall = 0.0f;        /* décrochage de pale reculante, 0..1 */
     float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
     bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */

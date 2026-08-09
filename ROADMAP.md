@@ -117,7 +117,7 @@ Aller au-delà de la simple clairance : un échange en plusieurs temps, conforme
 3. Survol du cap Ferret en rase-mottes à 30 m.
 4. Demi-tour et retour au pad, puis pose.
 
-> Note : route courte volontairement, centrée sur les deux temps forts (panorama en altitude puis rase-mottes), pour une démo plus rythmée. Altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). La Dune du Pilat (lat 44.5912130, lon -1.2020697) et le cap Ferret (lat 44.6184674, lon -1.2450709) sont des coordonnées explicites. Vitesse de croisière : 50 m/s (~180 km/h).
+> Note : route courte volontairement, centrée sur les deux temps forts (panorama en altitude puis rase-mottes), pour une démo plus rythmée. Altitude = hauteur de vol (au-dessus du bassin et du littoral bas, proche de l'altitude mer). La Dune du Pilat (lat 44.5912130, lon -1.2020697) et le cap Ferret (lat 44.6184674, lon -1.2450709) sont des coordonnées explicites. Vitesse de croisière : 47 m/s (170 km/h, croisière documentée de la SE 313B).
 
 - [X] Mode démo : à l'atterrissage on voit 2 helipads proches, un a son texte ou l'hélico n'attérit pas et l'autre où l'hélico attérit n'en a pas (pas toujours reproductible)
 

@@ -178,10 +178,62 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     m_cyclicLateralLagged      = approach(m_cyclicLateralLagged, controls.cyclicLateral, dt, ROTOR_LAG_TAU);
     m_cyclicLongitudinalLagged = approach(m_cyclicLongitudinalLagged, controls.cyclicLongitudinal, dt, ROTOR_LAG_TAU);
 
+    /* Régimes de vol : les trois mécanismes ci-dessous se superposent et évoluent
+     * chacun continûment avec la vitesse air, sans bascule d'un "mode stationnaire"
+     * à un "mode avion". Ils ne valent que physique réelle active (comme le VRS) :
+     * en mode assisté et en démo, l'appareil garde sa réponse de base.
+     *
+     * Physique réelle coupée (mode assisté, démo, atterrissage automatique) :
+     * facteurTranslation vaut 1, donc l'appareil garde EXACTEMENT sa tenue
+     * d'avant, la plus stable et la plus prévisible, à toute vitesse. Les deux
+     * effets transitoires plus bas, eux, sont purement et simplement absents.
+     *
+     * 1. Raffermissement aérodynamique : à vitesse établie, le rotor brasse de
+     *    l'air neuf et le stabilisateur horizontal mord, ce qui pose l'appareil en
+     *    tangage et en roulis. On majore donc les amortissements avec le même
+     *    coefficient de translation que la poussée. Au stationnaire, facteur nul :
+     *    le cyclique se contente d'incliner le disque et de vectoriser la poussée,
+     *    régime volontairement plus neutre et plus délicat.
+     *
+     *    Cette tenue-là suit la vitesse air LONGITUDINALE, et non la vitesse
+     *    horizontale qui sert au gain de poussée : le stabilisateur horizontal ne
+     *    voit l'écoulement que d'avant en arrière. Une dérive latérale ou un vol
+     *    arrière ne raffermissent donc rien, ce qui est bien le régime le plus
+     *    instable décrit par la note technique. */
+    const float vitesseAvant = velocityBody.x > 0.0f ? velocityBody.x : 0.0f;
+    const float facteurTranslation =
+        m_realFlyPhysicsEnabled ? glm::smoothstep(ETL_V_LOW, ETL_V_HIGH, vitesseAvant) : 1.0f;
+    const float amortissementAero = 1.0f + STAB_AERO_GAIN * facteurTranslation;
+
+    /*    Le rappel artificiel à l'horizontale suit le même chemin, en sens inverse :
+     *    sans vitesse air, rien ne s'écoule sur le fuselage ni sur le stabilisateur,
+     *    donc rien ne redresse l'appareil. On n'en garde que LEVEL_HOVER_FRAC au
+     *    stationnaire, la pleine valeur une fois la vitesse établie. Sans cela ce
+     *    rappel, trois fois plus fort que le cyclique, imposait la même assiette
+     *    d'équilibre à toute vitesse et rendait les deux régimes indiscernables. */
+    const float rappelHorizon =
+        LEVEL_GAIN * (LEVEL_HOVER_FRAC + (1.0f - LEVEL_HOVER_FRAC) * facteurTranslation);
+
+    /* 2. Effet de flux transversal : cloche autour de 14 kt, roulis à GAUCHE sur
+     *    l'Alouette II (rotor horaire vu de dessus, voir TRANSVERSE_ROLL). */
+    const float cloche = glm::smoothstep(TRANSVERSE_V_IN, TRANSVERSE_V_PEAK, airspeed) *
+                         (1.0f - glm::smoothstep(TRANSVERSE_V_PEAK, TRANSVERSE_V_OUT, airspeed));
+    const float fluxTransversal = m_realFlyPhysicsEnabled ? cloche : 0.0f;
+
+    /* 3. Décrochage de pale reculante : à l'approche de la VNE, cabrage puis roulis
+     *    vers la pale reculante, à DROITE ici. Calculé à part de la portance de
+     *    translation, pour que le plafond de vitesse ne dépende pas du gain d'ETL
+     *    (la traînée d'onde plus haut borne la vitesse, ceci l'annonce au pilote). */
+    m_retreatingStall = m_realFlyPhysicsEnabled
+        ? glm::smoothstep(RBS_V_ONSET * vne, RBS_V_FULL * vne, airspeed)
+        : 0.0f;
+
     const vec3&     w = m_body.angularVelocity;
     vec3 torque;
     torque.x = m_cyclicLateralLagged * ROLL_CTRL           /* roulis (autour de X) */
-               + LEVEL_GAIN * levelBody.x - DAMP_ROLL * w.x;
+               - TRANSVERSE_ROLL * fluxTransversal         /* flux transversal : à gauche */
+               + RBS_ROLL * m_retreatingStall              /* pale reculante : à droite */
+               + rappelHorizon * levelBody.x - DAMP_ROLL * amortissementAero * w.x;
     /* Lacet (autour de Y). Sur l'Alouette II, le rotor tourne dans le sens horaire
      * vu de dessus : son couple de réaction fait partir le nez vers la gauche, et le
      * pilote compense au palonnier droit. D'où le signe + sur l'anti-couple, qui croît
@@ -197,7 +249,8 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
                + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction
                - TURN_COORD_GAIN * m_cyclicLateralLagged * translationalLiftFactor - DAMP_YAW * w.y;
     torque.z = -m_cyclicLongitudinalLagged * PITCH_CTRL    /* tangage (autour de Z) */
-               + LEVEL_GAIN * levelBody.z - DAMP_PITCH * w.z;
+               + RBS_PITCH_UP * m_retreatingStall          /* pale reculante : cabrage */
+               + rappelHorizon * levelBody.z - DAMP_PITCH * amortissementAero * w.z;
 
     const vec3 inertia{I_ROLL, I_YAW, I_PITCH};
     m_body.integrate(force, torque, MASS, inertia, dt);

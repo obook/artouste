@@ -43,18 +43,23 @@ inline constexpr float CYCLE_VUES          = DUREE_POURSUITE + DUREE_COCKPIT + D
 inline constexpr float ALT_PLAFOND = 200.0f;  /* altitude de transit du retour et plafond de l'approche (m) :
                                                  évite de remonter haut depuis le dernier point bas (cap Ferret
                                                  en rase-mottes), pour une approche basse */
-inline constexpr float V_CROISIERE = 50.0f;   /* vitesse de croisière visée (m/s) : ~180 km/h, croisière réaliste de l'Alouette II */
+/* Vitesse de croisière visée : 170 km/h, la croisière documentée de la SE 313B
+ * (voir REFERENCES.md et le tableau de docs/PROCEDURE_VOL.md). La valeur
+ * précédente, 180 km/h, se plaçait à 97 % de la VNE : la démo volait alors voyant
+ * de survitesse allumé, et depuis l'ajout du décrochage de pale reculante elle
+ * aurait aussi traîné ses symptômes tout le long du parcours. */
+inline constexpr float V_CROISIERE = 47.0f;   /* m/s, 170 km/h */
 inline constexpr float RAYON_POINT = 300.0f;  /* distance à un point de passage en deçà de laquelle on vise le suivant (m) */
 
 /* Plafond de vitesse pendant le retour au pad et l'atterrissage automatique,
  * distinct de V_CROISIERE (qui reste la vitesse de croisière entre points de
  * passage, hors approche). Une approche hélicoptère réelle s'amorce vers 70 kt
  * puis ralentit en continu (70, 65, 60, 50 kt...) jusqu'au posé ; avec le seul
- * V_CROISIERE (50 m/s, ~97 kt) comme plafond, l'appareil gardait une vitesse
+ * V_CROISIERE (47 m/s, 170 km/h) comme plafond, l'appareil gardait une vitesse
  * quasi-croisière jusqu'à 357 m du pad (V_CROISIERE / GAIN_V_DIST) avant
  * d'entamer la décélération -- beaucoup plus tard que les 70 kt réels de
  * "début d'approche", d'où une approche perçue comme trop rapide. */
-inline constexpr float V_APPROCHE_MAX = 36.0f;  /* m/s, ~70 kt : plafond de vitesse en approche */
+inline constexpr float V_APPROCHE_MAX = 36.0f;  /* m/s, 130 km/h (~70 kt) : plafond de vitesse en approche */
 
 /* --- Gains du guidage proportionnel ------------------------------------------ */
 inline constexpr float GAIN_CAP        = 1.4f;    /* palonnier par radian d'erreur de cap */

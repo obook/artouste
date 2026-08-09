@@ -115,8 +115,15 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
        qui s'empilent depuis ce même coin (voir plus bas). */
     gauge(dl, m + r, y, r, data.collectivePct, 0.0f, 100.0f, 0.0f, 0.0f, "COLL %", coll,
           GaugeLed::None, data.alarmBlinkOn);
-    gauge(dl, m + r + dx, y, r, data.airspeedKmh, 0.0f, 260.0f, 176.0f, 195.0f, "IAS km/h", ias,
-          ledIas, data.alarmBlinkOn);
+    /* Bande du cadran IAS : elle suit la VNE DU MOMENT, qui décroît avec l'altitude,
+       et non une plage figée. Elle commence là où le voyant passe au jaune (95 % de
+       la VNE, voir alarmeIas) et finit à la VNE. Figée à 176-195 km/h, elle valait
+       pour le seul niveau de la mer : à 950 m elle mentait de 9 km/h et l'aiguille
+       n'entrait dans la bande que bien après l'allumage du voyant. Deux instruments
+       qui racontent la même chose ne doivent pas se contredire. */
+    const float vneKmh = physics::vneAtAltitudeMs(data.altitudeM) * 3.6f;
+    gauge(dl, m + r + dx, y, r, data.airspeedKmh, 0.0f, 260.0f, 0.95f * vneKmh, vneKmh,
+          "IAS km/h", ias, ledIas, data.alarmBlinkOn);
 
     /* Vario, sur la même ligne que les instruments du bas plutôt que sous le ruban
        d'altitude : midAngleDeg=180 pour un zéro à l'horizontale plutôt qu'en haut,

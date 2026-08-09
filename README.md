@@ -308,7 +308,8 @@ le rotor sont mis au régime : naître en vol moteur arrêté, c'est tomber.
 Les terrains et bâtiments 3D sont générés hors-ligne depuis les données de
 l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Détails, configuration
 complète et régénération : [docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de
-terrain : [docs/TERRAIN.md](docs/TERRAIN.md).
+terrain : [docs/TERRAIN.md](docs/TERRAIN.md). Les sources documentaires du modèle
+de vol et des données sont réunies dans [REFERENCES.md](REFERENCES.md).
 
 <img src="docs/IGN_logo_2012.png" alt="IGN" width="64" />
 

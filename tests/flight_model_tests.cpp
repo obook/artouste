@@ -428,3 +428,125 @@ TEST_CASE("Couper la turbine reste toujours possible", "[flight][turbine][carbur
     CHECK(model.toggleTurbine());
     CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
 }
+
+TEST_CASE("Le flux transversal donne un roulis gauche pendant la transition",
+          "[flight][regimes]") {
+    /* Effet transitoire en cloche autour de 14 kt : absent au stationnaire, absent
+       une fois la vitesse établie, présent au passage. Sur l'Alouette II (rotor
+       horaire vu de dessus), il part à GAUCHE, donc vitesse de roulis négative. La
+       documentation américaine annonce l'inverse, ses rotors tournant à l'envers.
+       Le manche est plein avant et le cyclique latéral au neutre : tout roulis
+       observé vient donc du flux transversal. */
+    Controls hover;
+    hover.collective = artouste::physics::COLL_HOVER;
+
+    const auto roulisApres = [&](float secondes) {
+        FlightModel model;
+        model.reset(300.0f);
+        model.turbine().forceRunning();
+        Controls forward = hover;
+        forward.cyclicLongitudinal = 1.0f;
+        advance(model, forward, secondes);
+        return model.body().angularVelocity.x;
+    };
+
+    /* Au stationnaire, rien : sous TRANSVERSE_V_IN le phénomène ne s'amorce pas. */
+    FlightModel stationnaire;
+    stationnaire.reset(300.0f);
+    stationnaire.turbine().forceRunning();
+    advance(stationnaire, hover, 2.0f);
+    REQUIRE(std::fabs(stationnaire.body().angularVelocity.x) < 0.001f);
+
+    /* Vers 3 s l'appareil traverse la plage (environ 8 m/s) : roulis à gauche. Une
+       fois la vitesse installée, il ne doit plus rien en rester. */
+    REQUIRE(roulisApres(3.0f) < -0.01f);
+    REQUIRE(std::fabs(roulisApres(12.0f)) < 0.01f);
+}
+
+TEST_CASE("La vitesse raffermit la tenue en roulis", "[flight][regimes]") {
+    /* Même entrée de cyclique latéral, même durée : à vitesse établie le rotor
+       travaille dans un air neuf et le stabilisateur mord, donc l'amortissement est
+       plus fort et la vitesse de roulis atteinte plus faible qu'au stationnaire.
+       C'est la "réponse avion" attendue par la note technique. */
+    Controls hover;
+    hover.collective = artouste::physics::COLL_HOVER;
+    Controls incline = hover;
+    incline.cyclicLateral = 1.0f;
+
+    FlightModel stationnaire;
+    stationnaire.reset(300.0f);
+    stationnaire.turbine().forceRunning();
+    advance(stationnaire, hover, 2.0f);
+    advance(stationnaire, incline, 0.6f);
+
+    FlightModel croisiere;
+    croisiere.reset(300.0f);
+    croisiere.turbine().forceRunning();
+    Controls forward = hover;
+    forward.cyclicLongitudinal = 1.0f;
+    advance(croisiere, forward, 12.0f);  /* vitesse établie, ETL plein */
+    const float avant = croisiere.body().angularVelocity.x;
+    Controls inclineEnVitesse = forward;
+    inclineEnVitesse.cyclicLateral = 1.0f;
+    advance(croisiere, inclineEnVitesse, 0.6f);
+    const float roulisCroisiere = croisiere.body().angularVelocity.x - avant;
+
+    REQUIRE(roulisCroisiere > 0.0f);
+    REQUIRE(roulisCroisiere < stationnaire.body().angularVelocity.x);
+}
+
+TEST_CASE("Le stationnaire est moins tenu que la croisière", "[flight][regimes]") {
+    /* Le rappel artificiel à l'horizontale suit la vitesse air longitudinale : sans
+       vitesse, rien ne s'écoule sur le stabilisateur et l'appareil est neutre. À
+       plein cyclique latéral, l'inclinaison d'équilibre est donc nettement plus
+       forte au stationnaire qu'en mode assisté, où la tenue d'avant est conservée
+       telle quelle. Sans cet écart, les deux régimes se pilotaient pareil. */
+    Controls incline;
+    incline.collective   = artouste::physics::COLL_HOVER;
+    incline.cyclicLateral = 1.0f;
+
+    FlightModel reel;
+    reel.reset(300.0f);
+    reel.turbine().forceRunning();
+    advance(reel, incline, 8.0f);
+
+    FlightModel assiste;
+    assiste.reset(300.0f);
+    assiste.turbine().forceRunning();
+    assiste.setRealFlyPhysicsEnabled(false);
+    advance(assiste, incline, 8.0f);
+
+    REQUIRE(tiltAngle(reel) > tiltAngle(assiste) * 1.3f);
+}
+
+TEST_CASE("Le décrochage de pale reculante annonce la VNE", "[flight][regimes]") {
+    Controls hover;
+    hover.collective = artouste::physics::COLL_HOVER;
+
+    /* En vol normal, aucun symptôme. */
+    FlightModel model;
+    model.reset(600.0f);
+    model.turbine().forceRunning();
+    advance(model, hover, 2.0f);
+    REQUIRE(model.retreatingStall() == 0.0f);
+
+    /* Plein manche avant depuis l'altitude : l'appareil descend en accélérant et
+       approche la VNE (195 km/h au niveau de la mer, limite structurelle), les
+       symptômes apparaissent. Il faut vraiment pousser : en palier l'appareil
+       plafonne sous la VNE, seule la descente permet de s'en approcher. */
+    Controls plein = hover;
+    plein.cyclicLongitudinal = 1.0f;
+    advance(model, plein, 45.0f);
+    const float vne = artouste::physics::vneAtAltitudeMs(model.body().position.y);
+    const auto& v   = model.body().velocity;
+    REQUIRE(std::sqrt(v.x * v.x + v.z * v.z) > artouste::physics::RBS_V_ONSET * vne);
+    REQUIRE(model.retreatingStall() > 0.0f);
+
+    /* En mode assisté (physique réelle coupée), aucun symptôme. */
+    FlightModel assiste;
+    assiste.reset(600.0f);
+    assiste.turbine().forceRunning();
+    assiste.setRealFlyPhysicsEnabled(false);
+    advance(assiste, plein, 25.0f);
+    REQUIRE(assiste.retreatingStall() == 0.0f);
+}

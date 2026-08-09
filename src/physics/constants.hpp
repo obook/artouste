@@ -131,13 +131,35 @@ inline constexpr float GE_HEIGHT  = 10.0f;   /* m (~1 diamètre rotor) */
 /* Effet de translation : en avançant, le rotor brasse de l'air neuf et gagne en
  * portance. Le gain s'établit progressivement vers 25-30 kt. */
 inline constexpr float ETL_MAX    = 0.10f;   /* +10 % une fois établi */
-inline constexpr float ETL_V_LOW  = 7.0f;    /* m/s (~14 kt) début du gain */
-inline constexpr float ETL_V_HIGH = 15.0f;   /* m/s (~29 kt) plein effet */
+inline constexpr float ETL_V_LOW  = 7.0f;    /* m/s (25 km/h au badin) début du gain */
+inline constexpr float ETL_V_HIGH = 15.0f;   /* m/s (54 km/h au badin) plein effet */
+
+/* Raffermissement aérodynamique avec la vitesse. Une fois la portance de
+ * translation établie, le rotor travaille dans un air non perturbé et le
+ * stabilisateur horizontal commence à mordre : l'appareil devient nettement plus
+ * posé en tangage et en roulis, là où le stationnaire est neutre et demande une
+ * correction permanente. On restitue cela en majorant les amortissements en
+ * fonction du MÊME coefficient de translation que la poussée (pas de bascule
+ * binaire "mode avion / mode latéral" : une seule grandeur continue pilote les
+ * deux effets). Référence : FAA-H-8083-21B, chapitre 2 (translational lift). */
+inline constexpr float STAB_AERO_GAIN = 0.5f;  /* +50 % d'amortissement à vitesse établie */
 
 /* Aide au pilotage : un couple ramène doucement l'appareil à l'horizontale.
  * Comme on ne modélise pas le rotor articulé réel, l'appareil serait sinon neutre
- * en assiette et difficile à tenir. À réduire ou retirer pour plus de réalisme. */
-inline constexpr float LEVEL_GAIN   = 6000.0f;  /* N.m par unité de sin(inclinaison) */
+ * en assiette et difficile à tenir.
+ *
+ * Ce rappel domine tout le reste : à pleine commande, le cyclique latéral pèse
+ * ROLL_CTRL contre LEVEL_GAIN, ce qui plafonne l'inclinaison d'équilibre vers
+ * 12 degrés. Appliqué tel quel à toute vitesse, il faisait du stationnaire une
+ * plateforme aussi stable que la croisière, et rendait imperceptibles les effets
+ * de régime ci-dessous (mesuré : 5 % d'écart de réponse entre les deux). On
+ * l'atténue donc à basse vitesse jusqu'à LEVEL_HOVER_FRAC : le stationnaire
+ * redevient un régime neutre, où l'appareil part et se rattrape au manche, tandis
+ * que la croisière garde son maintien d'assiette. C'est la traduction directe de
+ * la note technique : sans vitesse air, il n'y a pas d'écoulement structuré sur
+ * le fuselage ni sur le stabilisateur, donc rien pour redresser l'appareil. */
+inline constexpr float LEVEL_GAIN       = 6000.0f;  /* N.m par unité de sin(inclinaison) */
+inline constexpr float LEVEL_HOVER_FRAC = 0.6f;     /* part du rappel conservée au stationnaire */
 
 /* --- Mode assisté ------------------------------------------------------------ */
 /* Couche de confort posée par-dessus les commandes du pilote (voir FlightAssist).
@@ -161,10 +183,22 @@ inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deçà, cyclique c
  * hélicoptère de haute montagne. */
 inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéristique */
 
-/* VNE (vitesse à ne jamais dépasser) variable avec l'altitude : 105 kt au sol,
- * décroissante en altitude (compressibilité sur les pales). Au-delà, une traînée
- * d'onde croissante freine l'appareil et matérialise la limite. */
-inline constexpr float VNE_SEA_LEVEL_MS   = 54.0f;    /* m/s (105 kt) au niveau de la mer */
+/* VNE (vitesse à ne jamais dépasser) variable avec l'altitude, décroissante en
+ * altitude (compressibilité sur les pales). Au-delà, une traînée d'onde
+ * croissante freine l'appareil et matérialise la limite.
+ *
+ * NE PAS CONFONDRE avec la vitesse maximale en palier. Ce sont deux limites de
+ * nature différente :
+ *   - VNE 195 km/h : limite STRUCTURELLE du SE 3130, à ne franchir sous aucun
+ *     prétexte. On ne l'atteint qu'en poussant sur le manche, jamais en palier.
+ *     C'est elle que porte la bande rouge du cadran IAS (176-195 km/h, voir
+ *     HudSuperOverlay.cpp) et que surveille le voyant de survitesse ;
+ *   - 185 km/h : vitesse maximale EN PALIER, qui ne relève pas d'une limite mais
+ *     de la puissance disponible face à la traînée. Elle sort donc du calcul, via
+ *     KDRAG_FWD, et n'a pas à être écrite ici.
+ * Les confondre faisait apparaître le décrochage de pale reculante en croisière
+ * rapide au lieu de la seule approche de la limite structurelle. */
+inline constexpr float VNE_SEA_LEVEL_MS   = 54.2f;    /* m/s (195 km/h au badin) au niveau de la mer */
 inline constexpr float VNE_ALT_GRADIENT   = 4511.0f;  /* m : altitude pour perdre 25 % de VNE */
 inline constexpr float VNE_DRAG_K         = 15.0f;    /* N/(m/s)^2 : freinage au-delà de la VNE */
 
@@ -177,17 +211,56 @@ inline constexpr float vneAtAltitudeMs(float altitudeM) {
     return VNE_SEA_LEVEL_MS * (1.0f - 0.25f * altFactor);
 }
 
-/* Vol latéral ou arrière limité à 18 kt (Flight Manual SE 3130). Au-delà, le
- * rotor anticouple sature et l'autorité au palonnier diminue. */
-inline constexpr float SIDEWARD_V_MAX     = 9.3f;     /* m/s (18 kt) */
+/* Vol latéral ou arrière limité à 33 km/h, soit 18 kt du Flight Manual SE 3130,
+ * rédigé en unités OTAN. Au-delà, le rotor anticouple sature et l'autorité au
+ * palonnier diminue. Les instruments de bord, eux, sont en km/h : l'appareil est
+ * de facture française d'époque, seule la version export affichait des noeuds. */
+inline constexpr float SIDEWARD_V_MAX     = 9.3f;     /* m/s (33 km/h au badin) */
 
 /* Vortex ring state : en descente verticale rapide et à faible vitesse, le rotor
  * retombe dans son propre souffle et perd de la portance. Danger maximal à
  * puissance partielle ; il disparaît dès qu'on reprend de la vitesse. */
 inline constexpr float VRS_DESCENT_MIN    = 3.0f;     /* m/s : début du VRS */
 inline constexpr float VRS_DESCENT_MAX    = 7.0f;     /* m/s : VRS développé */
-inline constexpr float VRS_AIRSPEED_EXIT  = 7.0f;     /* m/s (~14 kt) : sortie par translation */
+inline constexpr float VRS_AIRSPEED_EXIT  = 7.0f;     /* m/s (25 km/h) : sortie par translation */
 inline constexpr float VRS_THRUST_LOSS    = 0.35f;    /* fraction max de portance perdue */
+
+/* Effet de flux transversal : pendant la transition vers le vol de translation,
+ * l'écoulement induit chute à l'avant du disque rotor et augmente à l'arrière.
+ * L'angle d'attaque monte donc à l'avant, et le rotor étant gyroscopique, la
+ * réponse maximale apparaît 90 degrés plus loin dans le sens de rotation. C'est
+ * un phénomène TRANSITOIRE, en cloche autour de 15 à 40 km/h, distinct de la
+ * portance de translation même s'il vit dans la même plage de vitesse : il donne
+ * les vibrations et le déséquilibre que le pilote contre au passage.
+ *
+ * SENS : le rotor de l'Alouette II tourne dans le sens HORAIRE vu de dessus
+ * (convention française, voir REACTIVE_TORQUE). Quatre-vingt-dix degrés après
+ * l'avant du disque dans ce sens, on tombe sur le côté DROIT : le disque se lève
+ * à droite et l'appareil part en roulis à GAUCHE. La documentation américaine
+ * (FAA-H-8083-21B ch. 2) annonce un roulis à droite parce que ses rotors tournent
+ * en sens inverse ; ne pas recopier son sens tel quel. */
+inline constexpr float TRANSVERSE_ROLL    = 900.0f;   /* N.m au sommet de la cloche */
+inline constexpr float TRANSVERSE_V_IN    = 4.0f;     /* m/s (14 km/h) : le phénomène s'installe */
+inline constexpr float TRANSVERSE_V_PEAK  = 7.0f;     /* m/s (25 km/h) : plein effet */
+inline constexpr float TRANSVERSE_V_OUT   = 12.0f;    /* m/s (43 km/h) : dissipé */
+
+/* Décrochage de pale reculante : à l'approche de la VNE, la pale reculante voit
+ * un vent relatif si faible qu'elle doit prendre un angle d'attaque énorme pour
+ * porter, et finit par décrocher. Symptômes ressentis, dans cet ordre :
+ * vibrations, cabrage, puis roulis vers le côté reculant. C'est CE mécanisme qui
+ * limite en pratique la vitesse maximale ; il est calculé à part de la portance
+ * de translation (le plafond de vitesse ne doit pas dépendre du gain d'ETL).
+ *
+ * SENS : rotor horaire vu de dessus, donc pale avançante à gauche et pale
+ * RECULANTE À DROITE : le roulis part à droite. Miroir du cas américain, comme
+ * pour le flux transversal ci-dessus.
+ *
+ * La traînée d'onde (VNE_DRAG_K) reste par-dessus : elle borne la vitesse, ces
+ * couples-ci l'expliquent au pilote avant qu'il n'y arrive. */
+inline constexpr float RBS_V_ONSET        = 0.96f;    /* fraction de la VNE (187 km/h au niveau de la mer) : premiers symptômes */
+inline constexpr float RBS_V_FULL         = 1.05f;    /* fraction de la VNE (205 km/h) : décrochage franc */
+inline constexpr float RBS_PITCH_UP       = 900.0f;   /* N.m : cabrage à plein décrochage */
+inline constexpr float RBS_ROLL           = 700.0f;   /* N.m : roulis vers la pale reculante */
 
 /* --- Alerte taux de descente (façon GPWS) -------------------------------------- */
 /* Seuils de l'alerte "TAUX DE DESCENTE" du HUD (voir ui/HudAlarms.hpp et

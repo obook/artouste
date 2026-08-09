@@ -1,0 +1,310 @@
+{
+  "aircraft": "SE 3130 / SE 313B Alouette II",
+  "engine": "Turbomeca Artouste IIB1 / IIC6",
+  "_lisez_moi": [
+    "Donnees de reference de l'enveloppe de vol, rassemblees le 09/08/2026 pour le",
+    "calage du modele physique. Les sources divergent entre elles, y compris entre",
+    "sources serieuses : ce fichier les conserve TOUTES plutot que d'en elire une.",
+    "La methode de validation par fourchettes est decrite dans",
+    "docs/technique/note-documentation-se3130.md, la bibliographie complete dans",
+    "REFERENCES.md. Les valeurs sont en unites SI ; les conversions d'affichage",
+    "(km/h, noeuds, pieds) se font a la lecture. authority_level : 1 = document de",
+    "certification officiel, 2 = documentation constructeur d'epoque, 3 = compilation",
+    "operationnelle ou historique serieuse, 4 = reference generique non specifique.",
+    "Ce fichier est une DONNEE, pas une configuration : le moteur physique ne le lit",
+    "pas, il sert a justifier et a reverifier les constantes de src/physics."
+  ],
+
+  "reference_values": [
+    {
+      "quantity": "vitesse_croisiere",
+      "value": 47.2, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer" },
+      "source": "Jane's All The World's Aircraft 1966-67 (Taylor, J. W. R.)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_croisiere",
+      "value": 44.4, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer" },
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_croisiere",
+      "value": 47.2, "unit": "m/s",
+      "conditions": { "masse_kg": 1500, "note": "masse maximale retenue par cette source" },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_croisiere",
+      "value": 48.6, "unit": "m/s",
+      "conditions": { "masse_kg": 1350 },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "vitesse_max_palier",
+      "value": 51.4, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer", "nature": "bilan de puissance, pas une limite" },
+      "source": "Jane's All The World's Aircraft 1966-67 (Taylor, J. W. R.)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_max_palier",
+      "value": 47.2, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer", "nature": "bilan de puissance, pas une limite" },
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "vne",
+      "value": 54.0, "unit": "m/s",
+      "conditions": { "masse_kg": 1089, "altitude_max_m": 1829, "nature": "limite structurelle placardee", "variante": "SE 3130 et SE 313B" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014), NOTE 2",
+      "authority_level": 1
+    },
+    {
+      "quantity": "vne",
+      "value": 54.2, "unit": "m/s",
+      "conditions": { "nature": "limite structurelle placardee", "variante": "SE 3130, Artouste IIB1" },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vne",
+      "value": 56.9, "unit": "m/s",
+      "conditions": { "variante": "SA 318C Astazou", "note": "citee en comparaison, ne s'applique PAS au SE 3130" },
+      "source": "EASA, Type Certificate Data Sheet No. R.124 (issue 03, 2017)",
+      "authority_level": 1
+    },
+
+    {
+      "quantity": "vne_altitude",
+      "value": [
+        { "altitude_m": 1829, "vne_ms": 54.0 },
+        { "altitude_m": 2743, "vne_ms": 48.9 },
+        { "altitude_m": 3658, "vne_ms": 43.7 },
+        { "altitude_m": 4115, "vne_ms": 41.2 }
+      ],
+      "unit": "m/s",
+      "conditions": { "masse_kg": 1089, "note": "table placardee ; plateau a pleine VNE jusqu'a 1829 m, puis decroissance" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014), NOTE 2",
+      "authority_level": 1
+    },
+
+    {
+      "quantity": "vitesse_ascensionnelle_max",
+      "value": 4.2, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer", "vitesse": "VY", "puissance": "maximale continue" },
+      "source": "Jane's All The World's Aircraft 1966-67 (Taylor, J. W. R.)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_ascensionnelle_max",
+      "value": 4.4, "unit": "m/s",
+      "conditions": { "masse_kg": 1600, "altitude": "niveau de la mer", "vitesse": "VY", "puissance": "maximale continue" },
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_ascensionnelle_max",
+      "value": 5.0, "unit": "m/s",
+      "conditions": { "masse_kg": 1500, "altitude": "niveau de la mer" },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+    {
+      "quantity": "vitesse_ascensionnelle_max",
+      "value": 6.0, "unit": "m/s",
+      "conditions": { "masse_kg": 1350, "altitude": "niveau de la mer" },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "plafond_pratique",
+      "value": 2300, "unit": "m",
+      "conditions": { "masse_kg": 1600 },
+      "source": "Jane's All The World's Aircraft 1966-67 (Taylor, J. W. R.)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "plafond_pratique",
+      "value": 3200, "unit": "m",
+      "conditions": { "masse_kg": 1600 },
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "plafond_pratique",
+      "value": 2900, "unit": "m",
+      "conditions": { "masse_kg": 1500 },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+    {
+      "quantity": "plafond_pratique",
+      "value": 4000, "unit": "m",
+      "conditions": { "masse_kg": 1350 },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "masse_maximale",
+      "value": 1497, "unit": "kg",
+      "conditions": { "variante": "SE 3130", "note": "3300 livres au certificat" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014)",
+      "authority_level": 1
+    },
+    {
+      "quantity": "masse_maximale",
+      "value": 1588, "unit": "kg",
+      "conditions": { "variante": "SE 313B", "note": "3500 livres au certificat" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014)",
+      "authority_level": 1
+    },
+    {
+      "quantity": "masse_maximale",
+      "value": 1600, "unit": "kg",
+      "conditions": { "variante": "SE 3130 en service ALAT" },
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "masse_a_vide",
+      "value": 1000, "unit": "kg",
+      "conditions": {},
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+    {
+      "quantity": "masse_avec_pilote",
+      "value": 1350, "unit": "kg",
+      "conditions": {},
+      "source": "ALAT / ESAM (Malcros, 2018, volume 18, via J.-P. Cabray)",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "puissance_moteur",
+      "value": 298300, "unit": "W",
+      "conditions": { "nature": "puissance nominale, 400 chevaux au certificat" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014)",
+      "authority_level": 1
+    },
+    {
+      "quantity": "puissance_moteur",
+      "value": 269000, "unit": "W",
+      "conditions": { "nature": "puissance deratee en utilisation operationnelle", "moteur": "Artouste IIB1" },
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+
+    {
+      "quantity": "temperature_t4_continue",
+      "value": 510, "unit": "degC",
+      "conditions": { "nature": "limite continue ; 550 en transitoire 15 minutes" },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014)",
+      "authority_level": 1
+    },
+    {
+      "quantity": "temperature_t4_continue",
+      "value": 500, "unit": "degC",
+      "conditions": { "nature": "limite continue du manuel francais reprise par les instruments de bord" },
+      "source": "Manuel de vol Sud-Aviation, releve dans docs/PANEL.md",
+      "authority_level": 2
+    },
+
+    {
+      "quantity": "diametre_rotor",
+      "value": 10.20, "unit": "m",
+      "conditions": {},
+      "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
+      "authority_level": 3
+    },
+    {
+      "quantity": "regime_rotor_vol",
+      "value": 360, "unit": "tr/min",
+      "conditions": { "limites_tr_min": [280, 420] },
+      "source": "FAA, Type Certificate Data Sheet No. 7H1 (rev. 16, 2014)",
+      "authority_level": 1
+    }
+  ],
+
+  "modele": {
+    "_lisez_moi": [
+      "Ce que le moteur physique retient, et pourquoi. Les chiffres documentes",
+      "ci-dessus valent tous a 1350 kg ou plus ; le modele vole a 1100 kg, une",
+      "configuration solo credible (1000 kg a vide plus un pilote et un fond de",
+      "reservoir). Aucune cible n'est donc recopiee telle quelle. La demarche : le",
+      "bilan de puissance du moteur (induite, profil, parasite) ne laisse qu'un seul",
+      "degre de liberte, la puissance disponible au rotor ; on la RESOUT en exigeant",
+      "que le modele redonne les trois taux de montee documentes a 1350, 1500 et",
+      "1600 kg, puis on le laisse predire a 1100 kg. Le modele est ainsi valide sur",
+      "trois masses et deux sources independantes avant d'etre extrapole.",
+      "PIEGE, deja paye une fois : un taux de montee de fiche technique se lit a la",
+      "vitesse de meilleure montee, jamais a la verticale. Les deux different d'un",
+      "facteur deux, la puissance induite s'effondrant des qu'on avance."
+    ],
+    "masse_simulee_kg": 1100,
+    "calage": {
+      "grandeur_resolue": "puissance_disponible_au_rotor",
+      "value": 200000, "unit": "W",
+      "controle": [
+        { "masse_kg": 1350, "modele_ms": 6.50, "documente_ms": [6.0, 6.0] },
+        { "masse_kg": 1500, "modele_ms": 5.14, "documente_ms": [5.0, 5.0] },
+        { "masse_kg": 1600, "modele_ms": 4.34, "documente_ms": [4.2, 4.4] }
+      ],
+      "conditions": { "altitude": "niveau de la mer", "vitesse": "VY, environ 72 km/h" }
+    },
+    "predictions_a_1100_kg": [
+      {
+        "quantity": "vitesse_ascensionnelle_max",
+        "value": 9.84, "unit": "m/s",
+        "conditions": { "altitude": "niveau de la mer", "vitesse": "VY, environ 72 km/h" }
+      },
+      {
+        "quantity": "vitesse_ascensionnelle_verticale",
+        "value": 5.16, "unit": "m/s",
+        "conditions": { "altitude": "niveau de la mer", "vitesse": "nulle" }
+      },
+      {
+        "quantity": "vitesse_max_palier",
+        "value": 52.3, "unit": "m/s",
+        "conditions": { "altitude": "niveau de la mer" },
+        "note": "188 km/h a plein collectif, mais 185,6 km/h si l'on reste dans la plage de puissance CONTINUE (tuyere sous 500 deg) : cette derniere tombe sur les 185 de Jane's. Decroit a 180 km/h a 1000 m, 174 a 2000 m, 166 a 3000 m ; a partir de 1000 m les deux valeurs se confondent, la puissance bornant avant la temperature. Un simple taux de chute de 1,3 m/s rend assez de puissance pour tenir 184 km/h a 2000 m."
+      },
+      {
+        "quantity": "assiette_croisiere",
+        "value": 8.4, "unit": "deg de piquer",
+        "conditions": { "vitesse_kmh": 160 },
+        "note": "fenetre demandee 8 a 10 ; en palier, tan(assiette) = trainee / poids"
+      }
+    ],
+    "ecarts_assumes": [
+      {
+        "sujet": "temperature t4 continue",
+        "retenu": 500,
+        "ecarte": 510,
+        "raison": "le seuil du voyant rouge et tout le protocole de mesure de la puissance continue sont ancres sur les 500 degres du manuel francais ; l'ecart de 10 degres avec le certificat americain ne vaut pas de tout recaler."
+      },
+      {
+        "sujet": "plafond pratique",
+        "retenu": 3300,
+        "ecarte": 5000,
+        "raison": "la densite de l'air du modele est volontairement durcie (AIR_DENSITY_SCALE) pour rendre la haute montagne exigeante : le plafond de sustentation est un choix de jeu, pas une performance a faire coller. Le bilan de puissance, lui, raisonne sur l'atmosphere reelle."
+      },
+      {
+        "sujet": "vitesse indiquee et vitesse vraie",
+        "retenu": "confondues",
+        "ecarte": "distinguees",
+        "raison": "le modele ne calcule qu'une vitesse vraie, que le cadran affiche telle quelle. En vol reel l'anemometre indiquerait environ 9 pour cent de moins a 2000 m, et la VNE se lit en vitesse INDIQUEE. Simplification connue, sans consequence sur les cartes basses ; a rouvrir si un jour le vol de montagne haute devient central."
+      }
+    ]
+  }
+}

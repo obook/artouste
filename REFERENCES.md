@@ -66,6 +66,61 @@ Administration, Ames Research Center. https://ntrs.nasa.gov/citations/1980001987
 > réponse du cyclique par plage de vitesse, plutôt que d'écrire un modèle global.
 > Vérifié le 09/08/2026 : PDF de 95 pages, 1,8 Mo.
 
+## Données de performance du SE 3130 / SE 313B
+
+Sources chiffrées de l'enveloppe de vol (VNE, vitesses, montée, plafond,
+masses), rassemblées le 09/08/2026 pour le calage du modèle. Les documents
+téléchargés sont archivés hors dépôt, dans
+`~/Documents/GitHub/Autres/artouste-sources-tierces/docs-se3130/`. Les
+sources divergent entre elles ; la méthode de validation par fourchettes est
+décrite dans `docs/technique/note-documentation-se3130.md`.
+
+Federal Aviation Administration. (2014). *Type certificate data sheet No. 7H1*
+(rév. 16). U.S. Department of Transportation, Dynamic Regulatory System.
+https://drs.faa.gov
+
+> Certification américaine des SE 3130, SE 313B et variantes Astazou : la
+> source de niveau le plus élevé disponible. VNE certifiée 105 kt
+> (194,5 km/h) pour SE 3130 et SE 313B ; table placardée de VNE selon
+> altitude ET masse (NOTE 2) ; limites moteur (34 000 tr/min, 400 hp, t4
+> 510 degrés en continu, 550 en transitoire 15 min) ; rotor 280-420 tr/min,
+> 360 en vol ; masses maximales 3300 lb (SE 3130) et 3500 lb (SE 313B).
+> Vérifié le 09/08/2026 : PDF de la révision 16 (10 janvier 2014) téléchargé
+> depuis drs.faa.gov, archivé avec les extraits dans
+> `faa-tcds-7h1-extraits.md` ; valeurs identiques à la révision 14.
+
+European Union Aviation Safety Agency. (2017). *Type certificate data sheet
+No. EASA.R.124: SA 318* (issue 03).
+https://www.easa.europa.eu/sites/default/files/dfu/TCDS_EASA_R124_AH_SA3180_SA318B_SA%20318C_Issue_03.pdf
+
+> Variante Astazou seulement (les SE 3130 / SE 313B, annexe II, sont restés
+> sous certificat DGAC et n'ont jamais été repris par l'EASA). Utile en
+> comparaison : VNE 205 km/h du SA 318C, table VNE/altitude, limite de
+> transmission 299 kW. Vérifié le 09/08/2026 : PDF de 8 pages téléchargé.
+
+Malcros, C. (2018). *Les aéronefs de l'ALAT (volume 18) : Sud Aviation
+SE-3130 Alouette II en service dans l'ALAT*.
+https://www.alouettelama.com/pdf/Alouette%20II%20SE3130%20dans%20l'ALAT.pdf
+
+> Données techniques sourcées auprès de Jean-Pierre Cabray et de l'ESAM, la
+> structure qui formait les pilotes de l'appareil. À 1600 kg : croisière
+> 160 km/h, vitesse maximale 170 km/h, vitesse ascensionnelle 4,4 m/s,
+> plafond pratique 3200 m ; masses 1000 kg à vide, 1350 kg avec pilote ;
+> réservoirs 580 ou 575 L. Diverge de Jane's 1966-67 (170 / 185 km/h,
+> 4,2 m/s, 2300 m) : aucune des deux valeurs n'est retenue seule, voir la
+> note de méthode. Vérifié le 09/08/2026 : PDF de 23 Mo téléchargé (miroir :
+> museehelico-alat.com).
+
+Heli-Archive. (s. d.). *SE 3130 Alouette 2: History and technical
+description*.
+https://www.heli-archive.ch/en/helicopters/in-depth-articles/se-3130-alouette-2
+
+> Seule source trouvée donnant les performances à PLUSIEURS masses : montée
+> 6,0 m/s à 1350 kg et 5,0 m/s à 1500 kg, plafonds et stationnaires DES/HES
+> aux mêmes masses, Artouste IIB1 298 kW ramenée à 269 kW. C'est la pente
+> masse/montée qui permet d'extrapoler le taux de montée à la masse simulée
+> de 1100 kg. Relevé en ligne le 09/08/2026.
+
 ## Ouvrages recommandés, non consultés
 
 Ouvrages sous droits, sans accès en ligne libre : ils sont cités pour mémoire,

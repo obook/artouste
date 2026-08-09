@@ -478,7 +478,9 @@ Le modèle est calé sur la documentation de l'appareil : Jane's 1966-67, donné
 
 \medskip
 {\small
-\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+% Colonne de gauche fixe : elle ne porte que des intitules courts, alors qu'une
+% seconde colonne X lui aurait donne la moitie de la largeur pour rien.
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{3.8cm}|>{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Croisière} & 160~km/h, une dizaine de degrés à piquer \\
 \hline

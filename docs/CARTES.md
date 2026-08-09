@@ -436,16 +436,16 @@ horde, roquettes, munitions, vagues à difficulté croissante, score) -- voir
 [notice.pdf](notice.pdf) pour les commandes (tir : `Ctrl gauche` au clavier,
 clic du stick droit `R3` à la manette) :
 
-* `zombies.txt` : présence = carte **compatible** avec le mode zombie. Un
-  point de spawn par ligne (`x z`, coordonnées monde). Sur une carte compatible
-  mais pas dédiée (ci-dessous), le mode reste optionnel : bouton `Mode Zombie`
-  du menu de démarrage, ou touche `Z` / bouton `LB` (Xbox) / `L1`
-  (PlayStation) une fois la carte sélectionnée.
+* `zombies.txt` : un point de spawn par ligne (`x z`, coordonnées monde), lu
+  par le gestionnaire de vagues du combat. À poser sur une carte dédiée
+  (ci-dessous), seule façon actuelle de lancer le mode zombie : il n'existe
+  pas encore de moyen de démarrer le combat sur une carte de tourisme
+  normale.
 * `zombie_only.txt` : présence = carte **dédiée** au mode zombie (arène de
   combat, pas d'usage touristique). Le combat démarre directement au
-  lancement normal de la carte (`Démarrer`/`Entrée`/bouton `A`), sans passer
-  par le bouton `Mode Zombie`. Ces cartes sont classées systématiquement en
-  dernier dans la liste du menu (peu importe l'ordre alphabétique de leur nom
+  lancement normal de la carte (`Démarrer`/`Entrée`/bouton `A`). Ces cartes
+  sont classées systématiquement en dernier dans la liste du menu (peu
+  importe l'ordre alphabétique de leur nom
   de dossier), et leur nuit est figée en permanence (pas de cycle jour/nuit)
   avec la lune visible depuis le cockpit dès le lancement.
 

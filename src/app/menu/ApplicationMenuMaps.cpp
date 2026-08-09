@@ -60,15 +60,11 @@ Application::recenserCartes(const std::filesystem::path& assets) {
         const fs::path txt = e.path() / "terrain.txt";
         if (fs::exists(txt)) {
             const std::string nom = e.path().filename().string();
-            /* Présence de zombies.txt : même mécanisme que les autres fichiers
-               optionnels par carte (exclusions.txt, hapi.txt) -- voir
-               render::Terrain et app::WaveManager, qui le lisent chacun de
-               leur côté sans dépendre l'un de l'autre. */
-            const bool zombieCapable = fs::exists(e.path() / "zombies.txt");
-            /* Même mécanisme, pour distinguer une carte dédiée (dax-arene) d'une
-               carte normale qui proposerait le mode zombie en option. */
+            /* Présence de zombie_only.txt : même mécanisme que les autres fichiers
+               optionnels par carte (exclusions.txt, hapi.txt) -- distingue une carte
+               dédiée au mode zombie (dax-arene) d'une carte de tourisme normale. */
             const bool zombieOnly = fs::exists(e.path() / "zombie_only.txt");
-            cartes.push_back({nom, lireTitreCarte(txt, nom), zombieCapable, zombieOnly});
+            cartes.push_back({nom, lireTitreCarte(txt, nom), zombieOnly});
         }
     }
     std::sort(cartes.begin(), cartes.end(), [](const MapEntry& a, const MapEntry& b) {

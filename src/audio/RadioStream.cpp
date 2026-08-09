@@ -59,6 +59,7 @@ constexpr std::size_t BUFFER_BYTES = 256 * 1024; /* ~6 s à 320 kbps */
 constexpr std::size_t PRIME_BYTES = 48 * 1024;   /* octets à accumuler avant de décoder */
 constexpr float RADIO_VOLUME = 0.45f;            /* sous les sons moteur */
 constexpr int RETRY_MS = 1000;                   /* attente avant reconnexion */
+constexpr int RETRY_SLICE_MS = 50;               /* granularité de l'attente, pour rester réactif à l'arrêt */
 } /* namespace */
 
 /*
@@ -154,6 +155,9 @@ struct RadioStream::Impl {
     RingBuffer buffer{BUFFER_BYTES};
     std::thread netThread;
     std::atomic<bool> running{false}; /* le thread réseau doit tourner */
+    /* Levé par netLoop() juste avant de rendre la main : signale qu'un join sur
+       netThread ne bloquera plus. Sert au join différé (voir reapNetThread). */
+    std::atomic<bool> netFinished{false};
 
     /* Côté lecture (créé dans poll() quand le tampon est amorcé). */
     ma_decoder decoder{};
@@ -181,10 +185,28 @@ struct RadioStream::Impl {
         return total;
     }
 
-    /* Boucle réseau : GET continu, reconnexion tant que running. */
+    /* Callback de progression de libcurl : appelé régulièrement pendant le
+       transfert, y compris pendant la connexion (avant le premier onCurlWrite).
+       Renvoyer une valeur non nulle avorte le transfert -- c'est le seul moyen de
+       sortir sans attendre de données quand l'arrêt tombe pendant la connexion ou
+       entre deux paquets, curl n'appelant onCurlWrite qu'à réception. */
+    static int onCurlProgress(void* user,
+                              curl_off_t,
+                              curl_off_t,
+                              curl_off_t,
+                              curl_off_t) {
+        auto* self = static_cast<Impl*>(user);
+        return self->running.load() ? 0 : 1;
+    }
+
+    /* Boucle réseau : GET continu, reconnexion tant que running. netFinished est
+       levé juste avant de rendre la main, sur toutes les sorties de la fonction
+       (curl_easy_init en échec compris) : c'est ce qui permet à stop() de ne plus
+       joindre lui-même (voir reapNetThread). */
     void netLoop() {
         CURL* curl = curl_easy_init();
         if (curl == nullptr) {
+            netFinished.store(true);
             return;
         }
         while (running.load()) {
@@ -194,14 +216,36 @@ struct RadioStream::Impl {
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
             curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
             curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+            /* Sans ce callback, un arrêt pendant la connexion ou entre deux
+               paquets attend jusqu'à CURLOPT_CONNECTTIMEOUT ou le prochain
+               paquet avant qu'onCurlWrite ne puisse avorter le transfert. */
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+            curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, &Impl::onCurlProgress);
+            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
             /* Volontairement sans en-tête Icy-MetaData : on reçoit du MP3 pur. */
             curl_easy_perform(curl); /* rend la main à la coupure ou à l'arrêt */
             if (!running.load()) {
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_MS));
+            /* Attente découpée en tranches, plutôt qu'un seul sleep_for(RETRY_MS) :
+               un arrêt demandé pendant l'attente de reconnexion doit être vu au
+               prochain réveil, pas après jusqu'à une seconde entière. */
+            for (int attendu = 0; attendu < RETRY_MS && running.load(); attendu += RETRY_SLICE_MS) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_SLICE_MS));
+            }
         }
         curl_easy_cleanup(curl);
+        netFinished.store(true);
+    }
+
+    /* Rejoint netThread s'il a fini (netFinished), sans jamais bloquer sinon :
+       à appeler depuis poll(), à chaque image, pour absorber le coût du join en
+       tâche de fond plutôt qu'au moment de stop(). */
+    void reapNetThread() {
+        if (netThread.joinable() && netFinished.load()) {
+            netThread.join();
+            netFinished.store(false);
+        }
     }
 
     /* Callback de lecture d'octets MP3, tiré du tampon sans bloquer.
@@ -282,10 +326,24 @@ RadioStream::RadioStream() : m_impl(std::make_unique<Impl>()) {}
 
 RadioStream::~RadioStream() {
     stop();
+    /* stop() ne joint plus (voir plus bas) : ici, en revanche, un join bloquant
+       est nécessaire et sans danger -- l'objet disparaît, il n'y a plus d'image
+       suivante pour absorber le coût en tâche de fond. */
+    if (m_impl->netThread.joinable()) {
+        m_impl->netThread.join();
+    }
 }
 
 void RadioStream::start(ma_engine* engine, const std::string& url) {
     stop(); /* coupe un éventuel flux précédent */
+    /* stop() ne joint plus l'ancien thread : on le fait ici avant d'en relancer un,
+       sans quoi les deux tourneraient de concert sur le même Impl. Bloquant, mais
+       sans danger : redémarrer la radio juste après l'avoir coupée est rare, et
+       le thread a déjà eu tout le temps de finir depuis le stop() qui précède. */
+    if (m_impl->netThread.joinable()) {
+        m_impl->netThread.join();
+        m_impl->netFinished.store(false);
+    }
     if (engine == nullptr || url.empty()) {
         return;
     }
@@ -300,6 +358,7 @@ void RadioStream::start(ma_engine* engine, const std::string& url) {
 
 void RadioStream::poll() {
     Impl* impl = m_impl.get();
+    impl->reapNetThread(); /* absorbe ici le coût du join, hors du chemin de stop() */
     if (!impl->running.load() || impl->soundReady) {
         return; /* pas en marche, ou déjà prêt */
     }
@@ -324,9 +383,13 @@ void RadioStream::stop() {
     Impl* impl = m_impl.get();
     impl->running.store(false);
     impl->buffer.close(); /* débloque un write en attente */
-    if (impl->netThread.joinable()) {
-        impl->netThread.join();
-    }
+    /* Le thread réseau n'est PAS joint ici : le join peut prendre de quelques ms
+       à plusieurs centaines (curl n'avorte qu'à son prochain appel de progression,
+       voir onCurlProgress), ce qui gelait l'image à chaque coupure de la radio.
+       teardownSound(), lui, ne coûte rien à mesurer (miniaudio ne bloque pas sur
+       l'arrêt d'un son) : rien à différer de ce côté. netThread sera rejoint sans
+       bloquer par reapNetThread(), appelée depuis poll() ; start() et le
+       destructeur, eux, joignent au besoin de façon bloquante (voir plus haut). */
     impl->teardownSound();
     impl->engine = nullptr;
 }

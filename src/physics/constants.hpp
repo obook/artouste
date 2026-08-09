@@ -122,6 +122,26 @@ inline constexpr float DAMP_PITCH   = 6000.0f;  /* N.m/(rad/s) */
 inline constexpr float DAMP_YAW     = 4000.0f;  /* N.m/(rad/s) */
 
 /* --- Effets aérodynamiques fins ---------------------------------------------- */
+/* --- Limite de puissance (vitesse ascensionnelle) ----------------------------- */
+/* Monter coûte de la puissance : P = poussée x vitesse verticale. La turbine n'en
+ * ayant qu'une quantité finie, la poussée réellement disponible décroît à mesure
+ * que l'appareil monte vite, et la montée se stabilise quand il n'y a plus
+ * d'excédent. Sans ce mécanisme, la seule traînée verticale bornait la montée, et
+ * le modèle grimpait à plus de 26 m/s, six fois la réalité.
+ *
+ * Chiffres de la SE 313B : Artouste IIC6 limitée à 269 kW en utilisation
+ * opérationnelle, vitesse ascensionnelle 4,2 m/s au niveau de la mer, plafond
+ * pratique 2300 m. Le stationnaire consomme déjà l'essentiel de la puissance ; ce
+ * qui reste, divisé par le poids, donne la vitesse ascensionnelle.
+ *
+ * On ne modélise pas la chaîne de puissance complète (puissance induite, traînée
+ * de profil, rotor de queue, pertes de transmission) : POWER_CLIMB_K résume le
+ * tout en une pénalité de poussée proportionnelle au taux de montée, calée pour
+ * retrouver les 4,2 m/s à plein collectif au niveau de la mer. La pénalité suit la
+ * densité de l'air : en altitude la turbine dispose de moins de puissance, la
+ * montée s'écrase, et le plafond apparaît de lui-même. */
+inline constexpr float POWER_CLIMB_K = 1930.0f;  /* N par m/s de montée : calé sur 4,2 m/s à plein collectif au niveau de la mer */
+
 /* Effet de sol : près du sol, l'air repoussé par le rotor forme un coussin qui
  * augmente la poussée jusqu'à GE_MAX. L'effet disparaît au-delà d'environ un
  * diamètre de rotor. */
@@ -180,7 +200,12 @@ inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deçà, cyclique c
  * des Pyrénées. À 1332 m (terrain Ossau) : densité 0,78, décollage vers 63 % de
  * collectif. Le stationnaire devient impossible vers 3300 m, ce qui laisse les
  * hauts sommets accessibles mais exigeants, dans l'esprit de l'Alouette II,
- * hélicoptère de haute montagne. */
+ * hélicoptère de haute montagne.
+ *
+ * La densité borne la SUSTENTATION ; la MONTÉE, elle, est bornée plus tôt par la
+ * puissance (voir POWER_CLIMB_K), qui écrase la vitesse ascensionnelle bien avant
+ * que le stationnaire ne devienne impossible : 4,2 m/s au niveau de la mer,
+ * 1,4 m/s à 1600 m, 0,7 m/s vers 2300 m, le plafond pratique du constructeur. */
 inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéristique */
 
 /* VNE (vitesse à ne jamais dépasser) variable avec l'altitude, décroissante en

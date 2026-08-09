@@ -550,3 +550,47 @@ TEST_CASE("Le décrochage de pale reculante annonce la VNE", "[flight][regimes]"
     advance(assiste, plein, 25.0f);
     REQUIRE(assiste.retreatingStall() == 0.0f);
 }
+
+TEST_CASE("La puissance borne la vitesse ascensionnelle", "[flight][regimes]") {
+    /* Monter coûte de la puissance, et la turbine n'en a qu'une quantité finie :
+       à plein collectif l'appareil plafonne vers 4,2 m/s au niveau de la mer
+       (chiffre constructeur de la SE 313B), et non aux 26 m/s que donnait la seule
+       traînée verticale. La montée s'écrase ensuite avec l'altitude, ce qui fait
+       apparaître le plafond pratique sans avoir à le coder. */
+    Controls plein;
+    plein.collective = 1.0f;
+
+    FlightModel mer;
+    mer.reset(0.0f);
+    mer.turbine().forceRunning();
+    advance(mer, plein, 30.0f);
+    const float vsMer = mer.body().velocity.y;
+    REQUIRE(vsMer > 3.5f);
+    REQUIRE(vsMer < 5.0f);
+
+    FlightModel altitude;
+    altitude.reset(2000.0f);
+    altitude.turbine().forceRunning();
+    advance(altitude, plein, 30.0f);
+    REQUIRE(altitude.body().velocity.y < vsMer * 0.5f);
+
+    /* Le stationnaire, lui, ne paie rien : la pénalité ne porte que sur la montée.
+       Sans quoi le collectif de sustentation ne tiendrait plus l'altitude. */
+    FlightModel stationnaire;
+    stationnaire.reset(50.0f);
+    stationnaire.turbine().forceRunning();
+    Controls hover;
+    const float densite = std::exp(-50.0f / artouste::physics::AIR_DENSITY_SCALE);
+    hover.collective = artouste::physics::COLL_HOVER / densite;
+    advance(stationnaire, hover, 5.0f);
+    REQUIRE(std::fabs(stationnaire.body().position.y - 50.0f) < 1.0f);
+
+    /* Physique réelle coupée (mode assisté, démo) : aucune pénalité, l'appareil
+       garde la montée franche qui rend ces modes faciles. */
+    FlightModel assiste;
+    assiste.reset(0.0f);
+    assiste.turbine().forceRunning();
+    assiste.setRealFlyPhysicsEnabled(false);
+    advance(assiste, plein, 30.0f);
+    REQUIRE(assiste.body().velocity.y > 10.0f);
+}

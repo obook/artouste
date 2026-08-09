@@ -99,6 +99,11 @@ Artouste IIC5 ou IIC6 et masse maximale portée de 1500 à 1600 kg. Même famill
 turbine et même puissance de 400 ch : à la masse simulée (1100 kg, chargement
 léger), ces vitesses valent pour les deux.
 
+Chiffres retenus du SE 313B, tous vérifiés le 09/08/2026 sur la fiche Wikipédia
+et repris tels quels dans `src/physics/constants.hpp` : vitesse ascensionnelle
+4,2 m/s, plafond pratique 2300 m, turbine Artouste IIC6 limitée à 269 kW en
+utilisation opérationnelle.
+
 Deux limites à ne pas confondre, et que le modèle distinguait mal avant le
 09/08/2026 :
 

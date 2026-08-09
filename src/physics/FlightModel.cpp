@@ -129,7 +129,22 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         vrsReduction   = 1.0f - VRS_THRUST_LOSS * m_vrsIntensity;
     }
 
-    m_lastThrust      = baseThrust * groundEffect * translationalGain * vrsReduction;
+    /* Limite de puissance en montée : monter consomme P = poussée x vitesse
+     * verticale, et la turbine n'en a qu'une quantité finie. On retranche donc à la
+     * poussée une pénalité proportionnelle au taux de montée, divisée par la densité
+     * (en altitude la turbine dispose de moins de puissance, donc la pénalité pèse
+     * plus lourd, et le plafond pratique apparaît de lui-même). Rien en descente :
+     * là, c'est l'autorotation et la traînée qui gouvernent, pas la puissance. */
+    float penaliteMontee = 0.0f;
+    if (m_realFlyPhysicsEnabled && m_body.velocity.y > 0.0f) {
+        penaliteMontee = POWER_CLIMB_K * m_body.velocity.y / densiteRelative;
+    }
+
+    m_lastThrust      = baseThrust * groundEffect * translationalGain * vrsReduction
+                      - penaliteMontee;
+    if (m_lastThrust < 0.0f) {
+        m_lastThrust = 0.0f;
+    }
     const vec3 thrust = bodyUpWorld * m_lastThrust;
 
     const vec3 gravity{0.0f, -MASS * G, 0.0f};

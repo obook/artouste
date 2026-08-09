@@ -70,7 +70,14 @@ inline constexpr float COLL_ALT_CLAMP  = 0.30f;   /* borne basse du terme d'alti
                                                      limite la vitesse de descente (évite la chute vertigineuse
                                                      sur un grand écart, ex. 1000 m -> 30 m après la dune).
                                                      La montée, elle, n'est pas bornée. */
-inline constexpr float GAIN_V_DIST     = 0.14f;   /* vitesse visée (m/s) par mètre de distance à la cible */
+inline constexpr float GAIN_V_DIST     = 0.11f;   /* vitesse visée (m/s) par mètre de distance à la cible.
+                                                     Descendu de 0,14 le 09/08/2026 : la cellule ayant
+                                                     retrouvé sa traînée physique (KDRAG_FWD de 2,2 à 1,0),
+                                                     elle ne freine plus autant toute seule et arrivait
+                                                     au-dessus du pad encore trop haute, à descendre
+                                                     presque sur place. Décélérer depuis plus loin
+                                                     (327 m au lieu de 257 m sous le plafond de vitesse
+                                                     d'approche) laisse le temps d'écouler l'excédent. */
 
 /* Cyclique longitudinal (tangage) et latéral (roulis) : deux gains distincts,
  * car les deux axes n'ont plus la même autorité de couple depuis l'adoucissement
@@ -147,8 +154,14 @@ inline float collectifPour(float hauteurCible, float hauteurSol, float vitesseVe
 
 /* --- Approche en descente contrôlée (façon GPWS) ------------------------------ */
 inline constexpr float GAIN_VZ_APPROCHE = 0.5f;  /* m/s de descente visée par mètre d'écart d'altitude */
-inline constexpr float MARGE_GPWS       = 0.7f;  /* fraction du taux GPWS toléré effectivement visée :
-                                                     une marge de sécurité, pas la limite pile */
+inline constexpr float MARGE_GPWS       = 0.6f;  /* fraction du taux GPWS toléré effectivement visée :
+                                                     une marge de sécurité, pas la limite pile.
+                                                     Descendue de 0,7 à 0,6 le 09/08/2026 avec le
+                                                     nouveau bilan de puissance : la traînée de cellule
+                                                     ayant retrouvé sa valeur physique (KDRAG_FWD de 2,2
+                                                     à 1,0), l'appareil freine moins tout seul et
+                                                     l'approche arrivait à 2,74 m/s de taux de descente,
+                                                     au-dessus du seuil de confort de 2,5. */
 
 /* Collectif pour rejoindre hauteurCible en approche, avec un taux de descente
    plafonné sous le seuil de l'alerte GPWS du HUD (physics::gpwsSinkLimitMs, avec

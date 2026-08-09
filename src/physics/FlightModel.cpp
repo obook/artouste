@@ -129,15 +129,48 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         vrsReduction   = 1.0f - VRS_THRUST_LOSS * m_vrsIntensity;
     }
 
-    /* Limite de puissance en montée : monter consomme P = poussée x vitesse
-     * verticale, et la turbine n'en a qu'une quantité finie. On retranche donc à la
-     * poussée une pénalité proportionnelle au taux de montée, divisée par la densité
-     * (en altitude la turbine dispose de moins de puissance, donc la pénalité pèse
-     * plus lourd, et le plafond pratique apparaît de lui-même). Rien en descente :
-     * là, c'est l'autorotation et la traînée qui gouvernent, pas la puissance. */
+    /* Bilan de puissance : on calcule d'abord le taux de montée que la turbine
+     * autorise, puis on pénalise le dépassement. Les trois postes de dépense et la
+     * puissance disponible ne suivent pas la densité de la même façon, et c'est
+     * précisément ce qui fait apparaître le plafond :
+     *   - la puissance INDUITE monte quand l'air se raréfie (il faut souffler plus
+     *     vite pour porter autant), d'où la division par la racine de la densité ;
+     *     elle s'effondre en revanche dès qu'on avance ;
+     *   - la puissance de PROFIL suit la densité, comme la traînée des pales ;
+     *   - la puissance PARASITE est celle de la traînée avant déjà appliquée à la
+     *     cellule, donc traînée x vitesse, avec le même coefficient ;
+     *   - la puissance DISPONIBLE suit la densité (la turbine aspire moins d'air).
+     * Le solde, divisé par le poids, est le taux de montée disponible. Quand il
+     * devient négatif, l'appareil ne peut même plus tenir l'altitude : c'est ce qui
+     * borne la vitesse en palier, sans avoir à l'écrire nulle part.
+     *
+     * La densité utilisée ici est celle de l'atmosphère RÉELLE, et non la densité
+     * durcie qui pénalise la sustentation : ce bilan se compare à des performances
+     * publiées, il doit donc raisonner sur l'air tel qu'il est. Voir
+     * AIR_DENSITY_SCALE_REELLE, qui explique pourquoi les deux coexistent.
+     *
+     * La pénalité ne porte QUE sur le dépassement : en piquée, la pesanteur fournit
+     * l'énergie et la turbine n'est pour rien dans la vitesse acquise, la VNE reste
+     * donc atteignable en poussant sur le manche. Neutre quand la physique réelle
+     * est coupée (mode assisté, démo, atterrissage automatique), comme le VRS. */
     float penaliteMontee = 0.0f;
-    if (m_realFlyPhysicsEnabled && m_body.velocity.y > 0.0f) {
-        penaliteMontee = POWER_CLIMB_K * m_body.velocity.y / densiteRelative;
+    if (m_realFlyPhysicsEnabled) {
+        const float densiteReelle = std::exp(-m_body.position.y / AIR_DENSITY_SCALE_REELLE);
+        const float chuteInduite  = V_INDUITE_HOVER /
+            std::sqrt(airspeed * airspeed + V_INDUITE_HOVER * V_INDUITE_HOVER);
+        const float pInduite  = POWER_INDUITE_W * chuteInduite / std::sqrt(densiteReelle);
+        /* La puissance de profil monte avec la vitesse : la pale avançante travaille
+         * dans un vent relatif de plus en plus fort. La forme classique est en
+         * 1 + 4,65 fois le carré du rapport d'avance, ce que V_PROFIL_REF résume. */
+        const float monteeProfil = 1.0f + (airspeed / V_PROFIL_REF) * (airspeed / V_PROFIL_REF);
+        const float pProfil   = POWER_PROFIL_W * densiteReelle * monteeProfil;
+        const float pParasite = KDRAG_FWD * airspeed * airspeed * airspeed;
+        const float pDispo    = POWER_ROTOR_W * densiteReelle;
+
+        const float monteeDispo = (pDispo - pInduite - pProfil - pParasite) / (MASS * G);
+        if (m_body.velocity.y > monteeDispo) {
+            penaliteMontee = POWER_CLIMB_K * (m_body.velocity.y - monteeDispo);
+        }
     }
 
     m_lastThrust      = baseThrust * groundEffect * translationalGain * vrsReduction

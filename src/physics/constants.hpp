@@ -83,7 +83,31 @@ inline constexpr float FUEL_CAUTION_L    = 60.0f;   /* seuil de la LED jaune (~1
 /* --- Traînée quadratique selon l'axe (repère corps) -------------------------- */
 /* La traînée freine le mouvement : Force = -k * v * |v| sur chaque axe.
  * Elle est plus forte verticalement qu'horizontalement (forme de l'appareil). */
-inline constexpr float KDRAG_FWD    = 2.2f;     /* N/(m/s)^2  axe avant */
+/* KDRAG_FWD porte deux rôles à la fois, et c'est ce qui rend son calage délicat.
+ * D'un côté il fixe l'assiette de croisière : en palier, la poussée doit s'incliner
+ * juste assez pour vaincre la traînée, donc tan(assiette) = traînée / poids. De
+ * l'autre il pèse dans la puissance parasite (traînée x vitesse), donc dans la
+ * vitesse maximale en palier que donne le bilan de puissance plus bas.
+ *
+ * La valeur précédente (2,2) demandait 193 kW rien que pour traîner la cellule à
+ * 160 km/h, davantage que la turbine entière : impossible, et responsable des
+ * 20,5 degrés de piqué relevés en croisière au lieu des 8 à 10 attendus.
+ *
+ * Courbe calculée à 1100 kg et au niveau de la mer, les deux rôles étant liés, une
+ * fois la puissance au rotor calée sur les performances documentées :
+ *
+ *     KDRAG_FWD | surface équiv. | assiette à 160 km/h | Vmax palier
+ *        0,80   |    1,31 m2     |       8,3 deg       |  185,6 km/h
+ *        0,87   |    1,42 m2     |       9,0 deg       |  180,9 km/h
+ *        0,90   |    1,47 m2     |       9,3 deg       |  179,0 km/h
+ *        1,00   |    1,63 m2     |      10,4 deg       |  173,2 km/h
+ *
+ * On retient 0,80 : l'assiette tombe dans la fenêtre demandée et la vitesse sur les
+ * 185 km/h de Jane's. Une surface équivalente de 1,31 m2 est cohérente pour un
+ * Alouette II, appareil franchement traînant (bulle exposée, poutre de queue en
+ * treillis, patins fixes, moteur à l'air libre) ; elle encadre d'ailleurs la valeur
+ * de 1,42 m2 que donne la résolution du bilan sur les seuls chiffres de l'ALAT. */
+inline constexpr float KDRAG_FWD    = 0.8f;     /* N/(m/s)^2  axe avant */
 inline constexpr float KDRAG_VERT   = 5.0f;     /* N/(m/s)^2  axe vertical */
 inline constexpr float KDRAG_LAT    = 3.2f;     /* N/(m/s)^2  axe latéral */
 
@@ -122,25 +146,60 @@ inline constexpr float DAMP_PITCH   = 6000.0f;  /* N.m/(rad/s) */
 inline constexpr float DAMP_YAW     = 4000.0f;  /* N.m/(rad/s) */
 
 /* --- Effets aérodynamiques fins ---------------------------------------------- */
-/* --- Limite de puissance (vitesse ascensionnelle) ----------------------------- */
-/* Monter coûte de la puissance : P = poussée x vitesse verticale. La turbine n'en
- * ayant qu'une quantité finie, la poussée réellement disponible décroît à mesure
- * que l'appareil monte vite, et la montée se stabilise quand il n'y a plus
- * d'excédent. Sans ce mécanisme, la seule traînée verticale bornait la montée, et
- * le modèle grimpait à plus de 26 m/s, six fois la réalité.
+/* --- Bilan de puissance (montée et vitesse maximale en palier) ---------------- */
+/* La turbine ne dispose que d'une puissance finie, et le vol la consomme de trois
+ * façons : la puissance INDUITE (souffler de l'air vers le bas pour se sustenter),
+ * la puissance de PROFIL (faire tourner les pales dans l'air) et la puissance
+ * PARASITE (traîner la cellule à travers l'air). Ce qui reste, divisé par le poids,
+ * donne le taux de montée disponible. Une seule équation borne ainsi la montée ET
+ * la vitesse en palier : quand la puissance parasite mange tout l'excédent, monter
+ * devient impossible, puis tenir l'altitude aussi, et l'appareil ne va pas plus
+ * vite. La piquée, elle, tire son énergie de la pesanteur et n'est pas concernée :
+ * c'est ce qui laisse la VNE atteignable en poussant sur le manche.
  *
- * Chiffres de la SE 313B : Artouste IIC6 limitée à 269 kW en utilisation
- * opérationnelle, vitesse ascensionnelle 4,2 m/s au niveau de la mer, plafond
- * pratique 2300 m. Le stationnaire consomme déjà l'essentiel de la puissance ; ce
- * qui reste, divisé par le poids, donne la vitesse ascensionnelle.
+ * Le calage précédent (une pénalité proportionnelle au seul taux de montée, calée
+ * sur 4,2 m/s à plein collectif) était faux deux fois : 4,2 m/s est un chiffre à
+ * 1600 kg et se lit à la puissance maximale CONTINUE, pas à plein collectif dans le
+ * rouge. À la masse simulée de 1100 kg, les deux estimations indépendantes du
+ * dossier (bilan de puissance recalé sur les points documentés à 1350, 1500 et
+ * 1600 kg d'une part, pente masse/montée de heli-archive d'autre part) donnent
+ * 7,7 à 8,3 m/s au niveau de la mer. Voir docs/technique/references-se3130.json. */
+/* POWER_ROTOR_W n'est pas la puissance de la turbine : c'est ce qui reste au rotor
+ * principal en montée continue, une fois payés le rotor de queue, la transmission,
+ * les accessoires, et l'écart entre une puissance nominale de certificat et ce que
+ * la machine tient réellement en continu. Elle vaut 74 % des 269 kW documentés.
  *
- * On ne modélise pas la chaîne de puissance complète (puissance induite, traînée
- * de profil, rotor de queue, pertes de transmission) : POWER_CLIMB_K résume le
- * tout en une pénalité de poussée proportionnelle au taux de montée, calée pour
- * retrouver les 4,2 m/s à plein collectif au niveau de la mer. La pénalité suit la
- * densité de l'air : en altitude la turbine dispose de moins de puissance, la
- * montée s'écrase, et le plafond apparaît de lui-même. */
-inline constexpr float POWER_CLIMB_K = 1930.0f;  /* N par m/s de montée : calé sur 4,2 m/s à plein collectif au niveau de la mer */
+ * Elle n'est pas déduite de ces postes un à un, ce qui n'aurait donné qu'un
+ * empilement d'hypothèses : elle est RÉSOLUE à partir des performances publiées.
+ * C'est le seul degré de liberté restant une fois la puissance induite et la
+ * puissance de profil calculées, et la valeur qui redonne les trois taux de montée
+ * documentés est 200 kW. Contrôle, montée à VY au niveau de la mer :
+ *
+ *     masse   | modèle    | documenté
+ *     1350 kg | 6,50 m/s  | 6,0 (heli-archive)
+ *     1500 kg | 5,14 m/s  | 5,0 (heli-archive)
+ *     1600 kg | 4,34 m/s  | 4,2 (Jane's) à 4,4 (ALAT)
+ *
+ * Le point à 1600 kg, le seul que deux sources indépendantes recoupent, tombe au
+ * milieu de sa fourchette. À la masse simulée de 1100 kg, la même équation prédit
+ * 9,4 m/s à VY et 4,7 m/s en montée verticale : c'est la prédiction du modèle, pas
+ * un réglage, et elle remplace l'extrapolation linéaire plus grossière (7,7 à
+ * 8,3 m/s) qui avait servi de cible avant que le bilan ne soit calé. */
+inline constexpr float POWER_ROTOR_W      = 200000.0f; /* W : puissance disponible au rotor principal, niveau de la mer */
+inline constexpr float POWER_INDUITE_W    = 91000.0f;  /* W : puissance induite au stationnaire, 1100 kg, niveau de la mer */
+inline constexpr float POWER_PROFIL_W     = 58000.0f;  /* W : puissance de profil du rotor, niveau de la mer */
+inline constexpr float V_INDUITE_HOVER    = 7.34f;     /* m/s : vitesse induite au stationnaire (poussée / 2 rho A) */
+inline constexpr float V_PROFIL_REF       = 89.0f;     /* m/s : vitesse à laquelle la puissance de profil double */
+
+/* La puissance induite s'effondre dès qu'on avance (le rotor brasse de l'air neuf
+ * au lieu de recycler son propre souffle) : la vitesse induite passe de
+ * V_INDUITE_HOVER au stationnaire à V_INDUITE_HOVER^2 / vitesse en croisière.
+ * Approximation à une racine, exacte au stationnaire et à 1,5 % près à 160 km/h. */
+inline constexpr float POWER_CLIMB_K = 20000.0f;  /* N par m/s de dépassement du taux de montée disponible :
+                                                     raideur du plafond, pas un calage de performance. Assez
+                                                     ferme pour que la montée s'arrête net à vyMax (dépassement
+                                                     résiduel sous 0,5 m/s), assez souple pour rester stable
+                                                     au pas de simulation. */
 
 /* Effet de sol : près du sol, l'air repoussé par le rotor forme un coussin qui
  * augmente la poussée jusqu'à GE_MAX. L'effet disparaît au-delà d'environ un
@@ -208,6 +267,17 @@ inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deçà, cyclique c
  * 1,4 m/s à 1600 m, 0,7 m/s vers 2300 m, le plafond pratique du constructeur. */
 inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéristique */
 
+/* Le bilan de puissance, lui, se cale sur des performances documentées (vitesse
+ * ascensionnelle et plafond du constructeur) : il doit donc raisonner sur
+ * l'atmosphère RÉELLE, pas sur la densité durcie ci-dessus. Les deux notions
+ * coexistent volontairement : AIR_DENSITY_SCALE durcit la SUSTENTATION pour rendre
+ * la haute montagne exigeante (choix de jeu, stationnaire impossible vers 3300 m),
+ * tandis que la montée et la vitesse en palier restent comparables aux fiches. Sans
+ * cette séparation, la densité durcie écrasait aussi la puissance et le plafond
+ * tombait vers 2500 m, très en dessous des 3200 m de l'ALAT, sur un appareil dont
+ * la haute montagne est la raison d'être. */
+inline constexpr float AIR_DENSITY_SCALE_REELLE = 10400.0f;  /* m : atmosphère standard */
+
 /* VNE (vitesse à ne jamais dépasser) variable avec l'altitude, décroissante en
  * altitude (compressibilité sur les pales). Au-delà, une traînée d'onde
  * croissante freine l'appareil et matérialise la limite.
@@ -224,16 +294,35 @@ inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéris
  * Les confondre faisait apparaître le décrochage de pale reculante en croisière
  * rapide au lieu de la seule approche de la limite structurelle. */
 inline constexpr float VNE_SEA_LEVEL_MS   = 54.2f;    /* m/s (195 km/h au badin) au niveau de la mer */
-inline constexpr float VNE_ALT_GRADIENT   = 4511.0f;  /* m : altitude pour perdre 25 % de VNE */
-inline constexpr float VNE_DRAG_K         = 15.0f;    /* N/(m/s)^2 : freinage au-delà de la VNE */
+inline constexpr float VNE_ALT_PLATEAU    = 1829.0f;  /* m : la VNE reste pleine jusque-là (6000 pieds au placard) */
+inline constexpr float VNE_ALT_PENTE      = 0.00562f; /* (m/s) perdus par mètre au-dessus du plateau */
+/* Traînée d'onde au-delà de la VNE. La valeur précédente (15) avait été calée
+ * contre une traînée de cellule 2,2 fois trop forte, qui faisait déjà l'essentiel du
+ * freinage ; avec KDRAG_FWD ramené à sa valeur physique, elle ne retenait plus rien
+ * et une piquée plein manche filait à 224 km/h, trente au-dessus de la limite
+ * structurelle. À 200, la même piquée plafonne à 205 km/h : la VNE reste
+ * franchissable, comme il se doit puisque c'est le pilote qui doit s'en garder, mais
+ * elle se paie tout de suite. */
+inline constexpr float VNE_DRAG_K         = 200.0f;    /* N/(m/s)^2 : freinage au-delà de la VNE */
 
-/* VNE à une altitude donnée (m/s) : pleine valeur au niveau de la mer, décroissance
- * linéaire jusqu'à -25 % à VNE_ALT_GRADIENT, constante au-delà. Partagée entre le
- * modèle de vol (traînée d'onde) et le HUD (LED de survitesse du cadran IAS). */
+/* VNE à une altitude donnée (m/s) : pleine valeur jusqu'à VNE_ALT_PLATEAU, puis
+ * décroissance linéaire. Partagée entre le modèle de vol (traînée d'onde) et le HUD
+ * (LED de survitesse du cadran IAS), les deux devant suivre la table placardée.
+ *
+ * Forme et valeurs reprises de la table certifiée du TCDS FAA n°7H1 (rév. 16,
+ * NOTE 2), à 2400 livres, soit 1089 kg : à onze kilos près la masse simulée, ce qui
+ * fait de cette ligne la référence la mieux conditionnée du dossier. Elle donne un
+ * PLATEAU à 105 noeuds jusqu'à 6000 pieds, puis 95 noeuds à 2743 m, 85 à 3658 m et
+ * 80 à 4115 m ; la pente ci-dessus les restitue à moins d'un noeud près. Le modèle
+ * précédent décroissait dès le niveau de la mer et se montrait donc beaucoup trop
+ * sévère en montagne : au pic du Midi d'Ossau (2884 m) il donnait 164 km/h de VNE
+ * contre 174 au placard. */
 inline constexpr float vneAtAltitudeMs(float altitudeM) {
-    const float f         = altitudeM / VNE_ALT_GRADIENT;
-    const float altFactor = (f < 0.0f) ? 0.0f : (f > 1.0f) ? 1.0f : f;
-    return VNE_SEA_LEVEL_MS * (1.0f - 0.25f * altFactor);
+    if (altitudeM <= VNE_ALT_PLATEAU) {
+        return VNE_SEA_LEVEL_MS;
+    }
+    const float vne = VNE_SEA_LEVEL_MS - VNE_ALT_PENTE * (altitudeM - VNE_ALT_PLATEAU);
+    return vne < 20.0f ? 20.0f : vne;  /* garde-fou : la table s'arrête bien plus bas que le plafond du modèle */
 }
 
 /* Vol latéral ou arrière limité à 33 km/h, soit 18 kt du Flight Manual SE 3130,

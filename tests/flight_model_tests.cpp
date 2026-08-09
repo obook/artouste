@@ -553,10 +553,22 @@ TEST_CASE("Le décrochage de pale reculante annonce la VNE", "[flight][regimes]"
 
 TEST_CASE("La puissance borne la vitesse ascensionnelle", "[flight][regimes]") {
     /* Monter coûte de la puissance, et la turbine n'en a qu'une quantité finie :
-       à plein collectif l'appareil plafonne vers 4,2 m/s au niveau de la mer
-       (chiffre constructeur de la SE 313B), et non aux 26 m/s que donnait la seule
-       traînée verticale. La montée s'écrase ensuite avec l'altitude, ce qui fait
-       apparaître le plafond pratique sans avoir à le coder. */
+       l'appareil plafonne au taux de montée que laisse l'excédent de puissance, et
+       non aux 26 m/s que donnait la seule traînée verticale. La montée s'écrase
+       ensuite avec l'altitude, ce qui fait apparaître le plafond sans le coder.
+
+       La cible n'est PAS les 4,2 m/s des fiches : ce chiffre vaut à 1600 kg, alors
+       que le modèle vole à 1100 kg. Une fois la puissance au rotor calée sur les
+       taux de montée documentés à 1350, 1500 et 1600 kg (voir POWER_ROTOR_W), la
+       même équation prédit à 1100 kg environ 9,4 m/s à la vitesse de meilleure
+       montée et 4,7 m/s en montée verticale.
+
+       CES DEUX CHIFFRES SONT DIFFÉRENTS, et c'est le coeur du modèle : monter à la
+       verticale coûte le plein tarif de puissance induite, alors qu'en avançant le
+       rotor brasse de l'air neuf et cette dépense s'effondre. Un taux de montée de
+       fiche technique se lit toujours à VY, jamais à la verticale. Confondre les
+       deux a déjà coûté un calage : mesurée à la verticale, la montée paraissait
+       correcte alors qu'elle était deux fois trop forte en vol de translation. */
     Controls plein;
     plein.collective = 1.0f;
 
@@ -564,15 +576,50 @@ TEST_CASE("La puissance borne la vitesse ascensionnelle", "[flight][regimes]") {
     mer.reset(0.0f);
     mer.turbine().forceRunning();
     advance(mer, plein, 30.0f);
-    const float vsMer = mer.body().velocity.y;
+    const float vsMer = mer.body().velocity.y;  /* montée verticale, sans vitesse */
     REQUIRE(vsMer > 3.5f);
-    REQUIRE(vsMer < 5.0f);
+    REQUIRE(vsMer < 6.5f);
+
+    /* En avançant vers VY (environ 72 km/h), la même puissance donne beaucoup plus.
+       On tient la vitesse à un simple gain proportionnel sur le manche, faute de
+       quoi l'appareil accélère indéfiniment. */
+    FlightModel translation;
+    translation.reset(0.0f);
+    translation.turbine().forceRunning();
+    float manche = 0.0f;
+    for (int i = 0; i < static_cast<int>(30.0f / SIM_DT); ++i) {
+        const auto& v = translation.body().velocity;
+        const float vitesse = std::sqrt(v.x * v.x + v.z * v.z);
+        manche = artouste::clamp(manche + 0.05f * (20.0f - vitesse) * SIM_DT, -0.6f, 0.6f);
+        Controls c;
+        c.collective         = 1.0f;
+        c.cyclicLongitudinal = manche;
+        c.pedals             = artouste::clamp(2.0f * translation.body().angularVelocity.y, -1.0f, 1.0f);
+        translation.update(c, SIM_DT);
+    }
+    REQUIRE(translation.body().velocity.y > vsMer * 1.5f);
+    REQUIRE(translation.body().velocity.y < 12.0f);
+
+    /* Le taux de montée se lit à la puissance maximale CONTINUE (tuyère 500 degrés,
+       soit une charge de 0,816) et non à plein collectif : c'est dans ces conditions
+       que les constructeurs publient leurs chiffres. Le modèle ne représente pas le
+       supplément transitoire, la montée à plein levier n'est donc que très
+       légèrement supérieure : passer au rouge ne rapporte que de la chaleur, ce qui
+       est la bonne leçon à donner au pilote. */
+    FlightModel continu;
+    continu.reset(0.0f);
+    continu.turbine().forceRunning();
+    Controls maxiContinu;
+    maxiContinu.collective = 0.816f;
+    advance(continu, maxiContinu, 30.0f);
+    REQUIRE(continu.body().velocity.y > 3.0f);
+    REQUIRE(continu.body().velocity.y < vsMer + 0.1f);
 
     FlightModel altitude;
     altitude.reset(2000.0f);
     altitude.turbine().forceRunning();
     advance(altitude, plein, 30.0f);
-    REQUIRE(altitude.body().velocity.y < vsMer * 0.5f);
+    REQUIRE(altitude.body().velocity.y < vsMer * 0.8f);
 
     /* Le stationnaire, lui, ne paie rien : la pénalité ne porte que sur la montée.
        Sans quoi le collectif de sustentation ne tiendrait plus l'altitude. */

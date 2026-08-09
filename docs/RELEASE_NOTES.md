@@ -1,3 +1,16 @@
+## v0.32.0 - 9 août 2026
+
+### Changements
+
+- **Enveloppe de vol refaite.** La montée, la vitesse maximale et l'assiette de croisière sortent maintenant d'un bilan de puissance, au lieu d'être trois réglages séparés qui se contredisaient. L'appareil pique de 8 degrés en croisière au lieu de 20, plafonne à 188 km/h en palier, et grimpe à 9,8 m/s au niveau de la mer.
+- **Montée en montagne** : le vario était bloqué vers 1 m/s sur la carte ossau, qui en devenait injouable. Il monte à 7,9 m/s au décollage, et le plafond passe de 2300 à 3300 m.
+- **VNE en altitude** moins sévère : la limite reste pleine jusqu'à 1829 m, comme au placard de l'appareil, au lieu de baisser dès le niveau de la mer.
+- **Approche automatique** un peu plus douce : la décélération commence plus tôt, la cellule freinant moins qu'avant.
+
+### Documentation
+
+- Sources chiffrées de l'Alouette II (`REFERENCES.md`), et données de référence dans `docs/technique/` : chaque valeur porte sa source et ses conditions, les sources qui divergent sont conservées toutes les deux.
+
 ## v0.31.0 - 8 août 2026
 
 ### Nouvelles fonctionnalités

@@ -457,6 +457,64 @@ Attribution 3.0 Non Transposé.}\normalsize
 
 \clearpage
 
+% ==================== A l'attention des pilotes (1 page, commune) ====================
+% Page destinee aux pilotes reels qui decouvrent l'appareil : ce que le simulateur
+% modelise, les chiffres qu'ils peuvent verifier en vol, et les particularites d'une
+% machine de 1955 qui surprennent quand on vient d'appareils plus recents. Les
+% valeurs sont celles du modele, cale sur la documentation du SE 3130 (voir
+% docs/technique/references-se3130.json). Compteur de page remis a 1, comme les
+% parties precedentes.
+\setcounter{section}{0}
+\setcounter{page}{1}
+\titrenotice
+
+\begin{center}\large\textbf{À l'attention des pilotes}\end{center}
+
+\section*{L'appareil}
+L'Alouette II SE.3130 est le premier hélicoptère à turbine produit en série : une turbine Turbomeca Artouste II de 400~ch, limitée à 269~kW en utilisation, un rotor tripale de 10,2~m, et \textbf{aucune servo-commande}. Les efforts du rotor remontent dans le manche ; tout se dose, rien ne se tient tout seul. Le simulateur reproduit un appareil léger (1100~kg, deux personnes et un plein partiel) : comme la machine réelle à cette charge, il grimpe mieux que les chiffres de fiche technique, qui sont donnés à la masse maximale.
+
+\section*{Ce que vous pouvez vérifier en vol}
+Le modèle est calé sur la documentation de l'appareil (Jane's 1966-67, données ALAT à 1600~kg, fiche de certification FAA 7H1), puis validé à trois masses avant d'être ramené à la masse simulée.
+
+\medskip
+{\small
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Croisière} & 160~km/h, une dizaine de degrés à piquer \\
+\hline
+\textbf{Vitesse maxi en palier} & 188~km/h au niveau de la mer, 174~km/h à 2000~m : c'est la puissance qui borne, pas la cellule \\
+\hline
+\textbf{VNE} & 195~km/h jusqu'à 1800~m, décroissante au-dessus ; l'amorce du décrochage de pale reculante secoue l'appareil quelques km/h avant, et une piquée franche la dépasse d'une dizaine de km/h, pas plus \\
+\hline
+\textbf{Montée} & près de 10~m/s au niveau de la mer en translation (le meilleur taux se prend vers 60-80~km/h) ; moitié moins à la verticale, comme sur la machine réelle \\
+\hline
+\textbf{Plafond pratique} & environ 3300~m à cette masse \\
+\hline
+\textbf{En altitude} & le collectif monte à charge égale (décollage vers 63~\% à 1300~m) et l'excédent de puissance fond : les cartes de montagne se pilotent comme telles \\
+\hline
+\end{tabularx}}
+
+\section*{Particularités à connaître}
+\textbf{Instruments métriques d'époque} : altitudes en mètres, vitesses en km/h, variomètre en m/s, rotor en tr/min. Pas de pieds ni de noeuds.
+
+\medskip
+\noindent
+\textbf{La vitesse affichée est la vitesse vraie}, pas une vitesse indiquée : en altitude, un anémomètre réel afficherait moins. La VNE du simulateur se lit donc directement sur le cadran, quelle que soit l'altitude.
+
+\medskip
+\noindent
+\textbf{Les alarmes} du tableau (température tuyère, régime rotor, survitesse) s'allument aux limites documentées de l'appareil. La plage continue de la turbine se tient sous 500~$^\circ$C de température tuyère ; au niveau de la mer, le plein collectif sort de cette plage, en altitude non.
+
+\medskip
+\noindent
+\textbf{Le mode assisté} stabilise l'appareil ; pour retrouver la machine réelle, volez sans lui. Vos impressions sont les bienvenues.
+
+\vfill
+\noindent
+\footnotesize\emph{Relief et orthophotos des cartes : \href{https://www.ign.fr/}{IGN}, sous Licence Ouverte Etalab 2.0.}\hfill\raisebox{-0.3\height}{\includegraphics[height=5ex]{IGN_logo_2012.png}}\normalsize
+
+\clearpage
+
 % ==================== Mise a jour (1 page, commune) ====================
 % Page valable quelle que soit la manette : elle repond a la question posee par
 % les joueurs qui ont deja telecharge des tuiles de detail et craignent de les

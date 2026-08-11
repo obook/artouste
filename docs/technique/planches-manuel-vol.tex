@@ -11,6 +11,9 @@
   \usepackage{fourier-otf}   % LuaLaTeX ou XeLaTeX (polices OpenType)
 \fi
 
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}  % points de conduite dans la table des matières
+
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
 \usepackage{xcolor}

@@ -4,6 +4,9 @@
 
 - **Regard du pilote en vue cockpit** (manette) : L3 maintenu, puis stick droit pour tourner la tête. Relâcher ramène la vue vers l'avant.
 - **Radio internet à la manette** : croix directionnelle droite pour allumer ou couper, haut/bas pour la balance radio/hélico.
+- **Collectif gradué en degrés de pas**, comme la machine : 6 à 15 degrés, stationnaire à 11, butée élastique à 14,5 signalée en jaune, secours à 15. Le cadran et le coin du HUD affichent le pas réel.
+- **Régime de décollage** : en altitude la turbine tient un plancher de puissance, ce qui porte le plafond de stationnaire hors effet de sol à 4078 m au lieu de 3090. La tuyère chauffe d'autant, et l'alarme TMP dit quand il est temps de redescendre.
+- **Indicateur de zone hauteur-vitesse**, optionnel : clé `zone_hv` de `config.txt`, éteint par défaut.
 
 ### Changements
 
@@ -16,10 +19,12 @@
 
 - **Radio internet** : léger gel à l'extinction, le temps que le thread réseau se termine.
 - **Mode zombie optionnel** retiré du menu (touche Z) : sans effet, faute de carte compatible non dédiée.
+- **Arbres sur les aires de poser** : le dégagement était centré à côté du pad, et les pads autres que celui de départ n'en avaient aucun. Aucun arbre à moins de 50 m d'un pad, sur toutes les cartes.
 
 ### Documentation
 
 - Sources chiffrées de l'Alouette II (`REFERENCES.md`), et données de référence dans `docs/technique/` : chaque valeur porte sa source et ses conditions, les sources qui divergent sont conservées toutes les deux.
+- **Planches du manuel de vol allemand** reconstituées avec leurs figures (`docs/technique/planches-manuel-vol.pdf`) : montée, carte moteur, puissances de décollage, butées de pas, VNE, domaine d'autorotation, masses maximales avec et sans effet de sol.
 
 ## v0.31.0 - 8 août 2026
 

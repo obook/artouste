@@ -39,9 +39,11 @@ constexpr float TREELINE_MAX  = 2200.0f;
 constexpr float TREE_WIDTH_MIN = 4.0f;
 constexpr float TREE_WIDTH_MAX = 7.0f;
 
-/* On dégage un disque autour du point de départ pour ne pas noyer l'hélisurface
-   d'arbres (rayon au carré, m^2). */
-constexpr float CLEAR_R2 = 30.0f * 30.0f;
+/* Dégagement de secours autour du repère de départ de terrain.txt (rayon au
+   carré, m^2), pour une carte sans helipads.txt : le départ s'y fait sur le
+   repère brut. Les cartes qui ont des hélipads sont dégagées par les zones
+   d'exclusion, pad par pad (voir VegetationMasks.cpp). */
+constexpr float CLEAR_R2 = 50.0f * 50.0f;
 
 /* Petit dégagement de secours autour du repère d'un lac (rayon au carré, m^2),
    utilisé seulement si le remplissage de proche en proche (flood fill) ne trouve

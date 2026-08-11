@@ -19,6 +19,15 @@
 
 namespace artouste::render {
 
+namespace {
+
+/* Dégagement imposé autour de chaque aire de poser : aucun arbre à moins de
+   50 m d'un pad, sur toutes les cartes, que la carte ait ou non son
+   exclusions.txt. Un arbre planté sur le H empêche de s'y poser. */
+constexpr float PAD_DEGAGEMENT_M = 50.0f;
+
+} /* namespace */
+
 std::vector<Vegetation::Exclusion>
 Vegetation::loadExclusions(const std::filesystem::path& terrainDir, const Terrain& terrain) const {
     /* Zones d'exclusion (aérodromes, etc.) : cercles "lon lat rayon_m" lus depuis
@@ -49,6 +58,19 @@ Vegetation::loadExclusions(const std::filesystem::path& terrainDir, const Terrai
         ex -= terrain.originX();
         ez -= terrain.originZ();
         exclusions.push_back({ex, ez, radius * radius});
+    }
+
+    /* Aires de poser (helipads.txt) : même traitement, avec un rayon imposé. Le
+       semis ne connaissait auparavant que le repère de départ de terrain.txt, qui
+       ne sert qu'à CHOISIR l'hélipad de départ (voir ApplicationScene) et s'en
+       écarte de plus de 100 m sur la plupart des cartes : le dégagement tombait
+       donc à côté du pad, et les pads autres que celui de départ n'en avaient
+       aucun. */
+    for (const Landmark& pad : terrain.helipads()) {
+        float px = 0.0f, pz = 0.0f;
+        terrain.worldAt(pad.lon, pad.lat, px, pz);
+        exclusions.push_back({px - terrain.originX(), pz - terrain.originZ(),
+                              PAD_DEGAGEMENT_M * PAD_DEGAGEMENT_M});
     }
     return exclusions;
 }

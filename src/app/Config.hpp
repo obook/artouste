@@ -46,6 +46,13 @@ struct Config {
        d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
     bool trees = true;
 
+    /* Indicateur de zone hauteur-vitesse : si vrai, le HUD affiche ZONE H-V quand
+       l'appareil est dans le domaine d'où l'autorotation n'est pas garantie en cas
+       de panne. Faux par défaut : l'appareil d'époque n'a aucun avertisseur, et le
+       domaine couvre tout stationnaire un peu haut, donc l'indication reste
+       allumée une bonne partie du vol. */
+    bool zoneHv = false;
+
     /* Recherche de mise à jour : si vrai (défaut), le simulateur demande au
        lancement, dans un fil séparé, le numéro de la dernière version publiée et
        propose au menu d'aller la chercher sur la page du projet. Rien n'est

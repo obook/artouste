@@ -68,7 +68,9 @@ void Application::fillHud(ui::HudData& hud,
     hud.assist = m_assist.active();
     hud.autoland = m_autoland.active();
     hud.vrsIntensity = m_flight.vrsIntensity(); /* alerte vortex (bandeau HUD) */
-    hud.hvIntensity  = m_flight.hvIntensity();  /* zone à éviter hauteur-vitesse */
+    /* Zone à éviter hauteur-vitesse : indication optionnelle, éteinte par défaut
+       (clé zone_hv de config.txt). L'appareil réel n'a aucun avertisseur. */
+    hud.hvIntensity = m_config.zoneHv ? m_flight.hvIntensity() : 0.0f;
 
     /* Alerte taux de descente (façon GPWS) : descente rapide près du sol. Enveloppe
        progressive (physics::gpwsSinkLimitMs) : plus on est bas, plus le taux de

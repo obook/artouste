@@ -413,6 +413,7 @@ TEST_CASE("chaque option annoncée est réellement lue", "[config]") {
          {"turbine_demarree 1", [](const Config& c) { return c.turbineRunning; }}},
         {"demo", {"demo 1", [](const Config& c) { return c.demo; }}},
         {"arbres", {"arbres 0", [](const Config& c) { return !c.trees; }}},
+        {"zone_hv", {"zone_hv 1", [](const Config& c) { return c.zoneHv; }}},
         {"verifier_maj", {"verifier_maj 0", [](const Config& c) { return !c.checkUpdate; }}},
         {"radio_url",
          {"radio_url https://exemple.test/f.mp3",

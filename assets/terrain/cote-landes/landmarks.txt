@@ -14,3 +14,5 @@
 -1.3594 43.6342 Bénesse-Maremne
 -1.3972 43.6007 Marais d'Orx
 -1.4488 43.6552 Estacade de Capbreton
+-1.315111 43.610662 Saubrigues
+-1.217726 43.779497 Magescq

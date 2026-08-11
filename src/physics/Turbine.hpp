@@ -40,11 +40,11 @@ public:
     void toggle() noexcept;
 
     /* Avance d'un pas de temps : fait évoluer les régimes selon l'état courant.
-     * La charge [0, 1] sert à la charge thermique de la tuyère (plus on tire de
-     * puissance, plus elle chauffe). L'appelant passe la puissance réellement
-     * produite (collectif pondéré par la densité de l'air), pas la position du
-     * levier, pour que l'altitude ne pénalise pas deux fois la température. */
-    void update(float dt, float charge) noexcept;
+     * t4CibleC est la température de tuyère visée au plein régime, en degrés
+     * Celsius : l'appelant la calcule d'après la loi pas/température du manuel
+     * (voir T4_LOI_* et FlightModel), transitoire compris. Pendant la montée en
+     * régime, la cible est proportionnelle au régime turbine. */
+    void update(float dt, float t4CibleC) noexcept;
 
     /* Met directement la turbine et le rotor en régime établi (100 %). Utile pour
      * les tests et pour un éventuel démarrage immédiat. */

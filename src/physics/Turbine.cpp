@@ -31,7 +31,7 @@ void Turbine::toggle() noexcept {
     }
 }
 
-void Turbine::update(float dt, float charge) noexcept {
+void Turbine::update(float dt, float t4CibleC) noexcept {
     /* Durée de la montée en régime turbine : raccourcie pendant un démarrage rapide
      * (mode démo), sinon celle de la séquence réelle. La phase rotor (frein puis
      * embrayage centrifuge) garde ses durées réelles dans tous les cas. */
@@ -90,16 +90,12 @@ void Turbine::update(float dt, float charge) noexcept {
             break;  /* états stables : rien à faire */
     }
 
-    /* Température de la tuyère : cible déduite du régime turbine (la tuyère chauffe
-     * en montant en régime) et de la charge (puissance demandée, fournie par
-     * l'appelant), rejointe avec une inertie thermique. La charge intervient au
-     * carré : la tuyère reste fraîche en croisière et ne chauffe vraiment qu'à
-     * forte puissance, si bien que l'alerte (480 degrés) n'apparaît qu'au-delà
-     * des trois quarts de la charge. */
-    const float load   = charge < 0.0f ? 0.0f : (charge > 1.0f ? 1.0f : charge);
+    /* Température de la tuyère : l'appelant fournit la cible de plein régime
+     * (loi pas/température du manuel, régime transitoire compris) ; pendant la
+     * montée en régime, la cible est proportionnelle au régime turbine, et la
+     * tuyère rejoint le tout avec son inertie thermique. */
     const float target = EXHAUST_TEMP_AMBIENT_C
-                       + (EXHAUST_TEMP_IDLE_C - EXHAUST_TEMP_AMBIENT_C) * m_turbine
-                       + (EXHAUST_TEMP_MAX_C - EXHAUST_TEMP_IDLE_C) * m_turbine * load * load;
+                       + (t4CibleC - EXHAUST_TEMP_AMBIENT_C) * m_turbine;
     const float ease   = 1.0f - std::exp(-dt / EXHAUST_TEMP_TAU);
     m_exhaustC += (target - m_exhaustC) * ease;
 }

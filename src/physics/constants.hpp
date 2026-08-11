@@ -30,6 +30,44 @@ inline constexpr float I_PITCH      = 3500.0f;  /* kg.m^2  autour de Z */
  * exactement le poids. */
 inline constexpr float COLL_HOVER   = 0.55f;    /* collectif nécessaire pour se sustenter */
 
+/* --- Pas collectif réel (graduation en degrés) -------------------------------- */
+/* Le levier gradué en degrés de pas de pale, comme la machine réelle (manuel de
+ * vol, planches FSHeli.ch, page 4) : plage utile 12 à 15 degrés, butée élastique
+ * à 14 ou 14 deg 30 selon la phase, secours à 15 (franchissable sans pompage en
+ * urgence). La correspondance est linéaire avec le collectif 0..1 :
+ * pas = PAS_MIN + (PAS_MAX - PAS_MIN) x collectif. Elle n'est pas arbitraire :
+ * avec 6..15 degrés, le collectif de sustentation (COLL_HOVER = 0,55) tombe à
+ * 11,0 degrés, ce que donne aussi la loi de stationnaire de la page 8 du manuel
+ * (12,8 degrés à 1500 kg au niveau de la mer ISA) ramenée à 1100 kg. */
+inline constexpr float PAS_MIN_DEG            = 6.0f;   /* levier en butée basse */
+inline constexpr float PAS_MAX_DEG            = 15.0f;  /* plein levier (secours) */
+inline constexpr float PAS_BUTEE_HAUTE_DEG    = 14.5f;  /* butée élastique haute (14 deg 30) */
+
+/* Le pas commande aussi ce que le rotor ABSORBE de la puissance turbine : à
+ * 14 degrés (montée normale, butée élastique respectée) le rotor ne prend pas
+ * tout ce que la turbine offre. C'est la lecture des planches Abb. 0-9 et 0-10
+ * du manuel (la "Grenze der Blattverstellung" court sous les limites moteur),
+ * et c'est ce qui réconcilie deux chiffres autrement incompatibles : la montée
+ * de la planche Abb. 3-6 (8,10 m/s à 1100 kg, 90 km/h, pas 14) et le calage du
+ * bilan à pleine puissance (voir POWER_ROTOR_W), qui donne 9,2 m/s dans les
+ * mêmes conditions à plein levier. Fraction absorbée linéaire en pas, résolue
+ * pour redonner exactement 8,10 m/s à 14 degrés : a(pas) = 1 - 0,0596 x
+ * (15 - pas). Contrôle contre la planche numérisée, à 14 degrés et 90 km/h :
+ *
+ *     altitude-densité | modèle | planche
+ *            0 m       |  8,10  |  8,10
+ *         1000 m       |  6,91  |  7,05
+ *         2000 m       |  5,82  |  6,00
+ *         3000 m       |  4,81  |  4,95
+ *         4000 m       |  3,88  |  3,90
+ *
+ * La même droite passe à 3 kW près par le point de stationnaire (11 degrés,
+ * puissance de sustentation) : une seule pente porte donc le stationnaire, la
+ * montée à 14 et le plein levier. Le plein collectif garde a = 1 : le palier
+ * (Vmax 185 km/h) et les trois points de montée documentés à 1350, 1500 et
+ * 1600 kg (calés à pleine puissance) ne bougent pas. */
+inline constexpr float ABSORPTION_PENTE = 0.0596f;  /* fraction perdue par degré sous PAS_MAX_DEG */
+
 /* --- Turbine Artouste --------------------------------------------------------- */
 /* Démarrage en deux temps, comme une vraie turbine libre : la turbine (le
  * générateur) monte d'abord seule en régime, puis le rotor s'accouple et
@@ -50,17 +88,26 @@ inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (
 inline constexpr float DEMO_TURBINE_START_TIME = 10.0f;  /* s : turbine 0 -> 100 % (accéléré) */
 
 /* --- Température de la tuyère (gaz d'échappement, T4) -------------------------- */
-/* Modèle thermique simple : la température vise une cible déduite du régime
- * turbine (la tuyère chauffe quand la turbine monte en régime) et de la charge
- * collective (plus on tire de puissance, plus elle chauffe), qu'elle rejoint avec
- * une inertie. Repères du manuel (PANEL.md) : 400 à 480 degrés en vol normal,
- * 500 degrés en continu maxi, 550 degrés en transitoire. */
+/* La cible de température suit la relation pas/température du manuel (planche
+ * Abb. 2-23, numérisée le 11/08/2026) : environ 27 degrés de t4 par degré de
+ * pas, 1,6 degré par degré de température extérieure. En atmosphère normale
+ * (l'air du simulateur), la température extérieure décroissant de 6,5 deg/1000 m,
+ * la loi se réduit à : t4 = 407 + 27 x (pas - 12) - 10,4 x altitude(km).
+ * La cible est bornée : 400 au plancher (turbine au régime, charge minimale,
+ * repère PANEL.md) et 520 hors transitoire ; le régime transitoire (plancher de
+ * puissance en altitude, voir POWER_FLAT_W) la pousse ensuite vers 550.
+ * La tuyère rejoint sa cible avec une inertie de quelques secondes. */
 inline constexpr float EXHAUST_TEMP_AMBIENT_C = 15.0f;   /* tuyère froide, turbine coupée */
 inline constexpr float EXHAUST_TEMP_IDLE_C    = 400.0f;  /* turbine au régime, charge minimale */
-inline constexpr float EXHAUST_TEMP_MAX_C     = 550.0f;  /* plein collectif (limite transitoire du manuel) */
+inline constexpr float EXHAUST_TEMP_MAX_C     = 550.0f;  /* limite transitoire du manuel */
 inline constexpr float EXHAUST_TEMP_TAU       = 4.0f;    /* s : inertie thermique (montée et descente) */
 inline constexpr float EXHAUST_TEMP_WARN_C    = 480.0f;  /* voyant orange : surveiller (limite haute du vol normal) */
 inline constexpr float EXHAUST_TEMP_MAXI_C    = 500.0f;  /* voyant rouge : limite continue franchie */
+inline constexpr float T4_LOI_BASE_C          = 407.0f;  /* t4 à 12 degrés de pas, ISA niveau de la mer */
+inline constexpr float T4_LOI_PAS_C           = 27.0f;   /* deg C par degré de pas */
+inline constexpr float T4_LOI_ALT_C_PAR_KM    = 10.4f;   /* deg C perdus par km (1,6 x 6,5) */
+inline constexpr float T4_LOI_PLAFOND_C       = 520.0f;  /* borne haute hors transitoire */
+inline constexpr float T4_LOI_PAS_REF_DEG     = 12.0f;   /* pas de référence de la loi (celui de T4_LOI_BASE_C) */
 
 /* --- Carburant ---------------------------------------------------------------- */
 /* Réservoir et consommation de l'Alouette II (d'après PANEL.md : ~580 L, 110 kg/h
@@ -186,6 +233,47 @@ inline constexpr float DAMP_YAW     = 4000.0f;  /* N.m/(rad/s) */
  * un réglage, et elle remplace l'extrapolation linéaire plus grossière (7,7 à
  * 8,3 m/s) qui avait servi de cible avant que le bilan ne soit calé. */
 inline constexpr float POWER_ROTOR_W      = 200000.0f; /* W : puissance disponible au rotor principal, niveau de la mer */
+
+/* Régime de décollage (transitoire) : en altitude, la turbine tient un PLANCHER
+ * de puissance au lieu de suivre la densité, tant que la température de tuyère
+ * le permet (régulation à débit et t4, planches Abb. 0-9/0-10 : la limite passe
+ * du débit carburant à la t4 vers 1800 m, et le certificat accorde 550 deg C en
+ * transitoire). Le plancher ne change RIEN sous ~3000 m (200 kW x densité y est
+ * plus grand) : palier, montée et calages existants sont intacts. Au-dessus, il
+ * porte le plafond de stationnaire HES de ~3090 m (continu) à ~4070 m, la
+ * valeur numérisée de la page 10 du manuel à 1100 kg en atmosphère normale
+ * (+/-50 m).
+ *
+ * Calage : le plancher subit l'absorption comme la puissance continue (un seul
+ * modèle, pas d'exception), donc 152,5 kW = besoin de stationnaire à 4070 m
+ * (149,9 kW) divisé par l'absorption au pas de sustentation de cette altitude
+ * (14,71 degrés, soit 0,983). Plafond mesuré sur le modèle, plein levier et à
+ * convergence : 4078 m, atteint aussi bien par le haut que par le bas.
+ *
+ * Le plafond se prend PLEIN LEVIER, donc au-delà de la butée élastique, voyant
+ * PAS jaune : c'est assumé, un plafond se tient à la puissance maximale. Ce qui
+ * l'arrête n'est pas la puissance brute mais la fonte du plancher : au-delà de
+ * 4070 m la surchauffe dépasse 1 et rogne le plancher, ce qui régule l'altitude
+ * au lieu de la laisser filer. C'est ce qui rend le calage sûr malgré une
+ * intersection RASANTE entre plancher et puissance de stationnaire (577 m de
+ * plafond par kW vers le haut, 758 vers le bas, hors régulation) : mesuré,
+ * passer de 152,5 à 156,5 kW ne déplace le plafond que de 4078 à 4090 m.
+ *
+ * ATTENTION quand même : toute retouche d'ABSORPTION_PENTE, de COLL_HOVER ou de
+ * la correspondance levier/degrés (PAS_MIN_DEG, PAS_MAX_DEG) déplace ce plafond
+ * de plusieurs centaines de mètres. Le revérifier après coup.
+ *
+ * La durée du régime n'est pas un chronomètre : sous le plafond il se tient
+ * indéfiniment, l'alarme TMP à 550 degrés servant de marqueur au pilote ; la
+ * fonte du plancher ne force la redescente qu'au-dessus du plafond. Voir
+ * SURCHAUFFE_TAU_S et FlightModel. */
+inline constexpr float POWER_FLAT_W       = 152500.0f; /* W : plancher transitoire tenu en altitude */
+inline constexpr float SURCHAUFFE_TAU_S   = 240.0f;    /* s : inertie de la surchauffe (3 tau, soit ~12 min, pour l'établir) */
+inline constexpr float SURCHAUFFE_PLEINE  = 0.11325f;  /* usage du plancher au plafond 4070 m : 1 - 200 kW x d(4070) / 152,5 kW */
+inline constexpr float SURCHAUFFE_PAS_SEUIL_DEG = 13.5f; /* pas à partir duquel le transitoire est sollicité */
+inline constexpr float SURCHAUFFE_PAS_PLAGE_DEG = 0.5f;  /* largeur de pas sur laquelle la sollicitation passe de 0 à 1 */
+inline constexpr float FONTE_PLAGE              = 0.3f;  /* surchauffe au-delà de 1 qui annule complètement le plancher */
+
 inline constexpr float POWER_INDUITE_W    = 91000.0f;  /* W : puissance induite au stationnaire, 1100 kg, niveau de la mer */
 inline constexpr float POWER_PROFIL_W     = 58000.0f;  /* W : puissance de profil du rotor, niveau de la mer */
 inline constexpr float V_INDUITE_HOVER    = 7.34f;     /* m/s : vitesse induite au stationnaire (poussée / 2 rho A) */
@@ -256,22 +344,23 @@ inline constexpr float ASSIST_INPUT_DEADZONE  = 0.05f;  /* en-deçà, cyclique c
  * relative suit une exponentielle décroissante : rho/rho0 = exp(-altitude / H).
  * H est un compromis de jeu, pas l'atmosphère standard (il faudrait ~10 400 m) :
  * la pénalité est volontairement forcée pour que l'altitude compte sur la carte
- * des Pyrénées. À 1332 m (terrain Ossau) : densité 0,78, décollage vers 63 % de
- * collectif. Le stationnaire devient impossible vers 3300 m, ce qui laisse les
- * hauts sommets accessibles mais exigeants, dans l'esprit de l'Alouette II,
- * hélicoptère de haute montagne.
+ * des Pyrénées. À 1332 m (terrain Ossau) : densité 0,83, décollage vers 66 % de
+ * collectif. Le mur de sustentation est à 4304 m, juste au-dessus du plafond de
+ * stationnaire transitoire (4070 m, voir POWER_FLAT_W) : c'est désormais la
+ * PUISSANCE qui borne la haute montagne, pas la portance, et les hauts sommets
+ * restent accessibles mais exigeants (collectif de sustentation à 97 % vers
+ * 4070 m), dans l'esprit de l'Alouette II, hélicoptère de haute montagne.
  *
- * La densité borne la SUSTENTATION ; la MONTÉE, elle, est bornée plus tôt par la
- * puissance (voir POWER_CLIMB_K), qui écrase la vitesse ascensionnelle bien avant
- * que le stationnaire ne devienne impossible : 4,2 m/s au niveau de la mer,
- * 1,4 m/s à 1600 m, 0,7 m/s vers 2300 m, le plafond pratique du constructeur. */
-inline constexpr float AIR_DENSITY_SCALE  = 5500.0f;  /* m : hauteur caractéristique */
+ * Valeur passée de 5500 à 7200 le 11/08/2026 (décision utilisateur, alignement
+ * sur le manuel de vol) : l'ancien mur à 3288 m tombait SOUS le plafond
+ * transitoire du manuel et l'aurait rendu inatteignable. */
+inline constexpr float AIR_DENSITY_SCALE  = 7200.0f;  /* m : hauteur caractéristique */
 
 /* Le bilan de puissance, lui, se cale sur des performances documentées (vitesse
  * ascensionnelle et plafond du constructeur) : il doit donc raisonner sur
  * l'atmosphère RÉELLE, pas sur la densité durcie ci-dessus. Les deux notions
  * coexistent volontairement : AIR_DENSITY_SCALE durcit la SUSTENTATION pour rendre
- * la haute montagne exigeante (choix de jeu, stationnaire impossible vers 3300 m),
+ * la haute montagne exigeante (choix de jeu, mur de portance à 4304 m),
  * tandis que la montée et la vitesse en palier restent comparables aux fiches. Sans
  * cette séparation, la densité durcie écrasait aussi la puissance et le plafond
  * tombait vers 2500 m, très en dessous des 3200 m de l'ALAT, sur un appareil dont
@@ -338,6 +427,9 @@ inline constexpr float VRS_DESCENT_MIN    = 3.0f;     /* m/s : début du VRS */
 inline constexpr float VRS_DESCENT_MAX    = 7.0f;     /* m/s : VRS développé */
 inline constexpr float VRS_AIRSPEED_EXIT  = 7.0f;     /* m/s (25 km/h) : sortie par translation */
 inline constexpr float VRS_THRUST_LOSS    = 0.35f;    /* fraction max de portance perdue */
+
+/* Zone à éviter du diagramme hauteur-vitesse (indicateur HUD, voir FlightModel). */
+inline constexpr float HV_AGL_MIN_M       = 3.0f;     /* m : sous cette hauteur-sol, pas d'indication */
 
 /* Effet de flux transversal : pendant la transition vers le vol de translation,
  * l'écoulement induit chute à l'avant du disque rotor et augmente à l'arrière.

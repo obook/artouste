@@ -116,6 +116,88 @@ TEST_CASE("L'effet de translation augmente la poussée", "[flight][m5]") {
     REQUIRE(model.lastThrust() > hoverThrust * 1.02f);
 }
 
+TEST_CASE("Le plancher transitoire tient le stationnaire à 3500 m", "[flight][transitoire]") {
+    /* Au régime continu (200 kW x densité), le stationnaire s'arrête vers 3090 m.
+       Le plancher transitoire (POWER_FLAT_W, décision du 11/08/2026, manuel page 10 :
+       plafond HES 4070 m à 1100 kg) doit le porter au-delà, plein levier. */
+    FlightModel model;
+    model.reset(3500.0f);
+    model.turbine().forceRunning();
+    Controls plein;
+    plein.collective = 1.0f;
+    advance(model, plein, 60.0f);
+
+    REQUIRE(model.body().position.y > 3470.0f);           /* il ne s'enfonce pas */
+    REQUIRE(model.turbine().exhaustTempC() > 440.0f);     /* et la tuyère chauffe */
+}
+
+TEST_CASE("Le plafond transitoire tient encore à 4000 m", "[flight][transitoire]") {
+    /* Le point qui garde le calage : le plafond de stationnaire HES du manuel
+       (4070 m à 1100 kg) se prend plein levier, et POWER_FLAT_W est calé pour
+       que l'excédent y soit encore franchement positif. Ce test échouerait si
+       l'absorption cessait de s'appliquer au plancher, ou si le plancher était
+       recalé sans revoir le pas du plafond. */
+    FlightModel model;
+    model.reset(4000.0f);
+    model.turbine().forceRunning();
+    Controls plein;
+    plein.collective = 1.0f;
+    advance(model, plein, 120.0f);
+
+    REQUIRE(model.body().position.y > 4000.0f);           /* il monte encore */
+    REQUIRE(model.body().velocity.y > 0.0f);
+    REQUIRE(model.surchauffe() > 0.2f);                   /* le transitoire est sollicité */
+}
+
+TEST_CASE("La surchauffe ne court pas en physique assistée", "[flight][transitoire]") {
+    /* Le bilan de puissance est débranché en assisté, en démo et pendant
+       l'atterrissage automatique : la surchauffe du transitoire n'y a aucun sens
+       et ne doit pas allumer l'alarme TMP en altitude. */
+    FlightModel model;
+    model.reset(4000.0f);
+    model.turbine().forceRunning();
+    model.setRealFlyPhysicsEnabled(false);
+    Controls plein;
+    plein.collective = 1.0f;
+    advance(model, plein, 120.0f);
+
+    REQUIRE(model.surchauffe() < 0.05f);
+    REQUIRE(model.turbine().exhaustTempC() < artouste::physics::EXHAUST_TEMP_MAXI_C);
+}
+
+TEST_CASE("La TMP suit la loi pas/température, pas le tout-ou-rien", "[flight][tmp]") {
+    /* Plein levier au niveau de la mer : la loi de la planche Abb. 2-23 donne
+       environ 488 degrés à 15 degrés de pas en ISA, plutôt que le vieux 550
+       systématique du modèle charge au carré. */
+    FlightModel model;
+    model.reset(50.0f);
+    model.turbine().forceRunning();
+    Controls plein;
+    plein.collective = 1.0f;
+    advance(model, plein, 60.0f);
+
+    REQUIRE(model.turbine().exhaustTempC() > 460.0f);
+    REQUIRE(model.turbine().exhaustTempC() < artouste::physics::EXHAUST_TEMP_MAXI_C);
+}
+
+TEST_CASE("La zone hauteur-vitesse s'allume en stationnaire haut", "[flight][hv]") {
+    /* Stationnaire à 60 m sol sans vitesse : en plein dans la zone à éviter du
+       diagramme hauteur-vitesse (autorotation non garantie). Turbine coupée,
+       l'indicateur doit retomber : on est déjà en autorotation. */
+    FlightModel model;
+    model.reset(60.0f);
+    model.turbine().forceRunning();
+    Controls hover;
+    hover.collective = artouste::physics::COLL_HOVER /
+                       std::exp(-60.0f / artouste::physics::AIR_DENSITY_SCALE);
+    advance(model, hover, 8.0f);
+    REQUIRE(model.hvIntensity() > 0.5f);
+
+    model.turbine().stopNow();
+    advance(model, hover, 8.0f);
+    REQUIRE(model.hvIntensity() < 0.2f);
+}
+
 TEST_CASE("Collectif plein fait décoller", "[flight]") {
     FlightModel model;
     model.turbine().forceRunning();

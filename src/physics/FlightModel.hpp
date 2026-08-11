@@ -117,9 +117,23 @@ public:
         }
     }
 
+    /* Pas collectif réel en degrés de pale (graduation du levier, voir
+       PAS_MIN_DEG) : pour l'affichage HUD et la notice. */
+    [[nodiscard]] float pasDeg() const noexcept { return m_pasDeg; }
+
+    /* Surchauffe du régime transitoire (0 = régime continu, 1 = équilibre au
+       plafond de 4070 m) : elle pousse la TMP vers 550 degrés et, au-delà de 1,
+       fait fondre le plancher de puissance (voir POWER_FLAT_W). */
+    [[nodiscard]] float surchauffe() const noexcept { return m_surchauffe; }
+
     /* Intensité du vortex ring state (0 = aucun, 1 = plein), pour l'alerte HUD.
        Toujours 0 en mode assisté et en démo (physique réelle coupée). */
     [[nodiscard]] float vrsIntensity() const noexcept { return m_vrsIntensity; }
+
+    /* Présence dans la zone à éviter du diagramme hauteur-vitesse (0 = hors zone,
+       1 = dedans, lissée sur ~2 s) : pour l'indicateur HUD. Toujours 0 turbine
+       coupée, au sol, ou en physique assistée. */
+    [[nodiscard]] float hvIntensity() const noexcept { return m_hvIntensity; }
 
     /* Intensité du décrochage de pale reculante (0 = aucun, 1 = franc), montante à
        l'approche de la VNE. Exposée comme le VRS pour qu'un jour le HUD puisse la
@@ -163,7 +177,10 @@ private:
     float     m_lastThrust   = 0.0f;
     float     m_groundHeight = 0.0f;
     float     m_fuelLiters   = FUEL_CAPACITY_L;
+    float     m_pasDeg     = PAS_MIN_DEG;      /* pas collectif réel, en degrés de pale */
+    float     m_surchauffe = 0.0f;             /* état lent du régime transitoire, 0..~1,3 */
     float     m_vrsIntensity  = 0.0f;          /* vortex ring state, 0..1 (alerte HUD) */
+    float     m_hvIntensity   = 0.0f;          /* zone hauteur-vitesse, 0..1 lissée (HUD) */
     float     m_retreatingStall = 0.0f;        /* décrochage de pale reculante, 0..1 */
     float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
     bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */

@@ -14,6 +14,7 @@
 #include "physics/constants.hpp"
 
 #include <cmath>
+#include <iterator>
 
 namespace artouste::physics {
 
@@ -46,20 +47,58 @@ float approach(float current, float target, float dt, float tau) noexcept {
 void FlightModel::update(const Controls& controls, float dt) noexcept {
     const float collective = saturate(controls.collective);
 
+    /* Pas collectif réel : le levier est gradué en degrés de pale, comme la
+     * machine (voir PAS_MIN_DEG et suivants). Le pas commande aussi la fraction
+     * de la puissance turbine que le rotor ABSORBE : butée élastique respectée
+     * (14 degrés), la montée retombe sur la planche du manuel ; plein levier
+     * (secours, 15 degrés), tout est absorbé. */
+    const float pasDeg = PAS_MIN_DEG + (PAS_MAX_DEG - PAS_MIN_DEG) * collective;
+    m_pasDeg = pasDeg;
+    const float absorption = 1.0f - ABSORPTION_PENTE * (PAS_MAX_DEG - pasDeg);
+
     /* Densité relative de l'air : elle décroît avec l'altitude (atmosphère
      * simplifiée, voir AIR_DENSITY_SCALE). La turbine aspire moins d'air et le
      * rotor produit moins de portance en altitude, ce qui finit par interdire le
      * stationnaire en montagne. En mode assisté, densité pleine (pas de pénalité). */
     const float densiteRelative =
         m_realFlyPhysicsEnabled ? std::exp(-m_body.position.y / AIR_DENSITY_SCALE) : 1.0f;
+    /* Atmosphère RÉELLE, celle du bilan de puissance et de la thermique turbine
+     * (voir AIR_DENSITY_SCALE_REELLE : les deux densités coexistent volontairement). */
+    const float densiteReelle = std::exp(-m_body.position.y / AIR_DENSITY_SCALE_REELLE);
+
+    /* Régime transitoire (décollage) : au-dessus de ~3000 m, le plancher
+     * POWER_FLAT_W dépasse la puissance continue et la turbine chauffe d'autant
+     * plus qu'on s'en sert (pas haut). La surchauffe est un état LENT
+     * (SURCHAUFFE_TAU_S) : sous le plafond elle se stabilise en dessous de 1 et
+     * le régime se tient indéfiniment, la TMP poussée vers 550 degrés servant
+     * d'alarme au pilote ; au-dessus du plafond seulement elle dépasse 1, fait
+     * fondre le plancher et force la redescente. Elle retombe d'elle-même une
+     * fois le pas réduit ou l'altitude rendue.
+     *
+     * Sans objet en physique assistée (démo, atterrissage automatique), où le
+     * bilan de puissance est débranché : la cible tombe à zéro et l'état revient
+     * de lui-même, sinon la TMP passait à l'alarme en altitude sans qu'aucune
+     * limite ne s'applique. */
+    const float pContinuW     = POWER_ROTOR_W * densiteReelle;
+    const float usagePlancher = pContinuW < POWER_FLAT_W
+        ? (1.0f - pContinuW / POWER_FLAT_W) / SURCHAUFFE_PLEINE
+        : 0.0f;
+    const float demandePas = clamp((pasDeg - SURCHAUFFE_PAS_SEUIL_DEG) / SURCHAUFFE_PAS_PLAGE_DEG,
+                                   0.0f, 1.0f);
+    const float cibleSurchauffe = m_realFlyPhysicsEnabled ? usagePlancher * demandePas : 0.0f;
+    m_surchauffe = approach(m_surchauffe, cibleSurchauffe, dt, SURCHAUFFE_TAU_S);
+    const float fontePlancher = 1.0f - clamp((m_surchauffe - 1.0f) / FONTE_PLAGE, 0.0f, 1.0f);
 
     /* Turbine : on fait avancer son régime avant tout le reste, car la poussée
      * et l'anti-couple en dépendent. Rotor à l'arrêt -> rotorFraction = 0.
-     * La charge thermique transmise est la puissance réellement produite
-     * (collectif ramené par la densité), pas la position du levier : en altitude
-     * le levier est plus haut pour la même portance, et la tuyère ne doit pas en
-     * être doublement pénalisée. Au niveau de la mer, rien ne change. */
-    m_turbine.update(dt, collective * std::sqrt(densiteRelative));
+     * La cible de température suit la loi pas/température du manuel (voir
+     * T4_LOI_*), altitude ISA comprise : elle mesure la puissance produite, pas
+     * la position du levier. Le transitoire la pousse ensuite vers 550 degrés. */
+    const float t4Loi = clamp(T4_LOI_BASE_C + T4_LOI_PAS_C * (pasDeg - T4_LOI_PAS_REF_DEG)
+                                  - T4_LOI_ALT_C_PAR_KM * m_body.position.y / 1000.0f,
+                              EXHAUST_TEMP_IDLE_C, T4_LOI_PLAFOND_C);
+    const float t4Cible = t4Loi + (EXHAUST_TEMP_MAX_C - t4Loi) * clamp(m_surchauffe, 0.0f, 1.0f);
+    m_turbine.update(dt, t4Cible);
     const float rotorFraction = m_turbine.rotorFraction();
 
     const vec3 worldUp{0.0f, 1.0f, 0.0f};
@@ -129,6 +168,43 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         vrsReduction   = 1.0f - VRS_THRUST_LOSS * m_vrsIntensity;
     }
 
+    /* Zone à éviter du diagramme hauteur-vitesse (manuel, planche 1.8, numérisée
+     * le 11/08/2026 ; borne prudente valable à 1600 kg, la zone réelle à 1100 kg
+     * est plus petite) : couples hauteur-vitesse d'où une autorotation réussie
+     * n'est pas garantie en cas de panne. Purement indicatif (bandeau HUD) : on
+     * lisse l'entrée et la sortie (~2 s) pour un affichage stable, aucune action
+     * sur la physique. Sans objet turbine coupée (on est déjà en autorotation),
+     * au sol, ou en physique assistée. */
+    if (m_realFlyPhysicsEnabled && m_turbine.state() == Turbine::State::Regime && agl > HV_AGL_MIN_M) {
+        const float vKmh = airspeed * 3.6f;
+        /* Limites numérisées (km/h, m), interpolation linéaire par morceaux. */
+        static constexpr float HAUTE[][2] = {{0.f,150.f},{30.f,136.f},{40.f,127.f},{50.f,117.f},
+                                             {60.f,100.f},{65.f,90.f},{70.f,76.f},{72.f,63.f}};
+        static constexpr float BASSE[][2] = {{0.f,2.f},{10.f,3.f},{20.f,5.f},{30.f,8.f},{40.f,13.f},
+                                             {50.f,21.f},{60.f,30.f},{65.f,37.f},{70.f,48.f},{72.f,63.f}};
+        static constexpr float RAPIDE[][2] = {{52.f,0.f},{60.f,5.f},{70.f,9.f},{80.f,13.f},{90.f,17.f},
+                                              {100.f,20.f},{120.f,22.f},{140.f,24.f},{185.f,25.f}};
+        /* Table prise par référence : sa taille se déduit, elle ne peut pas se
+           désynchroniser si un point est ajouté. */
+        const auto interp = [](const auto& tab, float x) noexcept {
+            const std::size_t n = std::size(tab);
+            if (x <= tab[0][0]) return tab[0][1];
+            for (std::size_t i = 1; i < n; ++i) {
+                if (x <= tab[i][0]) {
+                    const float t = (x - tab[i - 1][0]) / (tab[i][0] - tab[i - 1][0]);
+                    return tab[i - 1][1] + t * (tab[i][1] - tab[i - 1][1]);
+                }
+            }
+            return tab[n - 1][1];
+        };
+        const bool zoneLente  = vKmh < 72.0f && agl > interp(BASSE, vKmh)
+                                            && agl < interp(HAUTE, vKmh);
+        const bool zoneRapide = vKmh > 52.0f && agl < interp(RAPIDE, vKmh);
+        m_hvIntensity = approach(m_hvIntensity, (zoneLente || zoneRapide) ? 1.0f : 0.0f, dt, 2.0f);
+    } else {
+        m_hvIntensity = approach(m_hvIntensity, 0.0f, dt, 2.0f);
+    }
+
     /* Bilan de puissance : on calcule d'abord le taux de montée que la turbine
      * autorise, puis on pénalise le dépassement. Les trois postes de dépense et la
      * puissance disponible ne suivent pas la densité de la même façon, et c'est
@@ -155,7 +231,6 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * est coupée (mode assisté, démo, atterrissage automatique), comme le VRS. */
     float penaliteMontee = 0.0f;
     if (m_realFlyPhysicsEnabled) {
-        const float densiteReelle = std::exp(-m_body.position.y / AIR_DENSITY_SCALE_REELLE);
         const float chuteInduite  = V_INDUITE_HOVER /
             std::sqrt(airspeed * airspeed + V_INDUITE_HOVER * V_INDUITE_HOVER);
         const float pInduite  = POWER_INDUITE_W * chuteInduite / std::sqrt(densiteReelle);
@@ -165,7 +240,10 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         const float monteeProfil = 1.0f + (airspeed / V_PROFIL_REF) * (airspeed / V_PROFIL_REF);
         const float pProfil   = POWER_PROFIL_W * densiteReelle * monteeProfil;
         const float pParasite = KDRAG_FWD * airspeed * airspeed * airspeed;
-        const float pDispo    = POWER_ROTOR_W * densiteReelle;
+        /* Puissance offerte : la continue suit la densité, le plancher transitoire
+         * la relaie en altitude tant que la surchauffe le permet ; le rotor n'en
+         * absorbe que la fraction que le pas autorise (voir ABSORPTION_PENTE). */
+        const float pDispo = std::max(pContinuW, POWER_FLAT_W * fontePlancher) * absorption;
 
         const float monteeDispo = (pDispo - pInduite - pProfil - pParasite) / (MASS * G);
         if (m_body.velocity.y > monteeDispo) {

@@ -492,15 +492,15 @@ Le modèle est calé sur la documentation de l'appareil : Jane's 1966-67, donné
 \hline
 \textbf{Montée} & près de 10~m/s au niveau de la mer en translation, le meilleur taux se prenant vers 60-80~km/h ; moitié moins à la verticale, comme sur la machine réelle \\
 \hline
-\textbf{Plafond pratique} & environ 3300~m à cette masse \\
+\textbf{Plafond stationnaire} & 3100~m en continu, environ 4000~m au transitoire, tuyère vers l'alarme \\
 \hline
-\textbf{En altitude} & le collectif monte à charge égale, environ 63~\% pour décoller à 1300~m, et l'excédent de puissance fond : les cartes de montagne se pilotent comme telles \\
+\textbf{En altitude} & le collectif monte à charge égale, environ 66~\% pour décoller à 1300~m, et l'excédent de puissance fond : les cartes de montagne se pilotent comme telles \\
 \hline
 \end{tabularx}}
 
 \section*{Particularités à connaître}
 \noindent
-\textbf{Instruments métriques d'époque} : altitudes en mètres, vitesses en km/h, variomètre en m/s, rotor en tr/min. Pas de pieds ni de noeuds.
+\textbf{Instruments métriques d'époque} : altitudes en mètres, vitesses en km/h, variomètre en m/s, rotor en tr/min.
 
 \medskip
 \noindent
@@ -508,7 +508,15 @@ Le modèle est calé sur la documentation de l'appareil : Jane's 1966-67, donné
 
 \medskip
 \noindent
-\textbf{Les alarmes} du tableau s'allument aux limites documentées : température tuyère, régime rotor, survitesse. La plage continue de la turbine se tient sous 500~$^\circ$C ; au niveau de la mer le plein collectif en sort, en altitude non.
+\textbf{Les alarmes} s'allument aux limites documentées : température tuyère (500~$^\circ$C en continu, 550 au transitoire), régime rotor, survitesse. La tuyère suit la relation pas/température du manuel.
+
+\medskip
+\noindent
+\textbf{Le collectif est gradué en degrés de pas réels} (12 à 15 en vol) : butée élastique à 14$^\circ$30', secours à 15$^\circ$, montée normale à 14$^\circ$.
+
+\medskip
+\noindent
+\textbf{Zone hauteur-vitesse} : sans vitesse entre 2 et 150~m sol, l'autorotation n'est pas garantie en cas de panne ; au-delà de 140~km/h, tenir 25~m. Le HUD affiche ZONE H-V, la machine réelle n'avertit pas.
 
 \medskip
 \noindent

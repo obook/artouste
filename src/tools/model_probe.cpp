@@ -8,7 +8,14 @@
  * connaître l'échelle et l'orientation réelles du modèle FlightGear avant de
  * l'intégrer au rendu : on lit des chiffres, pas encore des pixels.
  *
- * Usage : ./build/bin/model_probe [chemin.ac]
+ * Avec un second argument, il réécrit le modèle en Wavefront OBJ (positions, UV
+ * et normales, sans matériaux). Blender ne lit pas l'AC3D, et c'est le seul
+ * chemin pour y cuire une occlusion ambiante sur le dépliage d'origine. On
+ * réutilise ainsi le chargeur du simulateur au lieu d'écrire un second
+ * analyseur de fichier ; Assimp saurait exporter, mais le projet le compile
+ * sans ses exportateurs (ASSIMP_NO_EXPORT).
+ *
+ * Usage : ./build/bin/model_probe [chemin.ac] [sortie.obj]
  *
  * Auteur : O. Booklage
  * Date : juin 2026
@@ -21,9 +28,11 @@
 
 #include <glm/glm.hpp>
 
+#include <cctype>
 #include <cstdio>
 #include <limits>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -51,9 +60,74 @@ struct Bounds {
     }
 };
 
+/* Écriture Wavefront OBJ au fil du parcours : chaque maillage est aplati dans le
+   repère du modèle, avec ses UV d'origine (indispensables : la cuisson doit
+   retomber sur le même atlas que la texture peinte) et ses normales. Les
+   indices OBJ commencent à 1 et se suivent d'un maillage à l'autre, d'où le
+   compteur 'base'. */
+struct ObjWriter {
+    std::FILE*   out  = nullptr;
+    unsigned int base = 1;
+
+    void add(const aiMesh* mesh, const glm::mat4& global) {
+        const glm::mat3 normalMat = glm::mat3(global);
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            const aiVector3D& p = mesh->mVertices[v];
+            const glm::vec3   w = glm::vec3(global * glm::vec4(p.x, p.y, p.z, 1.0f));
+            std::fprintf(out, "v %.6f %.6f %.6f\n", static_cast<double>(w.x),
+                         static_cast<double>(w.y), static_cast<double>(w.z));
+        }
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            /* Un maillage sans UV reçoit tout de même une coordonnée, sans quoi
+               la numérotation des faces se décalerait pour les suivants. */
+            const aiVector3D uv =
+                mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][v] : aiVector3D(0, 0, 0);
+            std::fprintf(out, "vt %.6f %.6f\n", static_cast<double>(uv.x),
+                         static_cast<double>(uv.y));
+        }
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            const aiVector3D& n = mesh->mNormals[v];
+            const glm::vec3   w = glm::normalize(normalMat * glm::vec3(n.x, n.y, n.z));
+            std::fprintf(out, "vn %.6f %.6f %.6f\n", static_cast<double>(w.x),
+                         static_cast<double>(w.y), static_cast<double>(w.z));
+        }
+        for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
+            const aiFace& face = mesh->mFaces[f];
+            std::fprintf(out, "f");
+            for (unsigned int k = 0; k < face.mNumIndices; ++k) {
+                const unsigned int idx = base + face.mIndices[k];
+                std::fprintf(out, " %u/%u/%u", idx, idx, idx);
+            }
+            std::fprintf(out, "\n");
+        }
+        base += mesh->mNumVertices;
+    }
+};
+
+/* Nœuds écartés de l'export, désignés par sous-chaîne de leur nom (insensible à
+   la casse), comme le fait le simulateur au chargement. Sans ce filtre, le plan
+   flou du rotor (un grand disque au-dessus de la cellule) et les flotteurs
+   optionnels seraient présents à la cuisson et couvriraient tout l'appareil
+   d'une ombre qui n'existe pas au rendu. */
+std::vector<std::string> g_skip;
+
+bool skipped(const std::string& name) {
+    std::string lower = name;
+    for (char& c : lower) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    for (const std::string& needle : g_skip) {
+        if (!needle.empty() && lower.find(needle) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void processNode(const aiScene* scene, const aiNode* node, const glm::mat4& parent,
-                 Bounds& bounds, int depth) {
+                 Bounds& bounds, int depth, ObjWriter* obj = nullptr) {
     const glm::mat4 global = parent * toGlm(node->mTransformation);
+    const bool      ecarte = skipped(node->mName.C_Str());
 
     for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -83,10 +157,14 @@ void processNode(const aiScene* scene, const aiNode* node, const glm::mat4& pare
                     static_cast<double>(local.min.x), static_cast<double>(local.min.y),
                     static_cast<double>(local.min.z), static_cast<double>(local.max.x),
                     static_cast<double>(local.max.y), static_cast<double>(local.max.z));
+
+        if (obj != nullptr && !ecarte) {
+            obj->add(mesh, global);
+        }
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-        processNode(scene, node->mChildren[i], global, bounds, depth + 1);
+        processNode(scene, node->mChildren[i], global, bounds, depth + 1, obj);
     }
 }
 
@@ -109,8 +187,34 @@ int main(int argc, char** argv) {
     std::printf("meshes:%u  matériaux:%u  textures embarquées:%u\n\n", scene->mNumMeshes,
                 scene->mNumMaterials, scene->mNumTextures);
 
+    /* Second argument : on réécrit le modèle en OBJ pendant le parcours. Le
+       troisième, facultatif, liste les nœuds à écarter, séparés par des virgules
+       (par exemple "blur,disc,flotteur,barre,roue"). */
+    ObjWriter obj;
+    if (argc > 3) {
+        std::string reste = argv[3];
+        while (!reste.empty()) {
+            const std::size_t virgule = reste.find(',');
+            g_skip.push_back(reste.substr(0, virgule));
+            reste = (virgule == std::string::npos) ? "" : reste.substr(virgule + 1);
+        }
+    }
+    if (argc > 2) {
+        obj.out = std::fopen(argv[2], "w");
+        if (obj.out == nullptr) {
+            std::printf("Écriture impossible : %s\n", argv[2]);
+            return 1;
+        }
+    }
+
     Bounds bounds;
-    processNode(scene, scene->mRootNode, glm::mat4(1.0f), bounds, 0);
+    processNode(scene, scene->mRootNode, glm::mat4(1.0f), bounds, 0,
+                obj.out != nullptr ? &obj : nullptr);
+
+    if (obj.out != nullptr) {
+        std::fclose(obj.out);
+        std::printf("\nOBJ écrit : %s (%u sommets)\n", argv[2], obj.base - 1);
+    }
 
     const glm::vec3 size = bounds.max - bounds.min;
     std::printf("\nBounding box assemblée :\n");

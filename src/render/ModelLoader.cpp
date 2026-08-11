@@ -104,6 +104,34 @@ const Texture* resolveTexture(Model& model, const aiScene* scene, const aiMesh* 
     return model.acquireTexture(baseDir / rawPath);
 }
 
+/* Cherche la carte de relief d'une pièce : le fichier de même nom que sa texture
+   de couleur, suffixé "-relief" (texture.png -> texture-relief.png), dans le même
+   dossier. Absente, acquireTexture renvoie nullptr et la pièce se rend comme
+   avant. On repart du chemin d'ORIGINE et non de la livrée en cours : le relief
+   de la tôle ne change pas quand on repeint l'appareil. */
+const Texture* resolveRelief(Model& model, const aiScene* scene, const aiMesh* mesh,
+                             const std::filesystem::path& baseDir) {
+    if (mesh->mMaterialIndex >= scene->mNumMaterials) {
+        return nullptr;
+    }
+    aiString path;
+    if (scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &path) !=
+        AI_SUCCESS) {
+        return nullptr;
+    }
+    const std::string rawPath = path.C_Str();
+    /* Textures embarquées (chemin "*N") : pas de fichier voisin à chercher. */
+    if (rawPath.empty() || rawPath.front() == '*') {
+        return nullptr;
+    }
+    std::filesystem::path relief = baseDir / rawPath;
+    relief.replace_filename(relief.stem().string() + "-relief" + relief.extension().string());
+    if (!std::filesystem::exists(relief)) {
+        return nullptr;
+    }
+    return model.acquireTexture(relief);
+}
+
 /* Traite un nœud de l'arbre du modèle, puis ses enfants (récursivement). Chaque
    nœud porte une transformation locale ; en la combinant avec celle de son
    parent, on obtient la position finale de sa géométrie dans le monde. */
@@ -157,7 +185,7 @@ void processNode(Model& model, const aiScene* scene, const aiNode* node, const m
                 model.recordVertices(vertices);
                 model.addPart(Mesh(vertices, indices),
                               resolveTexture(model, scene, mesh, baseDir), isTransparent,
-                              opacity);
+                              opacity, resolveRelief(model, scene, mesh, baseDir));
             }
         }
     }

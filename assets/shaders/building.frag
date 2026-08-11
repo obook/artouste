@@ -7,10 +7,18 @@
  * bâtiments lointains se fondent dans le ciel au lieu de surgir nettement.
  *
  * Les murs (normale horizontale) sont en plus habillés d'une texture de façade
- * tuilée (u_facade, fenêtres) échantillonnée en UV réels (voir Buildings.cpp) ;
- * le toit (normale verticale) garde sa seule couleur de sommet (palette de
- * tuiles/ardoise). Le tri mur/toit se fait sur la normale, sans attribut dédié :
- * c'est la seule différence géométrique fiable entre les deux à ce stade.
+ * tuilée échantillonnée en UV réels (voir BuildingsMesh.cpp) ; le toit (normale
+ * verticale) garde sa seule couleur de sommet (palette de tuiles/ardoise). Le
+ * tri mur/toit se fait sur la normale, sans attribut dédié : c'est la seule
+ * différence géométrique fiable entre les deux à ce stade.
+ *
+ * Deux tuiles de façade : la face ouverte (u_facade, fenêtres) et le pignon
+ * aveugle (u_facadePleine). Le choix est fait par face au montage du maillage et
+ * transporté par le SIGNE de l'UV horizontal, négatif pour un mur plein : la
+ * structure Vertex est partagée avec le terrain, on n'y ajoute pas d'attribut
+ * pour un seul bit. Les deux tuiles sont lues puis mélangées plutôt que lues
+ * dans une branche, pour que les dérivées (donc le niveau de mipmap) restent
+ * définies.
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -23,7 +31,8 @@ in vec3 v_worldPos;
 
 out vec4 frag_color;
 
-uniform sampler2D u_facade;   /* façade tuilée (fenêtres), murs seulement */
+uniform sampler2D u_facade;       /* façade tuilée (fenêtres), murs seulement */
+uniform sampler2D u_facadePleine; /* même tuile sans percement (pignon aveugle) */
 uniform vec3  u_lightDir;   /* direction VERS la lumière, déjà normalisée */
 uniform vec3  u_camPos;     /* position de la caméra (pour la distance de brume) */
 uniform vec3  u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
@@ -37,7 +46,10 @@ void main() {
        couleur du sommet (légère variation par bâtiment). Toit (n.y ~ 1) :
        couleur du sommet seule (palette de toiture, pas de façade dessus). */
     float wallMask = 1.0 - step(0.5, abs(n.y));
-    vec3  albedo   = mix(v_color, texture(u_facade, v_uv).rgb * v_color, wallMask);
+    float plein    = step(v_uv.x, 0.0);
+    vec3  tuile    = mix(texture(u_facade, v_uv).rgb,
+                         texture(u_facadePleine, v_uv).rgb, plein);
+    vec3  albedo   = mix(v_color, tuile * v_color, wallMask);
 
     float diffuse = max(dot(n, normalize(u_lightDir)), 0.0);
     float ambient = 0.4;

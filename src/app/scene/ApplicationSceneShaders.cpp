@@ -196,11 +196,17 @@ void Application::initSceneShaders() {
         m_terrainDetail = std::make_unique<render::Texture>(detailPath);
     }
 
-    /* Façade tuilée des bâtiments (fenêtres), voir u_facade dans building.frag.
-       Absente : le shader reçoit une unité vide, les murs restent en couleur unie. */
+    /* Façades tuilées des bâtiments, voir u_facade / u_facadePleine dans
+       building.frag : la face ouverte (fenêtres) et le pignon aveugle, choisis
+       par face au montage du maillage. Absentes : le shader reçoit une unité
+       vide, les murs restent en couleur unie. */
     const std::filesystem::path facadePath = assets / "textures" / "facade.png";
     if (std::filesystem::exists(facadePath)) {
         m_buildingFacade = std::make_unique<render::Texture>(facadePath);
+    }
+    const std::filesystem::path facadePleinePath = assets / "textures" / "facade_pleine.png";
+    if (std::filesystem::exists(facadePleinePath)) {
+        m_buildingFacadePleine = std::make_unique<render::Texture>(facadePleinePath);
     }
 
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */

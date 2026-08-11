@@ -187,10 +187,12 @@ void pushTriangle(std::vector<Vertex>& verts,
 }
 
 /* Quad d'un mur (bi, bj en bas ; ti, tj en haut, mêmes côtés), avec des UV
-   réels : u parcourt la largeur du côté (0 à sa longueur / FACADE_TILE_W_M), v
-   la hauteur depuis le sol du bâtiment (0 à sa hauteur / FACADE_TILE_H_M). La
-   texture de façade (voir building.frag) se répète ainsi à échelle constante
-   quelle que soit la taille du bâtiment. */
+   réels : u parcourt la largeur du côté (0 à u1, soit sa longueur /
+   FACADE_TILE_W_M), v la hauteur depuis le sol du bâtiment (0 à sa hauteur /
+   FACADE_TILE_H_M). La texture de façade (voir building.frag) se répète ainsi à
+   échelle constante quelle que soit la taille du bâtiment. Un u1 négatif
+   demande la tuile aveugle plutôt que la tuile fenêtrée (voir l'appelant) ; la
+   répétition, elle, est indifférente au signe. */
 void pushWallQuad(std::vector<Vertex>& verts,
                   std::vector<unsigned int>& idx,
                   const vec3& bi,
@@ -505,7 +507,37 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
         roof.z /= chaud;
 
         /* Murs : un quad vertical par côté de l'emprise, texturé en façade (UV réels,
-           voir pushWallQuad et FACADE_TILE_*). */
+           voir pushWallQuad et FACADE_TILE_*).
+
+           Toutes les faces ne sont pas fenêtrées : un bâtiment réel montre ses
+           fenêtres sur ses deux longues faces et garde ses pignons pleins. On
+           prend pour axe de référence le côté le plus long de l'emprise ; une
+           face dont la normale s'écarte de moins de 45 degrés de celle de cet
+           axe est fenêtrée, les autres sont pleines. Deux faces opposées ont des
+           normales opposées et le critère est pris en valeur absolue : elles
+           reçoivent donc toujours le même habillage, ce qui était le défaut à
+           corriger (fenêtres d'un côté, mur nu en face).
+
+           Le résultat voyage jusqu'au fragment par le SIGNE de l'UV horizontal,
+           négatif pour un mur plein : la structure Vertex est partagée avec le
+           terrain et son million de sommets, lui ajouter un attribut pour cette
+           seule donnée coûterait 4 Mo par carte. Voir building.frag. */
+        float refNx = 1.0f, refNz = 0.0f, refLen2 = -1.0f;
+        for (std::size_t i = 0; i < n; ++i) {
+            const std::size_t j = (i + 1) % n;
+            const float ex = px[j] - px[i];
+            const float ez = pz[j] - pz[i];
+            const float len2 = ex * ex + ez * ez;
+            if (len2 > refLen2) {
+                refLen2 = len2;
+                const float inv = 1.0f / std::sqrt(std::max(len2, 1e-6f));
+                refNx = ez * inv; /* normale du côté le plus long */
+                refNz = -ex * inv;
+            }
+        }
+        /* cos 45 degrés : au-delà, la face regarde dans l'axe de référence. */
+        constexpr float COS_45 = 0.70710678f;
+
         const float vTop = height / FACADE_TILE_H_M;
         for (std::size_t i = 0; i < n; ++i) {
             const std::size_t j = (i + 1) % n;
@@ -526,7 +558,9 @@ Buildings::Buildings(const std::filesystem::path& dir, const Terrain& terrain) {
             const vec3 tj{px[j], top, pz[j]};
             const vec3 ti{px[i], top, pz[i]};
             const float sideLen = std::sqrt(ex * ex + ez * ez);
-            pushWallQuad(tb.v, tb.i, bi, bj, tj, ti, normal, wall, sideLen / FACADE_TILE_W_M, vTop);
+            const bool fenetree = std::fabs(normal.x * refNx + normal.z * refNz) >= COS_45;
+            const float u1 = (fenetree ? 1.0f : -1.0f) * sideLen / FACADE_TILE_W_M;
+            pushWallQuad(tb.v, tb.i, bi, bj, tj, ti, normal, wall, u1, vTop);
         }
 
         /* Toit plat : éventail de triangles depuis le premier sommet (correct pour

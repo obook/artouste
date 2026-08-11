@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
 generer_facade.py
-Génère la texture de façade tuilable des bâtiments : mur enduit clair, percé de
-fenêtres sur deux étages et trois travées, avec un grain de plâtre discret.
-Échantillonnée par building.frag (u_facade) en répétition (GL_REPEAT), sur une
-tuile réelle de TILE_W_M x TILE_H_M mètres (mêmes valeurs que
-FACADE_TILE_W_M / FACADE_TILE_H_M dans src/render/Buildings.cpp) : Buildings.cpp
-calcule les coordonnées UV des murs en mètres réels, donc la tuile se pose à la
-même échelle sur un petit pavillon et sur un grand immeuble.
+Génère les deux textures de façade tuilables des bâtiments : mur enduit clair
+avec un grain de plâtre discret, percé de fenêtres sur deux étages et trois
+travées (facade.png) ou aveugle (facade_pleine.png, le pignon).
+Échantillonnées par building.frag (u_facade, u_facadePleine) en répétition
+(GL_REPEAT), sur une tuile réelle de TILE_W_M x TILE_H_M mètres (mêmes valeurs
+que FACADE_TILE_W_M / FACADE_TILE_H_M dans src/render/buildings/BuildingsMesh.cpp) :
+BuildingsMesh.cpp calcule les coordonnées UV des murs en mètres réels, donc la
+tuile se pose à la même échelle sur un petit pavillon et sur un grand immeuble.
 
 Usage : tools/.venv/bin/python tools/facade/generer_facade.py
-Sortie : assets/textures/facade.png
+Sorties : assets/textures/facade.png, assets/textures/facade_pleine.png
 
 Auteur : O. Booklage
 Licence : GPL v2
@@ -43,6 +44,10 @@ GLASS_COLORS = [
     (74, 82, 94),
 ]  # une teinte par travée : casse la répétition mécanique du carrelage
 
+# Le mur aveugle est le même enduit, assombri : un pignon sans ouverture prend
+# moins de lumière du ciel qu'une façade et se distingue ainsi de ses voisines.
+PLEIN_GAIN = 0.9
+
 
 def wall_base():
     """Fond enduit clair, avec un grain fin de plâtre (indépendant par pixel,
@@ -54,7 +59,9 @@ def wall_base():
     return ImageChops.overlay(base, grain_rgb)
 
 
-def main():
+def facade(fenetres):
+    """Tuile de façade. Avec fenetres, la face ouverte ; sans, le mur aveugle du
+       pignon (même enduit, mêmes bandeau et pilastres, assombri de PLEIN_GAIN)."""
     img = wall_base()
     draw = ImageDraw.Draw(img)
 
@@ -69,7 +76,7 @@ def main():
     win_w = bay_w * 0.56
     win_h = floor_h * 0.52
     frame = max(2, int(PX_PER_M * 0.08))
-    for col in range(BAYS):
+    for col in range(BAYS if fenetres else 0):
         cx = (col + 0.5) * bay_w
         glass = GLASS_COLORS[col % len(GLASS_COLORS)]
         for row in range(FLOORS):
@@ -93,10 +100,17 @@ def main():
         shade = Image.new("RGB", (WIDTH, HEIGHT), (0, 0, 0))
         img = Image.composite(shade, img, pilaster.point(lambda p: int(p * 0.35)))
 
-    sortie = assets_dir("textures", "facade.png")
-    sortie.parent.mkdir(parents=True, exist_ok=True)
-    img.save(sortie)
-    print(f"[facade] {sortie} écrit ({WIDTH}x{HEIGHT}, tuile {TILE_W_M:g}x{TILE_H_M:g} m)")
+    if not fenetres:
+        img = img.point(lambda p: int(p * PLEIN_GAIN))
+    return img
+
+
+def main():
+    for nom, fenetres in (("facade.png", True), ("facade_pleine.png", False)):
+        sortie = assets_dir("textures", nom)
+        sortie.parent.mkdir(parents=True, exist_ok=True)
+        facade(fenetres).save(sortie)
+        print(f"[facade] {sortie} écrit ({WIDTH}x{HEIGHT}, tuile {TILE_W_M:g}x{TILE_H_M:g} m)")
 
 
 if __name__ == "__main__":

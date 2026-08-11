@@ -141,8 +141,12 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_buildingShader->setFloat("u_fogStart", m_fogStart);
         m_buildingShader->setFloat("u_fogEnd", m_fogEnd);
         m_buildingShader->setInt("u_facade", 0);
+        m_buildingShader->setInt("u_facadePleine", 1);
         if (m_buildingFacade) {
             m_buildingFacade->bind(0);
+        }
+        if (m_buildingFacadePleine) {
+            m_buildingFacadePleine->bind(1);
         }
         /* Culling par tuiles : le recalage d'origine (u_model = toRel) s'annule dans le
            produit final, donc le frustum en coordonnées monde s'extrait de proj * vue

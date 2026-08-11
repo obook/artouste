@@ -121,6 +121,21 @@ https://www.heli-archive.ch/en/helicopters/in-depth-articles/se-3130-alouette-2
 > masse/montée qui permet d'extrapoler le taux de montée à la masse simulée
 > de 1100 kg. Relevé en ligne le 09/08/2026.
 
+FSHeli.ch. (s. d.). *FSHeli.ch Alouette II Reference* [scan des planches du
+manuel de vol allemand de l'Alouette II, turbine Artouste II C]. Diffusé
+"for Flight Simulator use only".
+
+> Dix planches du manuel de vol d'époque : montée à 90 km/h par masse et
+> altitude-densité (Abb. 3-6), carte moteur (Abb. 0-8), puissances maximales
+> de décollage (Abb. 0-9 et 0-10), butées du pas collectif, table des VNE,
+> domaine de sécurité en autorotation, contrôles de puissance et de pas
+> (Abb. 2-23 et 2-32), masses maximales au décollage avec et sans effet de
+> sol. Courbes numérisées le 11/08/2026 (voir
+> `docs/technique/references-se3130.json`) ; reconstitution typographique
+> avec figures dans `docs/technique/planches-manuel-vol.tex`. Scan tiers
+> archivé hors dépôt :
+> `artouste-sources-tierces/docs-se3130/fsheli-alouette2-reference.pdf`.
+
 ## Ouvrages recommandés, non consultés
 
 Ouvrages sous droits, sans accès en ligne libre : ils sont cités pour mémoire,

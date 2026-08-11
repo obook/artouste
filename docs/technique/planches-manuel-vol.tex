@@ -1,0 +1,496 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage{fourier}       % pdfLaTeX (polices Type1)
+\else
+  \usepackage{fourier-otf}   % LuaLaTeX ou XeLaTeX (polices OpenType)
+\fi
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{babel,patterns}
+\pgfplotsset{
+  /pgf/number format/use comma,
+  /pgf/number format/1000 sep={\,},
+  planche/.style={
+    width=14.5cm, height=10cm,
+    grid=both,
+    grid style={gray!30},
+    minor grid style={gray!15},
+    tick align=outside,
+    every axis/.append style={font=\small},
+    label style={font=\small},
+  },
+}
+
+\newcommand{\degmin}[2]{$#1^{\circ}\,#2'$}
+\renewcommand{\deg}[1]{$#1^{\circ}$}  % remplace l'opérateur mathématique deg, inutilisé ici
+
+\title{Planches du manuel de vol\\
+\Large Alouette II, turbine Artouste II C}
+\author{}
+\date{Reconstitution du 11 août 2026}
+
+\begin{document}
+\maketitle
+
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{%
+\textbf{Avertissement.} Ce document est une reconstitution typographique et
+graphique des planches du manuel de vol allemand de l'Alouette II (turbine
+Artouste II C), d'après le scan diffusé par FSHeli.ch ("for Flight Simulator
+use only"), archivé sous
+\texttt{artouste-sources-tierces/docs-se3130/fsheli-alouette2-reference.pdf}.
+Les courbes ont été numérisées sur le scan le 11/08/2026 ; l'incertitude de
+lecture est indiquée sous chaque planche. Document destiné à la simulation
+uniquement, sans aucune valeur opérationnelle.}}
+
+\tableofcontents
+
+\section{Vitesse de montée à 90 km/h (Abb. 3-6)}
+
+Conditions de la planche : toutes configurations (patins ou flotteurs), pas
+collectif \deg{14}, régime 34\,000 tr/min, vitesse indiquée 90 km/h (50 kt).
+La planche d'origine se lit en deux temps : conversion de l'altitude-pression
+en altitude-densité selon la température, puis lecture de la vitesse de
+montée à l'altitude-densité obtenue.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=8cm,
+  xlabel={Altitude-densité (m)}, ylabel={Altitude-pression (m)},
+  xmin=0, xmax=4600, ymin=0, ymax=4500,
+  minor x tick num=1, minor y tick num=1]
+\addplot[gray, thin] coordinates {(-1160,0) (3331,4500)}
+  node[pos=0.93, above left, black, font=\scriptsize, rotate=42]{$-30$};
+\addplot[gray, thin] coordinates {(-756,0) (3740,4500)}
+  node[pos=0.97, above left, black, font=\scriptsize, rotate=42]{$-20$};
+\addplot[gray, thin] coordinates {(-369,0) (4130,4500)}
+  node[pos=0.99, above left, black, font=\scriptsize, rotate=42]{$-10$};
+\addplot[black, thick] coordinates {(0,0) (4500,4500)}
+  node[pos=0.93, above left, font=\scriptsize, rotate=42]{ISA};
+\addplot[gray, thin] coordinates {(354,0) (4853,4500)}
+  node[pos=0.85, below right, black, font=\scriptsize, rotate=42]{$+10$};
+\addplot[gray, thin] coordinates {(693,0) (5190,4500)}
+  node[pos=0.78, below right, black, font=\scriptsize, rotate=42]{$+20$};
+\addplot[gray, thin] coordinates {(1020,0) (5513,4500)}
+  node[pos=0.71, below right, black, font=\scriptsize, rotate=42]{$+30$};
+\end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\begin{axis}[planche,
+  xlabel={Altitude-densité (m)}, ylabel={Vitesse de montée (m/s)},
+  xmin=0, xmax=4600, ymin=0, ymax=9,
+  minor x tick num=1, minor y tick num=1,
+  legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east},
+  legend cell align=left]
+\addplot[black, thick, smooth] coordinates
+  {(0,8.10) (1000,7.00) (2000,5.95) (2500,5.55) (3000,5.10) (3500,4.30) (4000,3.85) (4500,3.25)};
+\addlegendentry{1100 kg}
+\addplot[black, smooth] coordinates
+  {(0,7.20) (1000,6.15) (2000,5.15) (2500,4.64) (3000,4.00) (3500,3.45) (4000,2.85) (4500,2.10)};
+\addlegendentry{1200 kg}
+\addplot[black, smooth] coordinates
+  {(0,6.40) (1000,5.35) (2000,4.35) (2500,3.67) (3000,3.10) (3500,2.32) (4000,1.95) (4450,0.00)};
+\addlegendentry{1300 kg}
+\addplot[black, smooth] coordinates
+  {(0,5.55) (1000,4.62) (2000,3.55) (2500,2.76) (3000,2.08) (3500,1.17) (3950,0.00)};
+\addlegendentry{1400 kg}
+\addplot[black, smooth] coordinates
+  {(0,4.89) (1000,3.87) (2000,2.78) (2500,1.70) (3000,0.55) (3080,0.00)};
+\addlegendentry{1500 kg}
+\addplot[black, dashed, smooth] coordinates
+  {(0,4.15) (1000,3.10) (2000,1.95) (2300,0.00)};
+\addlegendentry{1600 kg}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Lecture numérisée à $\pm 0{,}15$ m/s. La pente commune est d'environ
+$-1{,}05$ m/s par 1\,000 m d'altitude-densité, jusqu'à un effondrement final
+environ 2 m/s au-dessus du plafond de montée. Plafonds lus : environ
+2\,300 m à 1600 kg, 3\,050 m à 1500 kg, 3\,950 m à 1400 kg, 4\,450 m à
+1300 kg ; hors planche au-delà. L'axe des montées de la planche d'origine
+est orienté vers le bas ; il est redressé ici.
+
+\section{Carte moteur (Abb. 0-8)}
+
+Puissance en fonction de la température de tuyère et de la consommation
+horaire, en grandeurs corrigées (réduites aux conditions standard). Réseau
+partiel : trois iso-températures et trois iso-consommations sur les réseaux
+complets de la planche (420 à 510 \deg{}C par pas de 10, 140 à 190 kg/h par
+pas de 5).
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=11cm,
+  xlabel={$\dfrac{n}{1000}\sqrt{\dfrac{288}{t_0}}$},
+  ylabel={$P\,\dfrac{760}{P_a}\sqrt{\dfrac{288}{t_0}}$\quad (PS)},
+  xmin=31, xmax=35.4, ymin=270, ymax=500,
+  minor x tick num=1, minor y tick num=1]
+\addplot[black, thick, smooth] coordinates
+  {(31.5,412) (32,431) (32.5,448) (33,461) (33.5,470) (34,476) (34.4,478) (34.7,476)}
+  node[pos=0.55, above left, font=\scriptsize]{510};
+\addplot[black, thick, smooth] coordinates
+  {(31.7,375) (32,388) (32.5,404) (33,415) (33.5,424) (34,428) (34.3,429) (34.7,419)}
+  node[pos=0.55, above left, font=\scriptsize]{480};
+\addplot[black, thick, smooth] coordinates
+  {(31.9,341) (32.5,356) (33,364) (33.5,371) (34,375) (34.1,375) (34.5,370) (34.8,345)}
+  node[pos=0.5, above left, font=\scriptsize]{450};
+\addplot[black, dashed, smooth] coordinates
+  {(33.2,480) (33.5,478) (34,474) (34.5,467) (34.8,459)}
+  node[pos=0.75, above right, font=\scriptsize]{190};
+\addplot[black, dashed, smooth] coordinates
+  {(31.7,410) (32,413) (32.5,415) (33,412) (33.5,407) (34,400) (34.5,385) (34.8,373)}
+  node[pos=0.85, above right, font=\scriptsize]{170};
+\addplot[black, dashed, smooth] coordinates
+  {(31.6,326) (32,333) (32.5,336) (33,331) (33.5,322) (34,315) (34.5,298)}
+  node[pos=0.85, above right, font=\scriptsize]{150};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\noindent Grandeurs : $P$ puissance (PS), $n$ régime du moteur (tr/min),
+$P_a$ pression atmosphérique (mm Hg), $t_0$ température extérieure absolue
+(K), $C_h$ consommation (kg/h), $t_4$ température de tuyère (\deg{}C).
+Traits pleins : $t_4$ corrigée $(t_4+273)\,\frac{288}{t_0}-273$. Tirets :
+consommation corrigée $C_h\,\frac{760}{P_a}\sqrt{\frac{288}{t_0}}$.
+Lecture à $\pm 4$ PS.
+
+\section{Puissance maximale de décollage (Abb. 0-9 et 0-10)}
+
+\subsection{Au niveau de la mer, selon la température (Abb. 0-9)}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche,
+  xlabel={Température extérieure (\deg{}C)},
+  ylabel={Puissance réelle (PS)},
+  xmin=-35, xmax=55, ymin=295, ymax=465,
+  minor x tick num=1, minor y tick num=1]
+\addplot[black, dashed, thick] coordinates {(18,455) (50,372)}
+  node[pos=0.35, right=2pt, font=\scriptsize]{$t_4$ max, 34\,000};
+\addplot[black, dashed] coordinates {(20,444) (50,364)}
+  node[pos=0.72, below left, font=\scriptsize]{$t_4$ max, 33\,000};
+\addplot[black, densely dashed, thick] coordinates {(-30,391) (0,404) (10,406) (34,406)}
+  node[pos=0.45, above, font=\scriptsize]{débit carburant, 33\,000};
+\addplot[black, densely dashed] coordinates {(-20,381) (0,398) (10,401) (39,402)}
+  node[pos=0.62, below, font=\scriptsize]{débit carburant, 34\,000};
+\addplot[black, thick] coordinates {(-30,390) (50,313)}
+  node[pos=0.62, above right, font=\scriptsize]{butée de pas, 34\,000};
+\addplot[black] coordinates {(-30,377) (50,316)}
+  node[pos=0.35, below left, font=\scriptsize]{butée de pas, 33\,000};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+La butée de pas est \degmin{14}{30} à $V_{\text{anz}} = 90$ km/h (50 kt) ou
+\deg{14} à $V_{\text{anz}} = 0$. En dessous d'environ $+35$ \deg{}C, la
+puissance utilisable au décollage est bornée par la butée de pas, très en
+dessous des limites moteur. Lecture à $\pm 5$ PS.
+
+\subsection{En atmosphère normale, selon l'altitude (Abb. 0-10)}
+
+Régime 34\,000 tr/min.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=9cm,
+  xlabel={Puissance (PS)}, ylabel={Altitude-pression (m)},
+  xmin=220, xmax=490, ymin=0, ymax=3300,
+  minor x tick num=1, minor y tick num=1]
+\addplot[black, thick] coordinates {(357,0) (228,3200)}
+  node[pos=0.45, left=2pt, font=\scriptsize, align=center]{butée\\de pas};
+\addplot[black, densely dashed] coordinates {(400,0) (443,2400)}
+  node[pos=0.5, right=2pt, font=\scriptsize, align=center]{débit carburant\\170 kg/h};
+\addplot[black, dashed, thick] coordinates {(475,0) (398,3200)}
+  node[pos=0.75, right=2pt, font=\scriptsize]{$t_4$ max};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+La limite moteur passe du débit carburant à la température $t_4$ vers
+1\,800 m ; la butée de pas (\degmin{14}{30} à 90 km/h ou \deg{14} à
+0 km/h) reste la borne réelle sur toute la plage. Lecture à $\pm 5$ PS.
+
+\section{Butées du pas collectif en utilisation normale (1.6a)}
+
+Ces limites respectées, la température $t_4$ maximale n'est jamais
+dépassée.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llc@{}}
+\toprule
+Phase de vol & Situation & Pas maximal \\
+\midrule
+Stationnaire & & \deg{14} \\
+\addlinespace
+Décollage normal (terrain dégagé) & en stationnaire & \deg{14} \\
+ & passage en translation & \degmin{14}{30} \\
+\addlinespace
+Décollage à forte pente & en stationnaire & \degmin{13}{30} \\
+ & survol des obstacles & \degmin{14}{30} \\
+\addlinespace
+Montée ($V_i = 90$ km/h, 33\,000 tr/min) & & \deg{14} \\
+\addlinespace
+Croisière & 33\,000 tr/min & \degmin{14}{30} \\
+ & 34\,000 tr/min & \deg{14} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Huile froide.} En dessous de $-10$ \deg{}C avec l'huile O-138,
+faire un point fixe au sol et attendre que l'aiguille de température
+d'huile monte. Passer en translation sans augmenter le pas, ou rester en
+stationnaire, jusqu'à 20 \deg{}C d'huile avec l'O-138, 0 \deg{}C avec
+l'O-135.
+
+\paragraph{Avertissements.} Ne jamais augmenter le pas brutalement. En
+utilisation normale, ne jamais franchir la butée élastique. En cas
+d'urgence, la butée élastique peut être dépassée jusqu'à \deg{15} sans
+risque de pompage.
+
+\section{Vitesses à ne pas dépasser (1.7.1)}
+
+Vitesses limites $V_{\text{anz}}$ pour tous les états de vol, patins ou
+flotteurs. La vitesse indiquée est égale à la vitesse corrigée. Valeurs en
+km/h, nœuds entre parenthèses.
+
+\begin{center}
+\small
+\begin{tabular}{@{}rrrrrrrr@{}}
+\toprule
+\multicolumn{2}{c}{Masse au décollage} & \multicolumn{6}{c}{Altitude (m)} \\
+\cmidrule(lr){1-2}\cmidrule(l){3-8}
+kg & lb & 0 & 1000 & 2000 & 3000 & 4000 & 4500 \\
+\midrule
+1600 & 3500 & 185 (100) & 165 (90) & & & & \\
+1500 & 3300 & 195 (105) & 175 (95) & 155 (85) & & & \\
+1400 & 3100 & 195 (105) & 185 (100) & 165 (90) & 145 (80) & & \\
+1300 & 2900 & 195 (105) & 195 (105) & 175 (95) & 155 (85) & 135 (75) & \\
+1200 & 2700 & 195 (105) & 195 (105) & 185 (100) & 165 (90) & 145 (80) & 135 (75) \\
+1100 & 2400 & 195 (105) & 195 (105) & 195 (105) & 175 (95) & 155 (85) & 145 (80) \\
+1000 & 2200 & 195 (105) & 195 (105) & 195 (105) & 185 (100) & 165 (90) & 155 (85) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Approximations données par le manuel : retrancher 20 km/h (10 kt) par
+1\,000 m de hauteur ; ajouter 10 km/h (5 kt) par 100 kg de masse en moins,
+sans jamais dépasser 195 km/h (105 kt).
+
+\section{Domaine de sécurité pour atterrissage en autorotation (1.8)}
+
+Valable à 1600 kg, en vol face au vent. À masse plus faible, la zone à
+éviter est plus petite : la courbe publiée sert de borne prudente.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=11cm,
+  xlabel={Vitesse indiquée (km/h)}, ylabel={Hauteur (m)},
+  xmin=0, xmax=190, ymin=0, ymax=160,
+  minor x tick num=1, minor y tick num=1]
+\addplot[black, fill=gray!35] coordinates
+  {(0,150) (30,136) (40,127) (50,117) (60,100) (65,90) (70,76) (72,63)
+   (70,48) (65,37) (60,30) (50,21) (40,13) (30,8) (20,5) (10,3) (0,2)} -- cycle;
+\addplot[black, fill=gray!35] coordinates
+  {(52,0) (60,5) (70,9) (80,13) (90,17) (100,20) (120,22) (140,24) (185,25) (185,0)} -- cycle;
+\node[font=\small\itshape, align=center] at (axis cs:33,70) {zone à\\éviter};
+\node[font=\small\itshape, align=center] at (axis cs:130,80) {domaine de sécurité};
+\node[font=\small\itshape, align=center] at (axis cs:125,10) {zone à éviter};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Numérisation à $\pm 3$ km/h et $\pm 3$ m. Le bec de la zone basse vitesse
+est à 72 km/h et 63 m ; le survol au ras du sol (sous 2 m en
+stationnaire) et le vol au-delà du bec sont sûrs. La zone grande vitesse
+impose de tenir environ 25 m de hauteur au-delà de 140 km/h.
+
+\section{Contrôle de la puissance (Abb. 2-23)}
+
+Température de tuyère $t_4$ en fonction du pas collectif, à
+34\,000 tr/min, pour le contrôle périodique de la puissance. La planche de
+l'exemplaire scanné porte une correction individuelle de turbine de
+$+15$ \deg{}C.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche,
+  xlabel={Pas collectif (\deg{})}, ylabel={$t_4$ (\deg{}C)},
+  xmin=12, xmax=14.35, ymin=340, ymax=525,
+  minor x tick num=3, minor y tick num=1]
+\addplot[black] coordinates {(12,455) (14,512)} node[right, font=\scriptsize]{$+45$};
+\addplot[black] coordinates {(12,439) (14,495)} node[right, font=\scriptsize]{$+35$};
+\addplot[black] coordinates {(12,422) (14,478)} node[right, font=\scriptsize]{$+25$};
+\addplot[black] coordinates {(12,407) (14,461)} node[right, font=\scriptsize]{$+15$};
+\addplot[black] coordinates {(12,391) (14,443)} node[right, font=\scriptsize]{$+5$};
+\addplot[black] coordinates {(12,375) (14,426)} node[right, font=\scriptsize]{$-5$};
+\addplot[black] coordinates {(12,358) (14,410)} node[right, font=\scriptsize]{$-15$};
+\node[font=\scriptsize, rotate=90] at (axis cs:14.28,470) {température extérieure (\deg{}C)};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Pente lue : 26 à 28 \deg{}C de $t_4$ par degré de pas, environ
+1,6 \deg{}C par degré de température extérieure. Lecture à $\pm 3$ \deg{}C.
+
+\section{Contrôle du pas en stationnaire (Abb. 2-32)}
+
+Pas collectif nécessaire au stationnaire à 1,5 m du sol, masse
+$1500 \pm 20$ kg, 34\,000 tr/min, vent faible.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=10.5cm,
+  xlabel={Pas collectif (\deg{})}, ylabel={Altitude-pression (m)},
+  xmin=12, xmax=14, ymin=0, ymax=2100,
+  minor x tick num=3, minor y tick num=1,
+  clip=true]
+% iso-températures tous les 5 degrés C, de -20 à +40
+\addplot[gray]  coordinates {(12.03,0) (13.43,2000)} node[pos=0.4, left, black, font=\scriptsize]{$-20$};
+\addplot[gray!60] coordinates {(12.14,0) (13.54,2000)};
+\addplot[gray]  coordinates {(12.25,0) (13.65,2000)} node[pos=0.5, left, black, font=\scriptsize]{$-10$};
+\addplot[gray!60] coordinates {(12.36,0) (13.76,2000)};
+\addplot[gray]  coordinates {(12.47,0) (13.87,2000)} node[pos=0.6, left, black, font=\scriptsize]{$0$};
+\addplot[gray!60] coordinates {(12.58,0) (13.98,2000)};
+\addplot[gray]  coordinates {(12.69,0) (14.09,2000)} node[pos=0.68, left, black, font=\scriptsize]{$+10$};
+\addplot[gray!60] coordinates {(12.80,0) (14.20,2000)};
+\addplot[gray]  coordinates {(12.91,0) (14.31,2000)} node[pos=0.55, left, black, font=\scriptsize]{$+20$};
+\addplot[gray!60] coordinates {(13.02,0) (14.42,2000)};
+\addplot[gray]  coordinates {(13.13,0) (14.53,2000)} node[pos=0.42, left, black, font=\scriptsize]{$+30$};
+\addplot[gray!60] coordinates {(13.24,0) (14.64,2000)};
+\addplot[gray]  coordinates {(13.35,0) (14.75,2000)} node[pos=0.3, left, black, font=\scriptsize]{$+40$};
+\addplot[black, very thick] coordinates {(12.82,0) (13.93,2000)}
+  node[pos=0.75, right=2pt, font=\scriptsize]{ISA};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Loi lue sur la planche : pas $= 12{,}03 + 0{,}022\,(T + 20) + 0{,}70\,h/1000$,
+avec $T$ en \deg{}C et $h$ en mètres ; en atmosphère normale,
+pas $= 12{,}82 + 0{,}55\,h/1000$. Traits intermédiaires tous les 5 \deg{}C.
+Lecture à $\pm 0{,}05$ \deg{}.
+
+\section{Masse maximale au décollage avec effet de sol (page 9)}
+
+Départ de terrain dégagé, patins ou flotteurs à 1,5 m du sol,
+34\,000 tr/min.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=10.5cm,
+  xlabel={Température extérieure (\deg{}C)}, ylabel={Altitude-pression (m)},
+  xmin=-40, xmax=46, ymin=0, ymax=4800,
+  minor x tick num=1, minor y tick num=4]
+\addplot[black, smooth] coordinates
+  {(-12.0,4620) (-5.7,4430) (-2.5,4336) (0.6,4241) (7.0,4054) (13.3,3868) (16.5,3775) (19.7,3683) (26.0,3499)}
+  node[pos=0.45, above right, font=\scriptsize]{1100 kg};
+\addplot[black, smooth] coordinates
+  {(-34.2,4620) (-23.4,4308) (-18.0,4151) (-12.6,3993) (-1.8,3676) (8.9,3356) (14.3,3195) (19.7,3033) (30.5,2708)}
+  node[pos=0.55, above right, font=\scriptsize]{1200};
+\addplot[black, smooth] coordinates
+  {(-40.0,4152) (-25.8,3740) (-18.8,3534) (-11.7,3329) (2.5,2919) (16.7,2509) (23.8,2305) (30.8,2101) (45.0,1694)}
+  node[pos=0.55, above right, font=\scriptsize]{1300};
+\addplot[black, smooth] coordinates
+  {(-40.0,3563) (-25.8,3138) (-18.8,2926) (-11.7,2714) (2.5,2291) (16.7,1869) (23.8,1658) (30.8,1448) (45.0,1028)}
+  node[pos=0.55, above right, font=\scriptsize]{1400};
+\addplot[black, smooth] coordinates
+  {(-40.0,3013) (-25.8,2589) (-18.8,2377) (-11.7,2165) (2.5,1741) (16.7,1319) (23.8,1108) (30.8,897) (45.0,476)}
+  node[pos=0.55, above right, font=\scriptsize]{1500};
+\addplot[black, smooth] coordinates
+  {(-40.0,2490) (-26.3,2072) (-19.5,1863) (-12.6,1655) (1.1,1240) (14.8,825) (21.6,619) (28.4,412) (42.1,0)}
+  node[pos=0.55, above right, font=\scriptsize]{1600};
+\addplot[black, very thick] coordinates {(15,0) (-16.2,4800)}
+  node[pos=0.83, right=2pt, font=\scriptsize]{ISA};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\section{Masse maximale au décollage hors effet de sol (page 10)}
+
+Décollage sous forte pente, ou travail en stationnaire hors effet de sol,
+34\,000 tr/min.
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[planche, height=10.5cm,
+  xlabel={Température extérieure (\deg{}C)}, ylabel={Altitude-pression (m)},
+  xmin=-40, xmax=46, ymin=0, ymax=4800,
+  minor x tick num=1, minor y tick num=4]
+\addplot[black, smooth] coordinates
+  {(-8.1,4600) (-2.5,4457) (0.3,4385) (3.1,4314) (8.6,4170) (14.2,4026) (17.0,3954) (19.7,3882) (25.3,3737)}
+  node[pos=0.45, above right, font=\scriptsize]{1000 kg};
+\addplot[black, smooth] coordinates
+  {(-30.9,4600) (-20.3,4312) (-15.0,4168) (-9.8,4024) (0.8,3737) (11.4,3451) (16.6,3307) (21.9,3164) (32.5,2878)}
+  node[pos=0.55, above right, font=\scriptsize]{1100};
+\addplot[black, smooth] coordinates
+  {(-40.0,4213) (-25.8,3800) (-18.8,3595) (-11.7,3390) (2.5,2984) (16.7,2582) (23.8,2382) (30.8,2183) (45.0,1788)}
+  node[pos=0.55, above right, font=\scriptsize]{1200};
+\addplot[black, smooth] coordinates
+  {(-40.0,3565) (-25.8,3147) (-18.8,2939) (-11.7,2732) (2.5,2318) (16.7,1908) (23.8,1704) (30.8,1500) (45.0,1094)}
+  node[pos=0.55, above right, font=\scriptsize]{1300};
+\addplot[black, smooth] coordinates
+  {(-40.0,3039) (-25.8,2608) (-18.8,2394) (-11.7,2181) (2.5,1757) (16.7,1337) (23.8,1128) (30.8,920) (45.0,507)}
+  node[pos=0.55, above right, font=\scriptsize]{1400};
+\addplot[black, smooth] coordinates
+  {(-40.0,2502) (-25.9,2075) (-18.9,1864) (-11.9,1653) (2.2,1234) (16.3,819) (23.3,613) (30.3,407) (44.4,0)}
+  node[pos=0.55, above right, font=\scriptsize]{1500};
+\addplot[black, smooth] coordinates
+  {(-40.0,1984) (-28.9,1646) (-23.3,1478) (-17.8,1311) (-6.7,979) (4.4,650) (10.0,486) (15.6,324) (26.7,0)}
+  node[pos=0.5, above right, font=\scriptsize]{1600};
+\addplot[black, very thick] coordinates {(15,0) (-16.2,4800)}
+  node[pos=0.83, right=2pt, font=\scriptsize]{ISA};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+Sur les deux planches, les courbes sont tracées sur leur étendue imprimée
+réelle : les courbes 1100 et 1200 de la page 9 et la courbe 1000 de la
+page 10 s'arrêtent avant le bord du cadre sur l'original.
+
+\subsection*{Plafonds de stationnaire en atmosphère normale}
+
+Croisement de chaque courbe de masse avec la droite ISA, lu à $\pm 50$ m.
+Les valeurs marquées d'un astérisque correspondent à un croisement situé
+hors du cadre de la planche (extrapolation, $\pm 150$ à $\pm 200$ m) ; ils
+ne sont volontairement pas tracés sur les figures.
+
+\begin{center}
+\small
+\begin{tabular}{@{}rrr@{}}
+\toprule
+Masse & Avec effet de sol (1,5 m) & Hors effet de sol \\
+\midrule
+1000 kg & & $\sim$4\,820 m$^{*}$ \\
+1100 kg & $\sim$4\,700 m$^{*}$ & 4\,070 m \\
+1200 kg & 3\,930 m & 3\,230 m \\
+1300 kg & 3\,150 m & 2\,410 m \\
+1400 kg & 2\,380 m & 1\,720 m \\
+1500 kg & 1\,700 m & 1\,060 m \\
+1600 kg & 1\,020 m & 420 m \\
+\bottomrule
+\end{tabular}
+
+{\scriptsize $^{*}$ extrapolé au-delà du cadre de la planche.}
+\end{center}
+
+Pente locale des courbes au voisinage du croisement : $-28$ à $-30$ m par
+\deg{}C selon la masse. L'effet de sol à 1,5 m équivaut à environ 85 à
+95 kg de masse en moins. En prolongeant l'espacement des croisements, la
+masse maximale au stationnaire ISA au niveau de la mer sort vers 1\,665 kg
+hors effet de sol et vers 1\,750 kg avec.
+
+\end{document}

@@ -124,6 +124,60 @@
       "source": "Heli-Archive (heli-archive.ch), fiche SE 3130",
       "authority_level": 3
     },
+    {
+      "quantity": "vitesse_ascensionnelle_90kmh",
+      "value": [
+        { "masse_kg": 1100, "vz_ms": 8.10 },
+        { "masse_kg": 1200, "vz_ms": 7.20 },
+        { "masse_kg": 1300, "vz_ms": 6.40 },
+        { "masse_kg": 1400, "vz_ms": 5.55 },
+        { "masse_kg": 1500, "vz_ms": 4.90 },
+        { "masse_kg": 1600, "vz_ms": 4.15 }
+      ],
+      "unit": "m/s",
+      "conditions": {
+        "altitude": "niveau de la mer", "vitesse_kmh": 90, "pas_deg": 14,
+        "regime": "34 000 tr/min", "incertitude_ms": 0.15,
+        "note": "pente commune -1,05 m/s par 1000 m d'altitude-densité, effondrement ~2 m/s au-dessus du plafond ; plafonds de montée lus : 2300 m (1600 kg), 3050 m (1500), 3950 m (1400), ~4450 m (1300)"
+      },
+      "source": "Manuel de vol allemand Alouette II Artouste IIC (planches FSHeli.ch, Abb. 3-6), numérisation du 11/08/2026 ; reconstitution docs/technique/planches-manuel-vol.pdf",
+      "authority_level": 2
+    },
+
+    {
+      "quantity": "plafond_stationnaire_DES",
+      "value": [
+        { "masse_kg": 1100, "plafond_m": 4700, "note": "extrapolé hors cadre, +/-200 m" },
+        { "masse_kg": 1200, "plafond_m": 3930 },
+        { "masse_kg": 1300, "plafond_m": 3150 },
+        { "masse_kg": 1400, "plafond_m": 2380 },
+        { "masse_kg": 1500, "plafond_m": 1700 },
+        { "masse_kg": 1600, "plafond_m": 1020 }
+      ],
+      "unit": "m",
+      "conditions": { "atmosphere": "normale", "effet_de_sol": "patins ou flotteurs à 1,5 m", "regime": "34 000 tr/min", "incertitude_m": 50 },
+      "source": "Manuel de vol allemand Alouette II Artouste IIC (planches FSHeli.ch, page 9), numérisation du 11/08/2026",
+      "authority_level": 2
+    },
+    {
+      "quantity": "plafond_stationnaire_HES",
+      "value": [
+        { "masse_kg": 1000, "plafond_m": 4820, "note": "extrapolé hors cadre, +/-150 m" },
+        { "masse_kg": 1100, "plafond_m": 4070 },
+        { "masse_kg": 1200, "plafond_m": 3230 },
+        { "masse_kg": 1300, "plafond_m": 2410 },
+        { "masse_kg": 1400, "plafond_m": 1720 },
+        { "masse_kg": 1500, "plafond_m": 1060 },
+        { "masse_kg": 1600, "plafond_m": 420 }
+      ],
+      "unit": "m",
+      "conditions": {
+        "atmosphere": "normale", "effet_de_sol": "aucun", "regime": "34 000 tr/min", "incertitude_m": 50,
+        "note": "l'effet de sol à 1,5 m équivaut à 85-95 kg de masse ; masse maxi au stationnaire ISA niveau de la mer ~1665 kg HES, ~1750 kg DES"
+      },
+      "source": "Manuel de vol allemand Alouette II Artouste IIC (planches FSHeli.ch, page 10), numérisation du 11/08/2026",
+      "authority_level": 2
+    },
 
     {
       "quantity": "plafond_pratique",

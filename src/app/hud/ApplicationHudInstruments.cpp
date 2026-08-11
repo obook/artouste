@@ -42,6 +42,7 @@ void Application::fillHud(ui::HudData& hud,
     hud.headingDeg = headingDeg;
     hud.varioMs = body.velocity.y;
     hud.collectivePct = controls.collective * 100.0f;
+    hud.pasDeg = m_flight.pasDeg();  /* graduation réelle du levier (degrés de pale) */
     hud.rotorPct = rotorFraction * 100.0f; /* régime rotor, en pourcentage */
     hud.rotorRpm = rotorFraction * 360.0f; /* régime rotor nominal : 360 tr/min */
     /* LED du cadran NR : armée quand le rotor atteint la bande nominale (340 tr/min,
@@ -57,7 +58,7 @@ void Application::fillHud(ui::HudData& hud,
     /* LED du cadran NR clignotante pendant la montée en régime du rotor (état Embrayage :
        frein lâché, le rotor accélère jusqu'au régime de vol), plutôt qu'éteinte. */
     hud.rotorSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Embrayage);
-    hud.turbineRpm = turbineFraction * 33500.0f; /* régime turbine nominal : ~33 500 tr/min */
+    hud.turbineRpm = turbineFraction * 34000.0f; /* régime turbine en puissance : 34 000 tr/min (manuel de vol) */
     /* LED du cadran TURBINE clignotante pendant la montée en régime (état Demarrage : la
        turbine seule accélère, rotor encore immobile), plutôt qu'éteinte comme à l'arrêt. */
     hud.turbineSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Demarrage);
@@ -67,6 +68,7 @@ void Application::fillHud(ui::HudData& hud,
     hud.assist = m_assist.active();
     hud.autoland = m_autoland.active();
     hud.vrsIntensity = m_flight.vrsIntensity(); /* alerte vortex (bandeau HUD) */
+    hud.hvIntensity  = m_flight.hvIntensity();  /* zone à éviter hauteur-vitesse */
 
     /* Alerte taux de descente (façon GPWS) : descente rapide près du sol. Enveloppe
        progressive (physics::gpwsSinkLimitMs) : plus on est bas, plus le taux de

@@ -45,6 +45,28 @@ void Hud::renderVortexAlert(const HudData& data, float w, float h) {
     ImGui::End();
 }
 
+void Hud::renderHvAlert(const HudData& data, float w, float h) {
+    /* Indicateur discret, à la différence des bandeaux rouges : la zone à éviter
+       du diagramme hauteur-vitesse n'est pas une urgence mais une exposition (en
+       cas de panne, l'autorotation n'est pas garantie). Texte ambre fixe, sans
+       clignotement, seuil au-delà du lissage de FlightModel (~1 s dans la zone). */
+    if (data.hvIntensity < 0.5f) {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+
+    /* Sous les bandeaux vortex et taux de descente, pour pouvoir coexister. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.47f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowBgAlpha(0.35f);
+    ImGui::Begin("hv_alert", nullptr, flags);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.75f, 0.20f, 1.0f)); /* ambre */
+    ImGui::Text("ZONE H-V");
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
 void Hud::renderSinkRateAlert(const HudData& data, float w, float h) {
     if (!data.sinkRateAlert) {
         return;

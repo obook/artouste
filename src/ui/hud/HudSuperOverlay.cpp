@@ -50,7 +50,7 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
     std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKmh));
     std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));
-    std::snprintf(coll, sizeof(coll), "%.0f",  static_cast<double>(data.collectivePct));
+    std::snprintf(coll, sizeof(coll), "%.1f",  static_cast<double>(data.pasDeg));
     std::snprintf(tmp,  sizeof(tmp),  "%.0f",  static_cast<double>(data.exhaustTempC));
     std::snprintf(fuel, sizeof(fuel), "%.0f",  static_cast<double>(data.fuelLiters));
 
@@ -113,7 +113,11 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
        même hauteur de rangée que le groupe central, décalés vers le coin pour
        rester lisibles d'un même coup d'oeil, au-dessus des badges radio/assisté
        qui s'empilent depuis ce même coin (voir plus bas). */
-    gauge(dl, m + r, y, r, data.collectivePct, 0.0f, 100.0f, 0.0f, 0.0f, "COLL %", coll,
+    /* Cadran du pas collectif gradué en degrés de pale (manuel : plage de vol
+       12-15, butée élastique à 14,5, secours à 15) : la bande verte couvre la
+       plage normale, comme le cadran réel. */
+    gauge(dl, m + r, y, r, data.pasDeg, physics::PAS_MIN_DEG, physics::PAS_MAX_DEG,
+          12.0f, physics::PAS_BUTEE_HAUTE_DEG, "PAS deg", coll,
           GaugeLed::None, data.alarmBlinkOn);
     /* Bande du cadran IAS : elle suit la VNE DU MOMENT, qui décroît avec l'altitude,
        et non une plage figée. Elle commence là où le voyant passe au jaune (95 % de

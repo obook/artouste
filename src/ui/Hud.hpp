@@ -57,6 +57,7 @@ struct HudData {
     float headingDeg = 0.0f;
     float varioMs = 0.0f; /* taux de montée en m/s (HUD coins et Super HUD) */
     float collectivePct = 0.0f;
+    float pasDeg        = 0.0f;     /* pas collectif réel en degrés de pale (12-15 en vol) */
     float rotorPct = 0.0f;
     float rotorRpm = 0.0f;          /* régime rotor en tr/min */
     bool rotorLedArmed = false;     /* LED du cadran NR active : le rotor a atteint son
@@ -76,6 +77,9 @@ struct HudData {
     const char* turbine = "";       /* libellé d'état de la turbine */
     bool assist = false;            /* mode assisté actif : affiche un repère */
     bool autoland = false;          /* atterrissage automatique engagé : affiche un repère */
+    float hvIntensity  = 0.0f;      /* zone à éviter hauteur-vitesse, 0..1 lissée :
+                                       au-delà de 0,5, indicateur discret (voir
+                                       renderHvAlert) */
     float vrsIntensity = 0.0f;      /* vortex ring state, 0..1 : au-delà d'un seuil,
                                        un bandeau d'alerte clignotant s'affiche (l'appareil
                                        d'époque n'a pas d'avertisseur : c'est une aide du
@@ -229,6 +233,11 @@ private:
        trop rapide pres du sol. Aide du simulateur, comme l'alerte vortex. Définie
        dans HudAlerts.cpp. */
     void renderSinkRateAlert(const HudData& data, float w, float h);
+    /* Indicateur discret de la zone à éviter du diagramme hauteur-vitesse
+       (autorotation non garantie en cas de panne) : texte ambre fixe, sans
+       clignotement, l'appareil réel n'ayant aucun avertisseur. Défini dans
+       HudAlerts.cpp. */
+    void renderHvAlert(const HudData& data, float w, float h);
     /* Sous-titre d'un message radio reçu, centré en bas, par-dessus tous les modes. */
     void renderRadioSubtitle(const HudData& data, float w);
     /* Bandeau du message de l'atterrissage automatique, par-dessus tous les modes. */

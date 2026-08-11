@@ -84,7 +84,11 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     corner("hud_bl", ImVec2(m, h - m), ImVec2(0.0f, 1.0f));
     ligneAlarme(alarmeTurbine(data), "TURB %s", data.turbine);
     ligneAlarme(alarmeNr(data), "NR   %3.0f %%", static_cast<double>(data.rotorPct));
-    ImGui::Text("COLL %3.0f %%", static_cast<double>(data.collectivePct));
+    /* Levier gradué en degrés de pas réels, comme la machine (12 à 15 en vol) :
+       jaune au-delà de la butée élastique, zone de secours du manuel. */
+    ligneAlarme(data.pasDeg > physics::PAS_BUTEE_HAUTE_DEG ? GaugeLed::Yellow : GaugeLed::Green,
+                "PAS  %4.1f deg  %3.0f %%", static_cast<double>(data.pasDeg),
+                static_cast<double>(data.collectivePct));
     ligneAlarme(alarmeTmp(data), "TMP  %3.0f C", static_cast<double>(data.exhaustTempC));
     const GaugeLed alCarb = alarmeCarb(data);
     if (data.fuelLiters <= 0.0f) {

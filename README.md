@@ -45,7 +45,7 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 > Voici les trois étapes pour effectuer sans stress votre premier vol à bord de l'Alouette.
 > 1. **Activez le mode assisté** : touche `M` | `LB`, un message à l'écran le confirme.
 > 2. **Démarrez la turbine** avec la touche `T` | bouton `Start`, la préparation avant de pouvoir décoller prend environ 60 secondes :
->    * La turbine monte seule en régime jusqu'à 33 500 tr/min
+>    * La turbine monte seule en régime jusqu'à 34 000 tr/min
 >    * Le frein rotor est automatiquement relâché, les pales commencent leur rotation puis le rotor atteint son régime de vol
 > 3. **Décollage et vol.** Une fois le rotor en régime :
 >    * augmentez doucement le collectif (touche `Z` | gâchette `RT`) jusqu'à un peu plus de 50 % pour décoller de quelques mètres du sol

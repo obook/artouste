@@ -393,7 +393,7 @@ Disposition suggérée (vue cockpit, coins d'écran) :
   [IAS  85 kt]                           [VSI +2,5 m/s]
 
   [ROTOR   360 tr/min  |||||||||| ]
-  [TURBINE 33500 tr/min ======== ]
+  [TURBINE 34000 tr/min ======== ]
   [COLLECTIF 55 %       ======   ]
 
   [TMP 445 C]  [HUILE 0,6 bar]  [FUEL 280 L]

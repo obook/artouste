@@ -81,6 +81,11 @@ void Application::initSceneShaders() {
                                                 assets / "shaders" / "basic.frag");
     m_modelShader = std::make_unique<render::Shader>(assets / "shaders" / "model.vert",
                                                      assets / "shaders" / "model.frag");
+    /* Unité de texture de la carte de relief, posée une fois pour toutes : la
+       valeur d'un uniforme appartient au programme, inutile de la redonner à
+       chaque appel de dessin (la texture de couleur reste sur l'unité 0). */
+    m_modelShader->use();
+    m_modelShader->setInt("u_relief", 1);
     m_terrainShader = std::make_unique<render::Shader>(assets / "shaders" / "terrain.vert",
                                                        assets / "shaders" / "terrain.frag");
     m_seaShader = std::make_unique<render::Shader>(assets / "shaders" / "sea.vert",

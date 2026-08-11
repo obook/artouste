@@ -22,7 +22,7 @@ import sys
 
 from retint import retint
 
-SRC_DEFAUT = "assets/models/Alouette-II/Models/texture.png"
+SRC_DEFAUT = "assets/models/Alouette-II/Models/texture-fond.png"
 DST_DEFAUT = "assets/models/Alouette-II/Models/texture-armeedeterre.png"
 CIBLE = (0x4b, 0x4e, 0x35)
 

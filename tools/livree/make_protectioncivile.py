@@ -25,7 +25,7 @@ import sys
 
 from retint import retint
 
-SRC_DEFAUT = "assets/models/Alouette-II/Models/texture.png"
+SRC_DEFAUT = "assets/models/Alouette-II/Models/texture-fond.png"
 DST_DEFAUT = "assets/models/Alouette-II/Models/texture-protectioncivile.png"
 CIBLE = (0x61, 0x17, 0x16)
 GAIN_CLIP = (0.45, 1.30)

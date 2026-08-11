@@ -24,7 +24,8 @@ namespace artouste::render {
 
 using namespace heli_detail;
 
-LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
+LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
+    const std::filesystem::path dir = modelFile.parent_path();
     /* Listes de nœuds à écarter au chargement :
        - skipBody : plans flous des rotors (blur/disc), doublons HDR des vitrages,
          version flotteurs du train (on garde les patins, par défaut chez FlightGear),
@@ -39,7 +40,23 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
        ce maillage dans le modèle pour ne rendre transparent que le verre.) */
     const std::vector<std::string> glass{"verriere", "vitreporte"};
 
-    m_fuselage  = loadPart(dir / "alouette.ac", skipBody, glass);
+    m_fuselage  = loadPart(modelFile, skipBody, glass);
+
+    /* Modèle glTF (.glb/.gltf) : autre convention d'axes que les .ac FlightGear
+       (nez vers +Z au lieu de -X) et bas de l'appareil à une autre hauteur. On le
+       redresse au dessin, quart de tour puis descente pour reposer les patins sur
+       le sol, sans toucher au fichier. */
+    if (const std::string ext = modelFile.extension().string();
+        ext == ".glb" || ext == ".gltf") {
+        float minY = 0.0f;
+        for (const vec3& p : m_fuselage.positions()) {
+            minY = std::min(minY, p.y);
+        }
+        m_fuselageFix = glm::translate(mat4(1.0f), vec3{0.0f, -(Y_OFFSET + minY), 0.0f}) *
+                        glm::rotate(mat4(1.0f), -PI / 2.0f, vec3{0.0f, 1.0f, 0.0f});
+        std::printf("[modèle] glTF redressé : quart de tour, descente de %.2f m.\n",
+                    static_cast<double>(Y_OFFSET + minY));
+    }
     /* Livrées de rechange du fuselage : blanc, bleu Gendarmerie, olive armée de
        terre et rouge Protection civile, préchargées dans le cache du fuselage et
        activables à la demande (setLivery). */
@@ -48,6 +65,11 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
     m_liveryArmeeDeTerre     = m_fuselage.acquireTexture(dir / "texture-armeedeterre.png");
     m_liveryProtectionCivile = m_fuselage.acquireTexture(dir / "texture-protectioncivile.png");
     m_interior  = loadPart(dir / "Interior/interior.ac", skipBody, glass);
+    /* Intérieur de cabine : version assombrie par l'occlusion ambiante cuite
+       (voir tools/livree/make_interior_ao.py), posée comme texture de rechange
+       pour laisser intacte la texture d'origine du modèle FlightGear. Fichier
+       absent : acquireTexture renvoie nullptr et l'original reste en place. */
+    m_interior.setLivery(m_interior.acquireTexture(dir / "Interior/interior-occlusion.png"));
 
     /* Pilote sur son siège (modèle FlightGear, texture general_pilot.png). Le
        pilote entier sert aux vues externes (et au copilote). En vue cockpit, on
@@ -190,6 +212,9 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& dir) {
        instruments une fois ceux-ci bien visibles. */
     const std::vector<std::string> skipPanel{"blur", "disc", "sur"};
     m_panel = loadPart(dir / "Interior/Panel/panel.ac", skipPanel);
+    /* Planche de bord assombrie par l'occlusion ambiante, même principe que
+       l'intérieur : texture de rechange, l'originale reste intacte. */
+    m_panel.setLivery(m_panel.acquireTexture(dir / "Interior/Panel/panel-occlusion.png"));
     for (const GaugeDef& def : GAUGES) {
         Gauge gauge;
         gauge.model  = loadPart(dir / def.file, {"blur", "disc", "vitre"});

@@ -49,7 +49,7 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
                                     float collective) const {
     /* Fuselage (hors vitrages), intérieur et les deux occupants. Les pales du rotor
        principal sont traitées à part, en mélange, pour le fondu selon le régime. */
-    drawModel(shader, m_fuselage, root, Pass::Opaque);
+    drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Opaque);
     drawModel(shader, m_interior, root, Pass::Opaque);
     /* Arceau de protection du rotor de queue (jaune en livrée Gendarmerie). Il a
        été retiré du fuselage (alouette.ac) et rechargé en pièce séparée, donc il se
@@ -256,7 +256,7 @@ void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
         drawDecal(shader, root, m_decalRegAyem, vec3{-1.92f, 0.62f, -0.05f}, 0.42f, 0.11f);
         drawDecal(shader, root, m_decalRegAyem, vec3{-1.92f, -0.62f, -0.05f}, 0.42f, 0.11f);
     }
-    drawModel(shader, m_fuselage, root, Pass::Transparent);
+    drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Transparent);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 

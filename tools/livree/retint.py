@@ -10,8 +10,26 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
+import os
+
 import numpy as np
 from PIL import Image
+
+FORCE_AO = 0.6  # 0 = aucune occlusion, 1 = creux poussés au noir
+
+
+def occlusion(out, chemin, force=FORCE_AO):
+    """Multiplie l'image par la carte d'occlusion ambiante cuite (voir cuire_ao.py).
+
+       La carte est cuite au double de la résolution de l'atlas : on la réduit
+       ici, ce qui la suréchantillonne au passage. Les texels que le dépliage
+       n'utilise pas ressortent noirs de la cuisson ; ils sont ramenés à 1 pour
+       ne pas noircir des zones peintes voisines au filtrage."""
+    hauteur, largeur = out.shape[:2]
+    carte = Image.open(chemin).convert("L").resize((largeur, hauteur), Image.LANCZOS)
+    ao = np.asarray(carte).astype(np.float32) / 255.0
+    ao = np.where(ao < 0.05, 1.0, ao)
+    return out * (1.0 - force * (1.0 - ao))[..., None]
 
 
 def retint(src, dst, target_hex, gain_clip=None):
@@ -50,6 +68,15 @@ def retint(src, dst, target_hex, gain_clip=None):
     out[..., 1] = np.where(neutral, target[1] * gain, g)
     out[..., 2] = np.where(neutral, target[2] * gain, b)
 
+    # Occlusion ambiante, si la carte a été cuite à côté de l'atlas d'origine.
+    # Elle s'applique après le repeint, et à toute l'image (les marquages sont
+    # dans l'ombre au même titre que la tôle).
+    carte_ao = os.path.join(os.path.dirname(src) or ".", "texture-ao.png")
+    avec_ao = os.path.exists(carte_ao)
+    if avec_ao:
+        out = occlusion(out, carte_ao)
+
     out = np.clip(out, 0.0, 1.0)
     Image.fromarray((out * 255).astype("uint8")).save(dst)
-    print(f"livrée écrite -> {dst}  ({neutral.mean() * 100:.0f}% des pixels repeints)")
+    print(f"livrée écrite -> {dst}  ({neutral.mean() * 100:.0f}% des pixels repeints"
+          f"{', occlusion appliquée' if avec_ao else ''})")

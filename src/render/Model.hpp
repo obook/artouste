@@ -72,7 +72,7 @@ public:
     void setLivery(const Texture* texture) noexcept { m_livery = texture; }
     /* Ajoute une partie au modèle (maillage + texture + réglages de rendu). */
     void addPart(Mesh&& mesh, const Texture* texture, bool transparent = false,
-                 float opacity = 1.0f);
+                 float opacity = 1.0f, const Texture* relief = nullptr);
 
     /* Mémorise les positions des sommets (repère local du modèle), pendant le
        chargement. Sert à retrouver le point de jonction réel entre deux pièces
@@ -86,6 +86,10 @@ private:
     struct Part {
         Mesh           mesh;
         const Texture* texture     = nullptr;
+        /* Carte de relief éventuelle, trouvée à côté de la texture au chargement
+           (voir ModelLoader). Elle reste attachée à la pièce quand la livrée
+           change : seule la couleur est repeinte, pas la tôle. */
+        const Texture* relief      = nullptr;
         bool           transparent = false;
         float          opacity     = 1.0f;
     };

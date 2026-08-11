@@ -167,10 +167,18 @@ void Application::initSceneConfig() {
      * nécessaire est versionné dans le dépôt (le paquet FlightGear complet, lui,
      * reste local). Sinon on conserve l'hélicoptère dessiné par le code.
      */
-    const std::filesystem::path modelsDir = assets / "models" / "Alouette-II" / "Models";
-    if (std::filesystem::exists(modelsDir / "alouette.ac")) {
+    /* ARTOUSTE_MODELE : chemin d'un autre .ac de fuselage, pour essayer un appareil
+       FlightGear tiers sans toucher au code. Les pièces manquantes (pilote, planche
+       de bord, décalques) restent simplement vides, et les repères des rotors sont
+       ceux de l'Alouette : c'est un essai, pas un deuxième appareil jouable. */
+    std::filesystem::path modelFile =
+        assets / "models" / "Alouette-II" / "Models" / "alouette.ac";
+    if (const char* env = std::getenv("ARTOUSTE_MODELE"); env != nullptr && env[0] != '\0') {
+        modelFile = env;
+    }
+    if (std::filesystem::exists(modelFile)) {
         renderLoadingScreen("Chargement de l'hélicoptère...");
-        auto loaded = std::make_unique<render::LoadedHelicopter>(modelsDir);
+        auto loaded = std::make_unique<render::LoadedHelicopter>(modelFile);
         if (loaded->loaded()) {
             m_loadedHeli = std::move(loaded);
             /* Livrée par défaut (Gendarmerie) appliquée d'emblée. */

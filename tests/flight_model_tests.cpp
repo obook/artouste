@@ -627,7 +627,13 @@ TEST_CASE("Le stationnaire est moins tenu que la croisière", "[flight][regimes]
        vitesse, rien ne s'écoule sur le stabilisateur et l'appareil est neutre. À
        plein cyclique latéral, l'inclinaison d'équilibre est donc nettement plus
        forte au stationnaire qu'en mode assisté, où la tenue d'avant est conservée
-       telle quelle. Sans cet écart, les deux régimes se pilotaient pareil. */
+       telle quelle. Sans cet écart, les deux régimes se pilotaient pareil.
+
+       Mesuré à 8 s, plein cyclique latéral : 14,4 degrés en physique réelle
+       contre 12,5 en assisté. Le seuil était à 1,3 tant que TRANSVERSE_ROLL
+       valait 900 N.m, car le flux transversal gonflait cet écart d'un tiers ;
+       ramené à 450 le 12/08/2026, il ne porte plus la marge, et c'est bien le
+       rappel d'assiette que ce test observe désormais. */
     Controls incline;
     incline.collective   = artouste::physics::COLL_HOVER;
     incline.cyclicLateral = 1.0f;
@@ -643,7 +649,7 @@ TEST_CASE("Le stationnaire est moins tenu que la croisière", "[flight][regimes]
     assiste.setRealFlyPhysicsEnabled(false);
     advance(assiste, incline, 8.0f);
 
-    REQUIRE(tiltAngle(reel) > tiltAngle(assiste) * 1.3f);
+    REQUIRE(tiltAngle(reel) > tiltAngle(assiste) * 1.10f);
 }
 
 TEST_CASE("Le décrochage de pale reculante annonce la VNE", "[flight][regimes]") {

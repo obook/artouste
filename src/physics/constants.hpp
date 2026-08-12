@@ -459,7 +459,13 @@ inline constexpr float HV_AGL_MIN_M       = 3.0f;     /* m : sous cette hauteur-
  * à droite et l'appareil part en roulis à GAUCHE. La documentation américaine
  * (FAA-H-8083-21B ch. 2) annonce un roulis à droite parce que ses rotors tournent
  * en sens inverse ; ne pas recopier son sens tel quel. */
-inline constexpr float TRANSVERSE_ROLL    = 900.0f;   /* N.m au sommet de la cloche */
+/* Valeur ramenée de 900 à 450 N.m le 12/08/2026. À 900, l'effet pesait 70 % de
+ * l'autorité du cyclique latéral (ROLL_CTRL, 1300 N.m) et arrivait comme une
+ * embardée que le rappel d'assiette rattrapait ensuite tout seul, ce qui ne
+ * laissait rien à piloter. Le manuel FAA décrit une tendance au roulis que le
+ * pilote contre d'une pointe de cyclique : à 450, soit 35 % de l'autorité, la
+ * tendance reste franche et c'est au pilote de la tenir. */
+inline constexpr float TRANSVERSE_ROLL    = 450.0f;   /* N.m au sommet de la cloche */
 inline constexpr float TRANSVERSE_V_IN    = 4.0f;     /* m/s (14 km/h) : le phénomène s'installe */
 inline constexpr float TRANSVERSE_V_PEAK  = 7.0f;     /* m/s (25 km/h) : plein effet */
 inline constexpr float TRANSVERSE_V_OUT   = 12.0f;    /* m/s (43 km/h) : dissipé */

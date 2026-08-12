@@ -84,6 +84,10 @@ ZONE = {
         # Plateforme sur remblai, 1 626 m2 mesurés sur l'ortho, marquage en
         # losange. Position et cap du H (135) arrêtés par l'utilisateur.
         ("Centre hospitalier de Pau", -0.350714, 43.327953),
+        # Hélistation officielle (IGN BD TOPO, couche aerodrome), à 327 m du pad
+        # de la base : plateforme bétonnée isolée en herbe le long du taxiway,
+        # distincte des postes de stationnement écartés plus haut.
+        ("Hélistation de Pau-Pyrénées", -0.411750, 43.378880),
     ],
     # Balise HAPI sur le pad de départ. Azimut 125 : l'axe de la piste 13/31,
     # mesuré sur l'orthophoto (2 532 m entre seuils, 125/305 degrés). Pente 6 %,

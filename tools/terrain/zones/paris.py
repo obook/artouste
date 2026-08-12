@@ -85,7 +85,9 @@ ZONE = {
         ("Héliport de Paris (Issy-les-Moulineaux)", 2.274772, 48.833076),
         ("Hôpital européen Georges-Pompidou", 2.2748, 48.8397),
         ("Hôpital Lariboisière", 2.3531, 48.8829),
-        ("Hôpital de la Pitié-Salpêtrière", 2.3653, 48.8371),
+        # Recalé sur l'aire de poser officielle, 290 m à l'ouest du point
+        # d'origine (IGN BD TOPO et OpenStreetMap concordants à 5 m).
+        ("Hôpital de la Pitié-Salpêtrière", 2.361280, 48.837170),
     ],
     # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
     # media/gt_installation_hapi.pdf) sur le pad de départ, l'héliport de Paris.

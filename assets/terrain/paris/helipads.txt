@@ -5,4 +5,4 @@
 2.274772 48.833076 Héliport de Paris (Issy-les-Moulineaux)
 2.2748 48.8397 Hôpital européen Georges-Pompidou
 2.3531 48.8829 Hôpital Lariboisière
-2.3653 48.8371 Hôpital de la Pitié-Salpêtrière
+2.361280 48.837170 Hôpital de la Pitié-Salpêtrière

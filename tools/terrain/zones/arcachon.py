@@ -52,6 +52,9 @@ ZONE = {
         ("Port d'Arcachon", -1.1479, 44.6599),
         ("Jetée de Bélisaire (Cap Ferret)", -1.2383, 44.6565),
         ("Port d'Andernos-les-Bains", -1.1111, 44.7449),
+        # Hélistation officielle absente du relevé OpenStreetMap d'origine
+        # (IGN BD TOPO, couche aerodrome, nature Héliport).
+        ("Clinique Wallerstein (Arès)", -1.13148, 44.75323),
     ],
     # Zones sans végétation (nom, lon, lat, rayon_m) : les pistes et bandes
     # enherbées des aérodromes sont vertes dans l'ortho et seraient sinon

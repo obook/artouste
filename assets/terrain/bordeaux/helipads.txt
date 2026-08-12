@@ -1,6 +1,9 @@
 # Helipads - Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac) (un par ligne : lon lat nom)
 # Positions approximatives, à affiner sur place.
--0.6964 44.8362 Aéroport de Bordeaux-Mérignac
+-0.69646 44.83831 Aéroport de Bordeaux-Mérignac
 -0.6039 44.8275 CHU Pellegrin
 -0.6609 44.7853 Hôpital Haut-Lévêque (Pessac)
 -0.579 44.8333 Hôpital Saint-André
+# Hélistations officielles absentes jusqu'ici (IGN BD TOPO, couche aerodrome).
+-0.57454 44.79995 HIA Robert Picqué (Villenave-d'Ornon)
+-0.70689 44.82403 Hélistation de Mérignac-Beutre

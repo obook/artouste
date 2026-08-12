@@ -64,10 +64,19 @@ ZONE = {
     # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
     # la carte ; à affiner si besoin).
     "helipads": [
-        ("Aéroport de Bordeaux-Mérignac", -0.6964, 44.8362),
+        # Recalé sur l'héliport officiel de l'aéroport, 233 m au nord du point
+        # approximatif d'origine (IGN BD TOPO, couche aerodrome).
+        ("Aéroport de Bordeaux-Mérignac", -0.69646, 44.83831),
         ("CHU Pellegrin", -0.6039, 44.8275),
         ("Hôpital Haut-Lévêque (Pessac)", -0.6609, 44.7853),
+        # Aucune aire de poser officielle ni OpenStreetMap à moins de 1,5 km de
+        # ce point : à vérifier, il pourrait n'avoir jamais existé.
         ("Hôpital Saint-André", -0.5790, 44.8333),
+        # Hélistations officielles absentes jusqu'ici (même source). La seconde
+        # n'a pas de toponyme en base : nommée d'après le lieu-dit Beutre, au
+        # sud de l'aéroport.
+        ("HIA Robert Picqué (Villenave-d'Ornon)", -0.57454, 44.79995),
+        ("Hélistation de Mérignac-Beutre", -0.70689, 44.82403),
     ],
     # Balise HAPI (indicateur de pente d'approche pour hélicoptère, voir
     # media/gt_installation_hapi.pdf) sur le pad de départ. Azimut = cap de

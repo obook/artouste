@@ -6,3 +6,6 @@
 -0.407849 43.378080 306 Base ALAT de Pau-Uzein
 -0.417500 43.383530 Dragon 64 (Sécurité civile)
 -0.350714 43.327953 135 Centre hospitalier de Pau
+# Hélistation officielle absente jusqu'ici (IGN BD TOPO, couche aerodrome) :
+# plateforme bétonnée isolée en herbe, au sud-ouest des postes de la base.
+-0.411750 43.378880 Hélistation de Pau-Pyrénées

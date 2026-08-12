@@ -6,3 +6,5 @@
 -1.1479 44.6599 Port d'Arcachon
 -1.2383 44.6565 Jetée de Bélisaire (Cap Ferret)
 -1.1111 44.7449 Port d'Andernos-les-Bains
+# Hélistation officielle absente jusqu'ici (IGN BD TOPO, couche aerodrome).
+-1.13148 44.75323 Clinique Wallerstein (Arès)

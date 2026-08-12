@@ -1,3 +1,30 @@
+## v0.33.0 - 12 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Reflets, occlusion et relief sur le modèle** : reflets du soleil et du ciel, occlusion ambiante et carte de relief cuites avec Blender, posées sur la cabine et la planche de bord. La turbine garde la nuance de sa livrée en ressortant presque noire. Coût mesuré : 25,3 Mo de mémoire vidéo pour les textures du modèle, contre 10,7 avant.
+- **Bâtiments habillés par paires de faces opposées** : les deux longues faces reçoivent la façade fenêtrée, les pignons un mur plein. Sans attribut de sommet en plus ni dessin supplémentaire.
+- **Repères comblés sur toutes les cartes** : plus aucune zone importante sans nom. Chaque carte a été découpée en grille et les cases vides remplies avec des toponymes IGN et OpenStreetMap. Trente-six repères de plus, dont Cestas, Latresne et Artigues autour de Bordeaux, Luz-Ardiden et le pic de Cestrède sur Cauterets, Gourette et le pic de Ger sur Ossau, le parc de la Villette et le Parc des Princes sur Paris.
+- **Hélipads recoupés avec les listes officielles** (BD TOPO de l'IGN, hélistations hospitalières de data.gouv.fr) : quatre hélistations manquaient, à Arès, Villenave-d'Ornon, Mérignac-Beutre et Pau-Pyrénées.
+- **Saubrigues** ajoutée à la côte landaise.
+
+### Changements
+
+- **Flux transversal adouci**, de 900 à 450 N.m. Le roulis à gauche au passage en translation restait à contrer d'une pointe de cyclique, mais il arrivait comme une embardée que le rappel d'assiette rattrapait ensuite tout seul.
+- **Refroidissement de la tuyère** : la TMP revenait à l'ambiante en une demi-minute. Elle décroche maintenant vers 250 degrés en quelques secondes, puis suit la chaleur du métal : environ 95 degrés cinq minutes après la coupure, 40 au bout de dix.
+
+### Corrections
+
+- **Écran des cartes** : le seuil HR/LR n'était pas celui du moteur, un jeu de tuiles entre les deux s'affichait LR alors qu'il était bien chargé. Les deux passent maintenant par la même règle.
+- **Jeu de tuiles interrompu** : un niveau serré inachevé laissait la carte annoncée entière, et une fabrication lancée en ligne de commande ne posait aucun témoin. Les deux chemins posent désormais le même.
+- **Golf de Saint-Paul-lès-Dax** retiré : il n'y a pas de parcours à cet endroit, l'orthophoto montre de la forêt.
+- **Pitié-Salpêtrière** et **Bordeaux-Mérignac** recalés sur leur aire de poser officielle, à 290 et 233 m de leur ancien point.
+- **Magescq** retirée de la côte landaise : la commune est à 6,6 km à l'est du bord de la carte.
+
+### Documentation
+
+- `docs/HELIPADS.md` réécrit : les deux listes officielles, leurs pièges (une erreur de coordonnées connue dans la liste hospitalière) et le nettoyage à faire avant d'ajouter un point.
+
 ## v0.32.0 - 9 août 2026
 
 ### Nouvelles fonctionnalités

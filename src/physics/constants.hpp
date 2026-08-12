@@ -101,6 +101,20 @@ inline constexpr float EXHAUST_TEMP_AMBIENT_C = 15.0f;   /* tuyère froide, turb
 inline constexpr float EXHAUST_TEMP_IDLE_C    = 400.0f;  /* turbine au régime, charge minimale */
 inline constexpr float EXHAUST_TEMP_MAX_C     = 550.0f;  /* limite transitoire du manuel */
 inline constexpr float EXHAUST_TEMP_TAU       = 4.0f;    /* s : inertie thermique (montée et descente) */
+
+/* Refroidissement après coupure, en deux temps comme sur la machine. La flamme
+   s'éteint d'un coup et les gaz cessent : la sonde décroche en quelques secondes
+   (toujours EXHAUST_TEMP_TAU) vers la température du MÉTAL qui l'entoure, pas
+   vers l'air ambiant. Ce métal, lui, met des minutes à rendre sa chaleur, et
+   c'est cette longue queue que le pilote voit sur le cadran.
+   EXHAUST_RESIDU : part de l'écart au-dessus de l'ambiante que garde le métal à
+   l'instant de la coupure. Depuis 450 degrés, la chute franche s'arrête donc
+   vers 250.
+   EXHAUST_COOL_TAU : inertie de ce métal. Avec 240 s, il reste environ 85 degrés
+   cinq minutes après la coupure et 35 au bout de dix, ce qui recoupe les ordres
+   de grandeur d'une turbine d'hélicoptère. */
+inline constexpr float EXHAUST_RESIDU         = 0.55f;
+inline constexpr float EXHAUST_COOL_TAU       = 240.0f;  /* s : inertie de la chaleur résiduelle */
 inline constexpr float EXHAUST_TEMP_WARN_C    = 480.0f;  /* voyant orange : surveiller (limite haute du vol normal) */
 inline constexpr float EXHAUST_TEMP_MAXI_C    = 500.0f;  /* voyant rouge : limite continue franchie */
 inline constexpr float T4_LOI_BASE_C          = 407.0f;  /* t4 à 12 degrés de pas, ISA niveau de la mer */

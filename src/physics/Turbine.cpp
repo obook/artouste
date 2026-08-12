@@ -12,6 +12,7 @@
 
 #include "physics/constants.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace artouste::physics {
@@ -93,9 +94,34 @@ void Turbine::update(float dt, float t4CibleC) noexcept {
     /* Température de la tuyère : l'appelant fournit la cible de plein régime
      * (loi pas/température du manuel, régime transitoire compris) ; pendant la
      * montée en régime, la cible est proportionnelle au régime turbine, et la
-     * tuyère rejoint le tout avec son inertie thermique. */
-    const float target = EXHAUST_TEMP_AMBIENT_C
-                       + (t4CibleC - EXHAUST_TEMP_AMBIENT_C) * m_turbine;
+     * tuyère rejoint le tout avec son inertie thermique.
+     *
+     * Turbine coupée, la sonde ne vise PAS l'air ambiant mais la chaleur
+     * résiduelle du métal qui l'entoure (voir EXHAUST_RESIDU) : elle décroche
+     * donc en quelques secondes, puis suit ce métal qui met des minutes à se
+     * vider. Sans ces deux temps, la TMP tombait à l'ambiante en une demi-minute,
+     * ce qu'aucune turbine ne fait. */
+    /* Flamme éteinte : les gaz cessent tout de suite, bien avant que la turbine
+       ait fini de ralentir (TURBINE_STOP_TIME, 30 s). Lier la température des gaz
+       au seul régime ferait descendre la sonde en pente douce pendant une
+       demi-minute, alors qu'elle décroche en quelques secondes. */
+    const bool  allumee = (m_state != State::Arret && m_state != State::Extinction);
+    const float gaz = allumee
+        ? EXHAUST_TEMP_AMBIENT_C + (t4CibleC - EXHAUST_TEMP_AMBIENT_C) * m_turbine
+        : EXHAUST_TEMP_AMBIENT_C;
+    const float chauffe = EXHAUST_TEMP_AMBIENT_C
+                        + (gaz - EXHAUST_TEMP_AMBIENT_C) * EXHAUST_RESIDU;
+    if (chauffe >= m_residuC) {
+        m_residuC = chauffe;  /* les gaz réchauffent le métal, sans retard notable */
+    } else {
+        m_residuC += (EXHAUST_TEMP_AMBIENT_C - m_residuC) *
+                     (1.0f - std::exp(-dt / EXHAUST_COOL_TAU));
+    }
+    /* La sonde voit le plus chaud des deux : les gaz tant que la turbine tourne,
+       le métal ensuite. Aucun test d'état à écrire, et un redémarrage en cours de
+       refroidissement repart naturellement de la température courante au lieu de
+       replonger vers l'ambiante le temps que le régime remonte. */
+    const float target = std::max(gaz, m_residuC);
     const float ease   = 1.0f - std::exp(-dt / EXHAUST_TEMP_TAU);
     m_exhaustC += (target - m_exhaustC) * ease;
 }
@@ -123,6 +149,8 @@ void Turbine::stopNow() noexcept {
     m_brakeTimer = 0.0f;
     m_rotorHold  = false;
     m_exhaustC   = EXHAUST_TEMP_AMBIENT_C;
+    m_residuC    = EXHAUST_TEMP_AMBIENT_C;  /* remise à froid complète : stopNow est un
+                                               reset d'état, pas une extinction */
 }
 
 const char* Turbine::label() const noexcept {

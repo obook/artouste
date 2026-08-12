@@ -90,6 +90,8 @@ private:
     float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
     bool  m_rotorHold  = false; /* maintien du frein rotor (attente autorisation radio) */
     float m_exhaustC = EXHAUST_TEMP_AMBIENT_C;  /* température tuyère, degrés Celsius */
+    float m_residuC  = EXHAUST_TEMP_AMBIENT_C;  /* chaleur du métal autour de la sonde :
+                                                   cible de la tuyère une fois coupée */
 };
 
 }  /* namespace artouste::physics */

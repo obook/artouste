@@ -326,6 +326,51 @@ TEST_CASE("Aucun NaN ni Inf sur entrées aléatoires bornées", "[flight][fuzz]"
     REQUIRE(std::isfinite(b.angularVelocity.y));
 }
 
+TEST_CASE("La tuyère refroidit en deux temps après la coupure", "[flight][turbine][tmp]") {
+    /* Une turbine ne revient pas à l'air ambiant en une demi-minute : la flamme
+       s'éteint d'un coup, la sonde décroche en quelques secondes, puis elle suit
+       la chaleur du métal qui l'entoure et met des minutes à se vider. On pilote
+       la turbine seule, sans modèle de vol : c'est elle qui porte la thermique. */
+    using artouste::physics::Turbine;
+    namespace phys = artouste::physics;
+
+    Turbine turbine;
+    turbine.forceRunning();
+    const auto chauffe = [&turbine](float secondes, float cible) {
+        for (int i = 0; i < static_cast<int>(secondes / SIM_DT); ++i) {
+            turbine.update(SIM_DT, cible);
+        }
+    };
+    chauffe(60.0f, 450.0f);
+    REQUIRE(turbine.exhaustTempC() > 440.0f);  /* tuyère chaude, régime établi */
+
+    turbine.toggle();  /* coupure */
+    REQUIRE(turbine.state() == Turbine::State::Extinction);
+
+    /* Chute franche : dix secondes suffisent à quitter les 450 degrés... */
+    chauffe(10.0f, 450.0f);
+    REQUIRE(turbine.exhaustTempC() < 300.0f);
+    /* ... mais la queue de chaleur résiduelle tient la sonde bien au-dessus de
+       l'ambiante une minute plus tard, là où l'ancien modèle l'y ramenait. */
+    chauffe(20.0f, 450.0f);
+    REQUIRE(turbine.exhaustTempC() < 300.0f);   /* t + 30 s */
+    chauffe(30.0f, 450.0f);
+    const float apresUneMinute = turbine.exhaustTempC();
+    REQUIRE(apresUneMinute > 150.0f);           /* t + 60 s */
+
+    /* Redémarrage en cours de refroidissement : la tuyère repart de sa
+       température courante, elle ne se téléporte ni au chaud ni au froid. */
+    turbine.toggle();
+    REQUIRE(turbine.state() == Turbine::State::Demarrage);
+    chauffe(0.5f, 450.0f);
+    REQUIRE(turbine.exhaustTempC() > apresUneMinute - 20.0f);
+
+    /* stopNow reste une remise à zéro d'état (tests, mode capture) : froid net. */
+    turbine.stopNow();
+    turbine.update(SIM_DT, 450.0f);
+    REQUIRE(turbine.exhaustTempC() < phys::EXHAUST_TEMP_AMBIENT_C + 1.0f);
+}
+
 TEST_CASE("Turbine coupée, plein collectif ne décolle pas", "[flight][turbine]") {
     FlightModel model;  /* turbine à l'arrêt par défaut au lancement */
     REQUIRE(model.turbine().state() == artouste::physics::Turbine::State::Arret);

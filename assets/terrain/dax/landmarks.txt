@@ -17,4 +17,12 @@
 -1.0549 43.7115 Le Splendid
 -1.0535 43.7163 Le Sablar
 -1.0688 43.7289 Lac de Christus
--1.0947 43.7341 Golf de Saint-Paul-lès-Dax
+# Nord-ouest, ouest, sud-ouest et sud-est de la carte : repères IGN (BD TOPO)
+# et OpenStreetMap.
+-1.0942 43.7221 Les Pins du Soleil
+-1.0837 43.7202 Céros
+-1.1026 43.7099 Sablot
+-1.0978 43.6998 Le Port
+-1.0823 43.6945 Stade Colette Besson
+-1.0516 43.6973 Aquae
+-1.0351 43.6846 Étang des Gravières

@@ -19,3 +19,10 @@
 -1.1465 44.7926 Lège-Cap-Ferret
 -1.0763 44.4837 Sanguinet
 -1.1453 44.4779 Lac de Cazaux
+# Est de la carte (forêt landaise), resté sans repère : bourgs OpenStreetMap
+# et lieux-dits IGN.
+-0.8827 44.4816 Lugos
+-0.9581 44.4504 La Gare de Lugos
+-0.87 44.5509 Salles
+-0.9349 44.6045 Mios
+-0.9313 44.7795 Blagon

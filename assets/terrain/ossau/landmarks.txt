@@ -23,3 +23,9 @@
 -0.4234 42.847 Col de Suzon
 -0.4483 42.8343 Lac de Peyreget
 -0.5038 42.9192 Pic de Sesques
+# Nord de la carte, resté sans repère (IGN et OpenStreetMap).
+-0.4104 42.9505 Signal du Gourzy
+-0.3862 42.9505 Cirque de Montcouges
+-0.3325 42.958 Gourette
+-0.3542 42.9366 Pic de Ger
+-0.3165 42.9254 Lac d'Uzious

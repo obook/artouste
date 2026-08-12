@@ -35,6 +35,13 @@ ZONE = {
         ("Lège-Cap-Ferret", -1.1465, 44.7926),  # mairie (Lège-Bourg, siège de la commune)
         ("Sanguinet", -1.0763, 44.4837),  # mairie
         ("Lac de Cazaux", -1.1453, 44.4779),
+        # Est de la carte (forêt landaise), resté sans repère : bourgs relevés
+        # sur OpenStreetMap, lieux-dits sur le géocodeur IGN.
+        ("Lugos", -0.8827, 44.4816),
+        ("La Gare de Lugos", -0.9581, 44.4504),
+        ("Salles", -0.8700, 44.5509),
+        ("Mios", -0.9349, 44.6045),
+        ("Blagon", -0.9313, 44.7795),
     ],
     # Coordonnées relevées sur Google Maps, complétées au géocodeur IGN et
     # OpenStreetMap.

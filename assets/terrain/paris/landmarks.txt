@@ -39,3 +39,12 @@
 2.288500 48.862600 Palais de Chaillot
 2.337100 48.848500 Palais du Luxembourg
 2.305600 48.851600 École militaire
+# Nord-est et sud-ouest de la carte, restés sans repère (OpenStreetMap).
+2.388400 48.894900 Parc de la Villette
+2.412300 48.898600 Pantin
+2.436700 48.884700 Romainville
+2.460900 48.889500 Noisy-le-Sec
+2.253100 48.841400 Parc des Princes
+2.288200 48.831100 Paris Expo Porte de Versailles
+2.240300 48.837200 Boulogne-Billancourt
+2.263700 48.821600 Issy-les-Moulineaux

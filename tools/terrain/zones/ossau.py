@@ -49,6 +49,12 @@ ZONE = {
         ("Col de Suzon", -0.4234, 42.8470),
         ("Lac de Peyreget", -0.4483, 42.8343),
         ("Pic de Sesques", -0.5038, 42.9192),
+        # Nord de la carte, resté sans repère (géocodeur IGN et OpenStreetMap).
+        ("Signal du Gourzy", -0.4104, 42.9505),
+        ("Cirque de Montcouges", -0.3862, 42.9505),
+        ("Gourette", -0.3325, 42.9580),  # station de ski
+        ("Pic de Ger", -0.3542, 42.9366),  # 2613 m
+        ("Lac d'Uzious", -0.3165, 42.9254),
     ],
     # Refuges de montagne (bases de secours du PGHM, fidèles au rôle de
     # l'Alouette II gendarmerie) et barrage d'Artouste, en plus du pad de

@@ -41,6 +41,25 @@ ZONE = {
         ("Gradignan", -0.6083, 44.7725),  # mairie
         ("Floirac", -0.5276, 44.8305),  # mairie
         ("Villenave-d'Ornon", -0.5717, 44.7829),  # mairie
+        # Couronne de la carte, restée sans repère : bourgs relevés sur
+        # OpenStreetMap (nœuds place=town/village).
+        ("Saint-Médard-en-Jalles", -0.7171, 44.8959),
+        ("Le Taillan-Médoc", -0.6693, 44.9044),
+        ("Saint-Aubin-de-Médoc", -0.7247, 44.9134),
+        ("Ambarès-et-Lagrave", -0.4882, 44.9259),
+        ("Sainte-Eulalie", -0.4743, 44.9062),
+        ("Artigues-près-Bordeaux", -0.4935, 44.8603),
+        ("Tresses", -0.4636, 44.8494),
+        ("Yvrac", -0.4618, 44.8808),
+        ("Bouliac", -0.5037, 44.8140),
+        ("Carignan-de-Bordeaux", -0.4747, 44.8129),
+        ("Cestas", -0.6841, 44.7412),
+        ("Canéjan", -0.6541, 44.7627),
+        ("Latresne", -0.4969, 44.7846),
+        ("Cénac", -0.4618, 44.7800),
+        ("Quinsac", -0.4891, 44.7557),
+        ("Cambes", -0.4629, 44.7320),
+        ("Isle-Saint-Georges", -0.4735, 44.7264),
     ],
     # Aéroport et hôpitaux dotés d'une aire de poser (coordonnées relevées sur
     # la carte ; à affiner si besoin).

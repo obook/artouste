@@ -42,6 +42,16 @@ ZONE = {
         ("Cascade de Lutour", -0.1064, 42.8709),
         ("Cascade du Cerisey", -0.1189, 42.8632),
         ("Refuge de Bayssellance", -0.1241, 42.7794),
+        # Massif d'Ardiden et frontière espagnole, restés sans repère (sommets
+        # et cols relevés sur OpenStreetMap, altitude en commentaire).
+        ("Luz-Ardiden", -0.0588, 42.8851),  # station de ski
+        ("Col de Riou", -0.0708, 42.8963),  # 1950 m
+        ("Pic Né", -0.0720, 42.8595),  # 2665 m
+        ("Pic de Cestrède", -0.0706, 42.8036),  # 2947 m
+        ("Lac de Cestrède", -0.0383, 42.8056),
+        ("Pic de Barbe de Bouc", -0.0544, 42.8220),  # 2964 m
+        ("Col de la Bernatoire", -0.1004, 42.7223),  # 2338 m
+        ("Pic Crabère", -0.1119, 42.7266),  # 2519 m
     ],
     # Hélistations : bases de secours en vallée (PGHM Cauterets, CRS de Gavarnie,
     # Luz, parking du Pont d'Espagne) et trois DZ de refuge d'altitude, fidèles au

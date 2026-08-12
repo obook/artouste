@@ -7,3 +7,11 @@
 -1.069514 43.690724 Tour de contrôle de Dax-Seyresse
 -1.0635 43.6922 Musée de l'ALAT
 -1.0635 43.684 Seyresse
+-1.0783 43.6898 Centre hospitalier de Dax - Lanot
+-1.0762 43.688 Société Hippique Nationale
+-1.077 43.6849 École d'application de l'ALAT
+-1.0789 43.6955 Stiron
+-1.0614 43.6864 Les Vergers du Luy
+-1.0721 43.6964 Saubagnacq
+-1.0688 43.6846 Pomès
+-1.0693 43.6812 Saledeys

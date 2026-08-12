@@ -21,3 +21,21 @@
 -0.6083 44.7725 Gradignan
 -0.5276 44.8305 Floirac
 -0.5717 44.7829 Villenave-d'Ornon
+# Couronne de la carte, restée sans repère : bourgs relevés sur OpenStreetMap.
+-0.7171 44.8959 Saint-Médard-en-Jalles
+-0.6693 44.9044 Le Taillan-Médoc
+-0.7247 44.9134 Saint-Aubin-de-Médoc
+-0.4882 44.9259 Ambarès-et-Lagrave
+-0.4743 44.9062 Sainte-Eulalie
+-0.4935 44.8603 Artigues-près-Bordeaux
+-0.4636 44.8494 Tresses
+-0.4618 44.8808 Yvrac
+-0.5037 44.814 Bouliac
+-0.4747 44.8129 Carignan-de-Bordeaux
+-0.6841 44.7412 Cestas
+-0.6541 44.7627 Canéjan
+-0.4969 44.7846 Latresne
+-0.4618 44.78 Cénac
+-0.4891 44.7557 Quinsac
+-0.4629 44.732 Cambes
+-0.4735 44.7264 Isle-Saint-Georges

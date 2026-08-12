@@ -66,6 +66,15 @@ ZONE = {
         ("Château de Vincennes", 2.4378, 48.8422),
         ("Île de la Cité", 2.3470, 48.8555),
         ("Île Saint-Louis", 2.3565, 48.8514),
+        # Nord-est et sud-ouest de la carte, restés sans repère (OpenStreetMap).
+        ("Parc de la Villette", 2.3884, 48.8949),
+        ("Pantin", 2.4123, 48.8986),
+        ("Romainville", 2.4367, 48.8847),
+        ("Noisy-le-Sec", 2.4609, 48.8895),
+        ("Parc des Princes", 2.2531, 48.8414),
+        ("Paris Expo Porte de Versailles", 2.2882, 48.8311),
+        ("Boulogne-Billancourt", 2.2403, 48.8372),
+        ("Issy-les-Moulineaux", 2.2637, 48.8216),
     ],
     # Héliport de Paris - Issy-les-Moulineaux (le seul héliport de l'agglomération
     # parisienne) et les hôpitaux intra-muros dotés d'une hélistation connue.

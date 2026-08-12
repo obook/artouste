@@ -8,7 +8,7 @@ plat, pas de mer.
 ATTENTION : cette entrée décrit l'emprise BRUTE utilisée pour amorcer les
 données (relief + première ortho). La carte livrée dans assets/terrain/dax/
 est ensuite recadrée sur le centre-ville, l'aérodrome, Saint-Paul-lès-Dax,
-les Thermes, Seyresse et le Golf de Saint-Paul-lès-Dax (voir
+les Thermes, Seyresse et la boucle de l'Adour à l'ouest (voir
 tools/terrain/crop_zombie_map.py, --center-x 149 --center-z 1219
 --half 3050 -- boîte carrée) pour un sol net avec un budget de pixels WMS
 raisonnable. Relancer `fetch_terrain.py dax` régénère la grande emprise
@@ -62,7 +62,24 @@ ZONE = {
         ("Le Splendid", -1.0549, 43.7115),
         ("Le Sablar", -1.0535, 43.7163),
         ("Lac de Christus", -1.0688, 43.7289),
-        ("Golf de Saint-Paul-lès-Dax", -1.0947, 43.7341),
+        # Nord-ouest, ouest, sud-ouest et sud-est de la carte livrée, restés sans
+        # repère jusqu'ici (coordonnées géocodeur IGN et OpenStreetMap).
+        ("Les Pins du Soleil", -1.0942, 43.7221),  # camping
+        ("Céros", -1.0837, 43.7202),
+        ("Sablot", -1.1026, 43.7099),  # hameau de la rive gauche de l'Adour
+        ("Le Port", -1.0978, 43.6998),  # ancien port de l'Adour
+        ("Stade Colette Besson", -1.0823, 43.6945),  # piste d'athlétisme, repérable de l'air
+        ("Aquae", -1.0516, 43.6973),
+        ("Étang des Gravières", -1.0351, 43.6846),
+        # Abords de l'aérodrome : repris tels quels par la carte dax-arene.
+        ("Centre hospitalier de Dax - Lanot", -1.0783, 43.6898),
+        ("Société Hippique Nationale", -1.0762, 43.6880),
+        ("École d'application de l'ALAT", -1.0770, 43.6849),
+        ("Stiron", -1.0789, 43.6955),
+        ("Les Vergers du Luy", -1.0614, 43.6864),
+        ("Saubagnacq", -1.0721, 43.6964),
+        ("Pomès", -1.0688, 43.6846),
+        ("Saledeys", -1.0693, 43.6812),
     ],
     # L'aérodrome porte DEUX aires de poser réelles (carré sombre à bordure
     # blanche, H au centre, balises de périmètre), toutes deux visibles sur

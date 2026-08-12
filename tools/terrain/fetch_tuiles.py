@@ -59,6 +59,11 @@ from terrain import config
 from terrain.ortho import request_map
 
 
+# Même nom que dans le jeu (src/app/cartes/FabriqueTuiles.hpp) : c'est lui que
+# l'écran des cartes cherche pour annoncer un jeu partiel.
+NOM_MARQUEUR_INACHEVE = "fabrication_inachevee.txt"
+
+
 def lire_calage(chemin):
     """Lit le terrain.txt d'une carte : emprise au sol, bornes géographiques et
        décalage d'origine. On le lit plutôt que d'interroger zones.py, pour que
@@ -195,6 +200,31 @@ def bloc_complet(sortie, col0, rangee0):
     return os.path.exists(os.path.join(sortie, ".blocs", f"{col0}_{rangee0}"))
 
 
+def marquer_inacheve(sortie, m_par_pixel, tuiles_attendues):
+    """Pose le témoin d'inachèvement, en même temps que l'index et dans les mêmes
+       termes que la fabrication intégrée au jeu (voir
+       src/app/cartes/FabriqueTuiles.hpp). L'index décrit la grille VOULUE : sans
+       ce témoin, un jeu interrompu par ce script ne se distingue pas d'un jeu
+       complet, et l'écran des cartes annonce des tuiles qui ne couvrent qu'un
+       coin de la carte."""
+    with open(os.path.join(sortie, NOM_MARQUEUR_INACHEVE), "w", encoding="utf-8") as f:
+        f.write("# Fabrication en cours ou interrompue.\n")
+        f.write("# Ce fichier disparaît quand le jeu de tuiles est complet.\n")
+        f.write("# Relancer la fabrication reprend où elle s'est arrêtée.\n")
+        f.write(f"m_par_pixel {m_par_pixel}\n")
+        f.write(f"tuiles_attendues {tuiles_attendues}\n")
+
+
+def retirer_marque_inacheve(sortie):
+    """Retire le témoin. Seul appelant : la fin normale de la boucle, une fois
+       tous les blocs demandés traités. Une coupure sort avant et le laisse en
+       place, ce qui est tout l'intérêt."""
+    try:
+        os.unlink(os.path.join(sortie, NOM_MARQUEUR_INACHEVE))
+    except FileNotFoundError:
+        pass
+
+
 def marquer_bloc(sortie, col0, rangee0):
     dossier = os.path.join(sortie, ".blocs")
     os.makedirs(dossier, exist_ok=True)
@@ -239,6 +269,7 @@ def main():
     subprocess.run([args.outil, dossier_carte, args.sortie, "--index-seul",
                     "--m-par-pixel", str(args.m_par_pixel),
                     "--tuile-px", str(args.tuile_px)], check=True)
+    marquer_inacheve(args.sortie, args.m_par_pixel, colonnes * rangees)
 
     zones = [zone_autour(lon, lat, rayon) for lon, lat, rayon in args.autour]
     if args.autour_helipads > 0.0:
@@ -302,6 +333,7 @@ def main():
             finally:
                 os.unlink(chemin_tmp)
 
+    retirer_marque_inacheve(args.sortie)
     if hors_zone > 0:
         print(f"[tuiles] {hors_zone} blocs hors des zones demandées, non téléchargés")
     print(f"[tuiles] terminé : {faits} blocs traités, {args.sortie}")

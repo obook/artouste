@@ -130,8 +130,10 @@ struct Interet {
 inline constexpr const char* NOM_MARQUEUR_INACHEVE = "fabrication_inachevee.txt";
 
 /* Ce dossier de tuiles porte-t-il la trace d'une fabrication interrompue ? Faux
-   pour un dossier vide ou absent, et pour les jeux produits par les scripts de
-   l'auteur, qui n'ont jamais posé ce marqueur. */
+   pour un dossier vide ou absent. Les scripts de l'auteur posent le même marqueur
+   (tools/terrain/fetch_tuiles.py), leurs jeux interrompus sont donc annoncés
+   partiels comme les autres ; ceux fabriqués avant qu'ils ne le fassent restent
+   tenus pour complets, faute de trace. */
 [[nodiscard]] bool fabricationInachevee(const std::filesystem::path& dossierTuiles);
 
 class Fabrique {

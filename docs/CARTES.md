@@ -370,8 +370,12 @@ courant. Tant qu'il est là :
   différentes dans le même dossier ne se mélangent pas ;
 - seules les tuiles manquantes sont téléchargées, l'écran le dit avant de partir.
 
-Un jeu produit par les scripts Python n'a jamais porté ce fichier : il est donc
-toujours tenu pour complet, ce qui est le bon défaut.
+`fetch_tuiles.py` pose et retire le même fichier, aux mêmes conditions : une
+fabrication lancée en ligne de commande et interrompue s'annonce partielle elle
+aussi. Les jeux fabriqués avant que le script ne le fasse n'en portent pas et
+restent tenus pour complets, faute de trace : leur état se vérifie en comptant
+les tuiles présentes, sachant que les tuiles hors couverture (la mer) sont
+absentes à juste titre.
 
 ## Bâtiments 3D (BD TOPO)
 

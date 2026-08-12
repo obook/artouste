@@ -77,6 +77,21 @@ TEST_CASE("un calage sans finesse ni grille est refusé") {
     CHECK_FALSE(c.valide());
 }
 
+TEST_CASE("un niveau n'est utile que s'il est plus fin que l'orthophoto") {
+    /* La règle sert deux fois : le moteur écarte les niveaux au chargement,
+       l'écran des cartes annonce HR ou LR. Deux seuils différents feraient dire
+       à la ligne le contraire de ce que montre le vol. */
+    CHECK(niveauUtile(0.25f, 3.60f));
+    CHECK_FALSE(niveauUtile(3.60f, 3.60f));
+    /* Juste des deux côtés de la marge : une carte à 0,25 m/px d'orthophoto
+       accepte un jeu à 0,20 et refuse un jeu à 0,24. */
+    CHECK(niveauUtile(0.20f, 0.25f));
+    CHECK_FALSE(niveauUtile(0.24f, 0.25f));
+    /* Finesse inconnue d'un côté ou de l'autre : bénéfice du doute. */
+    CHECK(niveauUtile(3.60f, 0.0f));
+    CHECK(niveauUtile(0.0f, 3.60f));
+}
+
 TEST_CASE("une tuile couvre son côté au sol, pas un pixel de plus") {
     const Pyramide p{"/tmp/inexistant", calageEssai()};
     CHECK(p.calage().tuileM() == 256.0f);

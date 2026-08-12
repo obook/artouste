@@ -336,7 +336,7 @@ void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
         if (finesseOrtho > 0.0f) {
             const std::size_t avant = niveaux.size();
             std::erase_if(niveaux, [finesseOrtho](const tuiles::Pyramide& p) {
-                return p.calage().mParPixel > 0.9f * finesseOrtho;
+                return !tuiles::niveauUtile(p.calage().mParPixel, finesseOrtho);
             });
             if (niveaux.empty()) {
                 std::printf("[tuiles] %s : aucun niveau plus fin que l'orthophoto "

@@ -72,6 +72,21 @@ struct Calage {
     }
 };
 
+/* Marge en deçà de laquelle un niveau n'apporte rien : des tuiles à peine plus
+   fines que l'orthophoto d'ensemble coûteraient leur mémoire vidéo pour une
+   image identique. */
+inline constexpr float MARGE_FINESSE_UTILE = 0.9f;
+
+/* Ce niveau sera-t-il retenu au chargement ? C'est LA règle du moteur (voir
+   Terrain::ouvrirDetail), et l'écran des cartes s'en sert pour annoncer HR ou
+   LR : deux seuils différents feraient dire à la ligne le contraire de ce que
+   montre le vol. Une finesse inconnue, d'un côté comme de l'autre, garde le
+   bénéfice du doute. */
+[[nodiscard]] inline bool niveauUtile(float mParPixel, float finesseOrtho) noexcept {
+    return finesseOrtho <= 0.0f || mParPixel <= 0.0f ||
+           mParPixel <= MARGE_FINESSE_UTILE * finesseOrtho;
+}
+
 class Pyramide {
 public:
     Pyramide(std::filesystem::path dossier, const Calage& calage)

@@ -60,8 +60,7 @@ namespace {
 /* Taille cumulée d'un dossier, sous-dossiers compris. Un jeu de tuiles compte
    des milliers de fichiers : on ne la recalcule donc qu'à l'ouverture de
    l'écran et sur demande, jamais à chaque image. */
-[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier,
-                                           int* tuiles = nullptr) {
+[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier) {
     std::error_code ec;
     if (!std::filesystem::is_directory(dossier, ec)) {
         return 0;
@@ -71,14 +70,29 @@ namespace {
          std::filesystem::recursive_directory_iterator(dossier, ec)) {
         if (entree.is_regular_file(ec)) {
             total += entree.file_size(ec);
-            /* Les tuiles sont comptées au passage : la marche est déjà faite, et
-               les compter à part rouvrirait des milliers de fichiers. */
-            if (tuiles != nullptr && entree.path().extension() == ".dds") {
-                ++*tuiles;
-            }
         }
     }
     return total;
+}
+
+/* Tuiles d'un SEUL niveau : celles de ses dossiers de rangées, sans descendre
+   plus bas. Un compte récursif ramasserait aussi celles des niveaux plus fins
+   rangés en dessous (ossau/serre), et l'écran comparerait alors des tuiles de
+   deux grilles à l'attendu d'une seule. */
+[[nodiscard]] int compterTuiles(const std::filesystem::path& niveau) {
+    std::error_code ec;
+    int             tuiles = 0;
+    for (const auto& rangee : std::filesystem::directory_iterator(niveau, ec)) {
+        if (!rangee.is_directory(ec)) {
+            continue;
+        }
+        for (const auto& fichier : std::filesystem::directory_iterator(rangee.path(), ec)) {
+            if (fichier.path().extension() == ".dds") {
+                ++tuiles;
+            }
+        }
+    }
+    return tuiles;
 }
 
 [[nodiscard]] std::uintmax_t tailleFichier(const std::filesystem::path& fichier) {
@@ -161,18 +175,29 @@ Application::inventorierCartes(const std::filesystem::path& assets) {
         etat.dossier          = dossier;
         etat.octetsBatiments  = tailleFichier(dossier / "buildings.bin");
         etat.dossierTuiles    = render::tuiles::cheminJeuDeTuiles(dossier, racineTuiles());
-        etat.octetsTuiles     = tailleDossier(etat.dossierTuiles, &etat.tuilesPresentes);
+        etat.octetsTuiles     = tailleDossier(etat.dossierTuiles);
         /* Finesse du jeu en place : celle de son niveau le plus fin, les niveaux
            revenant classés du plus large au plus fin. Ne lit que les index, pas
            les tuiles. */
         if (!etat.dossierTuiles.empty()) {
             const auto niveaux = render::tuiles::ouvrirNiveaux(etat.dossierTuiles);
             if (!niveaux.empty()) {
-                etat.finesseTuiles   = niveaux.back().calage().mParPixel;
-                etat.tuilesAttendues = niveaux.back().calage().colonnes *
-                                       niveaux.back().calage().rangees;
+                etat.finesseTuiles = niveaux.back().calage().mParPixel;
             }
-            etat.tuilesInachevees = fab::fabricationInachevee(etat.dossierTuiles);
+            /* Le témoin est cherché sur CHAQUE niveau, pas seulement à la racine :
+               un niveau serré interrompu (fetch_tuiles.py écrit dans son propre
+               sous-dossier) laisserait sinon la carte annoncée entière. Le compte
+               affiché est celui du niveau interrompu, les deux chiffres décrivant
+               ainsi la même grille. */
+            for (const render::tuiles::Pyramide& niveau : niveaux) {
+                if (fab::fabricationInachevee(niveau.dossier())) {
+                    etat.tuilesInachevees = true;
+                    etat.tuilesAttendues =
+                        niveau.calage().colonnes * niveau.calage().rangees;
+                    etat.tuilesPresentes = compterTuiles(niveau.dossier());
+                    break;
+                }
+            }
         }
         etat.interet = fab::interet(dossier);
         /* Le socle, c'est tout ce que porte le dossier de la carte, moins les
@@ -256,12 +281,13 @@ void Application::runGestionnaireCartes() {
 
     /* Des tuiles ne comptent que si elles sont plus fines que l'orthophoto
        d'ensemble : le moteur écarte les autres au chargement, et la carte reste
-       en LR malgré les mégaoctets posés sur le disque. Une carte dont on n'a pas
-       su mesurer l'orthophoto garde le bénéfice du doute. */
+       en LR malgré les mégaoctets posés sur le disque. On pose ici EXACTEMENT sa
+       question (render::tuiles::niveauUtile) et non celle de l'intérêt d'une
+       fabrication, plus exigeante : un jeu entre les deux seuils est bel et bien
+       chargé, l'annoncer LR démentirait le vol. */
     const auto tuilesEfficaces = [](const EtatCarte& c) {
         return c.octetsTuiles > 0 &&
-               (c.interet.ortho <= 0.0f || c.finesseTuiles <= 0.0f ||
-                c.interet.ortho >= c.finesseTuiles * fab::GAIN_MINIMUM);
+               render::tuiles::niveauUtile(c.finesseTuiles, c.interet.ortho);
     };
 
     /* Les deux actions lourdes sont écrites une seule fois : le clavier et les

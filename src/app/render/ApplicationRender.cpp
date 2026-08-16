@@ -50,7 +50,10 @@ void Application::renderScene(const mat4& base,
        tampon de profondeur, lui, est bien remis à zéro). */
     const float isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f);
     glClearColor(0.53f * isDay, 0.70f * isDay, 0.92f * isDay, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /* Pochoir remis à zéro : la fenêtre de relief fin y marque son emprise pour
+       que le maillage d'ensemble n'y soit pas dessiné (voir
+       renderTerrainAndBuildings). */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     /* Brume du lointain : on l'assombrit la nuit (sinon la mer et l'horizon se fondent
        dans une brume claire sous un ciel sombre, ce qui les fait paraître blancs). On

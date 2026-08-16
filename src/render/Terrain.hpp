@@ -20,6 +20,7 @@
 #include "render/Mesh.hpp"
 #include "render/Texture.hpp"
 #include "render/hapi/Hapi.hpp"
+#include "render/relief/FenetreRelief.hpp"
 #include "render/tuiles/Fenetre.hpp"
 
 #include <cmath>
@@ -100,6 +101,8 @@ public:
                      int                          sommetsMax      = 0,
                      std::filesystem::path        racineTuiles    = {});
 
+    ~Terrain();
+
     void draw() const { m_mesh.draw(); }
 
     /* Vrai si l'orthophoto est chargée : le rendu doit alors utiliser le shader
@@ -173,6 +176,18 @@ public:
     [[nodiscard]] const tuiles::Fenetre* detail() const noexcept { return m_detail.get(); }
     [[nodiscard]] const tuiles::Fenetre* detailFin() const noexcept { return m_detailFin.get(); }
 
+    /* Fenêtre de relief fin, ou nullptr. Se dessine par-dessus le maillage
+       d'ensemble (voir relief/FenetreRelief.hpp). */
+    [[nodiscard]] const relief::FenetreRelief* reliefFin() const noexcept {
+        return m_relief.get();
+    }
+
+    /* Relief d'ensemble en texture, ou 0 : la fenêtre fine s'y raccorde au bord.
+       Écrit après l'aplanissement du départ, donc conforme au maillage. */
+    [[nodiscard]] unsigned int carteReliefTexId() const noexcept { return m_carteRelief; }
+    [[nodiscard]] int gridCols() const noexcept { return m_cols; }
+    [[nodiscard]] int gridRows() const noexcept { return m_rows; }
+
     /* Recentre la fenêtre de détail sur un point du monde (en pratique la
        caméra) et fait avancer ses chargements. Sans effet si la carte n'a pas
        de tuiles. À appeler une fois par image. */
@@ -205,6 +220,17 @@ private:
        d'ensemble. */
     void ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
                       const std::filesystem::path& racineTuiles);
+    /* Ouvre les tuiles de relief de la carte, s'il y en a, et envoie le relief
+       d'ensemble en texture pour que la fenêtre s'y raccorde. */
+    void ouvrirRelief(const std::filesystem::path& dir,
+                      const std::filesystem::path& racineTuiles);
+    /* Corrige une tuile de relief avant son entrée dans la fenêtre (voir
+       relief::FenetreRelief::Correcteur). */
+    void corrigerTuileRelief(float x0, float z0, float pasM, int cote, float* hauteurs,
+                             bool aDonnee) const noexcept;
+    /* Altitude du seul maillage d'ensemble, sans la fenêtre fine ni les
+       plates-formes de pad. Base commune à heightAt et à la correction. */
+    [[nodiscard]] float heightCoarse(float x, float z) const noexcept;
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
     void
@@ -233,6 +259,10 @@ private:
        lecture), d'où les pointeurs. */
     std::unique_ptr<tuiles::Fenetre> m_detail;
     std::unique_ptr<tuiles::Fenetre> m_detailFin;
+    /* Relief fin autour de l'appareil, si la carte livre des tuiles d'altitude,
+       et le relief d'ensemble en texture auquel il se raccorde. */
+    std::unique_ptr<relief::FenetreRelief> m_relief;
+    unsigned int                           m_carteRelief = 0;
     bool m_textured = false;
     /* Rappel de progression de la préparation de l'orthophoto, transmis au
        cache. Vide en dehors du premier chargement d'une carte. */

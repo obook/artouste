@@ -16,6 +16,7 @@
 
 #include "render/Primitives.hpp"
 
+#include <glad/glad.h>
 #include <stb_image.h>
 
 #include <algorithm>
@@ -316,6 +317,7 @@ Terrain::Terrain(const std::filesystem::path& dir,
                     static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
         ouvrirDetail(dir, fenetreDetailPx, racineTuiles);
+        ouvrirRelief(dir, racineTuiles);
     }
 }
 
@@ -384,12 +386,87 @@ void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
     }
 }
 
+void Terrain::ouvrirRelief(const std::filesystem::path& dir,
+                           const std::filesystem::path& racineTuiles) {
+    const std::filesystem::path candidat = relief::cheminJeuDeRelief(dir, racineTuiles);
+    if (candidat.empty() || m_heights.empty()) {
+        return;
+    }
+
+    /* Relief d'ensemble en texture, tel qu'il est après aplanissement du départ :
+       la fenêtre s'y raccorde au bord, et une tuile absente y ramène. */
+    glGenTextures(1, &m_carteRelief);
+    glBindTexture(GL_TEXTURE_2D, m_carteRelief);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_cols, m_rows, 0, GL_RED, GL_FLOAT,
+                 m_heights.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    m_relief = relief::FenetreRelief::ouvrir(
+        candidat,
+        [this](float x0, float z0, float pasM, int cote, float* hauteurs, bool aDonnee) {
+            corrigerTuileRelief(x0, z0, pasM, cote, hauteurs, aDonnee);
+        });
+    if (!m_relief) {
+        glDeleteTextures(1, &m_carteRelief);
+        m_carteRelief = 0;
+    }
+}
+
+void Terrain::corrigerTuileRelief(float x0, float z0, float pasM, int cote, float* hauteurs,
+                                  bool aDonnee) const noexcept {
+    /* Le départ est aplani dans le maillage d'ensemble (voir flattenPads) : le
+       relief fin doit y revenir, sinon l'appareil naîtrait sur une bosse. */
+    constexpr float PLAT_M  = 40.0f;
+    constexpr float FONDU_M = 40.0f;
+    const bool      proche  = m_hasStart &&
+                        std::fabs(x0 + 0.5f * static_cast<float>(cote) * pasM - m_startX) <
+                            0.5f * static_cast<float>(cote) * pasM + PLAT_M + FONDU_M &&
+                        std::fabs(z0 + 0.5f * static_cast<float>(cote) * pasM - m_startZ) <
+                            0.5f * static_cast<float>(cote) * pasM + PLAT_M + FONDU_M;
+    if (aDonnee && !proche) {
+        return;
+    }
+
+    for (int j = 0; j < cote; ++j) {
+        const float z = z0 + static_cast<float>(j) * pasM;
+        for (int i = 0; i < cote; ++i) {
+            const float       x = x0 + static_cast<float>(i) * pasM;
+            const std::size_t k = static_cast<std::size_t>(j) * static_cast<std::size_t>(cote) +
+                                  static_cast<std::size_t>(i);
+            if (!aDonnee) {
+                hauteurs[k] = heightCoarse(x, z);
+                continue;
+            }
+            const float d = std::sqrt((x - m_startX) * (x - m_startX) +
+                                      (z - m_startZ) * (z - m_startZ));
+            if (d >= PLAT_M + FONDU_M) {
+                continue;
+            }
+            const float t = std::clamp((d - PLAT_M) / FONDU_M, 0.0f, 1.0f);
+            hauteurs[k]   = heightCoarse(x, z) * (1.0f - t) + hauteurs[k] * t;
+        }
+    }
+}
+
 void Terrain::suivreDetail(float x, float z, float dt) {
     if (m_detail) {
         m_detail->suivre(x, z, dt);
     }
     if (m_detailFin) {
         m_detailFin->suivre(x, z, dt);
+    }
+    if (m_relief) {
+        m_relief->suivre(x, z);
+    }
+}
+
+Terrain::~Terrain() {
+    if (m_carteRelief != 0) {
+        glDeleteTextures(1, &m_carteRelief);
     }
 }
 

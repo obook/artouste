@@ -98,6 +98,7 @@ add_executable(artouste
     render/TerrainQuery.cpp
     render/tuiles/Pyramide.cpp
     render/tuiles/Fenetre.cpp
+    render/relief/FenetreRelief.cpp
     render/hapi/Hapi.cpp
     render/buildings/BuildingsMesh.cpp
     render/buildings/BuildingsDraw.cpp

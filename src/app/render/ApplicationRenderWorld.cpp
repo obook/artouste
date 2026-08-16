@@ -115,7 +115,64 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         reglerNiveau(m_terrain->detailFin(), "serre", 4, 5);
 
         m_terrain->bindTexture(0);
-        m_terrain->draw();
+
+        /* Relief fin autour de l'appareil, dessiné AVANT le maillage d'ensemble
+           et marquant son emprise dans le pochoir : le maillage d'ensemble en
+           est ensuite écarté. Un simple décalage de profondeur ne suffirait pas,
+           le MNT LiDAR et le RGE ALTI s'écartant de plusieurs mètres, et le
+           maillage d'ensemble masquerait le relief fin partout où il passe
+           au-dessus. */
+        if (const render::relief::FenetreRelief* relief = m_terrain->reliefFin();
+            relief != nullptr) {
+            m_terrainShader->setInt("u_reliefActif", 1);
+            m_terrainShader->setInt("u_relief", 6);
+            m_terrainShader->setInt("u_carteRelief", 7);
+            relief->bind(6);
+            glActiveTexture(GL_TEXTURE7);
+            glBindTexture(GL_TEXTURE_2D, m_terrain->carteReliefTexId());
+            glActiveTexture(GL_TEXTURE0);
+
+            m_terrainShader->setVec2("u_reliefAncre", vec2{relief->ancreX(), relief->ancreZ()});
+            m_terrainShader->setFloat("u_reliefTailleM", relief->tailleM());
+            m_terrainShader->setFloat("u_reliefTexels",
+                                      static_cast<float>(relief->cotePoints()));
+            m_terrainShader->setVec2("u_reliefCentre", vec2{relief->centreX(), relief->centreZ()});
+            m_terrainShader->setVec2("u_reliefFondu",
+                                     vec2{relief->fonduDebutM(), relief->fonduFinM()});
+            m_terrainShader->setFloat("u_reliefLissage", relief->niveauLissage());
+            m_terrainShader->setFloat("u_reliefPasTexture", relief->pasM());
+            m_terrainShader->setFloat("u_reliefDetailM", relief->distanceDetailM());
+            m_terrainShader->setVec2("u_carteCoin",
+                                     vec2{m_terrain->originX() - m_terrain->halfWidth(),
+                                          m_terrain->originZ() - m_terrain->halfHeight()});
+            m_terrainShader->setVec2("u_carteTailleM", vec2{2.0f * m_terrain->halfWidth(),
+                                                            2.0f * m_terrain->halfHeight()});
+            m_terrainShader->setVec2("u_carteTexels",
+                                     vec2{static_cast<float>(m_terrain->gridCols()),
+                                          static_cast<float>(m_terrain->gridRows())});
+
+            /* Du noyau vers l'anneau : chacun ne remplit que ce que le
+               précédent a laissé, et marque le pochoir à son tour. */
+            glEnable(GL_STENCIL_TEST);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            for (int niveau = 0; niveau < relief->niveaux(); ++niveau) {
+                glStencilFunc(niveau == 0 ? GL_ALWAYS : GL_NOTEQUAL, 1, 0xFF);
+                m_terrainShader->setInt("u_reliefCote", relief->coteGrille(niveau));
+                m_terrainShader->setFloat("u_reliefPas", relief->pasGrille(niveau));
+                relief->dessiner(niveau);
+            }
+
+            /* Le maillage d'ensemble ne dessine que là où la fenêtre n'a rien
+               posé. */
+            m_terrainShader->setInt("u_reliefActif", 0);
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+            m_terrain->draw();
+            glDisable(GL_STENCIL_TEST);
+        } else {
+            m_terrainShader->setInt("u_reliefActif", 0);
+            m_terrain->draw();
+        }
     } else {
         m_shader->use();
         m_shader->setMat4("u_view", ctx.view);

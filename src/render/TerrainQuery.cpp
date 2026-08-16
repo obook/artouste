@@ -18,6 +18,33 @@
 namespace artouste::render {
 
 float Terrain::heightAt(float x, float z) const noexcept {
+    float h = heightCoarse(x, z);
+
+    /* Fenêtre de relief fin : ce qui est dessiné sous l'appareil fait foi. Elle
+       n'apporte qu'un détail, le relief d'ensemble gardant ses basses
+       fréquences, comme dans terrain.vert. */
+    if (m_relief) {
+        float detail = 0.0f;
+        float poids  = 0.0f;
+        if (m_relief->detailEn(x, z, detail, poids)) {
+            h += poids * detail;
+        }
+    }
+
+    /* Plates-formes d'hélisurface : dans leur emprise, le sol porteur ne descend
+       jamais sous le plateau du pad. Un pad perché (sommet du pic du Midi d'Ossau)
+       porte ainsi l'appareil sans déformer le relief alentour. */
+    for (const PadPlatform& pad : m_padPlatforms) {
+        const float dx = x - pad.x;
+        const float dz = z - pad.z;
+        if (dx * dx + dz * dz <= PAD_PLATFORM_RADIUS_M * PAD_PLATFORM_RADIUS_M && pad.top > h) {
+            h = pad.top;
+        }
+    }
+    return h;
+}
+
+float Terrain::heightCoarse(float x, float z) const noexcept {
     if (m_heights.empty()) {
         return 0.0f;
     }
@@ -59,17 +86,6 @@ float Terrain::heightAt(float x, float z) const noexcept {
         h = ha + tx * (hb - ha) + tz * (hc - ha); /* triangle a-c-b */
     } else {
         h = hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd); /* triangle b-c-d */
-    }
-
-    /* Plates-formes d'hélisurface : dans leur emprise, le sol porteur ne descend
-       jamais sous le plateau du pad. Un pad perché (sommet du pic du Midi d'Ossau)
-       porte ainsi l'appareil sans déformer le relief alentour. */
-    for (const PadPlatform& pad : m_padPlatforms) {
-        const float dx = x - pad.x;
-        const float dz = z - pad.z;
-        if (dx * dx + dz * dz <= PAD_PLATFORM_RADIUS_M * PAD_PLATFORM_RADIUS_M && pad.top > h) {
-            h = pad.top;
-        }
     }
     return h;
 }

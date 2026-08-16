@@ -50,6 +50,7 @@ Conséquences chiffrées :
 | Piste | Résolution | Couverture | Licence | vs nous |
 |-------|-----------|-----------|---------|---------|
 | RGE ALTI (actuel) | 1 m / 5 m natif | France | gratuit Etalab | déjà excellent, on le sous-échantillonne à 256 |
+| LiDAR HD, MNT et MNS | 1 m réels | France | gratuit Etalab | servi en BIL par le MÊME service WMS ; sol plus propre, et le MNS porte les bâtiments (voir `tools/observatoire.py`) |
 | Copernicus DEM GLO-30 | 30 m | Monde | gratuit | mondial, mais 3x plus grossier que RGE ALTI en France |
 | SRTM | 30 m (~90 m hors USA) | quasi-monde | gratuit | vieux, trous en montagne |
 | Copernicus GLO-90 / ASTER | 90 m | Monde | gratuit | trop grossier pour la montagne |
@@ -114,7 +115,7 @@ puis LOD) donne un meilleur résultat pour moins de complexité.
 
 ---
 
-Relief, orthophotos et emprises de bâtiments : [IGN](https://www.ign.fr/), sous
-[Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+Relief, orthophotos, emprises de bâtiments et LiDAR HD : [IGN](https://www.ign.fr/),
+sous [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
 
 <img src="IGN_logo_2012.png" alt="IGN" width="64" />

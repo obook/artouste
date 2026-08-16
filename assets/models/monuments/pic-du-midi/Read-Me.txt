@@ -1,0 +1,43 @@
+Observatoire du Pic du Midi de Bigorre
+======================================
+
+observatoire.glb et observatoire.jpg ne sont pas modelés à la main : ils sont
+calculés à partir des données publiques de l'IGN par tools/observatoire.py.
+
+  forme    : MNS issu du LiDAR HD (couche IGNF_LIDAR-HD_MNS sur data.geopf.fr),
+             sol nu MNT pour distinguer le bâti du rocher
+  texture  : BD ORTHO à 0,20 m par pixel, même emprise
+
+Données IGN Géoplateforme, Licence Ouverte Etalab 2.0 :
+https://www.etalab.gouv.fr/licence-ouverte-open-licence
+
+Pour refabriquer le modèle, ou changer son emprise ou sa finesse :
+
+  python3 tools/observatoire.py
+  python3 tools/observatoire.py --verifier
+
+Bande de façade (option --facade), essayée et écartée
+-----------------------------------------------------
+
+Le script sait coller une photo de façade redressée sous l'orthophoto, dans la
+même image, et la plaquer sur les murs (voir BANDE_FACADE_PX et FACADE_PERIODE).
+Essayé à partir d'une photo prise depuis le téléphérique, redressée ainsi :
+
+  quad = (599,836, 599,1234, 1648,1256, 1648,905)   # coins de la façade
+  bande = photo.transform((1600, 640), Image.QUAD, data=quad)
+
+Résultat écarté : les murs du modèle ne sont pas de grandes façades planes mais
+un escalier de mailles d'un mètre. Chaque facette va chercher un morceau de
+photo différent, et l'ensemble tourne au damier, moins lisible que la teinte
+unie. À reprendre seulement avec des murs modélisés à la main.
+
+Deuxième essai, écarté aussi : ne garder de la photo que son profil vertical
+(moyenne sur toute la largeur), ce qui supprime le damier par construction. Les
+murs y gagnent des niveaux, mais l'ensemble se lit comme des strates de rocher.
+
+Les murs restent donc en teinte unie, celle du toit médian du bâti.
+
+Le script affiche la ligne à reporter dans assets/terrain/bigorre/monuments.txt.
+L'altitude qui y figure est celle du point le plus bas du modèle : elle change
+avec le maillage, et --verifier refuse de valider si les deux ne s'accordent
+plus.

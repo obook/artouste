@@ -179,12 +179,31 @@ void Application::renderMonuments(const RenderContext& ctx) {
        boucle et la laissait allumée pour le reste de l'image : les instruments
        de la planche de bord devenaient transparents, leurs faces arrière étant
        éliminées. */
+    /* Décalage de profondeur vers l'avant. Un monument modelé d'après le terrain
+       réel (l'observatoire du Pic du Midi, tiré du LiDAR) pose son sol à quelques
+       décimètres seulement au-dessus du relief, sur toute son emprise. De près
+       cette marge suffit ; de loin non, car la précision du tampon de profondeur
+       se dégrade avec le carré de la distance : elle vaut déjà environ 1 m à
+       3 km et 3 m à 5 km. Les deux surfaces deviennent alors indiscernables et
+       clignotent l'une sur l'autre à chaque image.
+
+       Le décalage se compte en unités du tampon, pas en mètres : il suit donc la
+       distance et tranche à toute portée, là où relever le modèle ne réglerait
+       le cas que d'une distance donnée. Quelques unités suffisent, et ne
+       déplacent rien de visible au premier plan (un millimètre à dix mètres).
+       On l'éteint aussitôt après : une version antérieure de cette fonction
+       laissait traîner un état OpenGL, et c'est la planche de bord qui en avait
+       souffert. */
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0f, -4.0f);
     for (const MonumentInstance& mon : m_monuments) {
         /* La matrice de pose est en coordonnées monde absolues ; ctx.toRel porte le
            recalage d'origine de l'image (rendu relatif à la caméra). */
         m_monumentShader->setMat4("u_model", ctx.toRel * mon.transform);
         mon.model->draw(*m_monumentShader, render::Pass::All);
     }
+    glPolygonOffset(0.0f, 0.0f);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 } /* namespace artouste::app */

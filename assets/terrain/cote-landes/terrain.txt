@@ -6,7 +6,7 @@ rows 732
 width_m 16104.1
 height_m 27840.9
 elev_min 0.00
-elev_max 120.01
+elev_max 66.34
 lon_min -1.499883
 lon_max -1.300000
 lat_min 43.549980

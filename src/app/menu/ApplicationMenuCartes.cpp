@@ -165,9 +165,21 @@ namespace {
 
 std::vector<Application::EtatCarte>
 Application::inventorierCartes(const std::filesystem::path& assets) {
+    /* Peser un jeu de tuiles demande de parcourir des dizaines de milliers de
+       fichiers sur un disque externe : quelques secondes par carte, pendant
+       lesquelles la fenêtre resterait figée. On rend donc la main à l'écran
+       d'attente entre deux cartes, ce qui affiche l'avancement et évite que
+       l'OS croie le programme bloqué. */
+    const std::vector<MapEntry> cartes = recenserCartes(assets);
+
     std::vector<EtatCarte> etats;
-    for (const MapEntry& carte : recenserCartes(assets)) {
+    for (const MapEntry& carte : cartes) {
         const std::filesystem::path dossier = assets / "terrain" / carte.dir;
+
+        const std::string attente = "Analyse en cours : " + carte.title;
+        renderLoadingScreen(attente.c_str(),
+                            static_cast<float>(etats.size()) /
+                                static_cast<float>(cartes.size()));
 
         EtatCarte etat;
         etat.dir              = carte.dir;

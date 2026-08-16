@@ -30,3 +30,4 @@
 0.0745 42.9016 Souriche
 0.1889 43.0059 Saint-Roch
 0.1345 42.8647 Col de Tracens
+0.164033 42.920451 Le Taoulet

@@ -29,3 +29,6 @@
 -0.3325 42.958 Gourette
 -0.3542 42.9366 Pic de Ger
 -0.3165 42.9254 Lac d'Uzious
+-0.366942 42.887262 Lac Labachotte
+-0.356965 42.882815 Lac d'Omiélas
+-0.361540 42.865413 Lac du Lurien

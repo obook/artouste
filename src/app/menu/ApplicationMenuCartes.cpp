@@ -290,6 +290,16 @@ void Application::runGestionnaireCartes() {
                render::tuiles::niveauUtile(c.finesseTuiles, c.interet.ortho);
     };
 
+    /* Jeu plus grossier que ce que la carte vise aujourd'hui. Le cas existe parce
+       que la règle de finesse (fab::interet) est née après les premiers jeux,
+       fabriqués à la main à 0,50 puis 0,75 m/px : ils restent chargés et utiles,
+       mais un jeu refait serait trois fois plus net. La marge de 20 % évite de
+       signaler un écart d'arrondi. */
+    const auto tuilesDepassees = [](const EtatCarte& c) {
+        return c.octetsTuiles > 0 && !c.tuilesInachevees && c.finesseTuiles > 0.0f &&
+               c.interet.visee > 0.0f && c.finesseTuiles > c.interet.visee * 1.2f;
+    };
+
     /* Les deux actions lourdes sont écrites une seule fois : le clavier et les
        boutons de souris passent par elles, sans quoi les deux chemins finiraient
        par diverger. */
@@ -318,6 +328,9 @@ void Application::runGestionnaireCartes() {
        de même posé ses premières tuiles. */
     const auto lancerFabrication = [this, &fabrique, &destinationTuiles,
                                     &finesseAFabriquer](EtatCarte& c) {
+        /* La fabrique efface elle-même un jeu d'une autre finesse avant
+           d'écrire son index (voir FabriqueTuiles.cpp) ; l'écran se contente de
+           l'annoncer dans sa confirmation. */
         fabrique.lancer(c.dossier, destinationTuiles(c), finesseAFabriquer(c));
         m_cartesRemaniees = true;
     };
@@ -715,12 +728,23 @@ void Application::runGestionnaireCartes() {
                                        static_cast<double>(c.interet.ortho),
                                        static_cast<double>(c.finesseTuiles));
                 }
-            } else if (c.interet.ortho > 0.0f && !c.interet.vaut) {
+            }
+            if (tuilesDepassees(c)) {
+                /* En clair : c'est une proposition, pas un constat de plus. */
+                ImGui::TextWrapped("Ce jeu date d'avant la règle de finesse : %.2f m/px, alors "
+                                   "que cette carte vise %.2f. Le refaire rend le sol %.1f fois "
+                                   "plus net ; la relance efface d'abord l'ancien jeu, les deux "
+                                   "grilles ne pouvant cohabiter.",
+                                   static_cast<double>(c.finesseTuiles),
+                                   static_cast<double>(c.interet.visee),
+                                   static_cast<double>(c.finesseTuiles / c.interet.visee));
+            }
+            if (c.interet.ortho > 0.0f && !c.interet.vaut && c.finesseTuiles <= 0.0f) {
                 ImGui::TextWrapped("Rien à fabriquer ici : l'orthophoto est déjà à %.2f m/px, la "
                                    "finesse de la source. Des tuiles ne rendraient pas le sol "
                                    "plus net.",
                                    static_cast<double>(c.interet.ortho));
-            } else if (c.interet.ortho > 0.0f) {
+            } else if (c.interet.ortho > 0.0f && c.finesseTuiles <= 0.0f) {
                 ImGui::TextDisabled("Orthophoto %.2f m/px ; des tuiles à %.2f m/px la rendraient "
                                     "%.1f fois plus nette.",
                                     static_cast<double>(c.interet.ortho),

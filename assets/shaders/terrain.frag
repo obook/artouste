@@ -125,8 +125,9 @@ void main() {
        u_orthoMPP vaut 0 si l'uniforme n'est pas fourni, ce qui éteint le
        plancher : repli sans danger. */
     float plancher = 0.15 * smoothstep(0.30, 1.00, finesse);
-    float force  = mix(plancher, 1.0, pente) * (1.0 - smoothstep(300.0, 1200.0, dist));
-    vec3  albedo = ortho * mix(1.0, 0.60 + 0.80 * detail, force);
+    float force  = mix(plancher, smoothstep(0.30, 1.00, finesse), pente)
+                 * (1.0 - smoothstep(300.0, 1200.0, dist));
+    vec3  albedo = ortho * mix(1.0, 0.72 + 0.56 * detail, force);
 
     /* Demi-Lambert : la lumière sculpte le relief sans plonger les versants à
        l'ombre dans le noir total. */

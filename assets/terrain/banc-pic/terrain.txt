@@ -1,0 +1,19 @@
+# Terrain Artouste - Banc d'essai du Pic du Midi (3 km, heightmap au laser)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 1536
+rows 1536
+width_m 2999.1
+height_m 3005.6
+elev_min 0.00
+elev_max 2870.55
+lon_min 0.1227
+lon_max 0.1595
+lat_min 42.9234
+lat_max 42.9504
+ortho_width 4087
+ortho_height 4096
+sea 0
+start_x -538.3
+start_z 821.4
+start_heading 31

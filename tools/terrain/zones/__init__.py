@@ -25,6 +25,7 @@ Licence : GPL v2
 """
 
 from .arcachon import ZONE as _ARCACHON
+from .banc_pic import ZONE as _BANC_PIC
 from .bigorre import ZONE as _BIGORRE
 from .bordeaux import ZONE as _BORDEAUX
 from .cauterets import ZONE as _CAUTERETS
@@ -40,6 +41,7 @@ ZONES = {
     "arcachon": _ARCACHON,
     "cauterets": _CAUTERETS,
     "bigorre": _BIGORRE,
+    "banc-pic": _BANC_PIC,
     "bordeaux": _BORDEAUX,
     "dax": _DAX,
     "paris": _PARIS,

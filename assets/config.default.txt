@@ -39,6 +39,14 @@ turbine_demarree 0
 # 0 = pas de démo. (La démo se lance aussi par le bouton Démo du menu de démarrage.)
 demo 0
 
+# relief_fenetre : 1 = fenêtre de relief fin autour de l'appareil, qui redessine
+# le sol au pas du LiDAR sur quelques kilomètres. 0 = éteinte (défaut) -- son
+# raccord au relief lointain n'est pas encore au point, les crêtes se
+# construisent à l'approche. Éteinte, ses tuiles ne sont même pas lues.
+# La variable d'environnement ARTOUSTE_RELIEF l'allume, ARTOUSTE_NO_RELIEF
+# l'éteint et l'emporte.
+relief_fenetre 0
+
 # arbres : 1 = végétation activée (défaut) -- des arbres en billboards sont semés
 # d'après l'orthophoto, là où le sol est vert et sous la limite forestière. Ce
 # n'est pas réservé à la montagne : une ville entourée de bois en reçoit aussi.

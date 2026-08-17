@@ -695,6 +695,10 @@ private:
        par ARTOUSTE_NO_TREES). Lue par loadTerrain pour semer ou non les arbres. */
     bool m_treesEnabled = true;
 
+    /* Fenêtre de relief fin (clé "relief_fenetre", éteinte par défaut). ARTOUSTE_RELIEF
+       l'allume, ARTOUSTE_NO_RELIEF l'éteint et l'emporte. Lue par loadTerrain. */
+    bool m_reliefWindow = false;
+
     /* Budget d'arbres effectif (clé "arbres_max" de config.txt, surchargée par
        ARTOUSTE_TREE_MAX), résolu dans initScene et passé à Vegetation par loadTerrain.
        0 = laisser Vegetation appliquer son défaut. */

@@ -105,6 +105,10 @@ public:
        livre (voir tuiles/Fenetre.hpp) ; 0 y renonce. racineTuiles dit où les
        chercher, vide pour ne regarder que dans le dossier de la carte.
 
+       fenetreRelief allume la fenêtre de relief fin autour de l'appareil. Éteinte,
+       ses tuiles ne sont même pas lues : ni disque, ni mémoire vidéo, ni copie
+       en mémoire vive.
+
        sommetsMax plafonne le nombre de sommets DESSINÉS : au-delà, un point de
        grille sur deux, sur trois... est retenu pour le maillage. Les altitudes,
        elles, restent lues en entier par heightAt, qui porte le poser, les
@@ -115,7 +119,8 @@ public:
                      bc7::Progression             progression     = {},
                      int                          fenetreDetailPx = tuiles::COTE_FENETRE_PX,
                      int                          sommetsMax      = 0,
-                     std::filesystem::path        racineTuiles    = {});
+                     std::filesystem::path        racineTuiles    = {},
+                     bool                         fenetreRelief   = false);
 
     ~Terrain();
 

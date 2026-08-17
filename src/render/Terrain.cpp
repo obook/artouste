@@ -120,7 +120,8 @@ Terrain::Terrain(const std::filesystem::path& dir,
                  bc7::Progression             progression,
                  int                          fenetreDetailPx,
                  int                          sommetsMax,
-                 std::filesystem::path        racineTuiles)
+                 std::filesystem::path        racineTuiles,
+                 bool                         fenetreRelief)
     : m_progression(std::move(progression)) {
     const std::filesystem::path meta = dir / "terrain.txt";
     const std::filesystem::path height = dir / "heightmap.png";
@@ -258,7 +259,7 @@ Terrain::Terrain(const std::filesystem::path& dir,
        sans rien enlever au relief lui-même. */
     const int step = std::max(1, static_cast<int>(std::lround(35.0f / dx)));
     m_pasNormaleM  = static_cast<float>(step) * dx;
-    std::printf("[Terrain] raccord de la fenêtre : 1 point sur %d, normales à %.2f m.\n",
+    std::printf("[Terrain] maillage d'ensemble : 1 point sur %d, normales à %.2f m.\n",
                 m_pasMaillage, static_cast<double>(m_pasNormaleM));
 
     for (const int j : rangees) {
@@ -321,13 +322,13 @@ Terrain::Terrain(const std::filesystem::path& dir,
                     static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
         ouvrirDetail(dir, fenetreDetailPx, racineTuiles);
-        /* ARTOUSTE_NO_RELIEF : vole sans la fenêtre de relief fin, comme avant
-           son introduction. Sert de point de comparaison et de repli tant que
-           ses défauts se corrigent. */
-        if (std::getenv("ARTOUSTE_NO_RELIEF") == nullptr) {
+        /* Éteinte, la fenêtre ne coûte rien du tout : ses tuiles ne sont pas
+           lues. Voir la clé "relief_fenetre" de config.txt. */
+        if (fenetreRelief) {
             ouvrirRelief(dir, racineTuiles);
         } else {
-            std::printf("[relief] fenêtre désactivée (ARTOUSTE_NO_RELIEF).\n");
+            std::printf("[relief] fenêtre de relief fin ÉTEINTE "
+                        "(clé relief_fenetre ; ARTOUSTE_RELIEF l'allume).\n");
         }
     }
 }

@@ -65,6 +65,17 @@ void Application::initSceneConfig() {
         m_treesEnabled = false;
     }
 
+    /* Fenêtre de relief fin : clé "relief_fenetre", éteinte par défaut.
+       ARTOUSTE_RELIEF l'allume le temps d'un essai, ARTOUSTE_NO_RELIEF l'éteint
+       et l'emporte sur tout le reste. */
+    m_reliefWindow = config.reliefWindow;
+    if (std::getenv("ARTOUSTE_RELIEF") != nullptr) {
+        m_reliefWindow = true;
+    }
+    if (std::getenv("ARTOUSTE_NO_RELIEF") != nullptr) {
+        m_reliefWindow = false;
+    }
+
     /* Budget d'arbres : clé "arbres_max" de la config, surchargée par la variable
        d'environnement ARTOUSTE_TREE_MAX (prioritaire). Passé à Vegetation par
        loadTerrain. C'est le principal levier de performance (poste de rendu le plus

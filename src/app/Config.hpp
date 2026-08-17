@@ -46,6 +46,11 @@ struct Config {
        d'environnement ARTOUSTE_NO_TREES, si définie, force la désactivation. */
     bool trees = true;
 
+    /* Fenêtre de relief fin autour de l'appareil (clé "relief_fenetre"). ÉTEINTE
+       par défaut : son raccord au relief lointain n'est pas encore digne d'une
+       livraison, les crêtes se construisent à l'approche. */
+    bool reliefWindow = false;
+
     /* Indicateur de zone hauteur-vitesse : si vrai, le HUD affiche ZONE H-V quand
        l'appareil est dans le domaine d'où l'autorotation n'est pas garantie en cas
        de panne. Faux par défaut : l'appareil d'époque n'a aucun avertisseur, et le

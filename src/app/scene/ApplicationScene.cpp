@@ -192,7 +192,8 @@ void Application::loadTerrain(const std::string& name) {
         },
         tuilesIci ? m_detailWindowPx : 0,
         m_reliefVertexBudget,
-        racineTuiles());
+        racineTuiles(),
+        m_reliefWindow);
 
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien

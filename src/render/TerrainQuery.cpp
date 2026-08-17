@@ -77,17 +77,7 @@ float Terrain::heightCoarse(float x, float z) const noexcept {
      * L'interpolation doit suivre ces triangles et non la surface bilinéaire,
      * sinon l'appareil posé s'enfonce dans le relief partout où la surface
      * bilinéaire passe sous les triangles (sensible sur les fortes pentes). */
-    const float ha = at(i0, j0);
-    const float hb = at(i1, j0);
-    const float hc = at(i0, j1);
-    const float hd = at(i1, j1);
-    float h = 0.0f;
-    if (tx + tz <= 1.0f) {
-        h = ha + tx * (hb - ha) + tz * (hc - ha); /* triangle a-c-b */
-    } else {
-        h = hd + (1.0f - tx) * (hc - hd) + (1.0f - tz) * (hb - hd); /* triangle b-c-d */
-    }
-    return h;
+    return interpolerTriangle(at(i0, j0), at(i1, j0), at(i0, j1), at(i1, j1), tx, tz);
 }
 
 const HapiUnit* Terrain::hapiUnitNear(float lon, float lat, float maxDistM) const noexcept {

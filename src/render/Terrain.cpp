@@ -415,7 +415,20 @@ void Terrain::ouvrirRelief(const std::filesystem::path& dir,
     if (!m_relief) {
         glDeleteTextures(1, &m_carteRelief);
         m_carteRelief = 0;
+        return;
     }
+
+    /* Contrôle d'emboîtement. Un jeu de tuiles dont le pas ne divise pas la
+       maille de la carte fait redessiner au lieu de reproduire, et les
+       silhouettes bougent à la frontière de la fenêtre. On le dit au chargement
+       plutôt que de le laisser découvrir en vol. */
+    const float dx = m_widthM / static_cast<float>(m_cols - 1);
+    const float dz = m_heightM / static_cast<float>(m_rows - 1);
+    const bool  ok = relief::emboiteDansMaille(m_relief->pasX(), dx, relief::PAS_ANNEAU) &&
+                    relief::emboiteDansMaille(m_relief->pasZ(), dz, relief::PAS_ANNEAU);
+    std::printf("[relief] emboîtement dans la carte (%.4f x %.4f m) : %s.\n",
+                static_cast<double>(dx), static_cast<double>(dz),
+                ok ? "oui" : "NON, la frontière se verra");
 }
 
 void Terrain::corrigerTuileRelief(float x0, float z0, float pasX, float pasZ, int cote,

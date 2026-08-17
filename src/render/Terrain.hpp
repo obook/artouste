@@ -31,6 +31,22 @@
 
 namespace artouste::render {
 
+/* Interpolation dans une maille de la carte, SUIVANT SES TRIANGLES. La maille
+   est coupée par l'anti-diagonale, du coin (i+1, j) au coin (i, j+1) : c'est la
+   découpe du maillage d'ensemble (voir la construction des indices) et celle de
+   la grille de la fenêtre (construireGrille). Les trois doivent la partager,
+   sinon la fenêtre et le maillage ne dessinent pas la même surface.
+
+   Une bilinéaire à sa place passerait SOUS les triangles sur les fortes pentes,
+   et l'appareil posé s'y enfoncerait. */
+[[nodiscard]] inline float interpolerTriangle(float h00, float h10, float h01, float h11,
+                                              float tx, float tz) noexcept {
+    if (tx + tz <= 1.0f) {
+        return h00 + tx * (h10 - h00) + tz * (h01 - h00);
+    }
+    return h11 + (1.0f - tx) * (h01 - h11) + (1.0f - tz) * (h10 - h11);
+}
+
 /* Lieu remarquable du terrain (nom + position WGS84) : étiqueté sur la scène et
    pointé sur la minimap. Chaque terrain a ses propres lieux, lus de landmarks.txt
    dans son dossier. */

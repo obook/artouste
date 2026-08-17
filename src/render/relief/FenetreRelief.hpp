@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -62,6 +63,19 @@ inline constexpr int TUILES_PAR_IMAGE = 2;
 
    Pas le pas de la grille la plus grossière : l'anneau passé à 4 m, le centre
    alternerait entre deux phases du réseau de 8 m. */
+/* La grille de la fenêtre s'emboîte-t-elle dans la maille de la carte ? Il le
+   faut pour le noyau ET pour l'anneau, qui dessine à PAS_ANNEAU fois ce pas :
+   sinon la fenêtre redessine la surface du maillage au lieu de la reproduire, et
+   les silhouettes se déplacent à sa frontière. */
+[[nodiscard]] inline bool emboiteDansMaille(float pasFenetre, float mailleCarte,
+                                            int multAnneau) noexcept {
+    if (pasFenetre <= 0.0f || mailleCarte <= 0.0f || multAnneau < 1) {
+        return false;
+    }
+    const float k = mailleCarte / (pasFenetre * static_cast<float>(multAnneau));
+    return k >= 1.0f && std::fabs(k - std::round(k)) < 1e-3f;
+}
+
 inline constexpr int NIVEAU_ANNEAU  = 2;   /* niveau le plus grossier que l'anneau lit */
 inline constexpr int CALAGE_MAILLES = 1 << NIVEAU_ANNEAU;
 

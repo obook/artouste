@@ -25,6 +25,7 @@ add_executable(artouste_tests
     hud_alarms_tests.cpp
     texture_cache_tests.cpp
     ortho_tiles_tests.cpp
+    relief_emboitement_tests.cpp
     fabrique_tuiles_tests.cpp
     souffle_rotor_tests.cpp
     ligne_commande_tests.cpp

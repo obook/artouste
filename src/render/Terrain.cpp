@@ -226,6 +226,7 @@ Terrain::Terrain(const std::filesystem::path& dir,
         pasMaillage = std::max(1, static_cast<int>(std::ceil(
                                       std::sqrt(total / static_cast<double>(sommetsMax)))));
     }
+    m_pasMaillage = pasMaillage;
     const std::vector<int> colonnes    = retenus(m_cols, pasMaillage);
     const std::vector<int> rangees     = retenus(m_rows, pasMaillage);
     if (pasMaillage > 1) {
@@ -256,6 +257,9 @@ Terrain::Terrain(const std::filesystem::path& dir,
        lointains scintillaient en quadrillage régulier ; on lisse l'ÉCLAIRAGE
        sans rien enlever au relief lui-même. */
     const int step = std::max(1, static_cast<int>(std::lround(35.0f / dx)));
+    m_pasNormaleM  = static_cast<float>(step) * dx;
+    std::printf("[Terrain] raccord de la fenêtre : 1 point sur %d, normales à %.2f m.\n",
+                m_pasMaillage, static_cast<double>(m_pasNormaleM));
 
     for (const int j : rangees) {
         for (const int i : colonnes) {

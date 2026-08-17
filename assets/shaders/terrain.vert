@@ -49,6 +49,9 @@ uniform sampler2D u_carteRelief;
 uniform vec2      u_carteCoin;    /* coin nord-ouest de l'emprise, monde */
 uniform vec2      u_carteTailleM; /* emprise au sol (largeur, hauteur) */
 uniform vec2      u_carteTexels;  /* nombre de points de la heightmap */
+uniform int       u_cartePasMaillage; /* décimation du maillage d'ensemble */
+uniform float     u_cartePasNormale;  /* pas réel de ses normales (m) */
+uniform bool      u_reliefRaccord;    /* mise au point : débraye le raccord */
 
 out vec3 v_normal;
 out vec2 v_uv;
@@ -85,11 +88,29 @@ float hauteurCarte(vec2 p) {
     return texture(u_carteRelief, uv).r;
 }
 
-/* Pas du gradient des normales du maillage d'ensemble, en mètres. Même valeur
-   que Terrain.cpp, qui lisse l'ÉCLAIRAGE sans toucher au relief : la fenêtre
-   doit retrouver exactement cette normale au bord, sinon le raccord fait une
-   marche de lumière, un versant à l'ombre côtoyant le même versant au soleil. */
-const float PAS_NORMALE_CARTE = 35.0;
+/* Surface RÉELLE du maillage d'ensemble : ses points RETENUS et sa découpe en
+   triangles, pas la carte lue en bilinéaire. Il ne garde qu'un point sur
+   u_cartePasMaillage, plus le dernier de chaque axe, et coupe chaque maille
+   du coin nord-est au coin sud-ouest (Terrain.cpp : a, c, b puis b, c, d).
+
+   C'est vers CETTE surface que le bord de la fenêtre doit converger. Vers la
+   carte bilinéaire, il resterait un écart sous le mètre, assez pour décaler les
+   silhouettes et faire "se dessiner" les crêtes au passage de la frontière. */
+float hauteurMaillage(vec2 p) {
+    vec2  f   = (p - u_carteCoin) / u_carteTailleM;
+    vec2  g   = f * (u_carteTexels - 1.0);
+    float pas = float(max(u_cartePasMaillage, 1));
+    vec2  i0  = floor(g / pas) * pas;
+    vec2  i1  = min(i0 + pas, u_carteTexels - 1.0);
+    vec2  t   = clamp((g - i0) / max(i1 - i0, vec2(1.0)), 0.0, 1.0);
+    float h00 = texture(u_carteRelief, (i0 + 0.5) / u_carteTexels).r;
+    float h10 = texture(u_carteRelief, (vec2(i1.x, i0.y) + 0.5) / u_carteTexels).r;
+    float h01 = texture(u_carteRelief, (vec2(i0.x, i1.y) + 0.5) / u_carteTexels).r;
+    float h11 = texture(u_carteRelief, (i1 + 0.5) / u_carteTexels).r;
+    return (t.x + t.y <= 1.0)
+               ? (1.0 - t.x - t.y) * h00 + t.x * h10 + t.y * h01
+               : (1.0 - t.y) * h10 + (1.0 - t.x) * h01 + (t.x + t.y - 1.0) * h11;
+}
 
 /* Normale d'une surface échantillonnée à d mètres. X est, Z sud, Y en haut. */
 vec3 normaleDe(float hl, float hr, float hn, float hs, float d) {
@@ -102,15 +123,21 @@ float poidsFenetre(float dist) {
     return 1.0 - smoothstep(u_reliefFondu.x, u_reliefFondu.y, dist);
 }
 
-/* Pas du gradient de la normale : celui de la surface réellement lue tout près,
-   celui de la carte au bord de la fenêtre.
+/* Pas du gradient de la normale : celui du CHAMP RÉELLEMENT LU, qui montre tout
+   ce que le champ contient et rien de plus. Il ne rejoint le pas de la carte que
+   dans la bande de fondu, où la lumière doit se raccorder au maillage
+   d'ensemble.
 
    Il part de la finesse et NON du pas de la grille. Avec le pas de la grille,
-   noyau et anneau éclairaient différemment le même point de leur frontière, et
-   la marche de lumière suivait l'appareil. */
+   noyau et anneau éclairaient différemment le même point de leur frontière.
+
+   Le mélange part de fonduDebut et non de zéro : en partant de zéro, l'éclairage
+   d'un versant changeait tout au long de l'approche, et la carte de lumière
+   glissait sur le terrain en suivant l'appareil. */
 float pasNormale(float dist, float finesse) {
-    return mix(0.5 * (u_reliefPasTexture.x + u_reliefPasTexture.y) * exp2(finesse), PAS_NORMALE_CARTE,
-               smoothstep(0.0, u_reliefFondu.y, dist));
+    return mix(0.5 * (u_reliefPasTexture.x + u_reliefPasTexture.y) * exp2(finesse),
+               u_cartePasNormale,
+               smoothstep(u_reliefFondu.x, u_reliefFondu.y, dist));
 }
 
 /* Altitude dessinée : celle de la carte, plus le détail de la fenêtre, qui
@@ -141,9 +168,16 @@ void main() {
         float finesse = finesseDetail(dist);
         pos           = vec3(p.x, hauteurFenetre(p, t, finesse), p.y);
 
-        /* Normale par différences finies sur la surface dessinée. Au bord, le pas
-           et la hauteur sont ceux de la carte : les deux se raccordent en lumière
-           comme en altitude. */
+        /* Le bord rejoint la surface du maillage, pas la carte bilinéaire : à la
+           fin du fondu les deux sont ÉGALES. Sans cela il reste un écart sous le
+           mètre, assez pour décaler les silhouettes au passage de la frontière. */
+        if (t < 1.0 && u_reliefRaccord) {
+            pos.y += (1.0 - t) * (hauteurMaillage(p) - hauteurCarte(p));
+        }
+
+        /* Normale par différences finies sur la carte PLEINE, jamais sur la
+           surface décimée : c'est ainsi que le maillage calcule les siennes
+           (Terrain.cpp, voisins à u_cartePasNormale mètres). */
         float d = pasNormale(dist, finesse);
         normal  = normaleDe(hauteurFenetre(p + vec2(-d, 0.0), t, finesse),
                             hauteurFenetre(p + vec2(d, 0.0), t, finesse),

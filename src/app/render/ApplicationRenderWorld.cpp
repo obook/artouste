@@ -150,6 +150,13 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
                                           m_terrain->originZ() - m_terrain->halfHeight()});
             m_terrainShader->setVec2("u_carteTailleM", vec2{2.0f * m_terrain->halfWidth(),
                                                             2.0f * m_terrain->halfHeight()});
+            /* ARTOUSTE_DEBUG_RELIEF_RACCORD=0 débraye le raccord au maillage. */
+            static const int raccord =
+                (std::getenv("ARTOUSTE_DEBUG_RELIEF_RACCORD") != nullptr &&
+                 std::atoi(std::getenv("ARTOUSTE_DEBUG_RELIEF_RACCORD")) == 0) ? 0 : 1;
+            m_terrainShader->setInt("u_reliefRaccord", raccord);
+            m_terrainShader->setInt("u_cartePasMaillage", m_terrain->pasMaillage());
+            m_terrainShader->setFloat("u_cartePasNormale", m_terrain->pasNormaleM());
             m_terrainShader->setVec2("u_carteTexels",
                                      vec2{static_cast<float>(m_terrain->gridCols()),
                                           static_cast<float>(m_terrain->gridRows())});

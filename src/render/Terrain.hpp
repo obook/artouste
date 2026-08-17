@@ -136,6 +136,12 @@ public:
     [[nodiscard]] float halfWidth() const noexcept { return 0.5f * m_widthM; }
     [[nodiscard]] float halfHeight() const noexcept { return 0.5f * m_heightM; }
     /* Centre de l'emprise en coordonnées monde (0 sauf carte recadrée). */
+    /* Décimation du maillage, en points, et pas réel de ses normales, en mètres.
+       La fenêtre de relief s'y raccorde (voir hauteurMaillage dans
+       terrain.vert). */
+    [[nodiscard]] int   pasMaillage() const noexcept { return m_pasMaillage; }
+    [[nodiscard]] float pasNormaleM() const noexcept { return m_pasNormaleM; }
+
     [[nodiscard]] float originX() const noexcept { return m_originX; }
     [[nodiscard]] float originZ() const noexcept { return m_originZ; }
     [[nodiscard]] float maxElevation() const noexcept { return m_elevMax; }
@@ -247,6 +253,12 @@ private:
     /* Altitude du seul maillage d'ensemble, sans la fenêtre fine ni les
        plates-formes de pad. Base commune à heightAt et à la correction. */
     [[nodiscard]] float heightCoarse(float x, float z) const noexcept;
+
+    /* Altitude de la surface RÉELLEMENT dessinée par le maillage d'ensemble :
+       ses points retenus, sa découpe en triangles. Miroir de hauteurMaillage
+       dans terrain.vert. */
+    [[nodiscard]] float heightMesh(float x, float z) const noexcept;
+
     /* Charge un fichier de lieux "lon lat nom" (un par ligne) dans out. Fichier
        absent : out reste vide. label sert à la trace affichée. */
     void
@@ -289,6 +301,8 @@ private:
     std::vector<float> m_heights;
     int m_cols = 0;
     int m_rows = 0;
+    int   m_pasMaillage = 1;     /* 1 point sur n dessiné */
+    float m_pasNormaleM = 35.0f;  /* pas réel du gradient des normales (m) */
     float m_widthM = 0.0f;  /* dimension est-ouest au sol (m) */
     float m_heightM = 0.0f; /* dimension nord-sud au sol (m) */
     /* Décalage de l'origine du terrain en coordonnées monde (m) : par défaut 0,

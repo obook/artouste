@@ -35,8 +35,9 @@ def test_aller_retour():
        sous 3 cm, l'argument même du choix de 16 bits par point."""
     y, x = np.mgrid[0:512, 0:512]
     altitudes = 1000.0 + 1300.0 * (x / 511.0) * (y / 511.0)
-    relues, pas_m = decoder_tuile(encoder_tuile(altitudes, 2.0))
-    assert pas_m == 2.0
+    relues, pas = decoder_tuile(encoder_tuile(altitudes, 2.1898, 2.3112))
+    assert pas == (np.float32(2.1898), np.float32(2.3112)) or (
+        abs(pas[0] - 2.1898) < 1e-4 and abs(pas[1] - 2.3112) < 1e-4)
     assert np.abs(relues - altitudes).max() < 0.03, np.abs(relues - altitudes).max()
 
 
@@ -44,7 +45,7 @@ def test_tuile_plate():
     """Une tuile plate a une étendue nulle : elle ne doit pas diviser par zéro
        ni rendre autre chose que son altitude."""
     altitudes = np.full((512, 512), 37.5)
-    relues, _ = decoder_tuile(encoder_tuile(altitudes, 2.0))
+    relues, _ = decoder_tuile(encoder_tuile(altitudes, 2.0, 2.0))
     assert np.abs(relues - 37.5).max() < 1e-6
 
 
@@ -52,13 +53,14 @@ def test_grille_sans_recouvrement():
     """Les tuiles ne se recouvrent pas et ne laissent pas de trou : le dernier
        noeud d'un bloc doit tomber un pas exactement avant le premier du bloc
        suivant. Un pas d'écart ici décale toute la carte."""
-    tuile_m = 512 * 2.0
-    gauche = bornes_noeuds(CALAGE, tuile_m, 0, 0, 2, 2, 512)
-    droite = bornes_noeuds(CALAGE, tuile_m, 2, 0, 2, 2, 512)
+    # Tuile NON carrée au sol : c'est le cas qui casse si un axe est oublié.
+    tuile_x, tuile_z = 512 * 2.1898, 512 * 2.3112
+    gauche = bornes_noeuds(CALAGE, tuile_x, tuile_z, 0, 0, 2, 2, 512)
+    droite = bornes_noeuds(CALAGE, tuile_x, tuile_z, 2, 0, 2, 2, 512)
     pas_lon = (gauche[1] - gauche[0]) / (2 * 512 - 1)
     assert abs((droite[0] - gauche[1]) - pas_lon) < 1e-9 * pas_lon + 1e-12
 
-    bas = bornes_noeuds(CALAGE, tuile_m, 0, 2, 2, 2, 512)
+    bas = bornes_noeuds(CALAGE, tuile_x, tuile_z, 0, 2, 2, 2, 512)
     pas_lat = (gauche[3] - gauche[2]) / (2 * 512 - 1)
     assert abs((gauche[2] - bas[3]) - pas_lat) < 1e-9 * pas_lat + 1e-12
 
@@ -70,7 +72,7 @@ def test_tuile_vide_non_ecrite():
     manquant = np.zeros((16, 32), dtype=bool)
     manquant[:, 16:] = True  # la tuile de droite est vide
     with tempfile.TemporaryDirectory() as sortie:
-        assert ecrire_bloc(sortie, altitudes, manquant, 0, 0, 2, 1, 16, 2.0) == 1
+        assert ecrire_bloc(sortie, altitudes, manquant, 0, 0, 2, 1, 16, 2.0, 2.0) == 1
         assert os.path.exists(os.path.join(sortie, "0", "0.r16"))
         assert not os.path.exists(os.path.join(sortie, "0", "1.r16"))
 

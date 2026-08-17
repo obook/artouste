@@ -75,7 +75,7 @@ import numpy as np
 from PIL import Image
 
 from terrain import config
-from terrain.fetch_tuiles import (bbox_bloc, bloc_complet, grille, lire_calage,
+from terrain.fetch_tuiles import (bloc_complet, lire_calage,
                                   lire_points_poser, marquer_bloc,
                                   marquer_inacheve, retirer_marque_inacheve,
                                   zone_autour, bloc_dans_zones)
@@ -85,17 +85,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lidar.services import COUCHE_MNT, grille_altitudes
 
 MAGIC = b"ARTR"
-VERSION = 1
+VERSION = 2
 
 # Un point du laser qui plonge de plus de 300 m sous le relief en place ne
 # mesure pas le sol : 421 points sur ossau, jusqu'à -796 m sur un versant à
 # 2400 m. Même garde-fou que relief_lidar.py (CHUTE_ABERRANTE_M).
 CHUTE_ABERRANTE_M = 300.0
-EN_TETE = "<4sHHfff"
-EN_TETE_OCTETS = struct.calcsize(EN_TETE)
+# v1 : un seul pas, isotrope. v2 : un pas PAR AXE, la maille de la carte n'ayant
+# pas la même finesse en x et en z. Le moteur lit les deux.
+EN_TETE_V1 = "<4sHHfff"
+EN_TETE_V2 = "<4sHHffff"
+EN_TETE_OCTETS = struct.calcsize(EN_TETE_V2)
 
 
-def encoder_tuile(altitudes, pas_m):
+def encoder_tuile(altitudes, pas_x, pas_z):
     """Encode une tuile carrée d'altitudes en mètres. Le minimum et l'étendue
        sont ceux de CETTE tuile, ce qui donne la quantification la plus fine que
        16 bits permettent sur son propre dénivelé."""
@@ -105,20 +108,28 @@ def encoder_tuile(altitudes, pas_m):
     # par zéro ; le plancher ne coûte rien puisque tous les niveaux valent alors 0.
     etendue = max(float(altitudes.max()) - mini, 1e-3)
     niveaux = np.round((altitudes - mini) / etendue * 65535.0).astype("<u2")
-    return struct.pack(EN_TETE, MAGIC, VERSION, cote, pas_m, mini, etendue) + niveaux.tobytes()
+    return (struct.pack(EN_TETE_V2, MAGIC, VERSION, cote, pas_x, pas_z, mini, etendue) +
+            niveaux.tobytes())
 
 
 def decoder_tuile(octets):
     """Décode une tuile, en mètres. Sert aux vérifications et aux outils ; le
        moteur fait la même chose en C++."""
-    magie, version, cote, pas_m, mini, etendue = struct.unpack_from(EN_TETE, octets)
+    version = struct.unpack_from("<H", octets, 4)[0]
+    if version == 1:
+        magie, _, cote, pas_x, mini, etendue = struct.unpack_from(EN_TETE_V1, octets)
+        pas_z = pas_x
+        en_tete = struct.calcsize(EN_TETE_V1)
+    else:
+        magie, _, cote, pas_x, pas_z, mini, etendue = struct.unpack_from(EN_TETE_V2, octets)
+        en_tete = struct.calcsize(EN_TETE_V2)
     if magie != MAGIC:
         raise ValueError(f"tuile de relief inattendue : {magie!r}")
-    if version != VERSION:
+    if version not in (1, 2):
         raise ValueError(f"version de tuile inconnue : {version}")
-    niveaux = np.frombuffer(octets, dtype="<u2", offset=EN_TETE_OCTETS,
+    niveaux = np.frombuffer(octets, dtype="<u2", offset=en_tete,
                             count=cote * cote).reshape(cote, cote)
-    return mini + niveaux.astype(np.float64) / 65535.0 * etendue, pas_m
+    return mini + niveaux.astype(np.float64) / 65535.0 * etendue, (pas_x, pas_z)
 
 
 class ReliefCarte:
@@ -146,7 +157,7 @@ class ReliefCarte:
         return self.altitudes[j[:, None], i[None, :]]
 
 
-def ecrire_index(sortie, carte, calage, meta, tuile_points, pas_m, colonnes, rangees):
+def ecrire_index(sortie, carte, calage, meta, tuile_points, pas_x, pas_z, colonnes, rangees):
     """Index à la racine du jeu, dans les mêmes termes que celui des tuiles
        d'image : la grille est ancrée sur le coin nord-ouest de la carte, en
        coordonnées monde (X est, Z sud), dont l'origine est le centre de
@@ -159,27 +170,51 @@ def ecrire_index(sortie, carte, calage, meta, tuile_points, pas_m, colonnes, ran
         f.write("# coordonnées monde (X est, Z sud). Une tuile par fichier :\n")
         f.write("# <rangée>/<colonne>.r16, 16 bits par point (voir fetch_relief.py).\n")
         f.write(f"tuile_points {tuile_points}\n")
-        f.write(f"pas_m {pas_m}\n")
+        f.write(f"pas_x {pas_x}\n")
+        f.write(f"pas_z {pas_z}\n")
         f.write(f"colonnes {colonnes}\n")
         f.write(f"rangees {rangees}\n")
         f.write(f"coin_x {coin_x:.2f}\n")
         f.write(f"coin_z {coin_z:.2f}\n")
 
 
-def bornes_noeuds(calage, tuile_m, col0, rangee0, n_col, n_rangee, tuile_points):
+def grille_relief(calage, tuile_points, pas_x, pas_z):
+    """Nombre de tuiles couvrant l'emprise, avec un pas PAR AXE : une tuile n'est
+       plus carrée au sol."""
+    tuile_x = tuile_points * pas_x
+    tuile_z = tuile_points * pas_z
+    return (math.ceil(calage["largeur_m"] / tuile_x),
+            math.ceil(calage["hauteur_m"] / tuile_z),
+            tuile_x, tuile_z)
+
+
+def bbox_relief(calage, tuile_x, tuile_z, col0, rangee0, n_col, n_rangee):
+    """Emprise géographique d'un bloc, tuiles non carrées. Même ancrage que
+       bbox_bloc : coin nord-ouest, rangée 0 au nord."""
+    deg_lon = (calage["lon_max"] - calage["lon_min"]) / calage["largeur_m"]
+    deg_lat = (calage["lat_max"] - calage["lat_min"]) / calage["hauteur_m"]
+    lon_lo = calage["lon_min"] + col0 * tuile_x * deg_lon
+    lon_hi = lon_lo + n_col * tuile_x * deg_lon
+    lat_hi = calage["lat_max"] - rangee0 * tuile_z * deg_lat
+    lat_lo = lat_hi - n_rangee * tuile_z * deg_lat
+    return (lon_lo, lon_hi, lat_lo, lat_hi)
+
+
+def bornes_noeuds(calage, tuile_x, tuile_z, col0, rangee0, n_col, n_rangee, tuile_points):
     """Position des noeuds EXTRÊMES d'un bloc, en degrés, au format attendu par
        grille_altitudes : (lon_min, lon_max, lat_min, lat_max).
 
        Le premier noeud d'une tuile tombe sur son coin nord-ouest, et le dernier
        un pas AVANT le coin suivant : les tuiles ne se recouvrent pas."""
-    lon_lo, lon_hi, lat_lo, lat_hi = bbox_bloc(calage, tuile_m, col0, rangee0, n_col, n_rangee)
+    lon_lo, lon_hi, lat_lo, lat_hi = bbox_relief(calage, tuile_x, tuile_z, col0, rangee0,
+                                                 n_col, n_rangee)
     pas_lon = (lon_hi - lon_lo) / (n_col * tuile_points)
     pas_lat = (lat_hi - lat_lo) / (n_rangee * tuile_points)
     return (lon_lo, lon_hi - pas_lon, lat_lo + pas_lat, lat_hi)
 
 
 def ecrire_bloc(sortie, altitudes, manquant, col0, rangee0, n_col, n_rangee,
-                tuile_points, pas_m):
+                tuile_points, pas_x, pas_z):
     """Découpe un bloc en tuiles et les écrit. Renvoie le nombre de tuiles
        écrites : une tuile entièrement hors couverture LiDAR est laissée
        absente, le moteur y gardant le relief d'ensemble."""
@@ -194,7 +229,7 @@ def ecrire_bloc(sortie, altitudes, manquant, col0, rangee0, n_col, n_rangee,
             os.makedirs(dossier, exist_ok=True)
             chemin = os.path.join(dossier, f"{col0 + c}.r16")
             with open(chemin, "wb") as f:
-                f.write(encoder_tuile(altitudes[tranche], pas_m))
+                f.write(encoder_tuile(altitudes[tranche], pas_x, pas_z))
             ecrites += 1
     return ecrites
 
@@ -204,7 +239,14 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("carte", help="nom du dossier sous assets/terrain")
     p.add_argument("sortie", help="dossier où écrire les tuiles de relief")
-    p.add_argument("--pas-m", type=float, default=2.0)
+    # Pas PAR AXE : il doit valoir dx/k et dz/k de la carte, k multiple de
+    # PAS_ANNEAU (4), pour que le noyau ET l'anneau de la fenêtre s'emboîtent
+    # dans la maille du maillage d'ensemble. Sans cela la fenêtre redessine la
+    # surface au lieu de la reproduire, et sa frontière se voit en vol.
+    # --pas-m reste accepté et pose les deux à la même valeur.
+    p.add_argument("--pas-m", type=float, default=None)
+    p.add_argument("--pas-x", type=float, default=None)
+    p.add_argument("--pas-z", type=float, default=None)
     p.add_argument("--tuile-points", type=int, default=512)
     p.add_argument("--bloc-tuiles", type=int, default=2)
     p.add_argument("--surech", type=int, default=2)
@@ -213,6 +255,10 @@ def main():
     p.add_argument("--autour-helipads", type=float, default=0.0, metavar="RAYON_KM")
     p.add_argument("--reprendre", action="store_true")
     args = p.parse_args()
+    if args.pas_x is None:
+        args.pas_x = args.pas_m if args.pas_m is not None else 2.0
+    if args.pas_z is None:
+        args.pas_z = args.pas_m if args.pas_m is not None else args.pas_x
 
     dossier_carte = os.path.join(config.TERRAIN_ROOT, args.carte)
     terrain_txt = os.path.join(dossier_carte, "terrain.txt")
@@ -229,12 +275,13 @@ def main():
 
     calage = lire_calage(terrain_txt)
     meta = read_meta(Path(terrain_txt))
-    colonnes, rangees, tuile_m = grille(calage, args.tuile_points, args.pas_m)
+    colonnes, rangees, tuile_x, tuile_z = grille_relief(calage, args.tuile_points,
+                                                        args.pas_x, args.pas_z)
 
     os.makedirs(args.sortie, exist_ok=True)
     ecrire_index(args.sortie, args.carte, calage, meta, args.tuile_points,
-                 args.pas_m, colonnes, rangees)
-    marquer_inacheve(args.sortie, args.pas_m, colonnes * rangees)
+                 args.pas_x, args.pas_z, colonnes, rangees)
+    marquer_inacheve(args.sortie, args.pas_x, colonnes * rangees)
 
     relief_carte = ReliefCarte(dossier_carte)
 
@@ -247,7 +294,8 @@ def main():
     blocs_y = math.ceil(rangees / args.bloc_tuiles)
     octets = colonnes * rangees * args.tuile_points * args.tuile_points * 2
     print(f"[relief] {args.carte} : {colonnes} x {rangees} = {colonnes * rangees} tuiles "
-          f"de {args.tuile_points} points à {args.pas_m} m ({tuile_m:.0f} m au sol), "
+          f"de {args.tuile_points} points à {args.pas_x:.4f} x {args.pas_z:.4f} m "
+          f"({tuile_x:.0f} x {tuile_z:.0f} m au sol), "
           f"{octets / 1e6:.0f} Mo au plus")
     print(f"[relief] {blocs_x * blocs_y} blocs de {args.bloc_tuiles} x {args.bloc_tuiles} "
           f"tuiles, suréchantillonnage x{args.surech}")
@@ -263,7 +311,7 @@ def main():
             n_col = min(args.bloc_tuiles, colonnes - col0)
             n_rangee = min(args.bloc_tuiles, rangees - rangee0)
 
-            lon_lo, lon_hi, lat_lo, lat_hi = bbox_bloc(calage, tuile_m, col0, rangee0,
+            lon_lo, lon_hi, lat_lo, lat_hi = bbox_relief(calage, tuile_x, tuile_z, col0, rangee0,
                                                        n_col, n_rangee)
             if not bloc_dans_zones(lon_lo, lon_hi, lat_lo, lat_hi, zones):
                 hors_zone += 1
@@ -279,7 +327,7 @@ def main():
             print(f"[{faits}] bloc ({col0}, {rangee0}) {nx}x{nz} points, WMS...")
             sys.stdout.flush()
 
-            bornes = bornes_noeuds(calage, tuile_m, col0, rangee0, n_col, n_rangee,
+            bornes = bornes_noeuds(calage, tuile_x, tuile_z, col0, rangee0, n_col, n_rangee,
                                    args.tuile_points)
             altitudes = grille_altitudes(COUCHE_MNT, bornes, nx, nz,
                                          max(1, args.surech), journal=False)
@@ -293,7 +341,7 @@ def main():
                 altitudes = np.where(manquant | aberrant, carte_alt, altitudes)
 
             n = ecrire_bloc(args.sortie, altitudes, manquant, col0, rangee0,
-                            n_col, n_rangee, args.tuile_points, args.pas_m)
+                            n_col, n_rangee, args.tuile_points, args.pas_x, args.pas_z)
             ecrites += n
             marquer_bloc(args.sortie, col0, rangee0)
             trace_aberrant = f", {int(aberrant.sum())} point(s) aberrant(s) écarté(s)" \

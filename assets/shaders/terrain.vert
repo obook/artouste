@@ -33,15 +33,15 @@ uniform mat4 u_proj;
 uniform bool      u_reliefActif;
 uniform sampler2D u_relief;        /* altitudes de la fenêtre, en mètres */
 uniform vec2      u_reliefAncre;   /* coin nord-ouest de la tuile (0, 0), monde */
-uniform float     u_reliefTailleM; /* période du tore au sol */
+uniform vec2      u_reliefTailleM; /* période du tore au sol, par axe */
 uniform float     u_reliefTexels;  /* côté de la texture, en texels */
-uniform float     u_reliefPas;     /* maille de la fenêtre, en mètres */
+uniform vec2      u_reliefPas;     /* maille de la fenêtre, par axe */
 uniform vec2      u_reliefCentre;  /* centre de la grille dessinée, monde */
 uniform vec2      u_reliefOeil;    /* position continue de l'appareil, monde */
 uniform int       u_reliefCote;    /* côté de la grille dessinée, en points */
 uniform vec2      u_reliefFondu;   /* début et fin du fondu vers la carte (m) */
 uniform float     u_reliefLissage; /* niveau de réduction à la maille de la carte */
-uniform float     u_reliefPasTexture;  /* maille des tuiles de relief (m) */
+uniform vec2      u_reliefPasTexture;  /* maille des tuiles de relief, par axe */
 uniform float     u_reliefDetailM;     /* distance de pleine finesse (m) */
 
 /* Relief d'ensemble en texture : la fenêtre s'y raccorde au bord. */
@@ -109,7 +109,7 @@ float poidsFenetre(float dist) {
    noyau et anneau éclairaient différemment le même point de leur frontière, et
    la marche de lumière suivait l'appareil. */
 float pasNormale(float dist, float finesse) {
-    return mix(u_reliefPasTexture * exp2(finesse), PAS_NORMALE_CARTE,
+    return mix(0.5 * (u_reliefPasTexture.x + u_reliefPasTexture.y) * exp2(finesse), PAS_NORMALE_CARTE,
                smoothstep(0.0, u_reliefFondu.y, dist));
 }
 
@@ -132,8 +132,8 @@ void main() {
            indices. */
         int   i = gl_VertexID % u_reliefCote;
         int   j = gl_VertexID / u_reliefCote;
-        float demi = 0.5 * float(u_reliefCote - 1) * u_reliefPas;
-        vec2  p    = u_reliefCentre + vec2(float(i), float(j)) * u_reliefPas - demi;
+        vec2 demi = 0.5 * float(u_reliefCote - 1) * u_reliefPas;
+        vec2 p     = u_reliefCentre + vec2(float(i), float(j)) * u_reliefPas - demi;
 
         /* Le centre calé pose les sommets, l'oeil mesure les champs. */
         float dist    = distance(p, u_reliefOeil);

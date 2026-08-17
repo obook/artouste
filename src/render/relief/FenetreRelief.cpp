@@ -30,8 +30,8 @@ namespace {
 /* En-tête d'une tuile, tel que tools/terrain/fetch_relief.py l'écrit : 20 octets
    petit-boutiens, puis côté x côté entiers 16 bits. */
 constexpr char          MAGIQUE[4]     = {'A', 'R', 'T', 'R'};
-constexpr std::size_t   EN_TETE_OCTETS = 20;
-constexpr std::uint16_t VERSION        = 1;
+constexpr std::size_t   EN_TETE_OCTETS    = 20;  /* v1 : un seul pas */
+constexpr std::size_t   EN_TETE_V2_OCTETS = 24;  /* v2 : un pas par axe */
 
 /* Reprise du ruban de triangles. Un ruban par rangée : 8 Mo d'indices au lieu de
    25 pour une grille de 1024. */
@@ -78,7 +78,13 @@ std::unique_ptr<FenetreRelief> FenetreRelief::ouvrir(const std::filesystem::path
         if (cle == "tuile_points") {
             in >> calage.tuilePoints;
         } else if (cle == "pas_m") {
-            in >> calage.pasM;
+            /* Jeu de tuiles v1 : un seul pas, isotrope. */
+            in >> calage.pasX;
+            calage.pasZ = calage.pasX;
+        } else if (cle == "pas_x") {
+            in >> calage.pasX;
+        } else if (cle == "pas_z") {
+            in >> calage.pasZ;
         } else if (cle == "colonnes") {
             in >> calage.colonnes;
         } else if (cle == "rangees") {
@@ -105,38 +111,62 @@ std::unique_ptr<FenetreRelief> FenetreRelief::ouvrir(const std::filesystem::path
     /* Noyau au pas des tuiles, puis anneau quatre fois plus grossier et quatre
        fois plus large. L'anneau est écarté s'il déborde des tuiles que le tore
        garantit présentes. */
-    const float marge = static_cast<float>(TUILES_FENETRE / 2 - 1) * calage.tuileM();
+    /* La tuile n'étant pas carrée au sol, la marge garantie est celle du plus
+       PETIT côté : c'est lui qui limite ce que le tore tient à coup sûr. */
+    const float marge = static_cast<float>(TUILES_FENETRE / 2 - 1) *
+                        std::min(calage.tuileX(), calage.tuileZ());
     const int   noyau = std::clamp(coteGrillePoints, 64, fenetre->m_cotePoints / 2);
-    if (!fenetre->construireGrille(noyau, calage.pasM)) {
+    if (!fenetre->construireGrille(noyau, calage.pasX, calage.pasZ)) {
         return nullptr;
     }
-    const float pasAnneau  = static_cast<float>(PAS_ANNEAU) * calage.pasM;
-    const float demiAnneau = 0.5f * static_cast<float>(COTE_ANNEAU_POINTS - 1) * pasAnneau;
-    if (demiAnneau <= marge) {
-        (void)fenetre->construireGrille(COTE_ANNEAU_POINTS, pasAnneau);
+    const float pasAnneauX = static_cast<float>(PAS_ANNEAU) * calage.pasX;
+    const float pasAnneauZ = static_cast<float>(PAS_ANNEAU) * calage.pasZ;
+    const float pasAnneau  = std::max(pasAnneauX, pasAnneauZ);
+    /* L'anneau est RABOTÉ pour tenir dans la marge que le tore garantit, au lieu
+       d'être abandonné : sans cela un pas de tuile un peu plus grand supprime
+       l'anneau entier en silence, et la fenêtre perd les trois quarts de son
+       emprise. Le côté reste impair, comme celui du noyau. */
+    const int coteMarge  = 1 + 2 * static_cast<int>(marge / pasAnneau);
+    const int coteAnneau = std::min(COTE_ANNEAU_POINTS, coteMarge | 1);
+    /* Il ne vaut la peine que s'il DÉBORDE le noyau : on compare des emprises au
+       sol, pas des nombres de points, l'anneau ayant moins de points sur plus de
+       terrain. */
+    const float demiAnneau = 0.5f * static_cast<float>(coteAnneau - 1) * pasAnneau;
+    const float demiNoyau  = 0.5f * static_cast<float>(noyau - 1) *
+                            std::max(calage.pasX, calage.pasZ);
+    if (demiAnneau > demiNoyau) {
+        (void)fenetre->construireGrille(coteAnneau, pasAnneauX, pasAnneauZ);
+    } else {
+        std::printf("[relief] anneau écarté : la marge du tore (%.0f m) ne tient pas "
+                    "au-delà du noyau.\n", static_cast<double>(marge));
     }
 
     for (const Grille& grille : fenetre->m_grilles) {
-        std::printf("[relief] grille %d points à %.1f m : %.0f m au sol, %.2f M sommets.\n",
+        std::printf("[relief] grille %d points à %.4f x %.4f m : %.0f x %.0f m au sol, "
+                    "%.2f M sommets.\n",
                     grille.cote,
-                    static_cast<double>(grille.pas),
-                    static_cast<double>(grille.cote - 1) * static_cast<double>(grille.pas),
+                    static_cast<double>(grille.pasX), static_cast<double>(grille.pasZ),
+                    static_cast<double>(grille.cote - 1) * static_cast<double>(grille.pasX),
+                    static_cast<double>(grille.cote - 1) * static_cast<double>(grille.pasZ),
                     static_cast<double>(grille.cote) * static_cast<double>(grille.cote) / 1e6);
     }
     {
         const Grille& noyau     = fenetre->m_grilles.front();
         const Grille& large     = fenetre->m_grilles.back();
-        const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pas;
-        const float   rapport   = std::max(1.0f, large.pas / calage.pasM);
+        const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pasX;
+        const float   rapport   = std::max(1.0f, large.pasX / calage.pasX);
         std::printf("[relief] finesse pleine jusqu'à %.1f m, ÉPINGLÉE (loi 2x : %.1f m).\n",
                     static_cast<double>(fenetre->distanceDetailM()),
-                    static_cast<double>((demiNoyau - 0.5f * large.pas) / (2.0f * rapport)));
+                    static_cast<double>((demiNoyau - 0.5f * large.pasX) / (2.0f * rapport)));
     }
-    std::printf("[relief] fenêtre %d x %d points à %.2f m, %.0f m au sol, %.0f Mo.\n",
+    std::printf("[relief] fenêtre %d x %d points à %.4f x %.4f m, %.0f x %.0f m au sol, "
+                "%.0f Mo.\n",
                 fenetre->m_cotePoints,
                 fenetre->m_cotePoints,
-                static_cast<double>(calage.pasM),
+                static_cast<double>(calage.pasX),
+                static_cast<double>(calage.pasZ),
                 static_cast<double>(fenetre->tailleM()),
+                static_cast<double>(fenetre->tailleZ()),
                 static_cast<double>(fenetre->m_hauteurs.size()) * sizeof(float) / 1e6);
     return fenetre;
 }
@@ -196,7 +226,7 @@ bool FenetreRelief::allouerTexture() {
     return true;
 }
 
-bool FenetreRelief::construireGrille(int cote, float pas) {
+bool FenetreRelief::construireGrille(int cote, float pasX, float pasZ) {
     /* Aucun sommet stocké : terrain.vert les calcule depuis gl_VertexID. Seuls
        les indices existent, en rubans séparés par un indice de reprise. */
     std::vector<unsigned int> indices;
@@ -211,7 +241,8 @@ bool FenetreRelief::construireGrille(int cote, float pas) {
 
     Grille grille;
     grille.cote    = cote;
-    grille.pas     = pas;
+    grille.pasX    = pasX;
+    grille.pasZ    = pasZ;
     grille.indices = static_cast<int>(indices.size());
     glGenVertexArrays(1, &grille.vao);
     glBindVertexArray(grille.vao);
@@ -238,22 +269,28 @@ bool FenetreRelief::lireTuile(int col, int rangee, std::vector<float>& hauteurs)
 
     const int         cote   = m_calage.tuilePoints;
     const std::size_t points = static_cast<std::size_t>(cote) * static_cast<std::size_t>(cote);
-    const std::size_t attendu = EN_TETE_OCTETS + points * 2;
-    std::vector<unsigned char> brut(attendu);
-    in.read(reinterpret_cast<char*>(brut.data()), static_cast<std::streamsize>(attendu));
-    if (static_cast<std::size_t>(in.gcount()) != attendu) {
-        return false;
-    }
+    /* Deux versions coexistent : v1 porte un pas unique, v2 un pas par axe, et
+       son en-tête compte donc quatre octets de plus. Une carte migrée cohabite
+       ainsi avec les autres restées en v1. */
+    std::vector<unsigned char> brut(EN_TETE_V2_OCTETS + points * 2);
+    in.read(reinterpret_cast<char*>(brut.data()), static_cast<std::streamsize>(brut.size()));
+    const std::size_t lus = static_cast<std::size_t>(in.gcount());
     if (std::memcmp(brut.data(), MAGIQUE, sizeof(MAGIQUE)) != 0 ||
-        lire16(brut.data() + 4) != VERSION ||
         lire16(brut.data() + 6) != static_cast<std::uint16_t>(cote)) {
         return false;
     }
+    const std::uint16_t version = lire16(brut.data() + 4);
+    const std::size_t   enTete  = (version == 2) ? EN_TETE_V2_OCTETS : EN_TETE_OCTETS;
+    if ((version != 1 && version != 2) || lus != enTete + points * 2) {
+        return false;
+    }
 
-    const float mini    = lireFlottant(brut.data() + 12);
-    const float etendue = lireFlottant(brut.data() + 16);
+    /* Le pas suit l'en-tête : un flottant en v1, deux en v2. */
+    const std::size_t decalage = enTete - 8;
+    const float mini    = lireFlottant(brut.data() + decalage);
+    const float etendue = lireFlottant(brut.data() + decalage + 4);
     const float echelle = etendue / 65535.0f;
-    const unsigned char* niveaux = brut.data() + EN_TETE_OCTETS;
+    const unsigned char* niveaux = brut.data() + enTete;
     for (std::size_t k = 0; k < points; ++k) {
         hauteurs[k] = mini + static_cast<float>(lire16(niveaux + 2 * k)) * echelle;
     }
@@ -269,9 +306,9 @@ void FenetreRelief::poserTuile(int col, int rangee) {
        L'emplacement reçoit alors le relief d'ensemble. */
     const bool aDonnee = lireTuile(col, rangee, hauteurs);
 
-    const float x0 = m_calage.coinX + static_cast<float>(col) * m_calage.tuileM();
-    const float z0 = m_calage.coinZ + static_cast<float>(rangee) * m_calage.tuileM();
-    m_correcteur(x0, z0, m_calage.pasM, cote, hauteurs.data(), aDonnee);
+    const float x0 = m_calage.coinX + static_cast<float>(col) * m_calage.tuileX();
+    const float z0 = m_calage.coinZ + static_cast<float>(rangee) * m_calage.tuileZ();
+    m_correcteur(x0, z0, m_calage.pasX, m_calage.pasZ, cote, hauteurs.data(), aDonnee);
 
     const int slotCol    = modulo(col, TUILES_FENETRE);
     const int slotRangee = modulo(rangee, TUILES_FENETRE);
@@ -302,9 +339,10 @@ void FenetreRelief::suivre(float x, float z) {
     /* Centre calé sur la période commune des réseaux (voir CALAGE_MAILLES).
        Calé plus fin, un réseau glisse sur l'autre à chaque pas : les triangles
        recordent le champ ailleurs et les normales sautent. */
-    const float pas = m_calage.pasM * static_cast<float>(CALAGE_MAILLES);
-    m_centreX = m_calage.coinX + std::round((x - m_calage.coinX) / pas) * pas;
-    m_centreZ = m_calage.coinZ + std::round((z - m_calage.coinZ) / pas) * pas;
+    const float pasX = m_calage.pasX * static_cast<float>(CALAGE_MAILLES);
+    const float pasZ = m_calage.pasZ * static_cast<float>(CALAGE_MAILLES);
+    m_centreX = m_calage.coinX + std::round((x - m_calage.coinX) / pasX) * pasX;
+    m_centreZ = m_calage.coinZ + std::round((z - m_calage.coinZ) / pasZ) * pasZ;
 
     /* Le centre calé pose les sommets, et rien d'autre. Le fondu et la finesse
        se mesurent depuis l'oeil, resté continu. */
@@ -314,9 +352,10 @@ void FenetreRelief::suivre(float x, float z) {
     /* Tuiles tenues : celle de la caméra, autant que possible de part et
        d'autre. La marge garantie sur chaque bord vaut alors
        (TUILES_FENETRE / 2 - 1) tuiles, où que la caméra soit dans la sienne. */
-    const float tuile = m_calage.tuileM();
-    const int   colCam    = static_cast<int>(std::floor((m_oeilX - m_calage.coinX) / tuile));
-    const int   rangeeCam = static_cast<int>(std::floor((m_oeilZ - m_calage.coinZ) / tuile));
+    const int colCam =
+        static_cast<int>(std::floor((m_oeilX - m_calage.coinX) / m_calage.tuileX()));
+    const int rangeeCam =
+        static_cast<int>(std::floor((m_oeilZ - m_calage.coinZ) / m_calage.tuileZ()));
 
     /* Première image : tout d'un coup, sinon le sol s'affaisserait le temps du
        remplissage. Ensuite, quelques tuiles par image suffisent, l'appareil
@@ -372,8 +411,8 @@ void FenetreRelief::dessiner(int niveau) const {
 float FenetreRelief::distanceDetailM() const noexcept {
     const Grille& noyau = m_grilles.front();
     const Grille& large = m_grilles.back();
-    const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pas;
-    const float   rapport   = std::max(1.0f, large.pas / m_calage.pasM);
+    const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pasX;
+    const float   rapport   = std::max(1.0f, large.pasX / m_calage.pasX);
     /* ÉPINGLÉ à la valeur d'avant le report, le temps de la recette en vol :
        Olivier juge deux composantes de lumière, pas une portée de détail réduite
        de moitié qu'il n'a jamais vue.
@@ -388,7 +427,10 @@ float FenetreRelief::distanceDetailM() const noexcept {
 float FenetreRelief::niveauLissage() const noexcept {
     /* Un niveau de réduction moyenne deux points par deux : le niveau n lisse
        sur 2^n points. On prend le plus proche de la maille de la carte. */
-    return std::max(0.0f, std::round(std::log2(MAILLE_CARTE_M / m_calage.pasM)));
+    /* Un niveau de réduction halve les DEUX axes : une seule valeur doit servir
+       aux deux pas. On prend leur moyenne géométrique. */
+    const float pas = std::sqrt(m_calage.pasX * m_calage.pasZ);
+    return std::max(0.0f, std::round(std::log2(MAILLE_CARTE_M / pas)));
 }
 
 bool FenetreRelief::detailEn(float x, float z, float& detail, float& poids) const noexcept {
@@ -411,9 +453,8 @@ bool FenetreRelief::detailEn(float x, float z, float& detail, float& poids) cons
     poids = (bord <= debut) ? 1.0f : 1.0f - (bord - debut) / (fin - debut);
     poids = poids * poids * (3.0f - 2.0f * poids);
 
-    const float pas = m_calage.pasM;
-    const float fi  = (x - m_calage.coinX) / pas;
-    const float fj  = (z - m_calage.coinZ) / pas;
+    const float fi = (x - m_calage.coinX) / m_calage.pasX;
+    const float fj = (z - m_calage.coinZ) / m_calage.pasZ;
     const int   i0  = static_cast<int>(std::floor(fi));
     const int   j0  = static_cast<int>(std::floor(fj));
     const float tx  = fi - static_cast<float>(i0);

@@ -226,7 +226,7 @@ private:
                       const std::filesystem::path& racineTuiles);
     /* Corrige une tuile de relief avant son entrée dans la fenêtre (voir
        relief::FenetreRelief::Correcteur). */
-    void corrigerTuileRelief(float x0, float z0, float pasM, int cote, float* hauteurs,
+    void corrigerTuileRelief(float x0, float z0, float pasX, float pasZ, int cote, float* hauteurs,
                              bool aDonnee) const noexcept;
     /* Altitude du seul maillage d'ensemble, sans la fenêtre fine ni les
        plates-formes de pad. Base commune à heightAt et à la correction. */

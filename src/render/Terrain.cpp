@@ -407,34 +407,36 @@ void Terrain::ouvrirRelief(const std::filesystem::path& dir,
 
     m_relief = relief::FenetreRelief::ouvrir(
         candidat,
-        [this](float x0, float z0, float pasM, int cote, float* hauteurs, bool aDonnee) {
-            corrigerTuileRelief(x0, z0, pasM, cote, hauteurs, aDonnee);
-        });
+        [this](float x0, float z0, float pasX, float pasZ, int cote, float* hauteurs,
+               bool aDonnee) {
+            corrigerTuileRelief(x0, z0, pasX, pasZ, cote, hauteurs, aDonnee);
+        },
+        relief::COTE_GRILLE_POINTS);
     if (!m_relief) {
         glDeleteTextures(1, &m_carteRelief);
         m_carteRelief = 0;
     }
 }
 
-void Terrain::corrigerTuileRelief(float x0, float z0, float pasM, int cote, float* hauteurs,
-                                  bool aDonnee) const noexcept {
+void Terrain::corrigerTuileRelief(float x0, float z0, float pasX, float pasZ, int cote,
+                                  float* hauteurs, bool aDonnee) const noexcept {
     /* Le départ est aplani dans le maillage d'ensemble (voir flattenPads) : le
        relief fin doit y revenir, sinon l'appareil naîtrait sur une bosse. */
     constexpr float PLAT_M  = 40.0f;
     constexpr float FONDU_M = 40.0f;
+    const float     demiX   = 0.5f * static_cast<float>(cote) * pasX;
+    const float     demiZ   = 0.5f * static_cast<float>(cote) * pasZ;
     const bool      proche  = m_hasStart &&
-                        std::fabs(x0 + 0.5f * static_cast<float>(cote) * pasM - m_startX) <
-                            0.5f * static_cast<float>(cote) * pasM + PLAT_M + FONDU_M &&
-                        std::fabs(z0 + 0.5f * static_cast<float>(cote) * pasM - m_startZ) <
-                            0.5f * static_cast<float>(cote) * pasM + PLAT_M + FONDU_M;
+                        std::fabs(x0 + demiX - m_startX) < demiX + PLAT_M + FONDU_M &&
+                        std::fabs(z0 + demiZ - m_startZ) < demiZ + PLAT_M + FONDU_M;
     if (aDonnee && !proche) {
         return;
     }
 
     for (int j = 0; j < cote; ++j) {
-        const float z = z0 + static_cast<float>(j) * pasM;
+        const float z = z0 + static_cast<float>(j) * pasZ;
         for (int i = 0; i < cote; ++i) {
-            const float       x = x0 + static_cast<float>(i) * pasM;
+            const float       x = x0 + static_cast<float>(i) * pasX;
             const std::size_t k = static_cast<std::size_t>(j) * static_cast<std::size_t>(cote) +
                                   static_cast<std::size_t>(i);
             if (!aDonnee) {

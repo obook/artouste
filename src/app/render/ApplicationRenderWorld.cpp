@@ -133,7 +133,8 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             glActiveTexture(GL_TEXTURE0);
 
             m_terrainShader->setVec2("u_reliefAncre", vec2{relief->ancreX(), relief->ancreZ()});
-            m_terrainShader->setFloat("u_reliefTailleM", relief->tailleM());
+            m_terrainShader->setVec2("u_reliefTailleM",
+                                     vec2{relief->tailleM(), relief->tailleZ()});
             m_terrainShader->setFloat("u_reliefTexels",
                                       static_cast<float>(relief->cotePoints()));
             m_terrainShader->setVec2("u_reliefCentre", vec2{relief->centreX(), relief->centreZ()});
@@ -141,7 +142,8 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             m_terrainShader->setVec2("u_reliefFondu",
                                      vec2{relief->fonduDebutM(), relief->fonduFinM()});
             m_terrainShader->setFloat("u_reliefLissage", relief->niveauLissage());
-            m_terrainShader->setFloat("u_reliefPasTexture", relief->pasM());
+            m_terrainShader->setVec2("u_reliefPasTexture",
+                                     vec2{relief->pasX(), relief->pasZ()});
             m_terrainShader->setFloat("u_reliefDetailM", relief->distanceDetailM());
             m_terrainShader->setVec2("u_carteCoin",
                                      vec2{m_terrain->originX() - m_terrain->halfWidth(),
@@ -159,7 +161,9 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             for (int niveau = 0; niveau < relief->niveaux(); ++niveau) {
                 glStencilFunc(niveau == 0 ? GL_ALWAYS : GL_NOTEQUAL, 1, 0xFF);
                 m_terrainShader->setInt("u_reliefCote", relief->coteGrille(niveau));
-                m_terrainShader->setFloat("u_reliefPas", relief->pasGrille(niveau));
+                m_terrainShader->setVec2("u_reliefPas",
+                                         vec2{relief->pasGrille(niveau),
+                                              relief->pasGrilleZ(niveau)});
                 relief->dessiner(niveau);
             }
 

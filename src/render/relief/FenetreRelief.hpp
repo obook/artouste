@@ -85,17 +85,25 @@ inline constexpr float MAILLE_CARTE_M = 16.0f;
    mais une tuile porte des points d'altitude, sans recouvrement entre tuiles. */
 struct Calage {
     int   tuilePoints = 512;
-    float pasM        = 0.0f;
+    /* Pas PAR AXE. Il vaut dx/k et dz/k de la carte, k entier, si bien que la
+       grille de la fenêtre s'emboîte exactement dans celle du maillage
+       d'ensemble. Les deux axes de la carte n'ayant pas la même maille, ces deux
+       pas diffèrent : une tuile n'est PAS carrée au sol. */
+    float pasX        = 0.0f;
+    float pasZ        = 0.0f;
     int   colonnes    = 0;
     int   rangees     = 0;
     float coinX       = 0.0f;
     float coinZ       = 0.0f;
 
-    [[nodiscard]] float tuileM() const noexcept {
-        return static_cast<float>(tuilePoints) * pasM;
+    [[nodiscard]] float tuileX() const noexcept {
+        return static_cast<float>(tuilePoints) * pasX;
+    }
+    [[nodiscard]] float tuileZ() const noexcept {
+        return static_cast<float>(tuilePoints) * pasZ;
     }
     [[nodiscard]] bool valide() const noexcept {
-        return tuilePoints >= 16 && pasM > 0.0f && colonnes > 0 && rangees > 0;
+        return tuilePoints >= 16 && pasX > 0.0f && pasZ > 0.0f && colonnes > 0 && rangees > 0;
     }
 };
 
@@ -111,7 +119,8 @@ public:
        Seul endroit où la fenêtre touche à la carte ; la politique reste dans
        Terrain. */
     using Correcteur =
-        std::function<void(float x0, float z0, float pasM, int cote, float* hauteurs, bool aDonnee)>;
+        std::function<void(float x0, float z0, float pasX, float pasZ, int cote, float* hauteurs,
+                           bool aDonnee)>;
 
     /* Ouvre <dossier>/index.txt et alloue la fenêtre. nullptr si l'index manque,
        est illisible, ou si la mémoire vidéo est refusée : l'appelant continue
@@ -142,7 +151,10 @@ public:
         return m_grilles[static_cast<std::size_t>(niveau)].cote;
     }
     [[nodiscard]] float pasGrille(int niveau) const noexcept {
-        return m_grilles[static_cast<std::size_t>(niveau)].pas;
+        return m_grilles[static_cast<std::size_t>(niveau)].pasX;
+    }
+    [[nodiscard]] float pasGrilleZ(int niveau) const noexcept {
+        return m_grilles[static_cast<std::size_t>(niveau)].pasZ;
     }
     /* Tire une grille ; l'appelant a réglé le shader et le pochoir. */
     void dessiner(int niveau) const;
@@ -180,10 +192,15 @@ public:
     [[nodiscard]] float ancreZ() const noexcept { return m_calage.coinZ; }
     /* Période du tore au sol, et son côté en texels. */
     [[nodiscard]] float tailleM() const noexcept {
-        return static_cast<float>(m_cotePoints) * m_calage.pasM;
+        return static_cast<float>(m_cotePoints) * m_calage.pasX;
+    }
+    /* Période du tore par axe : la tuile n'est pas carrée au sol. */
+    [[nodiscard]] float tailleZ() const noexcept {
+        return static_cast<float>(m_cotePoints) * m_calage.pasZ;
     }
     [[nodiscard]] int   cotePoints() const noexcept { return m_cotePoints; }
-    [[nodiscard]] float pasM() const noexcept { return m_calage.pasM; }
+    [[nodiscard]] float pasX() const noexcept { return m_calage.pasX; }
+    [[nodiscard]] float pasZ() const noexcept { return m_calage.pasZ; }
     [[nodiscard]] float centreX() const noexcept { return m_centreX; }
     [[nodiscard]] float centreZ() const noexcept { return m_centreZ; }
     /* Position continue de l'appareil. Le centre calé pose les sommets, l'oeil
@@ -194,7 +211,7 @@ public:
     /* Demi-côté de la grille la plus large : c'est elle qui porte le fondu. */
     [[nodiscard]] float demiGrilleM() const noexcept {
         const Grille& large = m_grilles.back();
-        return 0.5f * static_cast<float>(large.cote - 1) * large.pas;
+        return 0.5f * static_cast<float>(large.cote - 1) * large.pasX;
     }
     /* Début et fin du fondu, en distance au centre. */
     [[nodiscard]] float fonduFinM() const noexcept { return demiGrilleM() - BORD_RETRAIT_M; }
@@ -211,11 +228,12 @@ private:
         unsigned int ebo     = 0;
         int          indices = 0;
         int          cote    = 0;
-        float        pas     = 0.0f;
+        float        pasX    = 0.0f;
+        float        pasZ    = 0.0f;
     };
 
     bool allouerTexture();
-    bool construireGrille(int cote, float pas);
+    bool construireGrille(int cote, float pasX, float pasZ);
     /* Lecture ou remplissage, correction, envoi au GPU et copie CPU. */
     void poserTuile(int col, int rangee);
     [[nodiscard]] bool lireTuile(int col, int rangee, std::vector<float>& hauteurs) const;

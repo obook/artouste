@@ -28,7 +28,8 @@ ZONE = {
         # Lieux ajoutés (coordonnées recoupées IGN + OpenStreetMap).
         ("Pic de Montaigu", 0.0688, 42.9837),
         ("Pène Nère", 0.1730, 42.9556),
-        ("Pic de Sencours", 0.1508, 42.9269),
+        ("Pic de Sencours", 0.150952, 42.926766),
+        ("Le Taoulet", 0.162927, 42.919852),
         ("Le Chiroulet", 0.0890, 42.9619),
         ("Gripp", 0.2224, 42.9466),
         ("Jardin botanique du Tourmalet", 0.1054, 42.8961),

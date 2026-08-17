@@ -8,7 +8,7 @@
 0.1777 43.0169 Campan
 0.0688 42.9837 Pic de Montaigu
 0.173 42.9556 Pène Nère
-0.1508 42.9269 Pic de Sencours
+0.150952 42.926766 Pic de Sencours
 0.089 42.9619 Le Chiroulet
 0.2224 42.9466 Gripp
 0.1054 42.8961 Jardin botanique du Tourmalet
@@ -30,4 +30,4 @@
 0.0745 42.9016 Souriche
 0.1889 43.0059 Saint-Roch
 0.1345 42.8647 Col de Tracens
-0.164033 42.920451 Le Taoulet
+0.162927 42.919852 Le Taoulet

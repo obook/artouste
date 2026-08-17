@@ -1,5 +1,5 @@
 # Lieux remarquables - Banc d'essai du Pic du Midi (3 km, heightmap au laser) (un par ligne : lon lat nom)
 # Le nom est le reste de la ligne et peut contenir des espaces et des accents.
 0.1411 42.9369 Pic du Midi de Bigorre
-0.1508 42.9269 Pic de Sencours
+0.150952 42.926766 Pic de Sencours
 0.1347 42.9292 Lac d'Oncet

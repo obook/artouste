@@ -18,7 +18,7 @@ ZONE = {
     "title": "Banc d'essai du Pic du Midi (3 km, heightmap au laser)",
     "landmarks": [
         ("Pic du Midi de Bigorre", 0.1411, 42.9369),
-        ("Pic de Sencours", 0.1508, 42.9269),
+        ("Pic de Sencours", 0.150952, 42.926766),
         ("Lac d'Oncet", 0.1347, 42.9292),
     ],
 }

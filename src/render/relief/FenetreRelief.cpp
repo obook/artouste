@@ -119,15 +119,23 @@ std::unique_ptr<FenetreRelief> FenetreRelief::ouvrir(const std::filesystem::path
     if (!fenetre->construireGrille(noyau, calage.pasX, calage.pasZ)) {
         return nullptr;
     }
-    const float pasAnneauX = static_cast<float>(PAS_ANNEAU) * calage.pasX;
-    const float pasAnneauZ = static_cast<float>(PAS_ANNEAU) * calage.pasZ;
+    /* ARTOUSTE_DEBUG_RELIEF_ANNEAU="cote pas" : côté et pas de l'anneau à
+       l'exécution, pour comparer deux anneaux avec UN SEUL binaire. Le garder
+       impair si son pas vaut celui des texels. À retirer. */
+    int coteAnneau = COTE_ANNEAU_POINTS;
+    int multAnneau = PAS_ANNEAU;
+    if (const char* e = std::getenv("ARTOUSTE_DEBUG_RELIEF_ANNEAU")) {
+        std::sscanf(e, "%d %d", &coteAnneau, &multAnneau);
+    }
+    const float pasAnneauX = static_cast<float>(multAnneau) * calage.pasX;
+    const float pasAnneauZ = static_cast<float>(multAnneau) * calage.pasZ;
     const float pasAnneau  = std::max(pasAnneauX, pasAnneauZ);
     /* L'anneau est RABOTÉ pour tenir dans la marge que le tore garantit, au lieu
        d'être abandonné : sans cela un pas de tuile un peu plus grand supprime
        l'anneau entier en silence, et la fenêtre perd les trois quarts de son
        emprise. Le côté reste impair, comme celui du noyau. */
-    const int coteMarge  = 1 + 2 * static_cast<int>(marge / pasAnneau);
-    const int coteAnneau = std::min(COTE_ANNEAU_POINTS, coteMarge | 1);
+    const int coteMarge = 1 + 2 * static_cast<int>(marge / pasAnneau);
+    coteAnneau          = std::min(coteAnneau, coteMarge | 1);
     /* Il ne vaut la peine que s'il DÉBORDE le noyau : on compare des emprises au
        sol, pas des nombres de points, l'anneau ayant moins de points sur plus de
        terrain. */
@@ -155,6 +163,9 @@ std::unique_ptr<FenetreRelief> FenetreRelief::ouvrir(const std::filesystem::path
         const Grille& large     = fenetre->m_grilles.back();
         const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pasX;
         const float   rapport   = std::max(1.0f, large.pasX / calage.pasX);
+        std::printf("[relief] fondu du bord : plein jusqu'à %.0f m, éteint à %.0f m.\n",
+                    static_cast<double>(fenetre->fonduDebutM()),
+                    static_cast<double>(fenetre->fonduFinM()));
         std::printf("[relief] finesse pleine jusqu'à %.1f m, ÉPINGLÉE (loi 2x : %.1f m).\n",
                     static_cast<double>(fenetre->distanceDetailM()),
                     static_cast<double>((demiNoyau - 0.5f * large.pasX) / (2.0f * rapport)));
@@ -409,6 +420,15 @@ void FenetreRelief::dessiner(int niveau) const {
 }
 
 float FenetreRelief::distanceDetailM() const noexcept {
+    /* ARTOUSTE_DEBUG_RELIEF_D : fixe la distance de pleine finesse, sans quoi
+       agrandir le noyau change aussi la loi de finesse. À retirer. */
+    static const float force = [] {
+        const char* e = std::getenv("ARTOUSTE_DEBUG_RELIEF_D");
+        return (e != nullptr) ? std::strtof(e, nullptr) : 0.0f;
+    }();
+    if (force > 0.0f) {
+        return force;
+    }
     const Grille& noyau = m_grilles.front();
     const Grille& large = m_grilles.back();
     const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pasX;

@@ -25,7 +25,9 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -228,8 +230,20 @@ public:
         const Grille& large = m_grilles.back();
         return 0.5f * static_cast<float>(large.cote - 1) * large.pasX;
     }
-    /* Début et fin du fondu, en distance au centre. */
-    [[nodiscard]] float fonduFinM() const noexcept { return demiGrilleM() - BORD_RETRAIT_M; }
+    /* Début et fin du fondu, en distance au centre.
+
+       ARTOUSTE_DEBUG_RELIEF_FONDU force la fin du fondu, en mètres. Instrument :
+       si les pics se dessinent plus près quand ce rayon rétrécit, le fondu est
+       bien le siège du défaut. Borné par la grille, un fondu qui déborderait
+       laisserait une marche au bord. À retirer. */
+    [[nodiscard]] float fonduFinM() const noexcept {
+        static const float force = [] {
+            const char* e = std::getenv("ARTOUSTE_DEBUG_RELIEF_FONDU");
+            return (e != nullptr) ? std::strtof(e, nullptr) : 0.0f;
+        }();
+        const float plafond = demiGrilleM() - BORD_RETRAIT_M;
+        return (force > 0.0f) ? std::min(force, plafond) : plafond;
+    }
     [[nodiscard]] float fonduDebutM() const noexcept { return BORD_PLEIN * fonduFinM(); }
 
 private:

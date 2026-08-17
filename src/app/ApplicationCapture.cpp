@@ -26,6 +26,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
@@ -294,6 +295,30 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
                     shotCollective, 1.0f, 0.1f);
         m_hud.updateScale(fbw, fbh);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, shotHud, false);
+    }
+
+    /* ARTOUSTE_DEBUG_COUT=n : n images de plus, chronométrées une à une, glFinish
+       entre chaque pour mesurer le GPU et non la file d'attente. La médiane est
+       publiée, la moyenne serait tirée par la première image encore froide. À
+       retirer. */
+    if (const char* e = std::getenv("ARTOUSTE_DEBUG_COUT")) {
+        const int           images = std::max(5, std::atoi(e));
+        std::vector<double> temps;
+        temps.reserve(static_cast<std::size_t>(images));
+        for (int i = 0; i < images; ++i) {
+            const auto debut = std::chrono::steady_clock::now();
+            renderScene(base, shotRotorAngle, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat,
+                        shotCollective, 1.0f, 0.1f);
+            m_hud.updateScale(fbw, fbh);
+            m_hud.render(hud, shotHud, false);
+            glFinish();
+            temps.push_back(std::chrono::duration<double, std::milli>(
+                                std::chrono::steady_clock::now() - debut)
+                                .count());
+        }
+        std::sort(temps.begin(), temps.end());
+        std::printf("[coût] %d images : médiane %.2f ms, min %.2f, max %.2f\n", images,
+                    temps[temps.size() / 2], temps.front(), temps.back());
     }
     glFinish();
 

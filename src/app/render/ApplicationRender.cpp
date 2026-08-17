@@ -49,7 +49,14 @@ void Application::renderScene(const mat4& base,
     /* Couleur de fond assombrie la nuit (le ciel plein écran la recouvre, mais le
        tampon de profondeur, lui, est bien remis à zéro). */
     const float isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f);
-    glClearColor(0.53f * isDay, 0.70f * isDay, 0.92f * isDay, 1.0f);
+    /* ARTOUSTE_DEBUG_POISON : fond magenta et pas de ciel, pour qu'un pixel non
+       dessiné se dénonce. Outil de mise au point, à retirer. */
+    static const bool poison = std::getenv("ARTOUSTE_DEBUG_POISON") != nullptr;
+    if (poison) {
+        glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    } else {
+        glClearColor(0.53f * isDay, 0.70f * isDay, 0.92f * isDay, 1.0f);
+    }
     /* Pochoir remis à zéro : la fenêtre de relief fin y marque son emprise pour
        que le maillage d'ensemble n'y soit pas dessiné (voir
        renderTerrainAndBuildings). */
@@ -62,7 +69,9 @@ void Application::renderScene(const mat4& base,
 
     const RenderContext ctx{lightDir, proj, view, toRel, camPosRel, fogColor};
 
-    renderSkyAndSea(ctx, timeSeconds);
+    if (!poison) {
+        renderSkyAndSea(ctx, timeSeconds);
+    }
     renderTerrainAndBuildings(ctx);
     renderMonuments(ctx);
     renderVegetationAndClouds(ctx);

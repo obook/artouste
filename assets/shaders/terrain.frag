@@ -46,6 +46,10 @@ uniform float     u_fogEnd;     /* distance où tout est noyé dans la brume (m)
 uniform vec2      u_originXZ;   /* origine de rendu : reconstitue le monde absolu */
 uniform float     u_orthoMPP;   /* finesse de l'orthophoto (m au sol par pixel) */
 
+/* Sonde de mise au point (ARTOUSTE_DEBUG_SONDE) : 3 écrit l'altitude du sol au
+   lieu de sa couleur. À retirer. */
+uniform int       u_sonde;
+
 /* Pose un niveau de tuiles sur la couleur du sol et renvoie la part réellement
    appliquée (0 = couleur inchangée).
 
@@ -73,6 +77,18 @@ float poserTuiles(sampler2D tuiles, sampler2D masque, vec2 monde, vec2 ancre,
 }
 
 void main() {
+    if (u_sonde == 3 || u_sonde == 4) {
+        /* 3 : altitude du sol. 4 : distance à la caméra. En centimètres sur
+           24 bits. La 4 dit si deux rendus qui divergent montrent le même
+           morceau de terrain ou deux morceaux différents. */
+        float v = (u_sonde == 3) ? clamp((v_worldPos.y + 1000.0) * 100.0, 0.0, 16777215.0)
+                                 : clamp(length(u_camPos - v_worldPos) * 100.0, 0.0, 16777215.0);
+        frag_color = vec4(floor(v / 65536.0) / 255.0,
+                          floor(mod(v, 65536.0) / 256.0) / 255.0,
+                          floor(mod(v, 256.0)) / 255.0, 1.0);
+        return;
+    }
+
     vec3 ortho = texture(u_texture, v_uv).rgb;
 
     float dist  = length(u_camPos - v_worldPos);

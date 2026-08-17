@@ -24,6 +24,8 @@
 
 #include <glad/glad.h>
 
+#include <cstdlib>
+
 namespace artouste::app {
 
 void Application::renderSkyAndSea(const RenderContext& ctx, float timeSeconds) {
@@ -64,6 +66,13 @@ void Application::renderSkyAndSea(const RenderContext& ctx, float timeSeconds) {
 }
 
 void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
+    /* ARTOUSTE_DEBUG_SONDE : le terrain écrit une mesure au lieu de sa
+       couleur. En capture seulement. À retirer. */
+    static const int sonde = [] {
+        const char* e = std::getenv("ARTOUSTE_DEBUG_SONDE");
+        return (e != nullptr) ? std::atoi(e) : 0;
+    }();
+
     /*
      * Terrain : orthophoto réelle drapée sur le relief, avec brume au loin.
      * Si les données réelles manquent, on retombe sur le shader à couleurs de
@@ -77,6 +86,7 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_terrainShader->setVec3("u_lightDir", ctx.lightDir);
         m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
         m_terrainShader->setVec3("u_camPos", ctx.camPosRel);
+        m_terrainShader->setInt("u_sonde", sonde);
         m_terrainShader->setVec3("u_fogColor", ctx.fogColor);
         m_terrainShader->setFloat("u_fogStart", m_fogStart);
         m_terrainShader->setFloat("u_fogEnd", m_fogEnd);

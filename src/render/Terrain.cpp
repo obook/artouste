@@ -321,7 +321,14 @@ Terrain::Terrain(const std::filesystem::path& dir,
                     static_cast<double>(m_heightM),
                     static_cast<double>(m_elevMax));
         ouvrirDetail(dir, fenetreDetailPx, racineTuiles);
-        ouvrirRelief(dir, racineTuiles);
+        /* ARTOUSTE_NO_RELIEF : vole sans la fenêtre de relief fin, comme avant
+           son introduction. Sert de point de comparaison et de repli tant que
+           ses défauts se corrigent. */
+        if (std::getenv("ARTOUSTE_NO_RELIEF") == nullptr) {
+            ouvrirRelief(dir, racineTuiles);
+        } else {
+            std::printf("[relief] fenêtre désactivée (ARTOUSTE_NO_RELIEF).\n");
+        }
     }
 }
 
@@ -479,7 +486,14 @@ void Terrain::suivreDetail(float x, float z, float dt) {
         m_detailFin->suivre(x, z, dt);
     }
     if (m_relief) {
-        m_relief->suivre(x, z);
+        /* ARTOUSTE_DEBUG_RELIEF_DECALAGE : avance la fenêtre seule, caméra
+           immobile, pour faire tomber une paroi du côté de l'anneau. À
+           retirer. */
+        static const float decalage = [] {
+            const char* e = std::getenv("ARTOUSTE_DEBUG_RELIEF_DECALAGE");
+            return (e != nullptr) ? std::strtof(e, nullptr) : 0.0f;
+        }();
+        m_relief->suivre(x + decalage, z);
     }
 }
 

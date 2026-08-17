@@ -123,6 +123,15 @@ std::unique_ptr<FenetreRelief> FenetreRelief::ouvrir(const std::filesystem::path
                     static_cast<double>(grille.cote - 1) * static_cast<double>(grille.pas),
                     static_cast<double>(grille.cote) * static_cast<double>(grille.cote) / 1e6);
     }
+    {
+        const Grille& noyau     = fenetre->m_grilles.front();
+        const Grille& large     = fenetre->m_grilles.back();
+        const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pas;
+        const float   rapport   = std::max(1.0f, large.pas / calage.pasM);
+        std::printf("[relief] finesse pleine jusqu'à %.1f m, ÉPINGLÉE (loi 2x : %.1f m).\n",
+                    static_cast<double>(fenetre->distanceDetailM()),
+                    static_cast<double>((demiNoyau - 0.5f * large.pas) / (2.0f * rapport)));
+    }
     std::printf("[relief] fenêtre %d x %d points à %.2f m, %.0f m au sol, %.0f Mo.\n",
                 fenetre->m_cotePoints,
                 fenetre->m_cotePoints,
@@ -290,18 +299,24 @@ void FenetreRelief::suivre(float x, float z) {
         return;
     }
 
-    /* Centre calé sur les points de la fenêtre, sinon les sommets glissent entre
-       les texels et le relief ondule sous l'appareil. */
-    const float pas = m_calage.pasM;
+    /* Centre calé sur la période commune des réseaux (voir CALAGE_MAILLES).
+       Calé plus fin, un réseau glisse sur l'autre à chaque pas : les triangles
+       recordent le champ ailleurs et les normales sautent. */
+    const float pas = m_calage.pasM * static_cast<float>(CALAGE_MAILLES);
     m_centreX = m_calage.coinX + std::round((x - m_calage.coinX) / pas) * pas;
     m_centreZ = m_calage.coinZ + std::round((z - m_calage.coinZ) / pas) * pas;
+
+    /* Le centre calé pose les sommets, et rien d'autre. Le fondu et la finesse
+       se mesurent depuis l'oeil, resté continu. */
+    m_oeilX = x;
+    m_oeilZ = z;
 
     /* Tuiles tenues : celle de la caméra, autant que possible de part et
        d'autre. La marge garantie sur chaque bord vaut alors
        (TUILES_FENETRE / 2 - 1) tuiles, où que la caméra soit dans la sienne. */
     const float tuile = m_calage.tuileM();
-    const int   colCam    = static_cast<int>(std::floor((x - m_calage.coinX) / tuile));
-    const int   rangeeCam = static_cast<int>(std::floor((z - m_calage.coinZ) / tuile));
+    const int   colCam    = static_cast<int>(std::floor((m_oeilX - m_calage.coinX) / tuile));
+    const int   rangeeCam = static_cast<int>(std::floor((m_oeilZ - m_calage.coinZ) / tuile));
 
     /* Première image : tout d'un coup, sinon le sol s'affaisserait le temps du
        remplissage. Ensuite, quelques tuiles par image suffisent, l'appareil
@@ -359,6 +374,14 @@ float FenetreRelief::distanceDetailM() const noexcept {
     const Grille& large = m_grilles.back();
     const float   demiNoyau = 0.5f * static_cast<float>(noyau.cote - 1) * noyau.pas;
     const float   rapport   = std::max(1.0f, large.pas / m_calage.pasM);
+    /* ÉPINGLÉ à la valeur d'avant le report, le temps de la recette en vol :
+       Olivier juge deux composantes de lumière, pas une portée de détail réduite
+       de moitié qu'il n'a jamais vue.
+
+       L'autre loi, (demiNoyau - demi-pas de calage) / (2 x rapport), fait lire à
+       l'anneau un champ deux fois plus grossier que son pas, ce qui efface la
+       marche au bord du noyau, mais divise cette distance par deux. Elle se
+       tranchera avec le choix C/B au report. Le journal imprime les deux. */
     return demiNoyau / rapport;
 }
 
@@ -376,10 +399,10 @@ bool FenetreRelief::detailEn(float x, float z, float& detail, float& poids) cons
         return false;
     }
 
-    /* Fondu du bord, MÊME formule que terrain.vert : distance au centre, adoucie
+    /* Fondu du bord, MÊME formule que terrain.vert : distance à l'oeil, adoucie
        comme son smoothstep. */
-    const float bord  = std::sqrt((x - m_centreX) * (x - m_centreX) +
-                                 (z - m_centreZ) * (z - m_centreZ));
+    const float bord  = std::sqrt((x - m_oeilX) * (x - m_oeilX) +
+                                 (z - m_oeilZ) * (z - m_oeilZ));
     const float debut = fonduDebutM();
     const float fin   = fonduFinM();
     if (bord >= fin) {

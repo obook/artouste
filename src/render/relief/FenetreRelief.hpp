@@ -56,6 +56,15 @@ inline constexpr int PAS_ANNEAU          = 4;
 
 inline constexpr int TUILES_PAR_IMAGE = 2;
 
+/* Période commune des réseaux en jeu, en mailles : les pas des deux grilles et
+   les blocs des niveaux lus. Le centre s'y cale, sans quoi un réseau glisse sur
+   l'autre à chaque pas et les normales sautent.
+
+   Pas le pas de la grille la plus grossière : l'anneau passé à 4 m, le centre
+   alternerait entre deux phases du réseau de 8 m. */
+inline constexpr int NIVEAU_ANNEAU  = 2;   /* niveau le plus grossier que l'anneau lit */
+inline constexpr int CALAGE_MAILLES = 1 << NIVEAU_ANNEAU;
+
 /* Fondu du bord vers le relief d'ensemble. Il rattrape l'écart entre MNT LiDAR
    et RGE ALTI (4 m au sommet du Pic du Midi, 28 m sur une falaise), qui ferait
    sinon une marche.
@@ -177,6 +186,11 @@ public:
     [[nodiscard]] float pasM() const noexcept { return m_calage.pasM; }
     [[nodiscard]] float centreX() const noexcept { return m_centreX; }
     [[nodiscard]] float centreZ() const noexcept { return m_centreZ; }
+    /* Position continue de l'appareil. Le centre calé pose les sommets, l'oeil
+       mesure le fondu et la finesse : calés eux aussi, ils avanceraient par
+       bonds de 8 m. */
+    [[nodiscard]] float oeilX() const noexcept { return m_oeilX; }
+    [[nodiscard]] float oeilZ() const noexcept { return m_oeilZ; }
     /* Demi-côté de la grille la plus large : c'est elle qui porte le fondu. */
     [[nodiscard]] float demiGrilleM() const noexcept {
         const Grille& large = m_grilles.back();
@@ -229,6 +243,8 @@ private:
     bool  m_premier = true;
     float m_centreX = 0.0f;
     float m_centreZ = 0.0f;
+    float m_oeilX   = 0.0f;
+    float m_oeilZ   = 0.0f;
 };
 
 /* Où sont les tuiles de relief d'une carte, ou un chemin vide. Le jeu est un

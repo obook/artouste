@@ -37,6 +37,7 @@ uniform float     u_reliefTailleM; /* période du tore au sol */
 uniform float     u_reliefTexels;  /* côté de la texture, en texels */
 uniform float     u_reliefPas;     /* maille de la fenêtre, en mètres */
 uniform vec2      u_reliefCentre;  /* centre de la grille dessinée, monde */
+uniform vec2      u_reliefOeil;    /* position continue de l'appareil, monde */
 uniform int       u_reliefCote;    /* côté de la grille dessinée, en points */
 uniform vec2      u_reliefFondu;   /* début et fin du fondu vers la carte (m) */
 uniform float     u_reliefLissage; /* niveau de réduction à la maille de la carte */
@@ -134,7 +135,8 @@ void main() {
         float demi = 0.5 * float(u_reliefCote - 1) * u_reliefPas;
         vec2  p    = u_reliefCentre + vec2(float(i), float(j)) * u_reliefPas - demi;
 
-        float dist    = distance(p, u_reliefCentre);
+        /* Le centre calé pose les sommets, l'oeil mesure les champs. */
+        float dist    = distance(p, u_reliefOeil);
         float t       = poidsFenetre(dist);
         float finesse = finesseDetail(dist);
         pos           = vec3(p.x, hauteurFenetre(p, t, finesse), p.y);

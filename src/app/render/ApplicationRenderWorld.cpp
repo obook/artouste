@@ -137,6 +137,7 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             m_terrainShader->setFloat("u_reliefTexels",
                                       static_cast<float>(relief->cotePoints()));
             m_terrainShader->setVec2("u_reliefCentre", vec2{relief->centreX(), relief->centreZ()});
+            m_terrainShader->setVec2("u_reliefOeil", vec2{relief->oeilX(), relief->oeilZ()});
             m_terrainShader->setVec2("u_reliefFondu",
                                      vec2{relief->fonduDebutM(), relief->fonduFinM()});
             m_terrainShader->setFloat("u_reliefLissage", relief->niveauLissage());

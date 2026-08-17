@@ -433,7 +433,8 @@ float FenetreRelief::niveauLissage() const noexcept {
     return std::max(0.0f, std::round(std::log2(MAILLE_CARTE_M / pas)));
 }
 
-bool FenetreRelief::detailEn(float x, float z, float& detail, float& poids) const noexcept {
+bool FenetreRelief::detailEn(float x, float z, float hauteurCarte, float& detail,
+                             float& poids) const noexcept {
     /* Tant qu'aucune tuile n'est posée, les altitudes sont nulles : répondre
        ferait naître l'appareil mille mètres sous le sol, le placement du départ
        interrogeant le terrain avant la première image. */
@@ -512,7 +513,9 @@ bool FenetreRelief::detailEn(float x, float z, float& detail, float& poids) cons
     };
     const float lu = (f <= 0.0f) ? at0(bas) : at0(bas) * (1.0f - f) + at0(bas + 1) * f;
 
-    detail = lu - niveau(static_cast<int>(lissage));
+    /* L'écart à LA CARTE, pas au laser lissé : MÊME formule que detailFin dans
+       terrain.vert, sans quoi l'appareil se pose ailleurs que sur ce qu'il voit. */
+    detail = lu - hauteurCarte;
     return true;
 }
 

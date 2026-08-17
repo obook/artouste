@@ -57,14 +57,26 @@ out vec3 v_normal;
 out vec2 v_uv;
 out vec3 v_worldPos;
 
-/* Détail apporté par la fenêtre : son altitude, moins cette même altitude lissée
-   à la maille de la carte. Ce que la carte porte déjà est ainsi retranché, et
-   seul le relief qu'elle ne peut pas tenir s'ajoute. Sans cela les deux relevés,
-   qui ne s'accordent pas de plusieurs mètres, feraient pousser les sommets à
-   l'entrée de la fenêtre. Le demi-texel tombe sur le point de grille lui-même. */
+/* Altitude d'ensemble. Les points de la heightmap sont sur les BORDS de
+   l'emprise, d'où le passage par (texels - 1). */
+float hauteurCarte(vec2 p) {
+    vec2 f  = (p - u_carteCoin) / u_carteTailleM;
+    vec2 uv = (f * (u_carteTexels - 1.0) + 0.5) / u_carteTexels;
+    return texture(u_carteRelief, uv).r;
+}
+
+/* Détail apporté par la fenêtre : l'écart entre le laser et LA CARTE, pas entre
+   le laser et son propre lissé. Ainsi carte + détail vaut exactement le laser,
+   par construction.
+
+   L'ancienne forme retranchait le laser lissé : la carte portant déjà la crête,
+   on lui ajoutait la crête du laser au-dessus de son propre lissé, donc on la
+   comptait DEUX FOIS. Les sommets en sortaient surdessinés, jusqu'à 15 m au 99e
+   centile sur les crêtes de bigorre, contre 5 m d'écart réel entre laser et
+   carte. Le demi-texel tombe sur le point de grille lui-même. */
 float detailFin(vec2 p, float finesse) {
     vec2 uv = (p - u_reliefAncre) / u_reliefTailleM + 0.5 / u_reliefTexels;
-    return textureLod(u_relief, uv, finesse).r - textureLod(u_relief, uv, u_reliefLissage).r;
+    return textureLod(u_relief, uv, finesse).r - hauteurCarte(p);
 }
 
 /* Finesse à laquelle lire le détail : pleine jusqu'à u_reliefDetailM, puis
@@ -78,14 +90,6 @@ float detailFin(vec2 p, float finesse) {
    surface définie à 5,7 m, et il en naît des pics qui scintillent. */
 float finesseDetail(float dist) {
     return clamp(log2(max(dist, 1.0) / u_reliefDetailM), 0.0, u_reliefLissage);
-}
-
-/* Altitude d'ensemble. Les points de la heightmap sont sur les BORDS de
-   l'emprise, d'où le passage par (texels - 1). */
-float hauteurCarte(vec2 p) {
-    vec2 f  = (p - u_carteCoin) / u_carteTailleM;
-    vec2 uv = (f * (u_carteTexels - 1.0) + 0.5) / u_carteTexels;
-    return texture(u_carteRelief, uv).r;
 }
 
 /* Surface RÉELLE du maillage d'ensemble : ses points RETENUS et sa découpe en

@@ -27,7 +27,7 @@ float Terrain::heightAt(float x, float z) const noexcept {
     if (m_relief) {
         float detail = 0.0f;
         float poids  = 0.0f;
-        if (m_relief->detailEn(x, z, detail, poids)) {
+        if (m_relief->detailEn(x, z, h, detail, poids)) {
             /* MÊME formule que terrain.vert : le détail au plein poids, et le
                bord qui rejoint la surface du maillage. Sans le second terme,
                l'appareil se poserait au bord de la fenêtre sur autre chose que

@@ -184,7 +184,8 @@ public:
 
        MÊME formule que terrain.vert, sinon l'appareil se poserait ailleurs que
        sur ce qu'il voit. */
-    [[nodiscard]] bool detailEn(float x, float z, float& detail, float& poids) const noexcept;
+    [[nodiscard]] bool detailEn(float x, float z, float hauteurCarte, float& detail,
+                                float& poids) const noexcept;
 
     /* Niveau de réduction qui lisse la fenêtre à la maille de la carte : c'est
        lui qui sépare ce que la carte porte déjà de ce que la fenêtre ajoute. */

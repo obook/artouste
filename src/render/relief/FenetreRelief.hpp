@@ -44,8 +44,13 @@ inline constexpr int TUILES_FENETRE = 6;
    relief au pas des tuiles, l'anneau le prolonge quatre fois plus grossièrement
    sur quatre fois plus de terrain, pour un quart de ses sommets : 1,05 M sur
    2 km, puis 0,26 M sur 4 km. Les deux lisent les MÊMES altitudes, seule la
-   finesse du maillage change, si bien qu'aucune marche ne les sépare. */
-inline constexpr int COTE_GRILLE_POINTS  = 1024;
+   finesse du maillage change, si bien qu'aucune marche ne les sépare.
+
+   Côté du noyau IMPAIR : terrain.vert pose ses sommets à demi = (cote - 1) / 2
+   pas du centre, et ce demi ne tombe sur les texels que si le côté est impair.
+   Avec 1024, tout le noyau glissait d'un demi-texel et lisait des moyennes de
+   quatre texels, ce qui rabote les parois. Ne pas remettre 1024. */
+inline constexpr int COTE_GRILLE_POINTS  = 1023;
 inline constexpr int COTE_ANNEAU_POINTS  = 512;
 inline constexpr int PAS_ANNEAU          = 4;
 

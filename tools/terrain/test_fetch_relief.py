@@ -15,8 +15,8 @@ import os
 
 import numpy as np
 
-from terrain.fetch_relief import (bornes_noeuds, decoder_tuile, ecrire_bloc,
-                                  encoder_tuile)
+from terrain.relief_tuiles import (bornes_noeuds, decoder_tuile, ecrire_bloc,
+                                   encoder_tuile)
 
 
 CALAGE = {

@@ -23,7 +23,6 @@
 
 namespace artouste::render::tuiles {
 
-
 Fenetre::Fenetre(Pyramide pyramide, int cotePx) : m_pyramide(std::move(pyramide)) {
     const Calage& calage = m_pyramide.calage();
     if (!calage.valide()) {

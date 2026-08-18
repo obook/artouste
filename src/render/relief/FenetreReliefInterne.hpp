@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "util/Math.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -26,11 +28,7 @@ constexpr std::size_t EN_TETE_V2_OCTETS = 24; /* v2 : un pas par axe */
    25 pour une grille de 1024. */
 constexpr unsigned int REPRISE = 0xFFFFFFFFu;
 
-/* Reste toujours positif : un point à l'ouest de l'ancre a un indice négatif. */
-[[nodiscard]] inline int modulo(int a, int b) noexcept {
-    const int r = a % b;
-    return (r < 0) ? r + b : r;
-}
+using artouste::modulo;
 
 /* Lit un entier 16 bits petit-boutien. */
 [[nodiscard]] inline std::uint16_t lire16(const unsigned char* p) noexcept {

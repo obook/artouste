@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "pas_simulation.hpp"
 #include "physics/FlightModel.hpp"
 #include "util/Math.hpp"
 
@@ -17,7 +18,7 @@
 
 namespace essais_vol {
 
-constexpr float SIM_DT = 1.0f / 240.0f;
+using essais::SIM_DT;
 
 /* Fait tourner la physique pendant "seconds", commandes tenues. */
 inline void advance(artouste::physics::FlightModel&    model,

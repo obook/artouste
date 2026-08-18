@@ -15,19 +15,6 @@
  */
 
 #include "app/DemoPilotDetail.hpp"
-#include "app/LandingAutopilot.hpp"
-#include "physics/FlightModel.hpp"
-
-#include <catch2/catch_test_macros.hpp>
-
-#include <cmath>
-#include <functional>
-
-using artouste::vec3;
-using artouste::app::LandingAutopilot;
-using artouste::physics::Controls;
-using artouste::physics::FlightModel;
-
 #include "landing/banc_approche.hpp"
 
 #include <catch2/catch_test_macros.hpp>

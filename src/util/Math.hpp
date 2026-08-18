@@ -50,6 +50,13 @@ inline constexpr float DEG_TO_RAD = PI / 180.0f;
 using std::clamp;
 using std::lerp;
 
+/* Reste toujours positif, pour indexer un tore : un point à l'ouest ou au nord
+   de l'ancre a un indice négatif, dont le reste du C++ l'est aussi. */
+[[nodiscard]] inline constexpr int modulo(int a, int b) noexcept {
+    const int r = a % b;
+    return (r < 0) ? r + b : r;
+}
+
 [[nodiscard]] inline constexpr float saturate(float value) noexcept {
     return std::clamp(value, 0.0f, 1.0f);
 }

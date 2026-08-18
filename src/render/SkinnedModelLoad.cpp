@@ -28,8 +28,6 @@
 
 namespace artouste::render {
 
-
-
 SkinnedModel::SkinnedModel(const std::filesystem::path& path) {
     Assimp::Importer importer;
     /* LimitBoneWeights ramène chaque sommet à au plus 4 influences (notre

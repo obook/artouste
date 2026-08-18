@@ -11,6 +11,8 @@
 #pragma once
 
 #include "app/LandingAutopilot.hpp"
+#include "app/LandingAutopilot.hpp"
+#include "pas_simulation.hpp"
 #include "physics/FlightModel.hpp"
 #include "physics/constants.hpp"
 #include "util/Math.hpp"
@@ -21,7 +23,11 @@
 
 namespace essais_pose {
 
-constexpr float SIM_DT = 1.0f / 240.0f;
+using artouste::vec3;
+using artouste::app::LandingAutopilot;
+using artouste::physics::Controls;
+using artouste::physics::FlightModel;
+using essais::SIM_DT;
 
 using TerrainFn = std::function<float(float, float)>;
 

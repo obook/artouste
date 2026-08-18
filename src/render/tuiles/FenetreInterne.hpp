@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "util/Math.hpp"
+
 #include <cstddef>
 
 namespace artouste::render::tuiles {
@@ -31,12 +33,6 @@ constexpr unsigned int GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
    emplacements que la fenêtre a déjà quittés. */
 constexpr std::size_t PRETES_MAX = 12;
 
-/* Reste toujours positif, pour indexer un emplacement du tore : une tuile à
-   l'ouest ou au nord de l'ancre a un indice négatif, dont le reste du C++ est
-   négatif lui aussi. */
-[[nodiscard]] inline int modulo(int a, int b) noexcept {
-    const int r = a % b;
-    return (r < 0) ? r + b : r;
-}
+using artouste::modulo;
 
 } /* namespace artouste::render::tuiles */

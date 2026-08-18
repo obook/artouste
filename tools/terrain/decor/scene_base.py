@@ -8,8 +8,6 @@ Date : Août 2026
 Licence : GPL v2
 """
 
-import math
-
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage

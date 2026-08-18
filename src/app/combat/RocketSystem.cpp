@@ -19,7 +19,6 @@
 namespace artouste::app {
 
 
-
 void RocketSystem::spawn(const vec3& origin, const vec3& dir) noexcept {
     if (m_rockets.size() >= MAX_ROCKETS) {
         return;

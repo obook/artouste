@@ -17,8 +17,6 @@
 
 namespace artouste::app {
 
-
-
 void ZombieHorde::spawn(const vec3& position, float yaw, float phase) {
     Zombie z;
     z.position = position;

@@ -2,11 +2,13 @@
  * ApplicationRender.cpp
  * Orchestration du rendu d'une image : calcule les grandeurs communes
  * (matrices relatives à la caméra, brume) puis enchaîne les étapes de dessin.
- * Le décor statique (ciel, mer, terrain, bâtiments, végétation, nuages) est
- * dans ApplicationRenderWorld.cpp ; les entités dynamiques (mode zombie,
- * hélicoptère) dans ApplicationRenderActors.cpp ; les décalques au sol dans
+ * Le ciel et la mer sont dans ApplicationRenderWorld.cpp ; le terrain, les
+ * bâtiments, la végétation et les nuages dans ApplicationRenderTerrain.cpp ;
+ * les entités dynamiques (mode zombie, hélicoptère) dans
+ * ApplicationRenderActors.cpp ; les décalques au sol dans
  * ApplicationGround.cpp ; les lueurs du moteur dans
- * ApplicationRenderEffects.cpp ; l'heure/direction du soleil dans
+ * ApplicationRenderEffects.cpp ; le souffle rotor dans
+ * ApplicationRenderSouffle.cpp ; l'heure/direction du soleil dans
  * ApplicationSun.cpp.
  *
  * Auteur : O. Booklage

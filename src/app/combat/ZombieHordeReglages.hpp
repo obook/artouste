@@ -51,7 +51,7 @@ constexpr float EYE_RADIUS_M = 0.032f;
    ce qu'il lâche. Le boss se repère ainsi de loin, avant même de distinguer sa
    silhouette (sa lueur est aussi trois fois plus large, à son échelle), et le
    rouge annonce du même coup quels marcheurs tomberont avec lui. */
-const vec3 EYE_COLOR_WALKER{0.30f, 3.00f, 0.50f};
-const vec3 EYE_COLOR_BROOD{3.20f, 0.18f, 0.10f};
+inline const vec3 EYE_COLOR_WALKER{0.30f, 3.00f, 0.50f};
+inline const vec3 EYE_COLOR_BROOD{3.20f, 0.18f, 0.10f};
 
 } /* namespace artouste::app */

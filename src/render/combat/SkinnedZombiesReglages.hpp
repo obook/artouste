@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "render/SkinnedModel.hpp"
+
 #include <cstddef>
 
 namespace artouste::render {

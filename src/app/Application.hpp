@@ -288,7 +288,7 @@ private:
     void renderSkyAndSea(const RenderContext& ctx, float timeSeconds);
 
     /* Terrain texturé (ou repli à couleurs de sommets) et bâtiments 3D extrudés.
-       Définie dans ApplicationRenderWorld.cpp. */
+       Définie dans ApplicationRenderTerrain.cpp. */
     void renderTerrainAndBuildings(const RenderContext& ctx);
 
     /* Monuments 3D de la carte (modèles ponctuels posés à une coordonnée), après
@@ -302,7 +302,7 @@ private:
     void loadMonuments();
 
     /* Végétation en billboards et nuages. Définie dans
-       ApplicationRenderWorld.cpp. */
+       ApplicationRenderTerrain.cpp. */
     void renderVegetationAndClouds(const RenderContext& ctx);
 
     /* Mode zombie : personnages skinnés, boulettes toxiques et explosions 3D
@@ -370,7 +370,7 @@ private:
     /* Souffle rotor : avance le nuage de poussière soulevé près du sol (émission
        sous l'axe du mât, que 'base' situe dans le monde) puis le dessine. Un pas
        de temps nul fige le nuage sans le faire disparaître (pause).
-       Définies dans ApplicationRenderEffects.cpp. */
+       Définies dans ApplicationRenderSouffle.cpp. */
     void updateSouffle(const mat4& base, float rotorFraction, float collective, float dt);
     void drawSouffle(const RenderContext& ctx);
 
@@ -595,18 +595,6 @@ private:
        mais pas sur les variables d'environnement. Terrain vide = pas de choix menu ;
        turbine -1 = pas de choix, 0 = à froid, 1 = démarrée. */
     EtatMenu m_menu;
-
-    /* Vrai quand la démo en cours a été lancée depuis le menu de démarrage : en sortir
-       (Échap, reprise des commandes...) ramène alors au menu, au lieu de rendre la main
-       en vol libre. La démo lancée par config/env (ARTOUSTE_DEMO) garde l'ancien
-       comportement (arrêt de la démo, vol libre). */
-
-    /* Délai de grâce (s) après le (re)lancement d'une démo, pendant lequel une entrée
-       pilote ne l'annule pas. Sans lui, la touche D qui lance la démo depuis le menu
-       est aussi le palonnier droit en vol (Keyboard.cpp) : si le relâchement physique
-       de la touche accuse ne serait-ce que quelques dizaines de ms de retard sur le
-       premier appel de computeControls, ce résidu dépasse aussitôt le seuil de 0.15 et
-       coupe la démo -- retour au menu immédiat, alors que le pilote n'a rien demandé. */
 
     /* Configuration lue au lancement (assets/config.txt). Chargée tôt dans run(),
        avant l'ouverture de la fenêtre, car le MSAA doit être connu à sa création ;

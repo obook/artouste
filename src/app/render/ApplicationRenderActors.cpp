@@ -3,7 +3,8 @@
  * Rendu des entités dynamiques d'une image : mode zombie (personnages
  * skinnés, boulettes toxiques, explosions 3D des roquettes) et l'hélicoptère
  * (modèle FlightGear texturé ou repli procédural). Le décor statique est dans
- * ApplicationRenderWorld.cpp ; l'orchestration dans ApplicationRender.cpp.
+ * ApplicationRenderWorld.cpp et ApplicationRenderTerrain.cpp ; l'orchestration
+ * dans ApplicationRender.cpp.
  *
  * Auteur : O. Booklage
  * Date : juillet 2026

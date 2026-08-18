@@ -91,6 +91,10 @@ void Application::fillHud(ui::HudData& hud,
         hud.sinkRateAlert = alert;
     }
 
+    /* Légende des liserets de relief : seulement s'il y en a à l'écran. La clé
+       seule ne suffit pas, une carte sans jeu de relief n'en trace aucun. */
+    hud.reliefLiserets = m_config.reliefDebug && m_terrain->reliefFin() != nullptr;
+
     hud.radio = m_audio.radioPlaying();
     hud.radioMixPct = static_cast<int>(m_audio.radioMix() * 100.0f + 0.5f);
     if (m_terrain->hasGeo()) { /* longitude / latitude de l'appareil */

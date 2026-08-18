@@ -17,6 +17,17 @@ in vec3 v_worldPos;
 
 out vec4 frag_color;
 
+/* Liserets de diagnostic (clé "relief_debug") : largeur au sol des traits qui
+   marquent les frontières de la fenêtre de relief, en mètres. Zéro les éteint.
+   Le reste du terrain garde ses couleurs, ce qui rend le mode utilisable en vol
+   réel. */
+uniform float u_reliefLiseret;
+uniform vec2  u_reliefDemiNoyau;   /* demi-côtés (x, z) du noyau */
+uniform vec2  u_reliefDemiAnneau;  /* idem pour l'anneau */
+uniform vec2  u_reliefCentre;      /* centre calé : il porte les deux contours */
+uniform vec2  u_reliefOeil;        /* position continue : elle porte les cercles */
+uniform vec2  u_reliefFondu;       /* début et fin du fondu, en distance à l'oeil */
+
 uniform sampler2D u_texture;
 uniform sampler2D u_detail;     /* grain rocheux tuilable, unité 1 */
 /* Tuiles d'orthophoto fine : deux niveaux au plus, du plus large au plus serré
@@ -44,11 +55,25 @@ uniform vec3      u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float     u_fogStart;   /* distance où la brume commence (m) */
 uniform float     u_fogEnd;     /* distance où tout est noyé dans la brume (m) */
 uniform vec2      u_originXZ;   /* origine de rendu : reconstitue le monde absolu */
+/* Emprise de la carte et passe en cours, pour borner la fenêtre de relief (voir
+   le début de main). Mêmes uniformes que terrain.vert, qui les pose déjà. */
+uniform bool      u_reliefActif;
+uniform vec2      u_carteCoin;    /* coin nord-ouest de l'emprise, monde */
+uniform vec2      u_carteTailleM; /* emprise au sol (largeur, hauteur) */
 uniform float     u_orthoMPP;   /* finesse de l'orthophoto (m au sol par pixel) */
 
 /* Sonde de mise au point (ARTOUSTE_DEBUG_SONDE) : 3 écrit l'altitude du sol au
    lieu de sa couleur. À retirer. */
 uniform int       u_sonde;
+
+/* Vrai sur le CONTOUR d'un rectangle centré, à demi-largeur près. Un rectangle
+   et non un carré : les deux pas de la grille diffèrent de quelques pour cent,
+   et un contour carré manquerait la frontière de plusieurs dizaines de mètres
+   sur une grille de deux kilomètres. */
+bool surLeContour(vec2 ecart, vec2 demis, float demi) {
+    return (abs(ecart.x - demis.x) < demi && ecart.y < demis.y + demi) ||
+           (abs(ecart.y - demis.y) < demi && ecart.x < demis.x + demi);
+}
 
 /* Pose un niveau de tuiles sur la couleur du sol et renvoie la part réellement
    appliquée (0 = couleur inchangée).
@@ -77,6 +102,22 @@ float poserTuiles(sampler2D tuiles, sampler2D masque, vec2 monde, vec2 ancre,
 }
 
 void main() {
+    /* La grille de la fenêtre de relief est un carré centré sur l'appareil :
+       près d'un bord de carte, elle DÉBORDE de l'emprise. Les textures de la
+       carte étant en répétition, elle y dessinerait le relief et l'orthophoto
+       de l'autre côté, ce qui se voit en vol comme une chute du sol puis une
+       image répétée (constaté sur dax le 18/08/2026). On n'écrit donc rien
+       au-delà du bord : un fragment écarté ne marque pas non plus le pochoir, et
+       le maillage d'ensemble ne va pas plus loin, si bien qu'il reste le ciel,
+       comme avant la fenêtre. Le maillage d'ensemble, lui, tient dans l'emprise
+       et n'est pas concerné. */
+    if (u_reliefActif) {
+        vec2 dedans = (v_worldPos.xz + u_originXZ - u_carteCoin) / u_carteTailleM;
+        if (any(lessThan(dedans, vec2(0.0))) || any(greaterThan(dedans, vec2(1.0)))) {
+            discard;
+        }
+    }
+
     if (u_sonde == 3 || u_sonde == 4) {
         /* 3 : altitude du sol. 4 : distance à la caméra. En centimètres sur
            24 bits. La 4 dit si deux rendus qui divergent montrent le même
@@ -93,6 +134,31 @@ void main() {
 
     float dist  = length(u_camPos - v_worldPos);
     vec2  monde = v_worldPos.xz + u_originXZ;
+
+    /* Liserets des frontières : le contour du noyau et celui de l'anneau autour
+       du centre calé, les deux cercles du fondu autour de l'oeil. Tracés avant
+       tout le reste, ils priment sur la couleur du sol. */
+    if (u_reliefLiseret > 0.0) {
+        vec2  ecart = abs(monde - u_reliefCentre);
+        float rayon = distance(monde, u_reliefOeil);
+        float demi  = 0.5 * u_reliefLiseret;
+        if (surLeContour(ecart, u_reliefDemiNoyau, demi)) {
+            frag_color = vec4(1.0, 0.0, 1.0, 1.0);   /* noyau : magenta */
+            return;
+        }
+        if (surLeContour(ecart, u_reliefDemiAnneau, demi)) {
+            frag_color = vec4(0.0, 1.0, 1.0, 1.0);   /* anneau : cyan */
+            return;
+        }
+        if (abs(rayon - u_reliefFondu.x) < demi) {
+            frag_color = vec4(1.0, 0.45, 0.0, 1.0);  /* début du fondu : orange */
+            return;
+        }
+        if (abs(rayon - u_reliefFondu.y) < demi) {
+            frag_color = vec4(1.0, 1.0, 0.0, 1.0);   /* fin du fondu : jaune */
+            return;
+        }
+    }
 
     /* Du plus large au plus serré : chaque niveau recouvre le précédent là où
        ses tuiles sont présentes et où l'on est assez près pour qu'il apporte

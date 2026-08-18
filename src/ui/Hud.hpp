@@ -89,6 +89,10 @@ struct HudData {
                                        du cadran V/S. Aide du simulateur, calculée dans
                                        fillHud (descente rapide + AGL faible) */
     bool radio = false;             /* flux radio en lecture : affiche un voyant "RADIO" */
+    bool reliefLiserets = false;    /* liserets de la fenêtre de relief tracés au sol
+                                       (clé relief_debug ET fenêtre chargée) : affiche
+                                       leur légende, sans quoi les traits colorés ne
+                                       s'expliquent pas */
     int radioMixPct = 0;       /* part de la radio dans le crossfade radio/hélico (0 à 100 %) */
     bool geoValid = false;     /* coordonnées géographiques disponibles */
     float lonDeg = 0.0f;       /* longitude (degrés, + est) */

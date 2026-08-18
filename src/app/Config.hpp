@@ -51,6 +51,12 @@ struct Config {
        livraison, les crêtes se construisent à l'approche. */
     bool reliefWindow = false;
 
+    /* Liserets de diagnostic de la fenêtre de relief (clé "relief_debug"),
+       éteints par défaut : un trait sur le contour du noyau, un autre sur celui
+       de l'anneau, et les deux cercles du fondu. Le terrain garde ses couleurs
+       ailleurs, on peut donc voler avec. Sans effet si la fenêtre est éteinte. */
+    bool reliefDebug = false;
+
     /* Indicateur de zone hauteur-vitesse : si vrai, le HUD affiche ZONE H-V quand
        l'appareil est dans le domaine d'où l'autorotation n'est pas garantie en cas
        de panne. Faux par défaut : l'appareil d'époque n'a aucun avertisseur, et le

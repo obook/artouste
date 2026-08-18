@@ -116,6 +116,9 @@ Config loadConfig(const std::filesystem::path& path) {
             /* Défaut à faux : seule une valeur explicitement positive allume la
                fenêtre de relief (logique inverse de "arbres"). */
             cfg.reliefWindow = (value == "1" || value == "oui" || value == "true");
+        } else if (key == "relief_debug") {
+            /* Défaut à faux, comme la fenêtre dont elle trace les frontières. */
+            cfg.reliefDebug = (value == "1" || value == "oui" || value == "true");
         } else if (key == "zone_hv") {
             /* Défaut à faux : seule une valeur explicitement positive allume
                l'indicateur (logique inverse de "arbres"). */

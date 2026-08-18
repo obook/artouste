@@ -24,6 +24,22 @@
 
 namespace artouste::app {
 
+namespace {
+
+/* Largeur au sol des liserets de diagnostic, en mètres : celle de l'essai qui a
+   servi à régler la fenêtre. Assez large pour se voir à deux kilomètres, assez
+   fine pour ne rien cacher du sol. */
+constexpr float LISERET_M = 10.0f;
+
+/* Demi-côtés au sol d'une grille de la fenêtre, par axe. La grille n'est pas
+   carrée : ses deux pas diffèrent de quelques pour cent. */
+[[nodiscard]] vec2 demiGrille(const render::relief::FenetreRelief& relief, int niveau) {
+    const float points = 0.5f * static_cast<float>(relief.coteGrille(niveau) - 1);
+    return vec2{points * relief.pasGrille(niveau), points * relief.pasGrilleZ(niveau)};
+}
+
+} /* namespace */
+
 void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
     /* ARTOUSTE_DEBUG_SONDE : le terrain écrit une mesure au lieu de sa
        couleur. En capture seulement. À retirer. */
@@ -108,6 +124,16 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
                                       static_cast<float>(relief->cotePoints()));
             m_terrainShader->setVec2("u_reliefCentre", vec2{relief->centreX(), relief->centreZ()});
             m_terrainShader->setVec2("u_reliefOeil", vec2{relief->oeilX(), relief->oeilZ()});
+            /* Liserets de diagnostic (clé "relief_debug") : les contours des
+               deux grilles, posés une fois pour toute la carte. Ils restent en
+               place pour le maillage d'ensemble, dont le trait de l'anneau
+               marque justement la frontière. Sans anneau, le second contour se
+               confond avec le premier et ne se voit pas. */
+            m_terrainShader->setFloat("u_reliefLiseret",
+                                      m_config.reliefDebug ? LISERET_M : 0.0f);
+            const int large = (relief->niveaux() > 1) ? 1 : 0;
+            m_terrainShader->setVec2("u_reliefDemiNoyau", demiGrille(*relief, 0));
+            m_terrainShader->setVec2("u_reliefDemiAnneau", demiGrille(*relief, large));
             m_terrainShader->setVec2("u_reliefFondu",
                                      vec2{relief->fonduDebutM(), relief->fonduFinM()});
             m_terrainShader->setFloat("u_reliefLissage", relief->niveauLissage());
@@ -151,7 +177,9 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             m_terrain->draw();
             glDisable(GL_STENCIL_TEST);
         } else {
+            /* Sans fenêtre de relief, il n'y a aucune frontière à tracer. */
             m_terrainShader->setInt("u_reliefActif", 0);
+            m_terrainShader->setFloat("u_reliefLiseret", 0.0f);
             m_terrain->draw();
         }
     } else {

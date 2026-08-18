@@ -32,6 +32,10 @@ ui::HudData Application::hudDeCapture(const vec3& shotPos) {
     hud.airspeedKmh   = (cruise < 170.0f) ? cruise : 170.0f;
     hud.airspeedKmh   = shotFloat("ARTOUSTE_SHOT_IAS", hud.airspeedKmh);
     hud.headingDeg    = 47.0f;
+    /* Légende des liserets de relief : état RÉEL et non valeur de croisière, sans
+       quoi une capture du mode de diagnostic montrerait les traits au sol sans la
+       légende qui les explique. */
+    hud.reliefLiserets = m_config.reliefDebug && m_terrain->reliefFin() != nullptr;
     hud.altitudeM     = shotPos.y;  /* vraie altitude du point de capture */
     hud.varioMs       = 1.2f;
     hud.collectivePct = 55.0f;

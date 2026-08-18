@@ -103,12 +103,24 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
     ImGui::End();
 
     /* Coin bas-droit : voyants du mode assisté, de l'atterrissage automatique et de la
-       radio quand ils sont actifs, et le compteur d'images par seconde (dernière ligne,
-       donc pile dans le coin).
+       radio quand ils sont actifs, la légende des liserets de relief, et le compteur
+       d'images par seconde (dernière ligne, donc pile dans le coin).
        On ne crée le panneau que s'il y a quelque chose à montrer, pour ne pas laisser
        une boîte vide (fps = 0 en capture => rien). */
-    if (data.assist || data.autoland || data.radio || data.fps > 0.0f) {
+    if (data.reliefLiserets || data.assist || data.autoland || data.radio ||
+        data.fps > 0.0f) {
         corner("hud_br", ImVec2(w - m, h - m), ImVec2(1.0f, 1.0f));
+        /* Légende des liserets de relief. Chaque libellé porte la couleur de son
+           trait au sol : c'est la couleur, et non le texte, qui fait la
+           correspondance (mêmes valeurs que terrain.frag). Ce coin plutôt que le
+           haut-gauche, où la carte de situation recouvrirait les lignes. */
+        if (data.reliefLiserets) {
+            ImGui::TextUnformatted("RELIEF 3D");
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "  NOYAU");
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "  ANNEAU");
+            ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.0f, 1.0f), "  FONDU PROCHE");
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "  FONDU LOIN");
+        }
         if (data.radio) {
             ImGui::Text("RADIO %d%%",
                         data.radioMixPct); /* voyant radio (touche K) + balance (-/+) */

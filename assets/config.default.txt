@@ -47,6 +47,14 @@ demo 0
 # l'éteint et l'emporte.
 relief_fenetre 0
 
+# relief_debug : 1 = liserets de diagnostic aux frontières de la fenêtre de
+# relief -- contour du noyau en magenta, contour de l'anneau en cyan, début du
+# fondu en orange et fin du fondu en jaune. Le terrain garde ses couleurs
+# partout ailleurs, ce qui rend le mode utilisable en vol. 0 = rendu normal
+# (défaut). Sans effet si relief_fenetre vaut 0 : il n'y a alors aucune
+# frontière à tracer.
+relief_debug 0
+
 # arbres : 1 = végétation activée (défaut) -- des arbres en billboards sont semés
 # d'après l'orthophoto, là où le sol est vert et sous la limite forestière. Ce
 # n'est pas réservé à la montagne : une ville entourée de bois en reçoit aussi.

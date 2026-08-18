@@ -26,6 +26,7 @@ const std::set<std::string>& clesConnues() {
                                                "demo",
                                                "arbres",
                                                "relief_fenetre",
+                                               "relief_debug",
                                                "zone_hv",
                                                "verifier_maj",
                                                "radio_url",

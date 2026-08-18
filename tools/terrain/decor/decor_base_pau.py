@@ -62,8 +62,10 @@ def main():
         if not chemin.exists():
             raise SystemExit(
                 "Texture absente : %s\n"
-                "Ce décor demande de vrais morceaux d'orthophoto à 25 cm, prélevés\n"
-                "sur la plateforme (herbe, béton, bitume) et nommés tex_<nom>.png.\n"
+                "Ce décor demande trois morceaux d'orthophoto à 25 cm prélevés sur\n"
+                "l'herbe de la plateforme, nommés tex_herbe.png, tex_herbe2.png et\n"
+                "tex_herbe3.png (512 px = 128 m). Le béton et le bitume, eux, sont\n"
+                "dessinés et ne demandent aucune photo.\n"
                 "Indiquez leur dossier par ARTOUSTE_DECOR_TEXTURES." % chemin)
         im = Image.open(chemin).convert("RGB")   # 512 px = 128 m
         n = max(8, int(round(cote_m / mpp)))

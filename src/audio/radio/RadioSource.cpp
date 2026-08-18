@@ -20,7 +20,7 @@ static ma_result
 radioSourceRead(ma_data_source* ds, void* frames, ma_uint64 frameCount, ma_uint64* framesRead) {
     auto* rds = reinterpret_cast<RadioDataSource*>(ds);
     ma_uint64 got = 0;
-    if (*rds->ctx.pDecoderReady) {
+    if (rds->ctx.pDecoderReady->load()) {
         ma_data_source_read_pcm_frames(rds->ctx.pDecoder, frames, frameCount, &got);
     }
     if (got < frameCount) {

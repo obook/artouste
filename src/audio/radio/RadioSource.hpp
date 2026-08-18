@@ -16,6 +16,7 @@
 
 #include <miniaudio.h>
 
+#include <atomic>
 #include <cstddef>
 
 namespace artouste::audio {
@@ -35,7 +36,8 @@ struct RadioCallbackCtx {
     ma_decoder* pDecoder = nullptr;
     RingBuffer* pBuffer = nullptr;
     ma_uint32 channels = 2;
-    bool* pDecoderReady = nullptr;
+    /* Atomique : lu par le fil audio, écrit par le fil principal. */
+    std::atomic<bool>* pDecoderReady = nullptr;
 };
 
 /*

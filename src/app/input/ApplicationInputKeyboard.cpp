@@ -151,11 +151,6 @@ void Application::keyCallback(
                 app->m_viewMode = (app->m_viewMode + 1) % 4;
             }
             break;
-        case GLFW_KEY_F: /* bascule plein écran sans bordure / fenêtré */
-            if (app != nullptr) {
-                app->toggleFullscreen();
-            }
-            break;
         case GLFW_KEY_T: /* démarre ou coupe la turbine */
             if (app != nullptr) {
                 /* Passe par le modèle de vol et non par la turbine seule : un

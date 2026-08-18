@@ -73,8 +73,16 @@ void Application::runGestionnaireCartes() {
         }
         if (etat.refaireInventaire) {
             etat.cartes            = inventorierCartes(etat.assets);
-            etat.selection         = std::min(etat.selection, etat.cartes.size() - 1);
             etat.refaireInventaire = false;
+            if (etat.cartes.empty()) {
+                /* Les cartes ont disparu du disque pendant l'écran : sans cette
+                   sortie, size() - 1 vaudrait SIZE_MAX et courante() lirait hors
+                   du vecteur. */
+                std::fprintf(stderr, "[cartes] plus aucune carte : retour au menu.\n");
+                etat.fini = true;
+                break;
+            }
+            etat.selection = std::min(etat.selection, etat.cartes.size() - 1);
         }
 
         int fbw = 0, fbh = 0;

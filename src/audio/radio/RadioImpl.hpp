@@ -43,7 +43,9 @@ struct RadioStream::Impl {
     ma_decoder      decoder{};
     RadioDataSource radioDataSource{};
     ma_sound        sound{};
-    bool            decoderReady    = false;
+    /* Lu par le fil audio de miniaudio (radioSourceRead), écrit par le fil
+       principal (teardownSound) : atomique pour que ce partage soit défini. */
+    std::atomic<bool> decoderReady{false};
     bool            dataSourceReady = false;
     bool            soundReady      = false;
     ma_uint32       channels        = 2;

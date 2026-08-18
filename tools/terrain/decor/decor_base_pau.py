@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-decor_base_hr.py
+decor_base_pau.py
 Décor IMAGINAIRE de la base d'hélicoptères de Pau-Uzein, dessiné à n'importe
 quelle finesse (0,25 m par pixel pour les tuiles de détail, 1,80 m pour
 l'orthophoto d'ensemble).
@@ -15,15 +15,20 @@ en pixels : le même plan sert donc aux deux finesses, et le détail fin
 que lorsque l'échelle le permet. Agrandir un dessin fait pour 1,80 m ne
 donnerait que du flou.
 
-Usage : decor_base_hr.py <sortie.png> <largeur_px> <hauteur_px> <mpp>
+Usage : decor_base_pau.py <sortie.png> <largeur_px> <hauteur_px> <mpp>
                           <lon_coin_no> <lat_coin_no>
 """
 import math
+import os
+from pathlib import Path
 import sys
 
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
+
+# Dossier des morceaux d'orthophoto servant de textures (voir morceau()).
+TEXTURES_DIR = os.environ.get("ARTOUSTE_DECOR_TEXTURES", "/tmp")
 
 from decor.formes_base import (AXE, BETON, BITUME, surface_lisse, texture)
 from decor.scene_base import dessiner
@@ -33,15 +38,12 @@ def main():
     sortie, W, H, mpp, lonNO, latNO = (sys.argv[1], int(sys.argv[2]), int(sys.argv[3]),
                                        float(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6]))
     Image.MAX_IMAGE_PIXELS = None
-    ortho = Image.open("assets/terrain/pau/ortho-ign-original.jpg").convert("RGB")
 
     # Centre du décor : le centroïde du contour tracé à la main, en lon/lat.
     LON0, DLON = -0.4519550855, 0.0000222322
     LAT0, DLAT = 43.3943211600, 0.0000161700
-    m = np.asarray(Image.open(
-        "/tmp/claude-1000/-home-obooklage-Documents-GitHub-artouste/"
-        "3d92b580-04b2-41f4-b7a6-790b60b02ab5/scratchpad/pau-trace/"
-        "masque-zone-militaire.png").convert("L")) > 128
+    masque = Path(__file__).resolve().parent / "masque-zone-militaire-pau.png"
+    m = np.asarray(Image.open(masque).convert("L")) > 128
     ys, xs = np.nonzero(m)
     lonC, latC = LON0 + xs.mean() * DLON, LAT0 - ys.mean() * DLAT
     mx = 111320 * math.cos(math.radians(latC))
@@ -56,7 +58,14 @@ def main():
         """Un morceau de photo réelle, ramené à la finesse voulue. Les herbes
         prélevées à des endroits différents n'ont pas le même ton : on les
         recale sur la première, sans quoi le pavage dessine un damier."""
-        im = Image.open("/tmp/tex_%s.png" % nom).convert("RGB")   # 512 px = 128 m
+        chemin = Path(TEXTURES_DIR) / ("tex_%s.png" % nom)
+        if not chemin.exists():
+            raise SystemExit(
+                "Texture absente : %s\n"
+                "Ce décor demande de vrais morceaux d'orthophoto à 25 cm, prélevés\n"
+                "sur la plateforme (herbe, béton, bitume) et nommés tex_<nom>.png.\n"
+                "Indiquez leur dossier par ARTOUSTE_DECOR_TEXTURES." % chemin)
+        im = Image.open(chemin).convert("RGB")   # 512 px = 128 m
         n = max(8, int(round(cote_m / mpp)))
         im = im.resize((n, n), Image.LANCZOS)
         if reference is not None:

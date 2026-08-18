@@ -119,6 +119,27 @@ Application::~Application() {
     m_modelShader.reset();
     m_shader.reset();
 
+    /* Décor du sol, textures et effets ajoutés après la première version de ce
+       bloc : sans ces lignes, leurs unique_ptr étaient détruits par le
+       compilateur APRÈS glfwDestroyWindow, donc hors contexte OpenGL. */
+    m_padSkirt.reset();
+    m_loadingImage.reset();
+    m_terrainDetail.reset();
+    m_buildingFacade.reset();
+    m_buildingFacadePleine.reset();
+    m_souffleFx.reset();
+    m_souffleShader.reset();
+
+    /* Mode zombie : rendus et shaders. */
+    m_zombiesRender.reset();
+    m_zombieEyesRender.reset();
+    m_projectilesRender.reset();
+    m_explosionFx.reset();
+    m_zombieShader.reset();
+    m_zombieEyesShader.reset();
+    m_projectileShader.reset();
+    m_explosionShader.reset();
+
     if (m_window != nullptr) {
         glfwDestroyWindow(m_window);
     }

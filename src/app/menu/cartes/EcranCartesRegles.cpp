@@ -13,6 +13,7 @@
 
 #include "render/tuiles/Pyramide.hpp"
 
+#include <cstdio>
 #include <fstream>
 #include <system_error>
 
@@ -94,6 +95,14 @@ void supprimerTuiles(Etat& etat) {
     cartes::EtatCarte& carte = etat.courante();
     std::error_code    effacement;
     std::filesystem::remove_all(carte.dossierTuiles, effacement);
+    if (effacement) {
+        /* Disque occupé, droits insuffisants : les fichiers sont toujours là.
+           Vider les compteurs ferait afficher 0 octet sur une carte encore
+           pleine, jusqu'au prochain inventaire. */
+        std::fprintf(stderr, "[cartes] suppression de %s impossible : %s\n",
+                     carte.dossierTuiles.string().c_str(), effacement.message().c_str());
+        return;
+    }
     carte.octetsTuiles     = 0;
     carte.tuilesPresentes  = 0;
     carte.tuilesInachevees = false;

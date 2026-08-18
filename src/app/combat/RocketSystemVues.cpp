@@ -49,7 +49,7 @@ std::vector<RocketSystem::ScorchView> RocketSystem::scorches() const {
     for (const Scorch& s : m_scorches) {
         ScorchView v;
         v.center = s.center;
-        /* Pleine au début puis fondu linéaire jusqu'a 0 sur la durée de vie. */
+        /* Pleine au début puis fondu linéaire jusqu'à 0 sur la durée de vie. */
         v.alpha      = 1.0f - s.age / SCORCH_DURATION_S;
         v.radius     = s.radius;
         v.elongation = s.elongation;

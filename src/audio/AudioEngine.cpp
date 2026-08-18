@@ -51,6 +51,9 @@ AudioEngine::~AudioEngine() {
     if (m_impl->gunfireLoaded) {
         ma_sound_uninit(&m_impl->gunfireSound);
     }
+    if (m_impl->explosionLoaded) {
+        ma_sound_uninit(&m_impl->explosionSound);
+    }
     if (m_impl->zombieHitLoaded) {
         ma_sound_uninit(&m_impl->zombieHitSound);
     }

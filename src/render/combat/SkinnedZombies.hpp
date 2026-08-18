@@ -102,7 +102,7 @@ private:
     std::vector<Part>  m_parts;        /* une entrée par variante */
     std::vector<float> m_phaseOffset;  /* décalage temporel de chaque groupe (s) */
     /* Lots d'instances de l'image : index = variante * phaseGroups + groupe,
-       chaque lot = 17 flottants par instance (mat4 + flash). Réutilisé d'une
+       chaque lot = 18 flottants par instance (mat4 + flash + graine). Réutilisé d'une
        image à l'autre (clear conserve la capacité). */
     std::vector<std::vector<float>> m_buckets;
     /* Yeux gauche/droit par lot, dans le repère du modèle : rafraîchis par

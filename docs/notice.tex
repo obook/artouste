@@ -18,6 +18,10 @@
 % Table
 \usepackage{tabularx}
 \usepackage{array}
+% Colonne X centrée verticalement (m au lieu de p) : sans ça, une cellule sur
+% une seule ligne colle en haut de sa rangée dès qu'une cellule voisine
+% déborde sur plusieurs lignes, ce qui donne un tableau qui "penche".
+\newcolumntype{X}{>{\raggedright\arraybackslash}m{\hsize}}
 
 % Image
 \usepackage{graphicx}
@@ -38,11 +42,11 @@
 \definecolor{ps_croix_bleu}{RGB}{60, 120, 216}
 \definecolor{ps_carre_rose}{RGB}{214, 74, 141}
 
-% Boutons PlayStation : le symbole Sony (couleur d'origine) dans un cercle a bord
-% noir, comme un bouton rond de la manette. Dessines au trait (TikZ) plutot qu'avec
-% \square (amssymb), qui entre en conflit avec fourier-otf (\eth deja defini). Le
-% cercle a le meme diametre (2ex) que les disques Xbox ; baseline -0.6ex pour
-% rester centre sur la ligne du tableau. Coordonnees en ex, centrees sur (0,0).
+% Boutons PlayStation : le symbole Sony (couleur d'origine) dans un cercle à bord
+% noir, comme un bouton rond de la manette. Dessinés au trait (TikZ) plutôt qu'avec
+% \square (amssymb), qui entre en conflit avec fourier-otf (\eth déjà défini). Le
+% cercle a le même diamètre (2ex) que les disques Xbox ; baseline -0.6ex pour
+% rester centré sur la ligne du tableau. Coordonnées en ex, centrées sur (0,0).
 \usepackage{tikz}
 \newcommand{\symtriangle}{\tikz[baseline=-0.6ex]{%
   \draw[black,line width=0.5pt] (0,0) circle (1ex);
@@ -58,8 +62,8 @@
   \draw[ps_carre_rose,line width=0.7pt] (-0.36ex,-0.36ex) rectangle (0.36ex,0.36ex);}}
 
 % Bouton Xbox : disque de couleur avec la lettre au centre (comme les boutons
-% ronds de la manette). Dessine avec TikZ, hauteur bornee (minimum size en ex) et
-% baseline reglee pour que la pastille reste centree sur la ligne sans deborder
+% ronds de la manette). Dessiné avec TikZ, hauteur bornée (minimum size en ex) et
+% baseline réglée pour que la pastille reste centrée sur la ligne sans déborder
 % sur les filets du tableau. #1 = couleur du disque, #2 = couleur de la lettre,
 % #3 = lettre.
 \newcommand{\boutonxbox}[3]{%
@@ -232,13 +236,13 @@
 \end{center}%
 }
 
-% Bloc de titre repris a l'identique sur chaque version (Xbox puis PlayStation).
-% \maketitle ne peut servir qu'une seule fois : on definit notre propre bloc pour
-% pouvoir reprendre exactement le meme titre en tete de la partie PlayStation.
-% Version affichee sous le titre : numero de la derniere release suivi du commit
-% courant (ex. 0.8.0.16c610f). La chaine est generee par build.sh -d dans
+% Bloc de titre repris à l'identique sur chaque version (Xbox puis PlayStation).
+% \maketitle ne peut servir qu'une seule fois : on définit notre propre bloc pour
+% pouvoir reprendre exactement le même titre en tête de la partie PlayStation.
+% Version affichée sous le titre : numéro de la dernière release suivi du commit
+% courant (ex. 0.8.0.16c610f). La chaîne est générée par build.sh -d dans
 % docs/version.tex ; en son absence (compilation manuelle), on retombe sur une
-% valeur par defaut.
+% valeur par défaut.
 \InputIfFileExists{version.tex}{}{}
 \providecommand{\noticeversion}{version de développement}
 
@@ -352,10 +356,10 @@ Creative Commons CC0 1.0.}\normalsize
 \clearpage
 
 % ================= Version manette PlayStation (2 pages) =================
-% Meme titre repris a l'identique. On remet le compteur de sections a zero pour
-% que cette partie soit numerotee comme la precedente (1. Commandes de vol, etc.),
-% et le compteur de page a 1 : la partie PlayStation forme une notice a part
-% entiere, numerotee page 1 et page 2.
+% Même titre repris à l'identique. On remet le compteur de sections à zéro pour
+% que cette partie soit numérotée comme la précédente (1. Commandes de vol, etc.),
+% et le compteur de page à 1 : la partie PlayStation forme une notice à part
+% entière, numérotée page 1 et page 2.
 \setcounter{section}{0}
 \setcounter{page}{1}
 \titrenotice
@@ -459,18 +463,18 @@ Attribution 3.0 Non Transposé.}\normalsize
 
 \clearpage
 
-% ==================== A l'attention des pilotes (1 page, commune) ====================
-% Page destinee aux pilotes reels qui decouvrent l'appareil : ce que le simulateur
-% modelise, les chiffres qu'ils peuvent verifier en vol, et les particularites d'une
-% machine de 1955 qui surprennent quand on vient d'appareils plus recents. Les
-% valeurs sont celles du modele, cale sur la documentation du SE 3130 (voir
-% docs/technique/references-se3130.json). Compteur de page remis a 1, comme les
-% parties precedentes.
+% ==================== À l'attention des pilotes (1 page, commune) ====================
+% Page destinée aux pilotes réels qui découvrent l'appareil : ce que le simulateur
+% modélise, les chiffres qu'ils peuvent vérifier en vol, et les particularités d'une
+% machine de 1955 qui surprennent quand on vient d'appareils plus récents. Les
+% valeurs sont celles du modèle, calé sur la documentation du SE 3130 (voir
+% docs/technique/references-se3130.json). Compteur de page remis à 1, comme les
+% parties précédentes.
 \setcounter{section}{0}
 \setcounter{page}{1}
 \titrenotice
 
-\begin{center}\large\textbf{À l'attention des pilotes}\end{center}
+\begin{center}\large\textbf{À l'attention des pilotes civils et militaires}\end{center}
 
 \section*{L'appareil}
 L'Alouette II SE.3130 est le premier hélicoptère à turbine produit en série : une turbine Turbomeca Artouste II de 400~ch, limitée à 269~kW en utilisation, un rotor tripale de 10,2~m, et \textbf{aucune servo-commande}. Les efforts du rotor remontent dans le manche ; tout se dose, rien ne se tient tout seul. Le simulateur reproduit un appareil léger, 1100~kg. Comme la machine réelle à cette charge, il grimpe mieux que les chiffres de fiche technique, donnés à la masse maximale.
@@ -480,9 +484,9 @@ Le modèle est calé sur la documentation de l'appareil : Jane's 1966-67, donné
 
 \medskip
 {\small
-% Colonne de gauche fixe : elle ne porte que des intitules courts, alors qu'une
-% seconde colonne X lui aurait donne la moitie de la largeur pour rien.
-\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{3.8cm}|>{\raggedright\arraybackslash}X|}
+% Colonne de gauche fixe : elle ne porte que des intitulés courts, alors qu'une
+% seconde colonne X lui aurait donné la moitié de la largeur pour rien.
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}m{3.8cm}|>{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Croisière} & 160~km/h, une dizaine de degrés à piquer \\
 \hline
@@ -528,11 +532,56 @@ Le modèle est calé sur la documentation de l'appareil : Jane's 1966-67, donné
 
 \clearpage
 
-% ==================== Mise a jour (1 page, commune) ====================
-% Page valable quelle que soit la manette : elle repond a la question posee par
-% les joueurs qui ont deja telecharge des tuiles de detail et craignent de les
-% perdre en installant une nouvelle version. Compteur de page remis a 1, comme
-% les deux parties precedentes, chacune formant une notice a part entiere.
+% ==================== Améliorer les cartes (1 page, commune) ====================
+% Page ouverte par le bénéfice (finesse HR, relief 3D sculpté) plutôt que par
+% l'état livré : c'est ce qui donne envie de lancer le téléchargement. L'état
+% livré (LR sans 3D) vient en deuxième idée. Compteur de page remis à 1, comme
+% les parties précédentes, chacune formant une notice à part entière.
+\setcounter{section}{0}
+\setcounter{page}{1}
+\titrenotice
+
+\begin{center}\large\textbf{Des cartes plus vraies}\end{center}
+
+\noindent
+En HR, le sol devient net en vol bas. Le relief 3D sculpte les crêtes et les barres rocheuses à 2~m près : magnifique sur les cartes de montagne. Les neuf cartes sont livrées en LR, sans relief 3D ; tout s'ajoute ensuite depuis le gestionnaire de cartes.
+
+\section*{Le gestionnaire de cartes}
+Touche \texttt{C} au menu. La colonne \textbf{Résolution} combine deux états.
+
+\smallskip
+{\small
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}m{2.2cm}|X|}
+\hline
+\textbf{LR} / \textbf{HR} & orthophoto d'ensemble seule (sol flou vu de près) ou tuiles fines installées \\
+\hline
+\textbf{2D} / \textbf{3D} & pas de relief fin, ou relief fin complet ; \textbf{3D (partiel)} et \textbf{3D (à refaire)} signalent un jeu incomplet \\
+\hline
+\end{tabularx}}
+
+\section*{Passer une carte en HR}
+Entrée sur la carte choisie affiche la finesse visée, le volume sur disque, le volume à télécharger et la place restante. Entrée confirme : avancement et débit s'affichent, l'estimation pouvant aller à plusieurs heures sur les cartes les plus étendues. \texttt{Échap} arrête la fabrication (fermer le jeu aussi), sans perte : une relance reprend où elle s'était arrêtée. Une carte marquée \texttt{x} dans la colonne Tuiles est déjà à sa finesse maximale.
+
+\section*{Ajouter le relief 3D}
+Touche \texttt{L} sur la carte (\texttt{Fabriquer relief 3D}), même mécanique que pour l'image. Le relief fin donne une maille d'environ 2~m autour de l'appareil, contre 15 à 20~m pour le maillage d'ensemble. Réglez \texttt{relief\_fenetre 1} dans \texttt{assets/config.txt} pour l'afficher en vol.
+
+\section*{Gérer et supprimer}
+\texttt{T} allume ou éteint les tuiles sans les supprimer. \texttt{Suppr} supprime les tuiles de la carte, \texttt{Maj+Suppr} son relief 3D.
+
+\section*{Combien de place}
+Les tuiles HR se comptent en gigaoctets, jusqu'à 37~Go pour la carte la plus étendue (Arcachon). Le relief 3D pèse moins, de 25~Mo (Dax) à 856~Mo (Arcachon) sur disque ; le téléchargement pèse environ huit fois ce poids. La clé \texttt{tuiles\_dossier} de \texttt{assets/config.txt} range tuiles et relief sur un autre disque.
+
+\vfill
+\noindent
+\footnotesize\emph{Relief et orthophotos des cartes : \href{https://www.ign.fr/}{IGN}, sous Licence Ouverte Etalab 2.0.}\hfill\raisebox{-0.3\height}{\includegraphics[height=5ex]{IGN_logo_2012.png}}\normalsize
+
+\clearpage
+
+% ==================== Mise à jour (1 page, commune) ====================
+% Page valable quelle que soit la manette : elle répond à la question posée par
+% les joueurs qui ont déjà téléchargé des tuiles de détail et craignent de les
+% perdre en installant une nouvelle version. Compteur de page remis à 1, comme
+% les parties précédentes, chacune formant une notice à part entière.
 \setcounter{section}{0}
 \setcounter{page}{1}
 \titrenotice

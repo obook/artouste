@@ -1,0 +1,313 @@
+% RENDU-3D.tex
+% Du terrain nu au rendu HR 3D : comment une carte se construit et se dessine.
+% Compilation, en double passe :
+%   cd docs/cartes && lualatex RENDU-3D.tex && lualatex RENDU-3D.tex
+\documentclass[a4paper,12pt]{article}
+\usepackage[left=1.5cm,right=1.5cm,top=2cm,bottom=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage{fourier}
+\else
+  \usepackage{fourier-otf}
+\fi
+
+\usepackage{amsmath}
+% Pas d'amssymb : fourier fournit déjà les symboles AMS (\mathbb compris) et
+% les deux entrent en conflit.
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+% Noms de fichiers et de fonctions : \code{...} plutôt que \texttt partout,
+% pour pouvoir changer la présentation en un seul endroit.
+\newcommand{\code}[1]{\texttt{#1}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5\baselineskip}
+
+% Les longs noms de code ne se coupent pas : on laisse les espaces s'étirer
+% pour renvoyer le nom entier à la ligne plutôt que de déborder dans la marge.
+\sloppy
+\setlength{\emergencystretch}{3em}
+
+% Version affichée sous le titre : celle de la notice (docs/version.tex,
+% régénéré par build.sh -d à partir du dernier tag). En son absence
+% (compilation manuelle), valeur de repli.
+\InputIfFileExists{../version.tex}{}{}
+\providecommand{\noticeversion}{version de développement}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Du terrain nu au rendu HR 3D}\\[0.5ex]
+  {\large Comment une carte d'Artouste se construit et se dessine}\\[1ex]
+  Olivier Booklage\\
+  version \noticeversion{}, le \today
+\end{center}
+
+Quatre étapes : partir de zéro, le rendu LR, le rendu HR, le rendu HR 3D. Les
+fonctions sont citées à chaque étape pour retrouver le code.
+
+\section{Fabriquer une carte}
+
+Une carte se fabrique hors du jeu, avec
+\code{python3 tools/fetch\_terrain.py <zone>}. Ce script en appelle quatre
+autres :
+
+\begin{itemize}
+  \item \code{tools/terrain/zones/<zone>.py} décrit la zone : emprise en
+    lon/lat, taille de la grille d'altitudes, hauteur de l'orthophoto, point
+    de départ, hélisurfaces ;
+  \item \code{tools/terrain/relief.py} demande les altitudes à l'API
+    altimétrie de l'IGN (RGE ALTI,
+    \url{https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json})
+    et les écrit dans \code{heightmap.png}, un PNG 16 bits étalé de 0 à
+    \code{elev\_max} ;
+  \item \code{tools/terrain/ortho.py} télécharge l'orthophoto BD ORTHO par le
+    WMS de la Géoplateforme (\url{https://data.geopf.fr/wms-r/wms}, couche
+    \code{ORTHOIMAGERY.ORTHOPHOTOS}), comble le blanc en bordure de couverture
+    (\code{fill\_nodata()}), donne une couleur unie à la mer
+    (\code{flatten\_sea()}) et écrit \code{ortho.jpg} ;
+  \item \code{tools/terrain/outputs.py} et \code{meta.py} écrivent
+    \code{terrain.txt} (emprise, maillage, altitude maximale). Le script pose
+    aussi \code{landmarks.txt} (lieux remarquables) et \code{helipads.txt}.
+\end{itemize}
+
+Le dossier \code{assets/terrain/<carte>/} obtenu est la carte livrée : l'état
+LR. Toutes les données viennent de l'IGN
+(\url{https://geoservices.ign.fr/}), sous Licence Ouverte Etalab 2.0.
+
+\section{Le rendu LR : un maillage et une photo}
+
+Au chargement, \code{Terrain::Terrain()} (\code{src/render/Terrain.cpp}) lit
+\code{terrain.txt}, \code{heightmap.png} et \code{ortho.jpg}. Puis
+\code{Terrain::construireMaillage()}
+(\code{src/render/terrain/TerrainMaillage.cpp}) échantillonne la heightmap
+sous un plafond de sommets (\code{relief\_sommets\_max}) : sur une carte de
+18~km, la maille tombe à 15-20~m. Le maillage est construit une fois,
+\code{Terrain::draw()} le dessine à chaque image.
+
+Le shader (\code{assets/shaders/terrain.frag}) drape \code{ortho.jpg} dessus
+et y mêle un grain rocheux selon la pente. La physique lit le même relief par
+\code{Terrain::heightAt()} (interpolation bilinéaire de la heightmap).
+
+Résultat : correct de loin, flou au ras du sol (une dizaine de mètres par
+pixel), anguleux sur les crêtes.
+
+\newpage
+
+\section{Le rendu HR : des tuiles d'image fines}
+
+Le gestionnaire de cartes (touche \code{C}, puis Entrée) fabrique des tuiles
+d'orthophoto à 0,25~m par pixel. \code{Fabrique::lancer()}
+(\code{src/app/cartes/FabriqueTuiles.cpp}) télécharge l'image bloc par bloc
+(même WMS, même couche que le socle), la découpe en tuiles de 512~px, les
+compresse en BC7 et les écrit en \code{.dds} (\code{render::dds::ecrire()}),
+avec un index par niveau de finesse. Le script
+\code{tools/terrain/fetch\_tuiles.py} fait pareil en ligne de commande ; les
+deux produisent le même jeu et une fabrication commencée par l'un se reprend
+par l'autre.
+
+Au chargement, \code{ouvrirNiveaux()} (\code{src/render/tuiles/Pyramide.cpp})
+retrouve le jeu. Une \code{Fenetre} (\code{src/render/tuiles/Fenetre.hpp}) par
+niveau garde une texture de tuiles autour de la caméra :
+\code{Fenetre::suivre()} la recentre à chaque image et charge les tuiles qui
+entrent, un masque dit au shader lesquelles sont prêtes. Dans
+\code{terrain.frag}, \code{poserTuiles()} pose le niveau large puis le niveau
+serré sur l'orthophoto d'ensemble, avec un fondu par distance
+(\code{reglerNiveau()} dans
+\code{src/app/render/ApplicationRenderTerrain.cpp}).
+
+Résultat : le sol est net en vol bas. Le relief, lui, reste celui du maillage
+LR.
+
+\section{Le rendu HR 3D : la fenêtre de relief}
+
+La méthode est propre à Artouste. Elle n'est pas reprise d'un moteur existant,
+elle a été construite pour ce jeu, mesure par mesure. Ses quatre choix : le
+relief fin est un \emph{écart} ajouté à la carte, pas une surface de plus
+(carte + détail = laser, par construction) ; le pas des tuiles s'emboîte dans
+la maille du terrain ; la finesse ne dépend que de la distance, pour que les
+grilles lisent la même surface à leur jonction ; la physique recalcule la
+formule du shader, donc l'appareil se pose sur ce que le pilote voit.
+
+La touche \code{L} du gestionnaire fabrique le jeu de relief.
+\code{Fabrique::lancerRelief()} puis \code{Fabrique::boucleRelief()}
+(\code{src/app/cartes/fabrique/FabriqueReliefBoucle.cpp}) téléchargent le MNT
+LiDAR HD de l'IGN, le modèle du sol nu (couche
+\code{IGNF\_LIDAR-HD\_MNT\_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G} du même
+WMS ; le MNS contient les toits et les cimes, on se poserait dessus), en
+binaire brut (\code{demanderAltitudes()}). Les trous et les points aberrants
+sont bouchés avec le relief de la carte (\code{ReliefCarte::altitude()}), puis
+tout est écrit en tuiles \code{.r16} sur 16 bits (\code{ecrireBlocRelief()},
+\code{encoderTuile()}). Le pas vient de \code{grilleRelief()} : la maille de
+la carte divisée par un multiple de 4, par axe. Un pas libre ferait voir la
+frontière de la fenêtre en vol. Le script
+\code{tools/terrain/fetch\_relief.py} fait pareil en ligne de commande (le
+format des tuiles est décrit dans son en-tête et dans
+\code{tools/terrain/relief\_tuiles.py}).
+
+Au chargement, \code{cheminJeuDeRelief()} trouve le dossier
+\code{<carte>.relief} et \code{FenetreRelief::ouvrir()}
+(\code{src/render/relief/}) alloue une texture d'altitudes avec ses niveaux de
+réduction, et deux grilles sans données : le noyau (pas fin, environ 2~m) et
+son anneau (pas quadruple). \code{FenetreRelief::suivre()} recentre le tout
+sur l'appareil à chaque image.
+
+Au dessin (\code{Application::renderTerrainAndBuildings()}), l'anneau est tiré
+d'abord, le noyau par-dessus (profondeur \code{GL\_LEQUAL} : à égalité, le
+dernier tiré gagne). Le pochoir écarte le maillage d'ensemble de l'emprise de
+la fenêtre. Dans \code{terrain.vert}, chaque sommet retrouve sa position
+depuis son numéro (\code{gl\_VertexID}), lit l'altitude de la carte
+(\code{hauteurCarte()}) et l'écart du laser (\code{detailFin()}, au niveau de
+réduction donné par \code{finesseDetail()}), puis fond cet écart vers zéro au
+bord de la fenêtre (\code{poidsFenetre()}) : \code{hauteurFenetre()} = carte +
+poids $\times$ détail. À la frontière, la surface rejoint donc exactement le
+maillage d'ensemble. Les normales sont recalculées par différences finies
+(\code{normaleDe()}), et \code{terrain.frag} écarte les points hors de
+l'emprise de la carte.
+
+La physique suit la même formule : \code{FenetreRelief::detailEn()} recalcule
+côté processeur le même écart et le même poids, \code{Terrain::heightAt()}
+l'ajoute à l'altitude de la carte. On se pose sur ce qu'on voit ; c'est un
+invariant du moteur.
+
+\section{Modélisation}
+
+En un point $p$ du sol, à distance $d$ de l'oeil de la fenêtre :
+\begin{equation*}
+  h(p) = c(p) + t(d)\,\bigl[\,T_{\ell}(p) - c(p)\,\bigr]
+\end{equation*}
+$c(p)$ est l'altitude de la carte (bilinéaire sur \code{heightmap.png}),
+$T_{\ell}(p)$ l'altitude laser lue au niveau de réduction $\ell$, $t(d)$ le
+poids du fondu. Le détail est l'écart $T - c$, jamais une altitude : quand $t$
+tombe à zéro, la surface \emph{est} la carte. Aucune marche possible à la
+frontière.
+
+La finesse ne dépend que de la distance :
+\begin{equation*}
+  \ell(d) = \min\Bigl(\max\bigl(\log_2 \tfrac{d}{D},\, 0\bigr),\, L\Bigr)
+  \qquad\text{avec}\qquad
+  L = \Bigl\lfloor \log_2 \tfrac{\Delta_{\text{carte}}}{\Delta_{\text{relief}}} \Bigr\rceil
+\end{equation*}
+Pleine finesse jusqu'à $D$ (environ 226~m sur dax), puis résolution divisée
+par deux à chaque doublement de distance, plafonnée à $L$, le niveau qui lisse
+le laser à la maille de la carte. Comme $\ell$ ne dépend que de $d$, le noyau
+et l'anneau lisent la même surface là où ils se rejoignent.
+
+Le pas des tuiles s'emboîte dans la maille $m$ de la carte :
+\begin{equation*}
+  \Delta_{\text{relief}} = \frac{m}{4k},
+  \qquad k \in \mathbb{N}^{*} \text{ choisi pour approcher } 2~\text{m}
+\end{equation*}
+Sur dax : $m = 14{,}156 \times 21{,}763$~m donne $14{,}156/8 = 1{,}7695$~m et
+$21{,}763/12 = 1{,}8136$~m. 8 et 12 sont multiples de 4 : le noyau et l'anneau
+(qui dessine à 4 fois ce pas) tombent tous deux sur les noeuds du maillage.
+
+Chaque tuile de $512 \times 512$ points quantifie ses altitudes sur 16 bits,
+bornes propres à la tuile :
+\begin{equation*}
+  a = a_{\min} + \frac{n}{65535}\, e,
+  \qquad n \in \{0, \dots, 65535\},
+  \qquad \varepsilon_{\max} = \frac{e}{131070}
+\end{equation*}
+où $e$ est l'étendue d'altitude de la tuile : 1~cm d'erreur sur 1300~m de
+dénivelé, 0,08~mm sur une tuile de plaine de 10~m d'étendue. Mesuré contre la
+chaîne Python de référence : 0,59~mm d'écart maximal sur 2,4 millions de
+points.
+
+Les normales sont des différences finies centrales, au pas $\delta$ suivant la
+finesse :
+\begin{equation*}
+  \vec{n} = \operatorname{normalize}\!\left(
+  \frac{h(x-\delta,z) - h(x+\delta,z)}{2\delta},\;
+  1,\;
+  \frac{h(x,z-\delta) - h(x,z+\delta)}{2\delta}
+  \right)
+\end{equation*}
+
+Pourquoi la double précision : autour de 43 degrés, deux \code{float}
+consécutifs sont séparés de
+\begin{equation*}
+  \operatorname{ulp}(43) = 43 \times 2^{-23}
+  \approx 5{,}1 \times 10^{-6}~\text{degré}
+  \approx 40~\text{cm au sol.}
+\end{equation*}
+En simple précision, le relief sortait décalé d'un demi-mètre sur les
+versants. En double, le même écart tombe au dixième de micron.
+
+\section{Voir la mécanique en vol}
+
+La clé \code{relief\_debug 1} de \code{assets/config.txt} trace les frontières
+de la fenêtre : contour du noyau en magenta, contour de l'anneau en cyan,
+cercles du fondu en orange et jaune, légende dans le HUD 4 coins (touche
+\code{H}). Le journal du lancement donne le reste : maille LR, finesse des
+tuiles HR, pas des grilles, et la ligne \code{emboîtement dans la carte : oui}.
+
+\section{Les difficultés rencontrées, et les solutions}
+
+\textbf{Des silhouettes qui bougeaient à la frontière de la fenêtre.} Avec un
+pas de tuiles de 2,00~m partout, la fenêtre redessinait la surface du maillage
+au lieu de la reproduire : les crêtes changeaient de forme en entrant.
+Solution : le pas n'est plus libre, \code{grilleRelief()} le cale sur la
+maille de la carte divisée par un multiple de 4, par axe
+(\code{pasEmboite()}).
+
+\textbf{Des pics qui surgissaient à l'approche des crêtes.} En réalité un
+peigne de lames verticales, une par cellule d'anneau, à partir du cercle de
+départ du fondu. Les données, la loi de finesse, la couture de la texture et
+les indices des grilles ont été mis hors de cause un par un, mesure après
+mesure. La cause : le noyau, tiré en premier, réservait ses pixels au
+pochoir ; sur une arête vue en rasant, ses triangles de 2~m se projettent en
+lamelles de moins d'un pixel, les pixels non couverts restaient libres et
+l'anneau y montrait sa propre corde, plus basse. Chaque grille seule dessinait
+la crête proprement ; le défaut venait de leur arbitrage. Solution : inverser
+l'ordre, l'anneau d'abord sur toute son emprise, le noyau par-dessus en
+\code{GL\_LEQUAL} (à égalité, le dernier tiré gagne). Coût nul. La physique
+n'a jamais été touchée : \code{detailEn()} lit le champ continu, c'est pour ça
+que l'appareil s'enfonçait dans les dents dessinées.
+
+\textbf{Des changements de couleur en approchant une montagne.} Deux causes.
+Au bord de carte, la fenêtre débordait de l'emprise et ses textures en
+répétition y dessinaient l'orthophoto et le relief de l'autre côté de la
+carte : corrigé par un écart au fragment hors emprise (\code{terrain.frag}).
+Et un versant pouvait passer clair, sombre, puis clair pendant l'approche :
+les normales sont recalculées à un pas qui suit la finesse
+(\code{pasNormale()}), l'éclairage dépend donc de la distance. L'essentiel a
+disparu avec le peigne ; le reste est surveillé.
+
+\textbf{Un décalage de 80~cm du relief sur les versants.} Les bornes
+géographiques de la fabrique étaient en simple précision (voir la section des
+formules). Passées en double (\code{CalageCarte}), ce qui a aussi corrigé le
+même décalage sur les tuiles d'orthophoto.
+
+\textbf{Des points laser qui ne mesuraient pas le sol.} Certains retours
+plongent de plusieurs centaines de mètres sous le relief (jusqu'à $-796$~m sur
+un versant d'Ossau). La fabrique écarte tout point à plus de 300~m sous la
+carte (\code{CHUTE\_ABERRANTE\_M}) et bouche trous et aberrations avec le
+relief d'ensemble (\code{ReliefCarte::altitude()}).
+
+À retenir de l'enquête du peigne : n'afficher qu'une grille à la fois pour
+isoler le fautif, compter les traversées de silhouette le long d'une ligne
+plutôt que des écarts entre pixels, couper le MSAA avant toute sonde qui
+encode des mesures dans les couleurs.
+
+\newpage
+
+\section{Sources de données}
+
+\begin{itemize}
+  \item Géoplateforme IGN, service WMS raster :
+    \url{https://data.geopf.fr/wms-r/wms} (orthophotos BD ORTHO et MNT LiDAR
+    HD).
+  \item API altimétrie IGN (RGE ALTI) :
+    \url{https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json}.
+  \item Portail des géoservices : \url{https://geoservices.ign.fr/}.
+  \item Licence Ouverte Etalab 2.0 :
+    \url{https://www.etalab.gouv.fr/licence-ouverte-open-licence/}.
+\end{itemize}
+
+\end{document}

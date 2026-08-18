@@ -38,6 +38,12 @@ namespace artouste::app::ecran_cartes {
 [[nodiscard]] std::filesystem::path destinationTuiles(const cartes::EtatCarte&     carte,
                                                       const std::filesystem::path& racineTuiles);
 
+/* Même chose pour le relief fin, et aux mêmes endroits que ceux où le moteur
+   ira le chercher (render::relief::cheminJeuDeRelief) : un dossier FRÈRE de la
+   carte, nommé <carte>.relief, ou <carte>/relief faute de racine. */
+[[nodiscard]] std::filesystem::path destinationRelief(const cartes::EtatCarte&     carte,
+                                                      const std::filesystem::path& racineTuiles);
+
 /* N'écrit que ce qui a été explicitement réglé pour cette carte : le reste
    continue de suivre la configuration générale. */
 void ecrireOptions(const cartes::EtatCarte& carte);

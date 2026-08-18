@@ -14,7 +14,9 @@
 #include "app/cartes/fabrique/FabriqueInterne.hpp"
 
 #include <filesystem>
+#include <functional>
 #include <mutex>
+#include <utility>
 
 namespace artouste::app::cartes {
 
@@ -22,9 +24,7 @@ Fabrique::~Fabrique() {
     annuler();
 }
 
-bool Fabrique::lancer(const std::filesystem::path& dossierCarte,
-                      const std::filesystem::path& dossierSortie,
-                      float                        mParPixel) {
+bool Fabrique::demarrer(std::function<void()> travail) {
     if (m_enCours.load()) {
         return false;
     }
@@ -38,8 +38,23 @@ bool Fabrique::lancer(const std::filesystem::path& dossierCarte,
         m_avancement = Avancement{};
         m_avancement.message = "Préparation...";
     }
-    m_fil = std::thread(&Fabrique::boucle, this, dossierCarte, dossierSortie, mParPixel);
+    m_fil = std::thread(std::move(travail));
     return true;
+}
+
+bool Fabrique::lancer(const std::filesystem::path& dossierCarte,
+                      const std::filesystem::path& dossierSortie,
+                      float                        mParPixel) {
+    return demarrer([this, dossierCarte, dossierSortie, mParPixel] {
+        boucle(dossierCarte, dossierSortie, mParPixel);
+    });
+}
+
+bool Fabrique::lancerRelief(const std::filesystem::path& dossierCarte,
+                            const std::filesystem::path& dossierSortie) {
+    return demarrer([this, dossierCarte, dossierSortie] {
+        boucleRelief(dossierCarte, dossierSortie);
+    });
 }
 
 void Fabrique::annuler() {

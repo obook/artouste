@@ -52,6 +52,18 @@ void dessinerEmplacementTuiles(const cartes::EtatCarte& carte) {
     }
 }
 
+/* Où est le relief fin, ou pourquoi il n'y en a pas. Sans lui la carte n'a que
+   son maillage d'ensemble, plafonné par relief_sommets_max. */
+void dessinerEmplacementRelief(const cartes::EtatCarte& carte) {
+    if (carte.octetsRelief > 0) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+        ImGui::TextWrapped("Relief fin : %s", carte.dossierRelief.string().c_str());
+        ImGui::PopStyleColor();
+    } else {
+        ImGui::TextDisabled("Pas de relief fin : le sol garde la maille d'ensemble.");
+    }
+}
+
 /* La comparaison qui dit si ces mégaoctets servent. */
 void dessinerFinesses(const cartes::EtatCarte& carte) {
     if (carte.interet.ortho <= 0.0f || carte.finesseTuiles <= 0.0f) {
@@ -111,6 +123,7 @@ void dessinerDetail(const Etat& etat, const cartes::Avancement& av) {
         ImGui::TextDisabled("Suit la configuration générale : %s", herites.c_str());
     }
     dessinerEmplacementTuiles(carte);
+    dessinerEmplacementRelief(carte);
 
     /* À dire avant toute comparaison de finesse : la carte n'est couverte qu'en
        partie. */
@@ -119,6 +132,21 @@ void dessinerDetail(const Etat& etat, const cartes::Avancement& av) {
                            "Relancer reprendra où elle s'est arrêtée.",
                            carte.tuilesPresentes,
                            carte.tuilesAttendues);
+    }
+    if (carte.reliefAutrePas) {
+        ImGui::TextWrapped("Relief à un autre pas (%.2f x %.2f m) : il ne s'emboîte pas dans "
+                           "la maille de la carte, et la frontière de la fenêtre se voit en "
+                           "vol. Le refabriquer efface celui-là et le refait au bon pas.",
+                           static_cast<double>(carte.reliefPasX),
+                           static_cast<double>(carte.reliefPasZ));
+    }
+    if (carte.reliefInacheve) {
+        /* Le compte des tuiles écrites reste sous l'attendu même sur un jeu
+           complet : celles qui sont hors couverture LiDAR ne sont pas écrites. */
+        ImGui::TextWrapped("Relief interrompu : %d tuiles écrites sur %d attendues. "
+                           "Relancer reprendra où il s'est arrêté.",
+                           carte.reliefPresent,
+                           carte.reliefAttendu);
     }
     dessinerFinesses(carte);
 

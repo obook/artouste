@@ -6,6 +6,9 @@
  * clavier. Entrée lance puis confirme, Échap annule puis ferme. Pas de F pour
  * "fabriquer" : elle bascule le plein écran partout dans le jeu.
  *
+ * Le relief double les deux actions d'image : L pour le fabriquer, Maj+Suppr
+ * pour le supprimer.
+ *
  * Auteur : O. Booklage
  * Date : août 2026
  * Licence : GPL v2
@@ -13,6 +16,7 @@
 
 #include "app/menu/cartes/EcranCartes.hpp"
 
+#include "app/cartes/FabriqueRelief.hpp"
 #include "app/menu/cartes/EcranCartesRegles.hpp"
 #include "input/Keyboard.hpp"
 
@@ -40,11 +44,15 @@ void traiterClavier(GLFWwindow* fenetre, Etat& etat) {
     const bool valider = glfwGetKey(fenetre, GLFW_KEY_ENTER) == GLFW_PRESS ||
                          glfwGetKey(fenetre, GLFW_KEY_KP_ENTER) == GLFW_PRESS;
     const bool supprimer = glfwGetKey(fenetre, GLFW_KEY_DELETE) == GLFW_PRESS;
+    /* Maj enfoncée : la suppression porte sur le relief, pas sur l'image. */
+    const bool maj = glfwGetKey(fenetre, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                     glfwGetKey(fenetre, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
     /* GLFW_KEY_A désigne une POSITION, celle qui écrit "q" en AZERTY. */
     const bool bascArbres    = glfwGetKey(fenetre, input::toucheImprimant('a')) == GLFW_PRESS;
     const bool bascBatiments = glfwGetKey(fenetre, input::toucheImprimant('b')) == GLFW_PRESS;
     const bool bascTuiles    = glfwGetKey(fenetre, input::toucheImprimant('t')) == GLFW_PRESS;
     const bool rendre        = glfwGetKey(fenetre, input::toucheImprimant('r')) == GLFW_PRESS;
+    const bool bascRelief    = glfwGetKey(fenetre, input::toucheImprimant('l')) == GLFW_PRESS;
 
     const bool frontRetour    = front(retour, etat.fronts.retour);
     const bool frontValider   = front(valider, etat.fronts.valider);
@@ -53,6 +61,7 @@ void traiterClavier(GLFWwindow* fenetre, Etat& etat) {
     const bool frontBatiments = front(bascBatiments, etat.fronts.batiments);
     const bool frontTuiles    = front(bascTuiles, etat.fronts.tuiles);
     const bool frontRendre    = front(rendre, etat.fronts.rendre);
+    const bool frontRelief    = front(bascRelief, etat.fronts.relief);
     const bool frontHaut      = front(haut, etat.fronts.haut);
     const bool frontBas       = front(bas, etat.fronts.bas);
 
@@ -70,7 +79,8 @@ void traiterClavier(GLFWwindow* fenetre, Etat& etat) {
         /* Les deux touches ferment le compte rendu ; le disque a changé. */
         if (frontRetour || frontValider) {
             etat.fabrique.oublier();
-            etat.refaireInventaire = true;
+            etat.refaireInventaire    = true;
+            etat.inventaireCarteSeule = true;
         }
         return;
     }
@@ -78,7 +88,11 @@ void traiterClavier(GLFWwindow* fenetre, Etat& etat) {
     if (etat.aFabriquer >= 0 || etat.aSupprimer >= 0) {
         /* Une confirmation attend : Entrée confirme, Échap renonce. */
         if (frontValider && etat.aFabriquer >= 0) {
-            lancerFabrication(etat);
+            /* Rien à lancer sur une estimation invalide : le bouton de l'écran
+               reste caché dans ce cas, la touche doit faire de même. */
+            if (etat.estimation.valide) {
+                lancerFabrication(etat);
+            }
             etat.aFabriquer = -1;
         } else if (frontValider && etat.aSupprimer >= 0) {
             supprimerTuiles(etat);
@@ -103,10 +117,19 @@ void traiterClavier(GLFWwindow* fenetre, Etat& etat) {
        à y gagner ne s'ouvre pas. */
     if (frontValider && cartes::reseauDisponible() &&
         (courante.interet.vaut || courante.tuilesInachevees)) {
+        etat.surRelief  = false;
         etat.estimation = cartes::estimer(courante.dossier, finesseAFabriquer(courante));
         etat.aFabriquer = static_cast<int>(etat.selection);
     }
-    if (frontSupprimer && courante.octetsTuiles > 0) {
+    /* L comme relief : toute carte peut en recevoir, il n'y a pas d'intérêt à
+       mesurer comme pour l'image. */
+    if (frontRelief && cartes::reseauDisponible()) {
+        etat.surRelief  = true;
+        etat.estimation = cartes::estimerRelief(courante.dossier);
+        etat.aFabriquer = static_cast<int>(etat.selection);
+    }
+    if (frontSupprimer && (maj ? courante.octetsRelief > 0 : courante.octetsTuiles > 0)) {
+        etat.surRelief  = maj;
         etat.aSupprimer = static_cast<int>(etat.selection);
     }
     if (frontArbres) {

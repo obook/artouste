@@ -105,10 +105,8 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
         return;
     }
 
-    const double degParMLon = static_cast<double>(carte.lonMax - carte.lonMin) /
-                              static_cast<double>(carte.largeurM);
-    const double degParMLat = static_cast<double>(carte.latMax - carte.latMin) /
-                              static_cast<double>(carte.hauteurM);
+    const double degParMLon = (carte.lonMax - carte.lonMin) / static_cast<double>(carte.largeurM);
+    const double degParMLat = (carte.latMax - carte.latMin) / static_cast<double>(carte.hauteurM);
     const double tuileM = static_cast<double>(TUILE_PX) * static_cast<double>(mParPixel);
 
     const auto debut = std::chrono::steady_clock::now();
@@ -128,11 +126,10 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
 
             /* Emprise du bloc. La grille est ancrée sur le coin nord-ouest, et la
                rangée 0 est au nord : la latitude décroît quand la rangée croît. */
-            const double lonLo = static_cast<double>(carte.lonMin) +
-                                 static_cast<double>(col0) * tuileM * degParMLon;
+            const double lonLo = carte.lonMin + static_cast<double>(col0) * tuileM * degParMLon;
             const double lonHi = lonLo + static_cast<double>(nCol) * tuileM * degParMLon;
-            const double latHi = static_cast<double>(carte.latMax) -
-                                 static_cast<double>(rangee0) * tuileM * degParMLat;
+            const double latHi =
+                carte.latMax - static_cast<double>(rangee0) * tuileM * degParMLat;
             const double latLo = latHi - static_cast<double>(nRangee) * tuileM * degParMLat;
 
             bool recu = false;

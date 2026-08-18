@@ -25,7 +25,7 @@ void dessinerEntete(const Etat& etat) {
     /* Les bâtiments sont compris dans le socle : les ajouter compterait deux fois. */
     std::uintmax_t total = 0;
     for (const cartes::EtatCarte& carte : etat.cartes) {
-        total += carte.octetsSocle + carte.octetsTuiles;
+        total += carte.octetsSocle + carte.octetsTuiles + carte.octetsRelief;
     }
     ImGui::Text("Cartes installées : %s au total", formaterOctets(total).c_str());
 
@@ -59,7 +59,7 @@ void dessinerEntete(const Etat& etat) {
 }
 
 void dessinerTableau(const Etat& etat) {
-    if (!ImGui::BeginTable("cartes", 6,
+    if (!ImGui::BeginTable("cartes", 7,
                            ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
         return;
     }
@@ -67,6 +67,7 @@ void dessinerTableau(const Etat& etat) {
     ImGui::TableSetupColumn("Résolution");
     ImGui::TableSetupColumn("Socle");
     ImGui::TableSetupColumn("Tuiles");
+    ImGui::TableSetupColumn("Relief");
     ImGui::TableSetupColumn("Bâtiments");
     ImGui::TableSetupColumn("Arbres");
     ImGui::TableHeadersRow();
@@ -83,16 +84,23 @@ void dessinerTableau(const Etat& etat) {
         ImGui::TextUnformatted(c.dir.c_str());
 
         ImGui::TableNextColumn();
+        /* Le relief en suffixe, en trois états : sans jeu la carte reste plate,
+           un jeu interrompu ne couvre qu'une part de l'emprise et le reste garde
+           la maille d'ensemble. */
+        const char* relief = (c.octetsRelief == 0) ? " 2D"
+                             : c.reliefInacheve    ? " 3D (partiel)"
+                             : c.reliefAutrePas    ? " 3D (à refaire)"
+                                                   : " 3D";
         /* Des tuiles que le moteur écarte ne font pas une carte HR, si lourdes
            soient-elles : la ligne démentirait le vol. */
         if (!tuilesEfficaces(c)) {
-            ImGui::TextDisabled("LR");
+            ImGui::TextDisabled("LR%s", relief);
         } else if (c.tuilesInachevees) {
-            ImGui::TextDisabled("HR (partiel)");
+            ImGui::TextDisabled("HR (partiel)%s", relief);
         } else if (c.tuiles) {
-            ImGui::TextUnformatted("HR");
+            ImGui::Text("HR%s", relief);
         } else {
-            ImGui::TextDisabled("HR (éteintes)");
+            ImGui::TextDisabled("HR (éteintes)%s", relief);
         }
 
         ImGui::TableNextColumn();
@@ -105,6 +113,19 @@ void dessinerTableau(const Etat& etat) {
             ImGui::TextUnformatted("x");
         } else {
             ImGui::TextUnformatted(formaterOctets(c.octetsTuiles).c_str());
+        }
+
+        ImGui::TableNextColumn();
+        /* Le relief fin est un poids comme les tuiles, et il n'y a pas de carte
+           à qui il n'apporte rien : toutes ont un maillage à raffiner. */
+        if (c.reliefInacheve) {
+            ImGui::TextDisabled("%s (partiel)", formaterOctets(c.octetsRelief).c_str());
+        } else if (c.reliefAutrePas) {
+            ImGui::TextDisabled("%s (à refaire)", formaterOctets(c.octetsRelief).c_str());
+        } else if (c.octetsRelief > 0) {
+            ImGui::TextUnformatted(formaterOctets(c.octetsRelief).c_str());
+        } else {
+            ImGui::TextDisabled("-");
         }
 
         ImGui::TableNextColumn();

@@ -24,6 +24,7 @@
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -150,6 +151,12 @@ public:
                 const std::filesystem::path& dossierSortie,
                 float                        mParPixel);
 
+    /* Même chose pour le jeu de tuiles de RELIEF (voir FabriqueRelief.hpp). Une
+       seule fabrication à la fois, image ou relief : les deux passent par ce
+       fil, cet avancement et ce verrou. */
+    bool lancerRelief(const std::filesystem::path& dossierCarte,
+                      const std::filesystem::path& dossierSortie);
+
     /* Demande l'arrêt et attend la fin du bloc en cours. Ce qui est écrit reste
        écrit : une reprise ultérieure sautera les tuiles déjà là. */
     void annuler();
@@ -166,9 +173,15 @@ public:
     void oublier();
 
 private:
+    /* Prépare l'avancement et part sur le fil. Faux si une fabrication tourne. */
+    bool demarrer(std::function<void()> travail);
+
     void boucle(std::filesystem::path dossierCarte,
                 std::filesystem::path dossierSortie,
                 float                 mParPixel);
+
+    void boucleRelief(std::filesystem::path dossierCarte,
+                      std::filesystem::path dossierSortie);
 
     std::thread       m_fil;
     std::atomic<bool> m_enCours{false};

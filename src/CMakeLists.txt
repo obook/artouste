@@ -70,6 +70,8 @@ add_executable(artouste
     app/menu/ApplicationMenuCartes.cpp
     app/menu/ApplicationMenuCartesInventaire.cpp
     app/menu/cartes/EcranCartesActions.cpp
+    app/menu/cartes/EcranCartesAnnonce.cpp
+    app/menu/cartes/EcranCartesBoutons.cpp
     app/menu/cartes/EcranCartesClavier.cpp
     app/menu/cartes/EcranCartesDetail.cpp
     app/menu/cartes/EcranCartesMesures.cpp
@@ -79,6 +81,11 @@ add_executable(artouste
     app/cartes/fabrique/FabriqueBoucle.cpp
     app/cartes/fabrique/FabriqueCalage.cpp
     app/cartes/fabrique/FabriqueReseau.cpp
+    app/cartes/fabrique/FabriqueReliefBloc.cpp
+    app/cartes/fabrique/FabriqueReliefBoucle.cpp
+    app/cartes/fabrique/FabriqueReliefCalage.cpp
+    app/cartes/fabrique/FabriqueReliefReseau.cpp
+    app/cartes/fabrique/FabriqueReliefTuiles.cpp
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
     app/config/ConfigCles.cpp

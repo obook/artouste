@@ -55,7 +55,20 @@ struct CalageCarte {
     float hauteurM = 0.0f;
     float originX  = 0.0f;
     float originZ  = 0.0f;
-    float lonMin = 0.0f, lonMax = 0.0f, latMin = 0.0f, latMax = 0.0f;
+    /* Bornes géographiques en DOUBLE, et non en float : à 43 degrés de latitude,
+       le pas d'un float vaut 4 microdegrés, soit 40 cm au sol. Le relief fin est
+       demandé à 2 m, et cet arrondi le décalait d'un cinquième de maille (mesuré
+       le 18/08/2026 : 1 cm d'écart moyen avec le script Python, 80 cm sur les
+       versants). */
+    double lonMin = 0.0, lonMax = 0.0, latMin = 0.0, latMax = 0.0;
+    /* Maillage d'ensemble : c'est sa maille (largeur / (colonnes - 1)) que le
+       pas des tuiles de relief doit diviser, faute de quoi la frontière de la
+       fenêtre se voit en vol. Zéro si le fichier ne les donne pas. */
+    int   mailleColonnes = 0;
+    int   mailleRangees  = 0;
+    /* Altitude la plus haute de la carte : heightmap.png est étalé de 0 à
+       elle. Sert à boucher les trous du LiDAR avec le relief d'ensemble. */
+    float elevMax = 0.0f;
     /* Hauteur en pixels de l'orthophoto d'ensemble. C'est la seule des deux
        dimensions qui compte : la finesse au sol est l'étendue nord-sud divisée
        par elle, comme la mesure Terrain::orthoMetersPerPixel. Zéro si le fichier

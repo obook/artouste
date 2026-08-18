@@ -16,16 +16,25 @@
 
 namespace artouste::app::ecran_cartes {
 
-[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier) {
+/* Entrées entre deux battements. Assez rares pour ne rien coûter, assez
+   fréquentes pour qu'un dossier lent batte plusieurs fois par seconde. */
+constexpr int ENTREES_PAR_BATTEMENT = 256;
+
+[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier,
+                                           const Battement&             battre) {
     std::error_code ec;
     if (!std::filesystem::is_directory(dossier, ec)) {
         return 0;
     }
     std::uintmax_t total = 0;
+    int            vues  = 0;
     for (const auto& entree :
          std::filesystem::recursive_directory_iterator(dossier, ec)) {
         if (entree.is_regular_file(ec)) {
             total += entree.file_size(ec);
+        }
+        if (battre && ++vues % ENTREES_PAR_BATTEMENT == 0) {
+            battre();
         }
     }
     return total;
@@ -33,16 +42,21 @@ namespace artouste::app::ecran_cartes {
 
 /* Un seul niveau : un compte récursif ramasserait les niveaux plus fins rangés
    en dessous, et on comparerait deux grilles à l'attendu d'une seule. */
-[[nodiscard]] int compterTuiles(const std::filesystem::path& niveau) {
+[[nodiscard]] int compterTuiles(const std::filesystem::path& niveau, const char* extension,
+                                const Battement& battre) {
     std::error_code ec;
     int             tuiles = 0;
+    int             vues   = 0;
     for (const auto& rangee : std::filesystem::directory_iterator(niveau, ec)) {
         if (!rangee.is_directory(ec)) {
             continue;
         }
         for (const auto& fichier : std::filesystem::directory_iterator(rangee.path(), ec)) {
-            if (fichier.path().extension() == ".dds") {
+            if (fichier.path().extension() == extension) {
                 ++tuiles;
+            }
+            if (battre && ++vues % ENTREES_PAR_BATTEMENT == 0) {
+                battre();
             }
         }
     }

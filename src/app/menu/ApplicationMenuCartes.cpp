@@ -71,6 +71,19 @@ void Application::runGestionnaireCartes() {
             m_cartesRemaniees  = true;
             etat.disqueRemanie = false;
         }
+        if (etat.refaireInventaire && etat.inventaireCarteSeule &&
+            etat.selection < etat.cartes.size()) {
+            /* Seule la carte remaniée est remesurée. Sans barre de progression :
+               il n'y a plus de suite de cartes à situer, seulement une attente
+               courte. */
+            /* Nom et titre copiés avant l'appel : la ligne remplacée est celle
+               d'où ils viennent. */
+            const MapEntry choisie{etat.cartes[etat.selection].dir,
+                                   etat.cartes[etat.selection].titre, false};
+            etat.cartes[etat.selection] = inventorierCarte(etat.assets, choisie, -1.0f);
+            etat.refaireInventaire    = false;
+            etat.inventaireCarteSeule = false;
+        }
         if (etat.refaireInventaire) {
             etat.cartes            = inventorierCartes(etat.assets);
             etat.refaireInventaire = false;
@@ -122,8 +135,8 @@ void Application::runGestionnaireCartes() {
         /* Hauteur figée, comme la largeur : le nombre de lignes change d'une
            carte à l'autre, et la fenêtre centrée se déplaçait à chaque flèche.
            On réserve la place du cas le plus haut ; le reste défile. */
-        const float reserve = 8.0f * ImGui::GetTextLineHeightWithSpacing() +
-                              2.0f * ImGui::GetFrameHeightWithSpacing();
+        const float reserve = 9.0f * ImGui::GetTextLineHeightWithSpacing() +
+                              3.0f * ImGui::GetFrameHeightWithSpacing();
         ImGui::BeginChild("zone", ImVec2(0.0f, reserve));
         ecran_cartes::dessinerDetail(etat, av);
         ecran_cartes::dessinerActions(etat, av);
@@ -132,6 +145,7 @@ void Application::runGestionnaireCartes() {
         ImGui::Separator();
         ImGui::TextDisabled("Flèches : choisir   Entrée : fabriquer les tuiles   "
                             "Suppr : les supprimer");
+        ImGui::TextDisabled("L : fabriquer relief 3D   Maj+Suppr : le supprimer");
         ImGui::TextDisabled("A : arbres   B : bâtiments   T : allumer ou éteindre les tuiles   "
                             "R : réglages par défaut   Échap : retour");
         ImGui::TextDisabled("Les arbres n'occupent aucun disque : ils coûtent des images par "

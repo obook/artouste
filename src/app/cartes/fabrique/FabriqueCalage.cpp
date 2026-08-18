@@ -54,6 +54,12 @@ namespace artouste::app::cartes {
             in >> c.latMax, aGeo3 = true;
         } else if (cle == "ortho_height") {
             in >> c.orthoHauteur;
+        } else if (cle == "cols") {
+            in >> c.mailleColonnes;
+        } else if (cle == "rows") {
+            in >> c.mailleRangees;
+        } else if (cle == "elev_max") {
+            in >> c.elevMax;
         } else {
             std::getline(in, cle);
         }

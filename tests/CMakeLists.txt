@@ -32,6 +32,7 @@ add_executable(artouste_tests
     ortho_tiles_tests.cpp
     relief_emboitement_tests.cpp
     fabrique_tuiles_tests.cpp
+    fabrique_relief_tests.cpp
     souffle_rotor_tests.cpp
     ligne_commande_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
@@ -47,6 +48,11 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueBoucle.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueCalage.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReseau.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReliefBloc.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReliefBoucle.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReliefCalage.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReliefReseau.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReliefTuiles.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LigneCommande.cpp
     ${CMAKE_SOURCE_DIR}/src/app/SouffleRotor.cpp

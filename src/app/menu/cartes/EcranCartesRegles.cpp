@@ -19,6 +19,24 @@
 
 namespace artouste::app::ecran_cartes {
 
+namespace {
+
+/* Efface un dossier et dit si c'est fait. Disque occupé, droits insuffisants :
+   les fichiers sont toujours là, et vider les compteurs ferait afficher 0 octet
+   sur une carte encore pleine, jusqu'au prochain inventaire. */
+[[nodiscard]] bool effacerDossier(const std::filesystem::path& dossier) {
+    std::error_code effacement;
+    std::filesystem::remove_all(dossier, effacement);
+    if (effacement) {
+        std::fprintf(stderr, "[cartes] suppression de %s impossible : %s\n",
+                     dossier.string().c_str(), effacement.message().c_str());
+        return false;
+    }
+    return true;
+}
+
+} /* namespace */
+
 bool tuilesEfficaces(const cartes::EtatCarte& carte) {
     return carte.octetsTuiles > 0 &&
            render::tuiles::niveauUtile(carte.finesseTuiles, carte.interet.ortho);
@@ -45,6 +63,17 @@ std::filesystem::path destinationTuiles(const cartes::EtatCarte&     carte,
         return carte.dossier / "tuiles";
     }
     return racineTuiles / carte.dir;
+}
+
+std::filesystem::path destinationRelief(const cartes::EtatCarte&     carte,
+                                        const std::filesystem::path& racineTuiles) {
+    if (!carte.dossierRelief.empty()) {
+        return carte.dossierRelief;
+    }
+    if (racineTuiles.empty()) {
+        return carte.dossier / "relief";
+    }
+    return racineTuiles / (carte.dir + ".relief");
 }
 
 void ecrireOptions(const cartes::EtatCarte& carte) {
@@ -83,24 +112,33 @@ void rendreAuDefaut(cartes::EtatCarte& carte, bool arbresGeneral) {
 }
 
 void lancerFabrication(Etat& etat) {
-    /* La fabrique efface elle-même un jeu d'une autre finesse (FabriqueTuiles.cpp). */
+    /* La fabrique efface elle-même un jeu d'une autre finesse ou d'un autre pas
+       (FabriqueTuiles.cpp, FabriqueReliefBoucle.cpp). */
     cartes::EtatCarte& carte = etat.courante();
-    etat.fabrique.lancer(carte.dossier,
-                         destinationTuiles(carte, etat.racineTuiles),
-                         finesseAFabriquer(carte));
+    if (etat.surRelief) {
+        etat.fabrique.lancerRelief(carte.dossier, destinationRelief(carte, etat.racineTuiles));
+    } else {
+        etat.fabrique.lancer(carte.dossier,
+                             destinationTuiles(carte, etat.racineTuiles),
+                             finesseAFabriquer(carte));
+    }
     etat.disqueRemanie = true;
 }
 
 void supprimerTuiles(Etat& etat) {
     cartes::EtatCarte& carte = etat.courante();
-    std::error_code    effacement;
-    std::filesystem::remove_all(carte.dossierTuiles, effacement);
-    if (effacement) {
-        /* Disque occupé, droits insuffisants : les fichiers sont toujours là.
-           Vider les compteurs ferait afficher 0 octet sur une carte encore
-           pleine, jusqu'au prochain inventaire. */
-        std::fprintf(stderr, "[cartes] suppression de %s impossible : %s\n",
-                     carte.dossierTuiles.string().c_str(), effacement.message().c_str());
+    if (etat.surRelief) {
+        if (!effacerDossier(carte.dossierRelief)) {
+            return;
+        }
+        carte.octetsRelief   = 0;
+        carte.reliefPresent  = 0;
+        carte.reliefInacheve = false;
+        carte.dossierRelief.clear();
+        etat.disqueRemanie = true;
+        return;
+    }
+    if (!effacerDossier(carte.dossierTuiles)) {
         return;
     }
     carte.octetsTuiles     = 0;

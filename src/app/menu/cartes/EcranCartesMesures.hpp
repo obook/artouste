@@ -11,16 +11,28 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <string>
 
 namespace artouste::app::ecran_cartes {
 
+/* Appelé de loin en loin PENDANT une marche de dossier, pour que l'écran
+   d'attente reste vivant : ces mesures durent des secondes sur un jeu de
+   tuiles, et rien ne les découpe de l'extérieur. À l'appelant de se brider,
+   chaque image attendant la synchronisation verticale. */
+using Battement = std::function<void()>;
+
 /* Taille cumulée d'un dossier. Des milliers de fichiers sur un jeu de tuiles :
    à appeler à l'ouverture de l'écran, jamais à chaque image. */
-[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier);
+[[nodiscard]] std::uintmax_t tailleDossier(const std::filesystem::path& dossier,
+                                           const Battement&             battre = {});
 
-/* Tuiles posées sous un niveau, sans descendre aux niveaux plus fins. */
-[[nodiscard]] int compterTuiles(const std::filesystem::path& niveau);
+/* Tuiles posées sous un niveau, sans descendre aux niveaux plus fins.
+   L'extension distingue les deux jeux : .dds pour l'image, .r16 pour le
+   relief. */
+[[nodiscard]] int compterTuiles(const std::filesystem::path& niveau,
+                                const char*                  extension = ".dds",
+                                const Battement&             battre    = {});
 
 /* Taille d'un fichier, 0 s'il est absent ou illisible. */
 [[nodiscard]] std::uintmax_t tailleFichier(const std::filesystem::path& fichier);

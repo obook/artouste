@@ -36,6 +36,7 @@ struct Fronts {
     bool batiments = false;
     bool tuiles    = false;
     bool rendre    = false;
+    bool relief    = false;
 };
 
 /* Tout ce que l'écran garde d'une image à l'autre. */
@@ -45,12 +46,20 @@ struct Etat {
 
     int  aSupprimer = -1; /* carte dont la suppression de tuiles est à confirmer */
     int  aFabriquer = -1; /* carte dont la fabrication est à confirmer */
+    /* L'action en attente, en cours ou rendue porte-t-elle sur le RELIEF plutôt
+       que sur l'image ? Les deux jeux passent par la même annonce, la même
+       confirmation et la même fabrique : ce drapeau est ce qui les distingue. */
+    bool surRelief  = false;
     bool fini       = false;
 
     /* Demandes à la boucle : elle seule sait refaire l'inventaire (il passe par
        l'écran d'attente) et prévenir le reste du programme. */
     bool refaireInventaire = false;
-    bool disqueRemanie     = false;
+    /* Cet inventaire ne porte que sur la carte choisie : une fabrication ou une
+       suppression n'a remanié qu'elle, et tout remesurer coûte une minute et
+       demie quand les tuiles vivent sur un disque externe. */
+    bool inventaireCarteSeule = false;
+    bool disqueRemanie        = false;
 
     /* Tourne dans son propre fil, l'écran ne fait que la suivre. */
     cartes::Fabrique   fabrique;
@@ -69,9 +78,9 @@ struct Etat {
     [[nodiscard]] const cartes::EtatCarte& courante() const { return cartes[selection]; }
 };
 
-/* Les deux actions qui touchent au disque. Elles lèvent disqueRemanie dès le
-   DÉPART : une fabrication arrêtée en route a posé ses premières tuiles.
-   Définies dans EcranCartesRegles.cpp. */
+/* Les deux actions qui touchent au disque, sur l'image ou sur le relief selon
+   surRelief. Elles lèvent disqueRemanie dès le DÉPART : une fabrication arrêtée
+   en route a posé ses premières tuiles. Définies dans EcranCartesRegles.cpp. */
 void lancerFabrication(Etat& etat);
 void supprimerTuiles(Etat& etat);
 

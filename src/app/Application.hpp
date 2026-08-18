@@ -150,6 +150,13 @@ private:
        l'écran, pas à chaque image. */
     std::vector<EtatCarte> inventorierCartes(const std::filesystem::path& assets);
 
+    /* Mesure d'UNE carte, celle que le gestionnaire vient de remanier. Refaire
+       l'inventaire complet après une fabrication coûte une minute et demie quand
+       les tuiles sont sur un disque externe, pour onze cartes dont une seule a
+       changé. part sert à l'écran d'attente. */
+    EtatCarte inventorierCarte(const std::filesystem::path& assets, const MapEntry& carte,
+                               float part);
+
     /* Gestionnaire de cartes : montre l'occupation disque de chaque carte, bascule
        ses arbres et ses bâtiments, et libère la place prise par ses tuiles. Rend
        la main au menu de démarrage. Défini dans ApplicationMenuCartes.cpp. */

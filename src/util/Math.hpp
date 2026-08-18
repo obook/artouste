@@ -23,6 +23,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace artouste {
 
@@ -37,30 +38,20 @@ inline constexpr float PI         = 3.14159265358979323846f;
 inline constexpr float TWO_PI     = 2.0f * PI;
 inline constexpr float HALF_PI    = 0.5f * PI;
 inline constexpr float DEG_TO_RAD = PI / 180.0f;
-inline constexpr float RAD_TO_DEG = 180.0f / PI;
 
-/* Conversions courtes entre degrés et radians */
+/* Conversion courte des degrés en radians */
 [[nodiscard]] inline constexpr float deg2rad(float deg) noexcept {
     return deg * DEG_TO_RAD;
 }
-[[nodiscard]] inline constexpr float rad2deg(float rad) noexcept {
-    return rad * RAD_TO_DEG;
-}
 
-/* Bornage d'une valeur dans un intervalle [lo, hi] */
-template <typename T>
-[[nodiscard]] inline constexpr T clamp(T value, T lo, T hi) noexcept {
-    return std::clamp(value, lo, hi);
-}
+/* Bornage et interpolation linéaire viennent de la bibliothèque standard. On les
+   nomme ici pour que le reste du projet les appelle sans préfixe, comme les
+   autres outils de ce fichier. */
+using std::clamp;
+using std::lerp;
 
 [[nodiscard]] inline constexpr float saturate(float value) noexcept {
-    return clamp(value, 0.0f, 1.0f);
-}
-
-/* Interpolation linéaire entre a et b, pour un scalaire ou un vecteur */
-template <typename T>
-[[nodiscard]] inline T lerp(const T& a, const T& b, float t) noexcept {
-    return a + (b - a) * t;
+    return std::clamp(value, 0.0f, 1.0f);
 }
 
 /*
@@ -69,16 +60,8 @@ template <typename T>
  * lissage est lent). On renvoie la valeur lissée après un pas "dt".
  * Cas particulier : tau = 0 => la sortie vaut directement la cible.
  */
-[[nodiscard]] inline float lowPass(float current, float target, float dt, float tau) noexcept {
-    if (tau <= 0.0f) {
-        return target;
-    }
-    const float alpha = 1.0f - std::exp(-dt / tau);
-    return current + alpha * (target - current);
-}
-
-[[nodiscard]] inline vec3 lowPass(const vec3& current, const vec3& target, float dt,
-                                  float tau) noexcept {
+template <typename T>
+[[nodiscard]] inline T lowPass(const T& current, const T& target, float dt, float tau) noexcept {
     if (tau <= 0.0f) {
         return target;
     }

@@ -19,15 +19,15 @@ namespace artouste::app {
 
 float Application::timeOfDaySeconds(float t) const {
     /* On part de l'heure de départ fixée au chargement de la carte
-       (m_sunBaseSeconds), puis on avance à m_sunTimeScale fois le temps écoulé
-       DEPUIS ce chargement (m_sunOriginSeconds), et non depuis le lancement du
+       (m_soleil.heureDepart), puis on avance à m_soleil.vitesse fois le temps écoulé
+       DEPUIS ce chargement (m_soleil.origine), et non depuis le lancement du
        programme : chaque carte commence donc à son heure de départ. La
-       nuit, elle, défile plus vite : m_nightSpeedFactor multiplie l'échelle entre
+       nuit, elle, défile plus vite : m_soleil.vitesseNuit multiplie l'échelle entre
        le coucher et le lever (clé lune_vitesse, 2 par défaut). Le calcul lui-même
        est dans CycleJourNuit.cpp : c'est une fonction pure, que les tests
        vérifient sans avoir à ouvrir de fenêtre. */
-    return heureDuJour(m_sunBaseSeconds, t - m_sunOriginSeconds, m_sunTimeScale,
-                       m_nightSpeedFactor);
+    return heureDuJour(m_soleil.heureDepart, t - m_soleil.origine, m_soleil.vitesse,
+                       m_soleil.vitesseNuit);
 }
 
 vec3 Application::sunDirection(float t) const {

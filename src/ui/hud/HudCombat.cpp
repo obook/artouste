@@ -21,12 +21,6 @@ namespace artouste::ui {
 
 using namespace hud_widgets;
 
-namespace {
-constexpr ImGuiWindowFlags COMBAT_FLAGS =
-    ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoSavedSettings |
-    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
-}  /* namespace */
-
 void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
     if (!data.combat.active) {
         return;
@@ -65,7 +59,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
                                 ImVec2(0.5f, 1.0f));
     }
     ImGui::SetNextWindowBgAlpha(0.55f);
-    ImGui::Begin("combat_hud", nullptr, COMBAT_FLAGS);
+    ImGui::Begin("combat_hud", nullptr, HUD_FLAGS);
 
     ImGui::PushStyleColor(ImGuiCol_Text, HUD_GREEN);
     ImGui::Text("MANCHE %d   SCORE %d", data.combat.wave, data.combat.score);
@@ -131,7 +125,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
         }
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.22f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.0f);
-        ImGui::Begin("kill_announce", nullptr, COMBAT_FLAGS | ImGuiWindowFlags_NoBackground);
+        ImGui::Begin("kill_announce", nullptr, HUD_FLAGS | ImGuiWindowFlags_NoBackground);
         ImGui::SetWindowFontScale(echelle);
         ImGui::PushStyleColor(ImGuiCol_Text, couleur);
         ImGui::TextUnformatted(texte);
@@ -142,7 +136,7 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
     if (data.combat.gameOver) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.80f);
-        ImGui::Begin("combat_gameover", nullptr, COMBAT_FLAGS);
+        ImGui::Begin("combat_gameover", nullptr, HUD_FLAGS);
         ImGui::PushStyleColor(ImGuiCol_Text, HUD_RED);
         ImGui::Text("          GAME OVER");
         ImGui::PopStyleColor();

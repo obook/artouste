@@ -155,6 +155,10 @@ private:
     unsigned int m_instanceVbo = 0;
     unsigned int m_ebo = 0;
     std::size_t m_count = 0;  /* nombre d'arbres semés */
+    /* Ramène le semis au budget d'arbres, si celui-ci est dépassé. Défini dans
+       vegetation/VegetationBudget.cpp. */
+    void eclaircirAuBudget(std::vector<float>& instances, std::size_t count) const;
+
     std::size_t m_budget = 0; /* plafond d'arbres (voir scatterTrees) */
 };
 

@@ -18,6 +18,17 @@
 #include "app/LigneCommande.hpp"
 #include "app/MiseAJour.hpp"
 #include "app/SouffleRotor.hpp"
+#include "app/cartes/EtatCarte.hpp"
+#include "app/types/EtatDemo.hpp"
+#include "app/types/EtatFenetre.hpp"
+#include "app/types/EtatPose.hpp"
+#include "app/types/EtatRadio.hpp"
+#include "app/types/EtatMenu.hpp"
+#include "app/types/EtatSoleil.hpp"
+#include "app/types/MapEntry.hpp"
+#include "app/types/MonumentInstance.hpp"
+#include "app/types/OptionsCarte.hpp"
+#include "app/types/RenderContext.hpp"
 #include "app/cartes/FabriqueTuiles.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "audio/AudioEngine.hpp"
@@ -118,17 +129,7 @@ private:
 
     /* --- Menu de démarrage ---------------------------------------------------- */
 
-    /* Une carte proposée au menu : nom du sous-dossier (valeur pour le terrain) et
-       libellé lisible affiché à l'utilisateur. Définie et peuplée dans
-       ApplicationMenuMaps.cpp, consommée par runStartupMenu (ApplicationMenu.cpp). */
-    struct MapEntry {
-        std::string dir;   /* nom du sous-dossier de assets/terrain (= nom du terrain) */
-        std::string title; /* libellé lisible, tiré de la première ligne de terrain.txt */
-        /* Présence de zombie_only.txt : carte dédiée au mode zombie (ex. dax-arene),
-           sans autre usage -- lancer normalement (Démarrer/Entrée/A) suffit à
-           démarrer le combat. */
-        bool zombieOnly = false;
-    };
+    using MapEntry = app::MapEntry; /* voir app/types/MapEntry.hpp */
 
     /* Recense les cartes : chaque sous-dossier de assets/terrain contenant un
        terrain.txt, trié par nom pour un ordre stable (la première est le choix par
@@ -136,45 +137,11 @@ private:
        en dernier. Définie dans ApplicationMenuMaps.cpp. */
     static std::vector<MapEntry> recenserCartes(const std::filesystem::path& assets);
 
-    /* Ce qu'une carte occupe sur le disque, et ce qu'elle affiche. Rempli par
-       inventorierCartes, consommé par le gestionnaire de cartes
-       (ApplicationMenuCartes.cpp). */
-    struct EtatCarte {
-        std::string           dir;
-        std::string           titre;
-        std::filesystem::path dossier;
-        std::filesystem::path dossierTuiles;  /* vide si la carte n'a pas de tuiles */
-        std::uintmax_t        octetsSocle     = 0;
-        std::uintmax_t        octetsBatiments = 0;
-        std::uintmax_t        octetsTuiles    = 0;
-        /* Finesse du jeu de tuiles en place, en mètres par pixel (0 s'il n'y en a
-           pas), et ce que des tuiles peuvent apporter à cette carte. Comparer les
-           deux est la SEULE façon de savoir si ces mégaoctets servent à quelque
-           chose : le moteur écarte au chargement un jeu qui n'est pas plus fin
-           que l'orthophoto d'ensemble. */
-        float           finesseTuiles = 0.0f;
-        cartes::Interet interet;
-        /* Fabrication interrompue : le dossier porte un index complet mais n'a
-           reçu qu'une partie de ses tuiles. Sans ces trois champs, l'écran
-           annoncerait un jeu entier là où il n'y a qu'un coin de carte. */
-        bool tuilesInachevees = false;
-        int  tuilesPresentes  = 0;  /* fichiers de tuiles réellement sur le disque */
-        int  tuilesAttendues  = 0;  /* colonnes x rangées annoncées par l'index */
-        /* Options effectives de la carte. Chacune est accompagnée de son drapeau
-           "défini" : faux tant que la carte ne tranche pas elle-même, auquel cas
-           la valeur vient de la configuration générale. On n'écrit dans le
-           options.txt d'une carte que ce qui a été explicitement réglé, sinon
-           toucher un seul réglage figerait les deux autres et soustrairait la
-           carte à la configuration générale sans le dire. */
-        bool arbres          = true;
-        bool arbresDefini    = false;
-        bool batiments       = true;
-        bool batimentsDefini = false;
-        /* Tuiles utilisées ou seulement conservées : les éteindre libère la
-           mémoire vidéo sans rien effacer du disque. */
-        bool tuiles       = true;
-        bool tuilesDefinie = false;
-    };
+    /* Ce qu'une carte occupe sur le disque, et ce qu'elle affiche. La
+       description elle-même vit dans app/cartes/EtatCarte.hpp : le gestionnaire
+       de cartes la découpe en plusieurs fichiers, qui doivent tous pouvoir la
+       nommer sans passer par cette classe. */
+    using EtatCarte = cartes::EtatCarte;
 
     /* Recense les cartes du dossier de ressources donné et mesure ce qu'elles
        occupent. Le chemin est passé en argument parce que le gestionnaire s'ouvre
@@ -191,7 +158,7 @@ private:
     /* Menu de démarrage affiché dans la fenêtre (ImGui) : choix de la carte et du
        démarrage immédiat de la turbine, à la place de l'ancien launch.bat (bloqué par
        le Contrôle intelligent des applications de Windows). Les choix sont déposés dans
-       m_menuTerrain / m_menuTurbine, lus ensuite par initScene(). Renvoie false si
+       m_menu.terrain / m_menu.turbine, lus ensuite par initScene(). Renvoie false si
        l'utilisateur ferme la fenêtre sans lancer (on quitte alors sans charger la scène).
        Non appelé en mode capture ni quand la carte est déjà imposée par une variable
        d'environnement. */
@@ -230,15 +197,7 @@ private:
 
     /* --- Terrain et cycle jour/nuit -------------------------------------------- */
 
-    /* Options propres à une carte (fichier options.txt facultatif), une fois
-       combinées à la configuration générale : ce que le moteur applique
-       réellement à cette carte-là. */
-    struct OptionsCarte {
-        bool arbres    = true;
-        bool batiments = true;
-        bool tuiles    = true;
-        [[nodiscard]] bool operator==(const OptionsCarte&) const = default;
-    };
+    using OptionsCarte = app::OptionsCarte; /* voir app/types/OptionsCarte.hpp */
 
     /* Racine où chercher les jeux de tuiles : clé "tuiles_dossier" de la
        configuration, surchargée par ARTOUSTE_TUILES, et rendue absolue depuis le
@@ -254,7 +213,7 @@ private:
        la démo est lancée alors qu'une autre carte est affichée. */
     void loadTerrain(const std::string& name);
 
-    /* (Re)règle l'heure/vitesse du soleil (m_sunTimeScale/m_sunBaseSeconds) : la
+    /* (Re)règle l'heure/vitesse du soleil (m_soleil.vitesse/m_soleil.heureDepart) : la
        clé soleil_vitesse de la config par défaut, sauf sur une arène dédiée au
        mode zombie (zombie_only.txt du terrain courant, ex. Happy DeathHour) où la
        nuit est figée en permanence. Appelée par initScene ET applyMenuSession
@@ -323,17 +282,7 @@ private:
                      float turbineFraction = 0.0f,
                      float timeSeconds = 0.0f);
 
-    /* Grandeurs communes à toutes les étapes de renderScene, calculées une fois
-       (position/matrices relatives à la caméra, brume) et passées aux
-       sous-méthodes ci-dessous. Voir renderScene pour leur calcul. */
-    struct RenderContext {
-        vec3 lightDir;
-        mat4 proj;
-        mat4 view;
-        mat4 toRel;     /* translation -m_renderOrigin, appliquée aux modèles */
-        vec3 camPosRel; /* position caméra, relative à m_renderOrigin */
-        vec3 fogColor;  /* couleur de brume, assombrie la nuit */
-    };
+    using RenderContext = app::RenderContext; /* voir app/types/RenderContext.hpp */
 
     /* Ciel en dégradé et plan de mer. Définie dans ApplicationRenderWorld.cpp. */
     void renderSkyAndSea(const RenderContext& ctx, float timeSeconds);
@@ -456,6 +405,15 @@ private:
     /* Remplit le HUD de repérage : étiquettes des lieux remarquables projetées sur la
        scène et données de la minimap (position de l'appareil, points). */
     void buildNavHud(ui::HudData& hud, const vec3& heliPos, float headingDeg, float timeSeconds);
+    /* Instruments d'une capture : valeurs de croisière plausibles, réglables
+       par les variables ARTOUSTE_SHOT_*. Défini dans ApplicationCaptureHud.cpp. */
+    [[nodiscard]] ui::HudData hudDeCapture(const vec3& shotPos);
+
+    /* Laisse la fenêtre de tuiles fines se remplir avant de photographier : une
+       capture ne rend que trois images, la carte serait immortalisée floue.
+       Défini dans ApplicationCaptureHud.cpp. */
+    void attendreTuilesDeDetail();
+
     void captureScreenshot(const std::filesystem::path& path);
     void onResize(int width, int height);
 
@@ -541,15 +499,8 @@ private:
     std::unique_ptr<render::Mesh> m_sea;               /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain> m_terrain;
     std::unique_ptr<render::Buildings> m_buildings;   /* bâtiments 3D (BD TOPO extrudée) */
-    /* Monument 3D chargé pour la carte courante : le modèle et la matrice qui le
-       pose dans le monde (translation, cap, échelle). La matrice est calculée une
-       fois au chargement, en coordonnées monde ABSOLUES : le dessin la compose
-       avec le recalage d'origine de l'image (voir drawMonuments). */
-    struct MonumentInstance {
-        std::unique_ptr<render::Model> model;
-        mat4 transform{1.0f};
-        std::string name;
-    };
+    using MonumentInstance = app::MonumentInstance; /* voir app/types/MonumentInstance.hpp */
+
     std::vector<MonumentInstance> m_monuments;        /* monuments 3D de la carte */
     std::unique_ptr<render::Vegetation> m_vegetation; /* arbres en billboards (prototype) */
     std::unique_ptr<render::Clouds> m_clouds;         /* nuages en billboards (prototype) */
@@ -599,22 +550,9 @@ private:
 
     /* --- Cycle jour/nuit --------------------------------------------------------------- */
 
-    float m_sunTimeScale = 1.0f; /* vitesse du temps : 1 = réel, 144 = jour en 10 min, 0 = figé */
-    /* Multiplicateur appliqué à la vitesse ci-dessus entre le coucher et le lever
-       (clé lune_vitesse, 2 par défaut) : la nuit passe donc deux fois plus vite que
-       le jour. Voir timeOfDaySeconds (ApplicationSun.cpp). */
-    float m_nightSpeedFactor = 2.0f;
-    float m_sunBaseSeconds = 0.0f; /* heure de départ du soleil (s depuis minuit) */
-    /* Valeur de m_animTime au moment où l'heure de départ a été fixée. Le temps
-       d'animation, lui, court depuis le lancement du programme et ne repart jamais
-       de zéro : sans cette origine, la deuxième carte d'une session reprenait son
-       heure de départ AUGMENTÉE de tout le temps déjà joué, soit une nuit noire
-       après un quart d'heure de vol à la vitesse par défaut. */
-    float m_sunOriginSeconds = 0.0f;
-    bool m_demoWasActive = false;  /* pour couper la musique quand la démo s'arrête */
-    bool m_demoUserView =
-        false; /* en démo : l'utilisateur a repris la main sur la vue (touche C) */
-    bool m_demoUserHud = false; /* en démo : l'utilisateur a repris la main sur le HUD (touche H) */
+    EtatSoleil m_soleil;
+
+    EtatDemo m_etatDemo;
 
     /* --- HUD et vues -------------------------------------------------------------------- */
 
@@ -656,16 +594,12 @@ private:
     /* Choix du menu de démarrage (voir runStartupMenu), prioritaires sur config.txt
        mais pas sur les variables d'environnement. Terrain vide = pas de choix menu ;
        turbine -1 = pas de choix, 0 = à froid, 1 = démarrée. */
-    std::string m_menuTerrain;
-    int m_menuTurbine = -1;
-    bool m_menuDemo = false;   /* le menu a lancé la démo (bouton "Démo") */
-    bool m_menuCombat = false; /* le menu a lancé le mode zombie (bouton "Mode Zombie") */
+    EtatMenu m_menu;
 
     /* Vrai quand la démo en cours a été lancée depuis le menu de démarrage : en sortir
        (Échap, reprise des commandes...) ramène alors au menu, au lieu de rendre la main
        en vol libre. La démo lancée par config/env (ARTOUSTE_DEMO) garde l'ancien
        comportement (arrêt de la démo, vol libre). */
-    bool m_demoFromMenu = false;
 
     /* Délai de grâce (s) après le (re)lancement d'une démo, pendant lequel une entrée
        pilote ne l'annule pas. Sans lui, la touche D qui lance la démo depuis le menu
@@ -673,7 +607,6 @@ private:
        de la touche accuse ne serait-ce que quelques dizaines de ms de retard sur le
        premier appel de computeControls, ce résidu dépasse aussitôt le seuil de 0.15 et
        coupe la démo -- retour au menu immédiat, alors que le pilote n'a rien demandé. */
-    float m_demoInputGraceS = 0.0f;
 
     /* Configuration lue au lancement (assets/config.txt). Chargée tôt dans run(),
        avant l'ouverture de la fenêtre, car le MSAA doit être connu à sa création ;
@@ -753,21 +686,12 @@ private:
 
     /* Plein écran sans bordure (voir setFullscreen). Géométrie de la fenêtre mémorisée
        avant de passer en plein écran, pour la restituer au retour en fenêtré (touche F). */
-    bool m_fullscreen = false;
-    int m_winX = 0;
-    int m_winY = 0;
-    int m_winW = 0;
-    int m_winH = 0;
+    EtatFenetre m_fenetre;
     /* Dernières commandes calculées : réutilisées en pause pour que les gouvernes
        dessinées et le HUD gardent leur position au lieu de revenir au neutre. */
     physics::Controls m_lastControls{};
     /* Message radio (voix de synthèse + sous-titre). */
-    bool m_radioMsgArmed = false; /* compte à rebours en cours */
-    bool m_radioMsgDone = false;  /* déjà émis depuis le dernier démarrage turbine */
-    float m_radioMsgDelay = 0.0f; /* s avant émission, une fois armé */
-    float m_radioMsgShow = 0.0f;  /* s restantes d'affichage du sous-titre */
-    std::string m_radioMsg;       /* texte du message courant (anglais) */
-    std::string m_homeStation;    /* nom de l'hélipad de départ (-> tour de contrôle) */
+    EtatRadio m_radio;
     /* Message court de l'atterrissage automatique (échec de l'engagement ou
        auto-désengagement), affiché quelques secondes dans le HUD. */
     std::string m_autolandMsg;
@@ -794,13 +718,7 @@ private:
     /* --- Aide à l'atterrissage --------------------------------------------------------------
      * État persistant entre les images (mode assisté).
      * ------------------------------------------------------------------------------------- */
-    float m_scoreTimer = 0.0f;  /* temps restant d'affichage du score (s) */
-    float m_lastScoreM = -1.0f; /* dernière distance au posé (m), -1 si aucun */
-    bool m_wasOnGround = false; /* état sol de l'image précédente (anti-rebond) */
-    bool m_wasAirborne = false; /* a volé depuis l'activation : évite un faux score au sol */
-    bool m_hasFlown = false; /* a décollé depuis le lancement/reset : pas d'aide au posé tant qu'on
-                                n'a pas volé */
-    float m_padGuideGrace = 0.0f; /* s restantes sans réticule après un décollage du pad */
+    EtatPose m_pose;
 };
 
 } /* namespace artouste::app */

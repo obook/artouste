@@ -121,7 +121,11 @@ private:
     /* Charge les trois tenues de rechange d'un segment du pilote et l'enregistre
        pour que setLivery() puisse ensuite commuter sa texture. Appelé une fois
        par segment (torse, bras, jambes) depuis le constructeur. */
-    void loadPilotSkin(const std::filesystem::path& pilotDir, Model& model);
+/* Charge le pilote et ses segments animables. Défini dans
+       LoadedHelicopterPilote.cpp. */
+    void chargerPilote(const std::filesystem::path& dir);
+
+        void loadPilotSkin(const std::filesystem::path& pilotDir, Model& model);
 
     std::vector<PilotSkin> m_pilotSkins;
 

@@ -155,6 +155,10 @@ public:
     }
 
 private:
+    /* Après l'intégration : bride vitesses et rotations, applique le contact
+       sol et le maintien sur les patins. Défini dans FlightModelContact.cpp. */
+    void briderEtPoser() noexcept;
+
     /* Repositionner l'appareil ne doit pas laisser derrière lui un contact non
        lu : la partie suivante encaisserait les dégâts d'un posé qui n'a pas eu
        lieu. On oublie aussi l'état "au sol", le nouveau point de départ pouvant

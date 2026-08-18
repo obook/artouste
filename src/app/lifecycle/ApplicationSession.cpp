@@ -71,12 +71,12 @@ void Application::resetToStart() {
     m_confirmReset = false;
     /* Retour au pad : on repart d'un état d'aide au posé vierge, sinon le réticule
        (ou un score en cours d'affichage) resterait visible alors qu'on est de nouveau
-       garé sans avoir volé. m_hasFlown se rearmera au prochain décollage. */
-    m_hasFlown      = false;
-    m_wasAirborne   = false;
-    m_wasOnGround   = false;
-    m_scoreTimer    = 0.0f;
-    m_padGuideGrace = 0.0f;  /* le prochain (premier) décollage réarmera le délai */
+       garé sans avoir volé. m_pose.aDecolle se rearmera au prochain décollage. */
+    m_pose.aDecolle      = false;
+    m_pose.aVole   = false;
+    m_pose.auSolAvant   = false;
+    m_pose.scoreS    = 0.0f;
+    m_pose.graceReticuleS = 0.0f;  /* le prochain (premier) décollage réarmera le délai */
 }
 
 void Application::startDemo() {
@@ -123,9 +123,9 @@ void Application::startDemo() {
     m_viewMode = 2;  /* vue d'orbite pour le démarrage */
     m_flight.turbine().stopNow();
     m_flight.turbine().startFast();
-    m_demoUserView = false;  /* la démo reprend la main sur la vue et le HUD */
-    m_demoUserHud  = false;
-    m_demoInputGraceS = 0.6f;  /* ignore un résidu d'entrée pilote juste après le lancement */
+    m_etatDemo.vueReprise = false;  /* la démo reprend la main sur la vue et le HUD */
+    m_etatDemo.hudRepris  = false;
+    m_etatDemo.graceS = 0.6f;  /* ignore un résidu d'entrée pilote juste après le lancement */
     m_demo.start(returnPad, route);
     /* Musique de la démo mise de côté pour l'instant : on ne la lance pas.
        (Tout le mécanisme reste en place ; décommenter pour la réactiver.) */

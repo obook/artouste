@@ -111,8 +111,8 @@ void Application::updateLandingAid(ui::HudData& hud,
     const bool aideAtterrissage =
         m_combat.active() ? false : (m_demo.active() ? m_demo.returning() : true);
     hud.padGuidance = {};
-    if (m_padGuideGrace > 0.0f) {
-        m_padGuideGrace -= frameDt; /* décompte du délai de grâce après un décollage */
+    if (m_pose.graceReticuleS > 0.0f) {
+        m_pose.graceReticuleS -= frameDt; /* décompte du délai de grâce après un décollage */
     }
     if (aideAtterrissage) {
         /* Point de référence horizontal : le mât rotor, pas l'origine du modèle. Au
@@ -151,20 +151,20 @@ void Application::updateLandingAid(ui::HudData& hud,
             g.dz = glm::dot(ecart, forward); /* + = pad devant */
 
             /* Détection du posé : appareil quasi immobile très près du sol du pad.
-               On ne compte un score que si l'appareil a d'abord volé (m_wasAirborne),
+               On ne compte un score que si l'appareil a d'abord volé (m_pose.aVole),
                pour ne pas déclencher un faux "PARFAIT" en activant l'aide alors qu'on
                est déjà posé, ou au tout début avant le décollage. */
             if (altSurPad > PAD_LAND_MAX_ALT_M) {
-                m_wasAirborne = true;
-                if (!m_hasFlown) {
+                m_pose.aVole = true;
+                if (!m_pose.aDecolle) {
                     /* Premier décollage depuis le lancement (ou un reset) : délai de
                        grâce sans réticule. Sans lui, la montée initiale, basse et
                        lente, remplit les conditions de finale et l'aide s'affiche
                        dès les premiers mètres. Une seule fois : aux décollages
                        suivants (posé-décollé, rebond, stationnaire au ras du pad),
                        l'aide doit rester disponible immédiatement. */
-                    m_hasFlown = true;
-                    m_padGuideGrace = PAD_GUIDE_GRACE_S;
+                    m_pose.aDecolle = true;
+                    m_pose.graceReticuleS = PAD_GUIDE_GRACE_S;
                 }
             }
             const float vitesseSol = glm::length(vec3{body.velocity.x, 0.0f, body.velocity.z});
@@ -172,39 +172,39 @@ void Application::updateLandingAid(ui::HudData& hud,
                 (altSurPad < PAD_LAND_MAX_ALT_M) && (vitesseSol < PAD_LAND_MAX_SPEED);
 
             /* Réticule visible en finale basse vitesse seulement ; jamais tant que
-               l'appareil n'a pas décollé au moins une fois (m_hasFlown : pas d'aide
+               l'appareil n'a pas décollé au moins une fois (m_pose.aDecolle : pas d'aide
                au lancement ni au reset, quand on est encore garé sur le pad), ni
                pendant le délai de grâce qui suit le premier décollage. */
-            g.active = m_hasFlown && (m_padGuideGrace <= 0.0f) &&
+            g.active = m_pose.aDecolle && (m_pose.graceReticuleS <= 0.0f) &&
                        (altSurPad < PAD_GUIDE_MAX_ALT_M) && (altSurPad > PAD_GUIDE_MIN_ALT_M) &&
                        (hud.airspeedKmh < PAD_GUIDE_MAX_KMH);
 
-            if (surSol && !m_wasOnGround && m_wasAirborne) {
+            if (surSol && !m_pose.auSolAvant && m_pose.aVole) {
                 /* Front montant après un vol : enregistrer le score du posé. */
-                m_lastScoreM = dist2D;
-                m_scoreTimer = SCORE_DISPLAY_S;
-                m_wasAirborne = false;
+                m_pose.derniereDistanceM = dist2D;
+                m_pose.scoreS = SCORE_DISPLAY_S;
+                m_pose.aVole = false;
             }
-            m_wasOnGround = surSol;
+            m_pose.auSolAvant = surSol;
         } else {
-            m_wasOnGround = false;
-            m_wasAirborne = false;
+            m_pose.auSolAvant = false;
+            m_pose.aVole = false;
         }
 
         /* Affichage du score pendant SCORE_DISPLAY_S secondes après le posé. */
-        if (m_scoreTimer > 0.0f) {
-            hud.padGuidance.scoreM = m_lastScoreM;
+        if (m_pose.scoreS > 0.0f) {
+            hud.padGuidance.scoreM = m_pose.derniereDistanceM;
             hud.padGuidance.scored = true;
-            m_scoreTimer -= frameDt;
-            if (m_scoreTimer < 0.0f) {
-                m_scoreTimer = 0.0f;
+            m_pose.scoreS -= frameDt;
+            if (m_pose.scoreS < 0.0f) {
+                m_pose.scoreS = 0.0f;
             }
         }
     } else {
         /* Aide inactive (ni assisté, ni démo en retour) : on oublie l'état du posé. */
-        m_wasOnGround = false;
-        m_wasAirborne = false;
-        m_scoreTimer = 0.0f;
+        m_pose.auSolAvant = false;
+        m_pose.aVole = false;
+        m_pose.scoreS = 0.0f;
     }
 }
 

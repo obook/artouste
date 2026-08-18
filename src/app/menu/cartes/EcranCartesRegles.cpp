@@ -1,0 +1,105 @@
+/*
+ * EcranCartesRegles.cpp
+ * Règles du gestionnaire de cartes (voir EcranCartesRegles.hpp).
+ *
+ * Auteur : O. Booklage
+ * Date : août 2026
+ * Licence : GPL v2
+ */
+
+#include "app/menu/cartes/EcranCartesRegles.hpp"
+
+#include "app/menu/cartes/EcranCartes.hpp"
+
+#include "render/tuiles/Pyramide.hpp"
+
+#include <fstream>
+#include <system_error>
+
+namespace artouste::app::ecran_cartes {
+
+bool tuilesEfficaces(const cartes::EtatCarte& carte) {
+    return carte.octetsTuiles > 0 &&
+           render::tuiles::niveauUtile(carte.finesseTuiles, carte.interet.ortho);
+}
+
+bool tuilesDepassees(const cartes::EtatCarte& carte) {
+    return carte.octetsTuiles > 0 && !carte.tuilesInachevees && carte.finesseTuiles > 0.0f &&
+           carte.interet.visee > 0.0f && carte.finesseTuiles > carte.interet.visee * 1.2f;
+}
+
+float finesseAFabriquer(const cartes::EtatCarte& carte) {
+    if (carte.tuilesInachevees && carte.finesseTuiles > 0.0f) {
+        return carte.finesseTuiles;
+    }
+    return carte.interet.visee;
+}
+
+std::filesystem::path destinationTuiles(const cartes::EtatCarte&     carte,
+                                        const std::filesystem::path& racineTuiles) {
+    if (!carte.dossierTuiles.empty()) {
+        return carte.dossierTuiles;
+    }
+    if (racineTuiles.empty()) {
+        return carte.dossier / "tuiles";
+    }
+    return racineTuiles / carte.dir;
+}
+
+void ecrireOptions(const cartes::EtatCarte& carte) {
+    if (!carte.arbresDefini && !carte.batimentsDefini && !carte.tuilesDefinie) {
+        std::error_code ec;
+        std::filesystem::remove(carte.dossier / "options.txt", ec);
+        return;
+    }
+    std::ofstream out(carte.dossier / "options.txt", std::ios::trunc);
+    if (!out) {
+        return;
+    }
+    out << "# Options de la carte, écrites par le gestionnaire de cartes.\n";
+    out << "# Le moteur les relit au chargement ; une clé absente rend la main à\n";
+    out << "# la configuration générale (assets/config.txt).\n";
+    if (carte.arbresDefini) {
+        out << "arbres " << (carte.arbres ? 1 : 0) << "\n";
+    }
+    if (carte.batimentsDefini) {
+        out << "batiments " << (carte.batiments ? 1 : 0) << "\n";
+    }
+    if (carte.tuilesDefinie) {
+        out << "tuiles " << (carte.tuiles ? 1 : 0) << "\n";
+    }
+}
+
+void rendreAuDefaut(cartes::EtatCarte& carte, bool arbresGeneral) {
+    std::error_code ec;
+    std::filesystem::remove(carte.dossier / "options.txt", ec);
+    carte.arbres          = arbresGeneral;
+    carte.arbresDefini    = false;
+    carte.batiments       = true;
+    carte.batimentsDefini = false;
+    carte.tuiles          = true;
+    carte.tuilesDefinie   = false;
+}
+
+void lancerFabrication(Etat& etat) {
+    /* La fabrique efface elle-même un jeu d'une autre finesse (FabriqueTuiles.cpp). */
+    cartes::EtatCarte& carte = etat.courante();
+    etat.fabrique.lancer(carte.dossier,
+                         destinationTuiles(carte, etat.racineTuiles),
+                         finesseAFabriquer(carte));
+    etat.disqueRemanie = true;
+}
+
+void supprimerTuiles(Etat& etat) {
+    cartes::EtatCarte& carte = etat.courante();
+    std::error_code    effacement;
+    std::filesystem::remove_all(carte.dossierTuiles, effacement);
+    carte.octetsTuiles     = 0;
+    carte.tuilesPresentes  = 0;
+    carte.tuilesInachevees = false;
+    carte.finesseTuiles    = 0.0f;
+    carte.dossierTuiles.clear();
+    etat.disqueRemanie = true;
+}
+
+} /* namespace artouste::app::ecran_cartes */

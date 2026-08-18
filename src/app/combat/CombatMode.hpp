@@ -182,7 +182,6 @@ public:
        et direction du canon à cet instant, pour placer le flash devant
        l'appareil plutôt qu'en son centre. */
     [[nodiscard]] bool muzzleFlashActive() const noexcept { return m_muzzleFlashTimer > 0.0f; }
-    [[nodiscard]] const vec3& muzzleWorldDir() const noexcept { return m_lastFireDir; }
 
     /* Position monde du canon visible (bouche apparente), en avant et un peu
        au-dessus du centre de l'appareil : origine commune du flash de bouche et

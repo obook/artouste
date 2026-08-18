@@ -105,10 +105,10 @@ void Application::fillHud(ui::HudData& hud,
        sur deux), comme une horloge digitale. */
     hud.timeOfDaySec = timeOfDaySeconds(t);
     /* Facteur affiché : celui qui s'applique à l'heure courante, donc multiplié par
-       lune_vitesse entre le coucher et le lever. Afficher m_sunTimeScale tel quel
+       lune_vitesse entre le coucher et le lever. Afficher m_soleil.vitesse tel quel
        annonçait x72 en pleine nuit pendant que l'horloge tournait à x144, ce qui
        donnait à croire que la nuit n'était pas accélérée. */
-    hud.timeScale = vitesseCourante(m_sunTimeScale, m_nightSpeedFactor, hud.timeOfDaySec);
+    hud.timeScale = vitesseCourante(m_soleil.vitesse, m_soleil.vitesseNuit, hud.timeOfDaySec);
     hud.colonOn = (std::fmod(t, 1.0f) < 0.5f);
     /* Clignotement des LED d'alarme jaune/rouge : cadence rapide (~2 Hz, allumée un peu
        plus de la moitié du temps) pour accrocher l'oeil, distincte du deux-points à 1 Hz. */

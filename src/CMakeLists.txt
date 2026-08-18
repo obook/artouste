@@ -32,10 +32,13 @@ message(STATUS "  version (pied de menu) : ${ARTOUSTE_VERSION_STRING}")
 add_executable(artouste
     main.cpp
     app/lifecycle/ApplicationLifecycle.cpp
+    app/lifecycle/ApplicationRun.cpp
     app/lifecycle/ApplicationWindow.cpp
     app/lifecycle/ApplicationSession.cpp
     app/scene/ApplicationAssets.cpp
     app/scene/ApplicationScene.cpp
+    app/scene/ApplicationSceneSoleil.cpp
+    app/scene/ApplicationSceneTerrain.cpp
     app/scene/ApplicationSceneShaders.cpp
     app/scene/ApplicationSceneConfig.cpp
     app/loop/ApplicationLoop.cpp
@@ -47,8 +50,10 @@ add_executable(artouste
     app/render/ApplicationSun.cpp
     app/render/ApplicationRender.cpp
     app/render/ApplicationRenderWorld.cpp
+    app/render/ApplicationRenderTerrain.cpp
     app/render/ApplicationRenderActors.cpp
     app/render/ApplicationRenderEffects.cpp
+    app/render/ApplicationRenderSouffle.cpp
     app/monuments/ApplicationMonuments.cpp
     app/ground/ApplicationGround.cpp
     app/ground/ApplicationGroundShadow.cpp
@@ -57,12 +62,29 @@ add_executable(artouste
     app/hud/ApplicationHudLanding.cpp
     app/hud/ApplicationHudNav.cpp
     app/ApplicationCapture.cpp
+    app/ApplicationCaptureHud.cpp
     app/menu/ApplicationMenu.cpp
+    app/menu/ApplicationMenuEntrees.cpp
+    app/menu/ApplicationMenuSession.cpp
     app/menu/ApplicationMenuMaps.cpp
     app/menu/ApplicationMenuCartes.cpp
+    app/menu/ApplicationMenuCartesInventaire.cpp
+    app/menu/cartes/EcranCartesActions.cpp
+    app/menu/cartes/EcranCartesClavier.cpp
+    app/menu/cartes/EcranCartesDetail.cpp
+    app/menu/cartes/EcranCartesMesures.cpp
+    app/menu/cartes/EcranCartesRegles.cpp
+    app/menu/cartes/EcranCartesTableau.cpp
     app/cartes/FabriqueTuiles.cpp
+    app/cartes/fabrique/FabriqueBoucle.cpp
+    app/cartes/fabrique/FabriqueCalage.cpp
+    app/cartes/fabrique/FabriqueReseau.cpp
     app/menu/ApplicationLoadingScreen.cpp
     app/Config.cpp
+    app/config/ConfigCles.cpp
+    app/config/ConfigCompletion.cpp
+    app/config/ConfigRenommage.cpp
+    app/config/ConfigTexte.cpp
     app/CycleJourNuit.cpp
     app/DemoPilot.cpp
     app/LandingAutopilot.cpp
@@ -71,8 +93,10 @@ add_executable(artouste
     app/MiseAJour.cpp
     app/combat/CombatMode.cpp
     app/combat/ZombieHorde.cpp
+    app/combat/ZombieHordeInstances.cpp
     app/combat/Weapon.cpp
     app/combat/RocketSystem.cpp
+    app/combat/RocketSystemVues.cpp
     app/combat/ProjectileSystem.cpp
     app/combat/WaveManager.cpp
     audio/AudioEngineControl.cpp
@@ -84,6 +108,7 @@ add_executable(artouste
     input/InputSystem.cpp
     physics/RigidBody.cpp
     physics/FlightModel.cpp
+    physics/FlightModelContact.cpp
     physics/FlightAssist.cpp
     physics/Raycast.cpp
     physics/Turbine.cpp
@@ -94,13 +119,25 @@ add_executable(artouste
     render/Primitives.cpp
     render/Camera.cpp
     render/Terrain.cpp
+    render/terrain/TerrainDetail.cpp
+    render/terrain/TerrainMaillage.cpp
+    render/terrain/TerrainMetadata.cpp
+    render/terrain/TerrainPads.cpp
     render/TerrainSetup.cpp
     render/TerrainQuery.cpp
     render/tuiles/Pyramide.cpp
     render/tuiles/Fenetre.cpp
+    render/tuiles/FenetreEnvoi.cpp
+    render/tuiles/FenetreLecture.cpp
+    render/tuiles/FenetreTextures.cpp
     render/relief/FenetreRelief.cpp
+    render/relief/FenetreReliefOuverture.cpp
+    render/relief/FenetreReliefTuiles.cpp
     render/hapi/Hapi.cpp
     render/buildings/BuildingsMesh.cpp
+    render/buildings/BuildingsCouleurs.cpp
+    render/buildings/BuildingsEmprise.cpp
+    render/buildings/BuildingsGeometrie.cpp
     render/buildings/BuildingsDraw.cpp
     render/vegetation/Vegetation.cpp
     render/vegetation/VegetationMasks.cpp
@@ -108,10 +145,14 @@ add_executable(artouste
     render/vegetation/VegetationBuildingMask.cpp
     render/vegetation/VegetationForestMask.cpp
     render/vegetation/VegetationScatter.cpp
+    render/vegetation/VegetationBudget.cpp
     render/SkinnedModelLoad.cpp
+    render/SkinnedModelCalage.cpp
     render/SkinnedModelAnim.cpp
     render/ExplosionModel.cpp
+    render/ExplosionModelPose.cpp
     render/combat/SkinnedZombies.cpp
+    render/combat/SkinnedZombiesDraw.cpp
     render/combat/ExplosionFx.cpp
     render/combat/Projectiles.cpp
     render/combat/ZombieEyes.cpp
@@ -124,8 +165,10 @@ add_executable(artouste
     render/Model.cpp
     render/ModelLoader.cpp
     render/LoadedHelicopter.cpp
+    render/LoadedHelicopterPilote.cpp
     render/LoadedHelicopterInstruments.cpp
     render/LoadedHelicopterDraw.cpp
+    render/LoadedHelicopterRotors.cpp
     ui/Hud.cpp
     ui/hud/HudSetup.cpp
     ui/hud/HudCorners.cpp
@@ -138,14 +181,14 @@ add_executable(artouste
     audio/AudioEngineCombat.cpp
     audio/RingBuffer.cpp
     audio/RadioStream.cpp
+    audio/radio/RadioLecture.cpp
+    audio/radio/RadioReseau.cpp
+    audio/radio/RadioSource.cpp
 )
 
 # Racine des includes du projet : permet les chemins "render/...", "util/...".
-# Le second chemin donne accès à app/ConfigModele.hpp, la copie du modèle de
-# configuration fabriquée par CMake (voir le CMakeLists.txt racine).
 target_include_directories(artouste PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_BINARY_DIR}/generated
 )
 
 # Chemin des ressources (shaders, modèles) connu à la compilation. Pratique en
@@ -234,6 +277,10 @@ if(ARTOUSTE_BUILD_TOOLS)
     # qui laisse l'outil utilisable sur une machine sans carte graphique.
     add_executable(orthotuiles
         tools/orthotuiles.cpp
+        tools/orthotuiles/OrthoBloc.cpp
+        tools/orthotuiles/OrthoCalage.cpp
+        tools/orthotuiles/OrthoComplet.cpp
+        tools/orthotuiles/OrthoComposition.cpp
         render/Bc7.cpp
         render/Dds.cpp
         render/tuiles/Pyramide.cpp

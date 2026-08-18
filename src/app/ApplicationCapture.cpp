@@ -15,6 +15,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "app/ApplicationCaptureReglages.hpp"
 #include "app/AppConstants.hpp"
 #include "render/Camera.hpp"
 #include "render/LoadedHelicopter.hpp"
@@ -37,6 +38,8 @@
 #include <vector>
 
 namespace artouste::app {
+
+
 
 void Application::captureScreenshot(const std::filesystem::path& path) {
     int fbw = 0;
@@ -70,8 +73,8 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
        (par exemple 17.7 pour un soleil bas sur la mer). On fige le temps (échelle 0)
        pour que le rendu reste à cette heure. */
     if (const char* e = std::getenv("ARTOUSTE_SHOT_HOUR")) {
-        m_sunBaseSeconds = std::strtof(e, nullptr) * 3600.0f;
-        m_sunTimeScale   = 0.0f;
+        m_soleil.heureDepart = std::strtof(e, nullptr) * 3600.0f;
+        m_soleil.vitesse   = 0.0f;
     }
 
     /*
@@ -79,27 +82,12 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
      * des variables d'environnement pour observer plusieurs angles sans
      * recompiler.
      */
-    float angle   = 2.4f;
-    float radius  = 14.0f;
-    float height  = 6.0f;
-    float targetY = 1.8f;
-    float agl     = 140.0f;  /* hauteur de vol au-dessus du sol pour la capture (m) */
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_ANGLE")) {
-        angle = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_RADIUS")) {
-        radius = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_HEIGHT")) {
-        height = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETY")) {
-        targetY = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_AGL")) {
-        agl = std::strtof(e, nullptr);
-    }
-
+    const float angle   = shotFloat("ARTOUSTE_SHOT_ANGLE", 2.4f);
+    const float radius  = shotFloat("ARTOUSTE_SHOT_RADIUS", 14.0f);
+    const float height  = shotFloat("ARTOUSTE_SHOT_HEIGHT", 6.0f);
+    const float targetY = shotFloat("ARTOUSTE_SHOT_TARGETY", 1.8f);
+    /* Hauteur de vol au-dessus du sol pour la capture, en mètres. */
+    const float agl = shotFloat("ARTOUSTE_SHOT_AGL", 140.0f);
 
     /* L'appareil est placé en vol au-dessus de la côte (sa position de départ),
        de sorte que la capture montre le relief réel et la mer sous lui.
@@ -117,20 +105,18 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
                            shotX, shotZ);
     }
     vec3 shotPos{shotX, m_terrain->heightAt(shotX, shotZ) + agl, shotZ};
-    if (std::getenv("ARTOUSTE_SHOT_PARK") != nullptr) {
+    if (shotFlag("ARTOUSTE_SHOT_PARK")) {
         shotPos = m_parkPos;
     }
     /* Cap de l'appareil : ARTOUSTE_SHOT_HEADING (cap boussole en degrés, 0 = nord,
-       90 = est). Par défaut le nez pointe vers l'est (+X monde), comme au départ.
-       Permet une vue arrière orientée vers un paysage choisi. */
-    mat4 base = glm::translate(mat4(1.0f), shotPos);
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_HEADING")) {
-        const float headingDeg = std::strtof(e, nullptr);
-        base = base * glm::rotate(mat4(1.0f), glm::radians(90.0f - headingDeg),
-                                  vec3{0.0f, 1.0f, 0.0f});
-    }
+       90 = est). Par défaut 90, le nez vers l'est (+X monde) comme au départ, ce qui
+       ne tourne rien. Permet une vue arrière orientée vers un paysage choisi. */
+    const float headingDeg = shotFloat("ARTOUSTE_SHOT_HEADING", 90.0f);
+    const mat4  rotation   = glm::rotate(mat4(1.0f), glm::radians(90.0f - headingDeg),
+                                         vec3{0.0f, 1.0f, 0.0f});
+    const mat4  base       = glm::translate(mat4(1.0f), shotPos) * rotation;
 
-    if (std::getenv("ARTOUSTE_SHOT_COCKPIT") != nullptr) {
+    if (shotFlag("ARTOUSTE_SHOT_COCKPIT")) {
         m_viewMode = 1;  /* vue cockpit : pilote allégé, jambes animées */
         m_camera.setFovYDeg(70.0f);
         m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
@@ -159,84 +145,18 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         m_camera.setNear(0.5f);
         /* Décalages horizontaux du point visé (le repère corps est aligné sur le monde
            en capture) : pratique pour centrer la cabine, en avant de l'origine. */
-        float targetX = 0.0f;
-        float targetZ = 0.0f;
-        if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETX")) {
-            targetX = std::strtof(e, nullptr);
-        }
-        if (const char* e = std::getenv("ARTOUSTE_SHOT_TARGETZ")) {
-            targetZ = std::strtof(e, nullptr);
-        }
+        const float targetX = shotFloat("ARTOUSTE_SHOT_TARGETX", 0.0f);
+        const float targetZ = shotFloat("ARTOUSTE_SHOT_TARGETZ", 0.0f);
         m_camera.orbit(shotPos + vec3{targetX, targetY, targetZ}, radius, height, angle);
     }
 
-    ui::HudData hud;
-    /* Vitesse de croisière affichée : ~170 km/h, mais plafonnée à 90 % de la VNE
-       du moment (elle décroît avec l'altitude), pour que la LED IAS reste verte
-       même sur une capture en altitude : sinon 170 km/h dépasse la VNE au-delà de
-       ~2000 m (par ex. ~164 km/h à 2800 m) et le voyant passe au rouge. Réglable
-       par ARTOUSTE_SHOT_IAS. */
-    const float vneKmh = physics::vneAtAltitudeMs(shotPos.y) * 3.6f;
-    const float cruise = 0.90f * vneKmh;
-    hud.airspeedKmh   = (cruise < 170.0f) ? cruise : 170.0f;
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_IAS")) {
-        hud.airspeedKmh = std::strtof(e, nullptr);
-    }
-    hud.headingDeg    = 47.0f;
-    hud.altitudeM     = shotPos.y;  /* vraie altitude du point de capture */
-    hud.varioMs       = 1.2f;
-    hud.collectivePct = 55.0f;
-    hud.pasDeg        = 11.0f;    /* pas de sustentation à 55 % de collectif */
-    hud.rotorPct      = 100.0f;
-    hud.rotorRpm      = 360.0f;
-    hud.rotorLedArmed = true;     /* rotor au régime : LED NR verte sur la capture */
-    hud.turbineRpm    = 34000.0f;
-    hud.exhaustTempC  = 445.0f;   /* tuyère en croisière normale */
-    hud.fuelLiters    = 480.0f;
-    hud.turbine       = "EN RÉGIME";
-    if (std::getenv("ARTOUSTE_SHOT_TURBINE_OFF") != nullptr) {
-        /* Turbine à l'arrêt : tous les voyants doivent s'éteindre. */
-        hud.rotorRpm      = 0.0f;
-        hud.rotorLedArmed = false;
-        hud.turbineRpm    = 0.0f;
-        hud.turbine       = "ARRÊT";
-    }
-    hud.assist        = std::getenv("ARTOUSTE_SHOT_ASSIST") != nullptr;  /* repère "MODE ASSISTÉ" */
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_VORTEX")) {
-        hud.vrsIntensity = std::strtof(e, nullptr);  /* force le bandeau d'alerte vortex */
-    }
-    hud.sinkRateAlert = std::getenv("ARTOUSTE_SHOT_SINKRATE") != nullptr;  /* bandeau taux de descente */
-    if (m_terrain->hasGeo()) {  /* coordonnées du point de capture */
-        float lon = 0.0f, lat = 0.0f;
-        m_terrain->lonLatAt(shotPos.x, shotPos.z, lon, lat);
-        hud.geoValid = true;
-        hud.lonDeg   = lon;
-        hud.latDeg   = lat;
-    }
-    buildNavHud(hud, shotPos, hud.headingDeg, 0.0f);  /* capture déterministe : phase "allumée" */
+    const ui::HudData hud = hudDeCapture(shotPos);
 
-    /*
-     * On rend plusieurs images d'affilée : ImGui laisse ses fenêtres
-     * auto-dimensionnées invisibles à leur première apparition (le temps de les
-     * mesurer), puis elles se stabilisent.
-     */
     /* Commandes de capture (pour vérifier les animations pédales/jambes/manche). */
-    float shotRudder = 0.0f;
-    float shotCyclicLong = 0.0f;
-    float shotCyclicLat = 0.0f;
-    float shotCollective = 0.0f;
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_RUDDER")) {
-        shotRudder = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_CYCLIC_LONG")) {
-        shotCyclicLong = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_CYCLIC_LAT")) {
-        shotCyclicLat = std::strtof(e, nullptr);
-    }
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_COLLECTIVE")) {
-        shotCollective = std::strtof(e, nullptr);
-    }
+    const float shotRudder     = shotFloat("ARTOUSTE_SHOT_RUDDER", 0.0f);
+    const float shotCyclicLong = shotFloat("ARTOUSTE_SHOT_CYCLIC_LONG", 0.0f);
+    const float shotCyclicLat  = shotFloat("ARTOUSTE_SHOT_CYCLIC_LAT", 0.0f);
+    const float shotCollective = shotFloat("ARTOUSTE_SHOT_COLLECTIVE", 0.0f);
     /* Mode du HUD pour la capture : coins par défaut, ou via ARTOUSTE_SHOT_HUDMODE. */
     ui::HudMode shotHud = m_hudMode;
     if (const char* e = std::getenv("ARTOUSTE_SHOT_HUDMODE")) {
@@ -248,36 +168,8 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     /* Angle du rotor (rad) : figé par défaut pour une capture reproductible, réglable
        par ARTOUSTE_SHOT_ROTORANGLE (utile pour enchaîner des captures avec des pales
        à des angles différents, par exemple pour composer une séquence animée). */
-    float shotRotorAngle = 1.3f;
-    if (const char* e = std::getenv("ARTOUSTE_SHOT_ROTORANGLE")) {
-        shotRotorAngle = std::strtof(e, nullptr);
-    }
-    /* Tuiles de détail : en vol elles arrivent au fil des images, mais une
-       capture n'en rend que trois. On laisse donc la fenêtre se remplir avant de
-       photographier, sinon la carte serait immortalisée floue -- exactement ce
-       qu'on cherche à vérifier. Plafond de temps pour ne jamais bloquer : une
-       carte sans tuiles, ou un disque absent, ne doit pas empêcher la capture.
-       Un dt généreux fait aussi terminer les fondus d'un coup. */
-    if (m_terrain->detail() != nullptr) {
-        const render::tuiles::Fenetre* large = m_terrain->detail();
-        const render::tuiles::Fenetre* serree = m_terrain->detailFin();
-        for (int i = 0; i < 400; ++i) {
-            /* Le suivi d'abord : c'est lui qui recense les tuiles attendues, et
-               le compte partirait de zéro si on le testait avant. */
-            m_terrain->suivreDetail(m_camera.position().x, m_camera.position().z, 1.0f);
-            if (large->stabilisee() && (serree == nullptr || serree->stabilisee())) {
-                break;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
-        std::printf("[capture] tuiles de détail : %d / %d en place",
-                    large->residentes(),
-                    large->attendues());
-        if (serree != nullptr) {
-            std::printf(", niveau serré %d / %d", serree->residentes(), serree->attendues());
-        }
-        std::printf(".\n");
-    }
+    const float shotRotorAngle = shotFloat("ARTOUSTE_SHOT_ROTORANGLE", 1.3f);
+    attendreTuilesDeDetail();
 
     /* Souffle rotor : le nuage de poussière se construit au fil de la boucle de
        vol, qu'une capture ne fait pas tourner. On l'amorce donc ici sur deux

@@ -14,6 +14,9 @@
 #include "ui/HudAlarms.hpp"
 #include "ui/HudWidgets.hpp"
 
+#include "ui/hud/HudCadran.hpp"
+#include "ui/hud/HudRubans.hpp"
+
 #include <imgui.h>
 
 #include <algorithm>

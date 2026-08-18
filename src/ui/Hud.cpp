@@ -88,16 +88,11 @@ void Hud::render(const HudData& data,
 }
 
 void Hud::renderBanners(bool paused, bool confirmReset, bool confirmDemo, float w, float h) {
-    constexpr ImGuiWindowFlags bannerFlags =
-        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
-
     /* Les panneaux de confirmation (reset, démo) sont prioritaires sur le bandeau de pause. */
     if (confirmReset) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.75f);
-        ImGui::Begin("confirm_reset", nullptr, bannerFlags);
+        ImGui::Begin("confirm_reset", nullptr, HUD_FLAGS);
         ImGui::Text("       RÉINITIALISER ?");
         ImGui::Text("Replacer l'appareil au départ");
         ImGui::Text("A / O : Oui        B / N : Non");
@@ -105,7 +100,7 @@ void Hud::renderBanners(bool paused, bool confirmReset, bool confirmDemo, float 
     } else if (confirmDemo) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.75f);
-        ImGui::Begin("confirm_demo", nullptr, bannerFlags);
+        ImGui::Begin("confirm_demo", nullptr, HUD_FLAGS);
         ImGui::Text("     LANCER LA DÉMO ?");
         ImGui::Text("Vol automatique (Dune du Pilat)");
         ImGui::Text("A / O : Oui        B / N : Non");
@@ -113,7 +108,7 @@ void Hud::renderBanners(bool paused, bool confirmReset, bool confirmDemo, float 
     } else if (paused) {
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowBgAlpha(0.65f);
-        ImGui::Begin("pause", nullptr, bannerFlags);
+        ImGui::Begin("pause", nullptr, HUD_FLAGS);
         ImGui::Text("        PAUSE");
         ImGui::Text("P : reprendre    Échap : quitter");
         ImGui::End();
@@ -124,9 +119,7 @@ void Hud::renderRadioSubtitle(const HudData& data, float w) {
     if (data.radioMessage == nullptr || data.radioMessage[0] == '\0') {
         return;
     }
-    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags flags = HUD_FLAGS;
 
     /* En haut, centré, sous le ruban de cap du HUD complet : le ruban s'étend de
        y = 30 à y = 72 (bord haut 30 + hauteur 40 + fond) et il est dessiné dans le
@@ -146,9 +139,7 @@ void Hud::renderAutolandMessage(const HudData& data, float w) {
     if (data.autolandMessage == nullptr || data.autolandMessage[0] == '\0') {
         return;
     }
-    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags flags = HUD_FLAGS;
 
     /* Même emplacement que le sous-titre radio (haut, centré, sous le ruban de cap),
        mais légèrement plus bas pour ne pas se superposer si les deux coïncident. */

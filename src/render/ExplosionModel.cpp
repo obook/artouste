@@ -9,6 +9,8 @@
 
 #include "render/ExplosionModel.hpp"
 
+#include "render/ExplosionModelCles.hpp"
+
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -25,48 +27,10 @@ namespace artouste::render {
 namespace {
 
 mat4 toGlm(const aiMatrix4x4& a) {
-    return mat4(a.a1, a.b1, a.c1, a.d1,   /* */
-                a.a2, a.b2, a.c2, a.d2,   /* */
-                a.a3, a.b3, a.c3, a.d3,   /* */
+    return mat4(a.a1, a.b1, a.c1, a.d1,   /* colonne par colonne : assimp est en */
+                a.a2, a.b2, a.c2, a.d2,   /* lignes, GLM en colonnes */
+                a.a3, a.b3, a.c3, a.d3,
                 a.a4, a.b4, a.c4, a.d4);
-}
-
-vec3 sampleVec(const std::vector<std::pair<float, vec3>>& keys, float t, const vec3& fallback) {
-    if (keys.empty()) {
-        return fallback;
-    }
-    if (t <= keys.front().first) {
-        return keys.front().second;
-    }
-    if (t >= keys.back().first) {
-        return keys.back().second;
-    }
-    const auto it = std::upper_bound(keys.begin(), keys.end(), t,
-                                     [](float v, const std::pair<float, vec3>& k) { return v < k.first; });
-    const auto& b = *it;
-    const auto& a = *(it - 1);
-    const float span = b.first - a.first;
-    const float f    = span > 1e-8f ? (t - a.first) / span : 0.0f;
-    return a.second + (b.second - a.second) * f;
-}
-
-quat sampleQuat(const std::vector<std::pair<float, quat>>& keys, float t) {
-    if (keys.empty()) {
-        return quat(1.0f, 0.0f, 0.0f, 0.0f);
-    }
-    if (t <= keys.front().first) {
-        return keys.front().second;
-    }
-    if (t >= keys.back().first) {
-        return keys.back().second;
-    }
-    const auto it = std::upper_bound(keys.begin(), keys.end(), t,
-                                     [](float v, const std::pair<float, quat>& k) { return v < k.first; });
-    const auto& b = *it;
-    const auto& a = *(it - 1);
-    const float span = b.first - a.first;
-    const float f    = span > 1e-8f ? (t - a.first) / span : 0.0f;
-    return glm::slerp(a.second, b.second, f);
 }
 
 }  /* namespace */
@@ -225,24 +189,4 @@ ExplosionModel::ExplosionModel(const std::filesystem::path& path) {
     }
 }
 
-std::vector<mat4> ExplosionModel::poseAtTime(float t) const {
-    std::vector<mat4> globals(m_nodes.size(), mat4(1.0f));
-    const float       tt = (m_durationS > 1e-4f) ? clamp(t, 0.0f, m_durationS) : 0.0f;
-    for (std::size_t i = 0; i < m_nodes.size(); ++i) {
-        const Node& n = m_nodes[i];
-        mat4        local;
-        if (n.channel >= 0) {
-            const Channel& ch = m_channels[static_cast<std::size_t>(n.channel)];
-            const vec3     tr = sampleVec(ch.posKeys, tt, vec3{0.0f});
-            const quat     rot = sampleQuat(ch.rotKeys, tt);
-            const vec3     sc = sampleVec(ch.scaleKeys, tt, vec3{1.0f});
-            local = glm::translate(mat4(1.0f), tr) * mat4_cast(rot) * glm::scale(mat4(1.0f), sc);
-        } else {
-            local = n.localDefault;
-        }
-        globals[i] = (n.parent >= 0) ? globals[static_cast<std::size_t>(n.parent)] * local : local;
-    }
-    return globals;
-}
-
-}  /* namespace artouste::render */
+} /* namespace artouste::render */

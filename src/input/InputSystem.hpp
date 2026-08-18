@@ -95,7 +95,6 @@ public:
        uniquement. */
     [[nodiscard]] float lookAxisVertical() const noexcept { return m_gamepad.lookAxisVertical(); }
 
-    [[nodiscard]] Source activeSource() const noexcept { return m_active; }
 
 private:
     Keyboard m_keyboard;

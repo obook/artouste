@@ -112,6 +112,15 @@ public:
     [[nodiscard]] vec2 rootDriftXZ(std::size_t meshIndex, float t) const;
 
 private:
+    /* Après le chargement des maillages : mesure la pose réelle de chaque
+       variante et en déduit son localFix, puis sa table de dérive. Défini dans
+       SkinnedModelCalage.cpp. */
+    void calibrerVariantes();
+
+    /* Exprime les deux lueurs d'yeux dans le repère de l'os de tête, par
+       variante. Défini dans SkinnedModelCalage.cpp. */
+    void ancrerYeux();
+
     /* Un noeud du squelette : sa transformation locale par défaut, son parent
        (index dans m_nodes, -1 pour la racine) et son canal d'animation
        éventuel (-1 si le noeud n'est pas animé). */

@@ -50,7 +50,6 @@ public:
     }
 
     [[nodiscard]] int   waveNumber() const noexcept { return m_waveNumber; }
-    [[nodiscard]] float waveElapsedS() const noexcept { return m_waveElapsedS; }
     /* Vagues intégralement survécues (la vague en cours ne compte pas tant
        qu'elle n'est pas exterminée). */
     [[nodiscard]] int score() const noexcept { return m_waveNumber > 0 ? m_waveNumber - 1 : 0; }

@@ -39,18 +39,18 @@ void Application::handleActionButtons() {
     if (m_demo.active()) {
         if (m_input->hudTogglePressed()) { /* B : change de HUD, la démo continue */
             m_hudMode = static_cast<ui::HudMode>((static_cast<int>(m_hudMode) + 1) % 3);
-            m_demoUserHud = true;
+            m_etatDemo.hudRepris = true;
         }
         if (m_input->viewTogglePressed()) { /* Y : change de vue, la démo continue */
             m_viewMode = (m_viewMode + 1) % 4;
-            m_demoUserView = true;
+            m_etatDemo.vueReprise = true;
         }
         if (m_input->liveryTogglePressed()) { /* A : change de livrée, la démo continue */
             cycleLivery();
         }
         if (m_input->resetPressed()) { /* X : quitte la démo (comme R) */
             m_demo.stop();
-            if (m_demoFromMenu) {
+            if (m_etatDemo.depuisMenu) {
                 m_returnToMenu = true; /* la démo venait du menu : on y retourne */
             } else {
                 resetToStart(); /* replace l'appareil au pad (le pilote reprend) */

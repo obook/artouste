@@ -11,6 +11,7 @@
  */
 
 #include "ui/Hud.hpp"
+#include "ui/HudWidgets.hpp"
 
 #include <imgui.h>
 
@@ -29,9 +30,7 @@ void Hud::renderVortexAlert(const HudData& data, float w, float h) {
     if (!data.alarmBlinkOn) {
         return;
     }
-    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags flags = hud_widgets::HUD_FLAGS;
 
     /* Tiers supérieur, centré : au-dessus de l'appareil et du réticule d'aide au posé,
        sous le ruban de cap du HUD complet, et distinct du sous-titre radio (en haut). */
@@ -53,9 +52,7 @@ void Hud::renderHvAlert(const HudData& data, float w, float h) {
     if (data.hvIntensity < 0.5f) {
         return;
     }
-    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags flags = hud_widgets::HUD_FLAGS;
 
     /* Sous les bandeaux vortex et taux de descente, pour pouvoir coexister. */
     ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.47f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -75,9 +72,7 @@ void Hud::renderSinkRateAlert(const HudData& data, float w, float h) {
     if (!data.alarmBlinkOn) {
         return;
     }
-    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
-                                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-                                       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav;
+    constexpr ImGuiWindowFlags flags = hud_widgets::HUD_FLAGS;
 
     /* Juste sous l'emplacement du bandeau vortex : les deux peuvent coexister (descente
        rapide a faible vitesse pres du sol) sans se recouvrir. */

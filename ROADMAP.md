@@ -1143,9 +1143,8 @@ Trois points à contrôler sur chacun :
     la table `clesRenommees()` (une entrée ne s'en retire jamais). Réécriture par
     fichier intermédiaire puis remplacement, pour ne jamais laisser une
     configuration tronquée ;
-  - **modèle effacé ou abîmé** réécrit depuis la copie embarquée dans l'exécutable
-    (`ConfigModele.hpp`, fabriquée par CMake depuis `assets/config.default.txt`) ;
-    un modèle valide mais adapté volontairement n'est jamais touché.
+  - **modèle effacé** signalé sur la sortie d'erreur : rien n'est complété, les
+    options nouvelles gardent la valeur par défaut du chargeur.
   Les tests verrouillent la cohérence entre les trois listes (clés du chargeur, du
   modèle et de la table de renommage) : ajouter une option oblige à toucher les
   trois, sinon ils tombent.

@@ -81,13 +81,13 @@ GLFWmonitor* Application::monitorForWindow() const {
 }
 
 void Application::setFullscreen(bool on) {
-    if (on == m_fullscreen) {
+    if (on == m_fenetre.pleinEcran) {
         return;
     }
     if (on) {
         /* On mémorise la fenêtre courante pour pouvoir y revenir. */
-        glfwGetWindowPos(m_window, &m_winX, &m_winY);
-        glfwGetWindowSize(m_window, &m_winW, &m_winH);
+        glfwGetWindowPos(m_window, &m_fenetre.x, &m_fenetre.y);
+        glfwGetWindowSize(m_window, &m_fenetre.largeur, &m_fenetre.hauteur);
         GLFWmonitor*       mon  = monitorForWindow();
         const GLFWvidmode* mode = (mon != nullptr) ? glfwGetVideoMode(mon) : nullptr;
         if (mon != nullptr && mode != nullptr) {
@@ -99,17 +99,17 @@ void Application::setFullscreen(bool on) {
             glfwSetWindowMonitor(m_window, mon, 0, 0, mode->width, mode->height,
                                  mode->refreshRate);
         }
-        m_fullscreen = true;
+        m_fenetre.pleinEcran = true;
     } else {
-        const int w = (m_winW > 0) ? m_winW : WINDOW_WIDTH;
-        const int h = (m_winH > 0) ? m_winH : WINDOW_HEIGHT;
-        glfwSetWindowMonitor(m_window, nullptr, m_winX, m_winY, w, h, 0);
-        m_fullscreen = false;
+        const int w = (m_fenetre.largeur > 0) ? m_fenetre.largeur : WINDOW_WIDTH;
+        const int h = (m_fenetre.hauteur > 0) ? m_fenetre.hauteur : WINDOW_HEIGHT;
+        glfwSetWindowMonitor(m_window, nullptr, m_fenetre.x, m_fenetre.y, w, h, 0);
+        m_fenetre.pleinEcran = false;
     }
 }
 
 void Application::toggleFullscreen() {
-    setFullscreen(!m_fullscreen);
+    setFullscreen(!m_fenetre.pleinEcran);
 }
 
 }  /* namespace artouste::app */

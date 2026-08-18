@@ -149,11 +149,11 @@ void Application::advanceRotor(float rotorFraction, float frameDt) {
 }
 
 void Application::resetRadioMessage() noexcept {
-    m_radioMsgArmed = false;
-    m_radioMsgDone  = false;
-    m_radioMsgDelay = 0.0f;
-    m_radioMsgShow  = 0.0f;  /* pas de sous-titre hérité de la session précédente */
-    m_radioMsg.clear();
+    m_radio.arme = false;
+    m_radio.emis  = false;
+    m_radio.delaiS = 0.0f;
+    m_radio.afficheS  = 0.0f;  /* pas de sous-titre hérité de la session précédente */
+    m_radio.message.clear();
 }
 
 void Application::updateRadioMessage(float turbineFraction, float t, float frameDt) {
@@ -163,29 +163,29 @@ void Application::updateRadioMessage(float turbineFraction, float t, float frame
        l'appareil resterait cloué au pad en attendant une réplique qui ne vient
        pas (voir la fin de cette fonction). */
     if (m_combat.active()) {
-        m_radioMsgShow = 0.0f;  /* ni voix ni sous-titre */
+        m_radio.afficheS = 0.0f;  /* ni voix ni sous-titre */
         m_flight.turbine().setRotorHold(false);
         return;
     }
 
     /* Turbine nettement ralentie : on réarme pour le prochain démarrage. */
     if (turbineFraction < 0.5f) {
-        m_radioMsgArmed = false;
-        m_radioMsgDone  = false;
+        m_radio.arme = false;
+        m_radio.emis  = false;
     }
     /* Turbine au plein régime : on arme un compte à rebours de 2 s (une seule fois). */
-    if (turbineFraction >= 0.99f && !m_radioMsgArmed && !m_radioMsgDone) {
-        m_radioMsgArmed = true;
-        m_radioMsgDelay = 2.0f;
+    if (turbineFraction >= 0.99f && !m_radio.arme && !m_radio.emis) {
+        m_radio.arme = true;
+        m_radio.delaiS = 2.0f;
     }
     /* Délai écoulé : on émet le message (voix de synthèse) et son sous-titre. */
-    if (m_radioMsgArmed) {
-        m_radioMsgDelay -= frameDt;
-        if (m_radioMsgDelay <= 0.0f) {
+    if (m_radio.arme) {
+        m_radio.delaiS -= frameDt;
+        if (m_radio.delaiS <= 0.0f) {
             /* La tour de contrôle de l'hélipad de départ autorise le décollage. Le nom
                de la station vient du terrain (helipads.txt), donc correct sur toute
                carte ; on retire un préfixe "Aérodrome de/d'" pour une tournure naturelle. */
-            std::string station = m_homeStation;
+            std::string station = m_radio.stationDepart;
             for (const char* prefix : {"Aérodrome de ", "Aérodrome d'"}) {
                 const std::string p = prefix;
                 if (station.rfind(p, 0) == 0) {
@@ -201,32 +201,32 @@ void Application::updateRadioMessage(float turbineFraction, float t, float frame
                 station = station.substr(0, paren);
             }
             const ClairanceRadio& clairance = tirerClairance();
-            m_radioMsg = station.empty() ? "Fox-Bravo, tower, " : "Fox-Bravo, " + station + " tower, ";
+            m_radio.message = station.empty() ? "Fox-Bravo, tower, " : "Fox-Bravo, " + station + " tower, ";
             if (clairance.salutation) {
-                m_radioMsg += salutationRadio(timeOfDaySeconds(t));
-                m_radioMsg += ", ";
+                m_radio.message += salutationRadio(timeOfDaySeconds(t));
+                m_radio.message += ", ";
             }
-            m_radioMsg += clairance.corps;
+            m_radio.message += clairance.corps;
 
             /* Durée du sous-titre proportionnelle à la longueur du message : les
                clairances n'ont plus toutes la même taille, et un sous-titre figé
                couperait les plus longues avant la fin de la voix. Le coefficient
                est calé sur le débit de Flite (duration_stretch 0.82), la constante
                laissant le temps de lire après la dernière syllabe. */
-            m_radioMsgShow = 3.0f + 0.065f * static_cast<float>(m_radioMsg.size());
-            m_audio.playRadioMessage(m_radioMsg);
-            m_radioMsgArmed = false;
-            m_radioMsgDone  = true;
+            m_radio.afficheS = 3.0f + 0.065f * static_cast<float>(m_radio.message.size());
+            m_audio.playRadioMessage(m_radio.message);
+            m_radio.arme = false;
+            m_radio.emis  = true;
         }
     }
-    if (m_radioMsgShow > 0.0f) {
-        m_radioMsgShow -= frameDt;
+    if (m_radio.afficheS > 0.0f) {
+        m_radio.afficheS -= frameDt;
     }
 
     /* Le rotor attend l'autorisation de la tour : on bloque son engagement tant que la
        turbine est au régime et que le message n'est pas terminé. Avant l'émission, le
        verrou est posé dès le plein régime ; après, il tient jusqu'à la fin de la voix. */
-    const bool holdRotor = m_radioMsgDone ? m_audio.radioMessagePlaying()
+    const bool holdRotor = m_radio.emis ? m_audio.radioMessagePlaying()
                                           : (turbineFraction >= 0.99f);
     m_flight.turbine().setRotorHold(holdRotor);
 }

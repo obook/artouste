@@ -110,8 +110,8 @@ void Application::initSceneConfig() {
     }
 
     std::string terrainName = config.terrain;
-    if (!m_menuTerrain.empty()) { /* choix du menu de démarrage, au-dessus de la config */
-        terrainName = m_menuTerrain;
+    if (!m_menu.terrain.empty()) { /* choix du menu de démarrage, au-dessus de la config */
+        terrainName = m_menu.terrain;
     }
     if (!m_options.carte.empty()) { /* option --carte, au-dessus du menu */
         terrainName = m_options.carte;
@@ -120,7 +120,7 @@ void Application::initSceneConfig() {
         terrainName = env; /* variable d'environnement : priorité maximale */
     }
     /* La démo se déroule sur le bassin d'Arcachon (survol du cap Ferret puis d'Arcachon). */
-    if ((demoEnabled || m_menuDemo) && terrainName != "arcachon") {
+    if ((demoEnabled || m_menu.demo) && terrainName != "arcachon") {
         std::printf("[scène] mode démo : terrain forcé sur arcachon.\n");
         terrainName = "arcachon";
     }
@@ -132,8 +132,8 @@ void Application::initSceneConfig() {
        `turbine_demarree` de la config, ou la variable d'environnement
        ARTOUSTE_TURBINE_DEMARREE (prioritaire). */
     bool turbineRunning = config.turbineRunning;
-    if (m_menuTurbine >= 0) { /* choix du menu de démarrage, au-dessus de la config */
-        turbineRunning = (m_menuTurbine == 1);
+    if (m_menu.turbine >= 0) { /* choix du menu de démarrage, au-dessus de la config */
+        turbineRunning = (m_menu.turbine == 1);
     }
     /* Point d'apparition demandé sur la ligne de commande : la turbine doit
        tourner. Apparaître à 300 m au-dessus d'un monument avec un rotor arrêté,
@@ -148,7 +148,7 @@ void Application::initSceneConfig() {
     }
     /* En mode démo, c'est la démo qui pilote la turbine (démarrage rapide) : on
        ignore donc le démarrage immédiat éventuel. */
-    if (turbineRunning && !demoEnabled && !m_menuDemo) {
+    if (turbineRunning && !demoEnabled && !m_menu.demo) {
         m_flight.turbine().forceRunning();
         std::printf("[scène] démarrage immédiat : turbine et rotor au régime.\n");
     }
@@ -207,10 +207,10 @@ void Application::initSceneConfig() {
     }
 
     /* Mode démo demandé au lancement : on démarre la démonstration tout de suite. Lancée
-       depuis le menu (bouton "Démo"), en sortir ramènera au menu (m_demoFromMenu). */
-    if (demoEnabled || m_menuDemo) {
+       depuis le menu (bouton "Démo"), en sortir ramènera au menu (m_etatDemo.depuisMenu). */
+    if (demoEnabled || m_menu.demo) {
         std::printf("[scène] mode démo activé : démonstration automatique en boucle.\n");
-        m_demoFromMenu = m_menuDemo;
+        m_etatDemo.depuisMenu = m_menu.demo;
         startDemo();
     }
 
@@ -221,7 +221,7 @@ void Application::initSceneConfig() {
     /* ARTOUSTE_SHOT_ZOMBIE : arme le mode zombie sans passer par le menu, qui est
        justement sauté en mode capture (voir ApplicationCapture) -- sans quoi
        aucune capture ne pourrait montrer la horde. */
-    if (m_menuCombat || std::getenv("ARTOUSTE_SHOT_ZOMBIE") != nullptr) {
+    if (m_menu.combat || std::getenv("ARTOUSTE_SHOT_ZOMBIE") != nullptr) {
         m_combat.start(assets / "terrain" / m_terrainName,
                        [this](float x, float z) { return m_terrain->heightAt(x, z); });
         if (m_combat.active()) {

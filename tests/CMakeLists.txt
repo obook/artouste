@@ -8,13 +8,18 @@ find_package(Threads REQUIRED)
 
 add_executable(artouste_tests
     arcade_flight_tests.cpp
-    flight_model_tests.cpp
+    flight_model/flight_model_pilotage_tests.cpp
+    flight_model/flight_model_regimes_tests.cpp
+    flight_model/flight_model_sustentation_tests.cpp
+    flight_model/flight_model_turbine_tests.cpp
     flight_assist_tests.cpp
-    config_tests.cpp
+    config/config_completion_tests.cpp
+    config/config_lecture_tests.cpp
+    config/config_renommage_tests.cpp
     cycle_jour_nuit_tests.cpp
     mise_a_jour_tests.cpp
     ring_buffer_tests.cpp
-    landing_autopilot_tests.cpp
+    landing/landing_autopilot_tests.cpp
     raycast_tests.cpp
     weapon_tests.cpp
     rocket_system_tests.cpp
@@ -30,24 +35,34 @@ add_executable(artouste_tests
     souffle_rotor_tests.cpp
     ligne_commande_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/config/ConfigCles.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/config/ConfigCompletion.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/config/ConfigRenommage.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/config/ConfigTexte.cpp
     ${CMAKE_SOURCE_DIR}/src/app/CycleJourNuit.cpp
     # Compilé sans ARTOUSTE_HAS_CURL : seules les fonctions d'analyse (tag et
     # numéros de version) entrent dans les tests, pas la requête réseau.
     ${CMAKE_SOURCE_DIR}/src/app/MiseAJour.cpp
     ${CMAKE_SOURCE_DIR}/src/app/cartes/FabriqueTuiles.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueBoucle.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueCalage.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/cartes/fabrique/FabriqueReseau.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LandingAutopilot.cpp
     ${CMAKE_SOURCE_DIR}/src/app/LigneCommande.cpp
     ${CMAKE_SOURCE_DIR}/src/app/SouffleRotor.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/CombatMode.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHorde.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/ZombieHordeInstances.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/Weapon.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/RocketSystem.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/combat/RocketSystemVues.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/ProjectileSystem.cpp
     ${CMAKE_SOURCE_DIR}/src/app/combat/WaveManager.cpp
     ${CMAKE_SOURCE_DIR}/src/audio/RingBuffer.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/ArcadeFlight.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/RigidBody.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightModel.cpp
+    ${CMAKE_SOURCE_DIR}/src/physics/FlightModelContact.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/FlightAssist.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
@@ -57,9 +72,11 @@ add_executable(artouste_tests
 )
 
 # physics/ se teste sans contexte graphique : on ne lie que GLM (maths pures).
+# Le second chemin permet aux tests découpés en sous-dossiers d'inclure leurs
+# propres en-têtes, comme flight_model/aide_vol.hpp.
 target_include_directories(artouste_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_BINARY_DIR}/generated  # app/ConfigModele.hpp, fabriqué par CMake
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # En-têtes d'ImGui seulement, sans lier la bibliothèque : ui/HudAlarms.hpp

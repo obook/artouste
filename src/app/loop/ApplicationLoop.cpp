@@ -90,10 +90,10 @@ bool Application::mainLoop() {
         /* Musique de la démo : coupée dès que la démo s'arrête (entrée pilote,
            touche V, etc.). Le lancement, lui, se fait dans startDemo(). */
         const bool demoActiveNow = m_demo.active();
-        if (m_demoWasActive && !demoActiveNow) {
+        if (m_etatDemo.etaitActive && !demoActiveNow) {
             m_audio.stopMusic();
         }
-        m_demoWasActive = demoActiveNow;
+        m_etatDemo.etaitActive = demoActiveNow;
 
         handleActionButtons();
 
@@ -239,7 +239,7 @@ bool Application::mainLoop() {
         fillHud(hud, body, forward, controls, airspeed, turbineFraction, rotorFraction, t, frameDt);
         buildNavHud(hud, body.position, hud.headingDeg, t);
         /* Sous-titre du message radio simulé, tant que son temps d'affichage court. */
-        hud.radioMessage = (m_radioMsgShow > 0.0f) ? m_radioMsg.c_str() : "";
+        hud.radioMessage = (m_radio.afficheS > 0.0f) ? m_radio.message.c_str() : "";
         /* Message de l'atterrissage automatique (échec de l'engagement ou
            auto-désengagement), tant que son temps d'affichage court. */
         if (m_autolandMsgShow > 0.0f) {

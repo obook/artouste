@@ -48,18 +48,14 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
-import json
 import os
-import re
 import sys
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 # On réutilise la lecture de terrain.txt du paquet terrain : une seule source de
 # vérité pour l'emprise géographique de la carte.
@@ -67,259 +63,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from terrain.config import TERRAIN_ROOT
 from terrain.meta import read_meta
 
-# --- Services WFS ------------------------------------------------------------
-WFS_URL = "https://data.geopf.fr/wfs/ows"
-WFS_LAYER_DEPT = "ADMINEXPRESS-COG-CARTO.LATEST:departement"
-WFS_LAYER_VEGETATION = "BDTOPO_V3:zone_de_vegetation"
-WFS_LAYER_ESSENCE = "LANDCOVER.FORESTINVENTORY.V2:formation_vegetale"
-# Couches de la passe de gomme (voir gommer) : chaussées, terrains de sport et
-# pistes d'aérodrome, repeints en non boisé une fois le masque assemblé.
-WFS_LAYER_ROUTE = "BDTOPO_V3:troncon_de_route"
-WFS_LAYER_SPORT = "BDTOPO_V3:terrain_de_sport"
-WFS_LAYER_PISTE = "BDTOPO_V3:piste_d_aerodrome"
-
-# Nombre d'entités par requête (le service pagine ; on avance de l'effectif
-# réellement renvoyé, comme fetch_buildings.py).
-PAGE = 1000
-
-# Résolution du masque, en mètres par pixel. Assez fin pour que le couloir d'une
-# autoroute (25 m) reste dégagé, sans faire enfler le fichier.
-PX_M = 10.0
-
-# Niveaux de gris du masque (voir le format ci-dessus).
-NON_BOISE = 40
-FEUILLU = 85
-PIN = 130
-CONIFERE = 170
-MIXTE = 255
-
-# Natures de la BD TOPO qui portent des arbres. Écartées : lande ligneuse, vigne,
-# verger, marais, canne à sucre... végétation sans houppier à l'échelle du semis.
-NATURES_ARBOREES = ("bois", "forêt", "peupleraie", "haie", "zone arborée")
-
-# Natures de route goudronnées, gommées du masque. Le chemin, le sentier, la
-# route empierrée et l'escalier sont laissés : ils passent SOUS le couvert en
-# vraie forêt, et les gommer perforerait le semis de tranchées imaginaires.
-NATURES_ROUTE = ("Type autoroutier", "Route à 2 chaussées", "Route à 1 chaussée",
-                 "Bretelle", "Rond-point")
-
-# Chaussée de repli quand la BD TOPO ne la renseigne pas (fréquent sur les
-# bretelles et les ronds-points), et marge dégagée de part et d'autre :
-# accotements, bandes d'arrêt, glissières. En mètres.
-CHAUSSEE_MIN_M = 4.0
-MARGE_ROUTE_M = 6.0
-
-# Mot entier : "sapin" ne doit pas être pris pour un pin.
-RE_PIN = re.compile(r"\bpins?\b")
-# Autres essences résineuses de la BD Forêt, reconnues par mot-clé.
-MOTS_CONIFERE = ("conifère", "sapin", "épicéa", "douglas", "mélèze", "cyprès",
-                 "cèdre")
-
-
-def filtre_natures(bbox, natures):
-    """Filtre OGC (paramètre FILTER, FES 2.0) croisant l'emprise et une liste de
-       natures. Ce service ne connaît pas CQL_FILTER (erreur 500), et refuse
-       FILTER en même temps que le paramètre BBOX : l'emprise doit donc voyager
-       DANS le filtre. Attention, gml:Envelope se donne en LATITUDE LONGITUDE."""
-    lon_min, lat_min, lon_max, lat_max = bbox.split(",")
-    ors = "".join(
-        "<fes:PropertyIsEqualTo><fes:ValueReference>nature</fes:ValueReference>"
-        f"<fes:Literal>{n}</fes:Literal></fes:PropertyIsEqualTo>" for n in natures)
-    return (
-        '<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" '
-        'xmlns:gml="http://www.opengis.net/gml/3.2"><fes:And>'
-        '<fes:BBOX><fes:ValueReference>geometrie</fes:ValueReference>'
-        '<gml:Envelope srsName="urn:ogc:def:crs:EPSG::4326">'
-        f'<gml:lowerCorner>{lat_min} {lon_min}</gml:lowerCorner>'
-        f'<gml:upperCorner>{lat_max} {lon_max}</gml:upperCorner>'
-        '</gml:Envelope></fes:BBOX>'
-        f'<fes:Or>{ors}</fes:Or>'
-        '</fes:And></fes:Filter>')
-
-
-def fetch_pages(bbox, layer, champs=None, filtre=None):
-    """Récupère TOUTES les entités d'une couche sur l'emprise, page par page.
-       filtre (voir filtre_natures) remplace le BBOX par un filtre OGC complet."""
-    entites = []
-    start = 0
-    while True:
-        params = {
-            "SERVICE": "WFS",
-            "VERSION": "2.0.0",
-            "REQUEST": "GetFeature",
-            "TYPENAMES": layer,
-            "SRSNAME": "EPSG:4326",
-            "OUTPUTFORMAT": "application/json",
-            "COUNT": str(PAGE),
-            "STARTINDEX": str(start),
-        }
-        if filtre:
-            params["FILTER"] = filtre
-        else:
-            params["BBOX"] = bbox + ",EPSG:4326"
-        if champs:
-            params["PROPERTYNAME"] = champs
-        page = fetch_page(WFS_URL + "?" + urllib.parse.urlencode(params), layer, start)
-        if not page:
-            return entites
-        entites += page
-        start += len(page)
-
-
-def fetch_page(url, layer, start):
-    """Une page, avec reprise sur erreur (le service est parfois capricieux)."""
-    last_err = None
-    for attempt in range(6):
-        try:
-            with urllib.request.urlopen(url, timeout=300) as resp:
-                return json.loads(resp.read())["features"]
-        except urllib.error.HTTPError as err:
-            last_err = err
-            time.sleep((5.0 if err.code == 429 else 2.0) * (attempt + 1))
-        except Exception as err:  # réseau capricieux : on retente
-            last_err = err
-            time.sleep(1.0 + attempt)
-    raise RuntimeError(f"page {layer} (start={start}) : échec ({last_err})")
-
-
-def porte_des_arbres(nature):
-    """La nature BD TOPO donnée porte-t-elle des arbres au sens du semis ?"""
-    bas = (nature or "").lower()
-    return any(mot in bas for mot in NATURES_ARBOREES)
-
-
-def essence_bdtopo(nature):
-    """Essence de repli déduite de la nature BD TOPO, là où la BD Forêt ne dit
-       rien (haie, bosquet, bois sans inventaire). "Bois" ne précisant pas
-       l'essence, on le traite en feuillu."""
-    bas = (nature or "").lower()
-    if "mixte" in bas:
-        return MIXTE
-    return CONIFERE if "conifère" in bas else FEUILLU
-
-
-def essence_bdforet(tfv, essence):
-    """Niveau d'essence pour une formation de la BD Forêt, ou 0 si ce n'en est
-       pas une (lande, formation herbacée : elles ne colorent rien, le contour
-       vient de la BD TOPO)."""
-    if not tfv.startswith("Forêt") and not tfv.startswith("Peupleraie"):
-        return 0
-    bas = essence.lower()
-    if "mixte" in bas:
-        return MIXTE
-    if RE_PIN.search(bas):
-        return PIN
-    return CONIFERE if any(mot in bas for mot in MOTS_CONIFERE) else FEUILLU
-
-
-def anneaux_de(geometry):
-    """Renvoie les anneaux extérieurs (un par polygone) d'une géométrie Polygon
-       ou MultiPolygon. Les trous sont ignorés : ces couches sont des pavages,
-       un trou est comblé par une autre entité, que le tri par surface
-       décroissante (voir peindre) dessine par-dessus."""
-    if geometry is None:
-        return []
-    gtype = geometry["type"]
-    coords = geometry["coordinates"]
-    if gtype == "Polygon":
-        return [coords[0]]
-    if gtype == "MultiPolygon":
-        return [poly[0] for poly in coords]
-    return []
-
-
-def lignes_de(geometry):
-    """Renvoie les lignes d'une géométrie LineString ou MultiLineString."""
-    if geometry is None:
-        return []
-    if geometry["type"] == "LineString":
-        return [geometry["coordinates"]]
-    if geometry["type"] == "MultiLineString":
-        return geometry["coordinates"]
-    return []
-
-
-def epaisseur_route(chaussee):
-    """Épaisseur du trait à gommer pour une chaussée donnée, en pixels : la
-       chaussée elle-même (souvent absente sur les bretelles, d'où le repli) plus
-       la marge dégagée de chaque côté."""
-    largeur = max(float(chaussee or 0.0), CHAUSSEE_MIN_M) + 2.0 * MARGE_ROUTE_M
-    return max(1, round(largeur / PX_M))
-
-
-def surface(pts):
-    """Surface (formule du lacet, valeur absolue) d'un anneau en pixels : sert à
-       trier les polygones du plus grand au plus petit."""
-    aire = 0.0
-    for i in range(len(pts)):
-        x0, y0 = pts[i - 1]
-        x1, y1 = pts[i]
-        aire += x0 * y1 - x1 * y0
-    return abs(aire) * 0.5
-
-
-def en_pixels(anneau, cadre):
-    """Anneau (lon, lat) -> liste de pixels du masque. cadre vaut
-       (lon_min, lon_max, lat_min, lat_max, cols, rows) : colonne 0 = ouest,
-       rangée 0 = NORD, comme l'orthophoto (d'où le lat_max - lat)."""
-    lon_min, lon_max, lat_min, lat_max, cols, rows = cadre
-    return [((lon - lon_min) / (lon_max - lon_min) * (cols - 1),
-             (lat_max - lat) / (lat_max - lat_min) * (rows - 1))
-            for lon, lat, *_ in anneau]
-
-
-def peindre(cadre, entites, niveau_de_feature):
-    """Rastérise des entités WFS dans une image de niveaux de gris. niveau_de_feature
-       rend le niveau à peindre pour une entité, ou 0 pour l'ignorer. Les polygones
-       sont posés du plus grand au plus petit : une entité nichée dans le trou d'une
-       autre est donc dessinée par-dessus, ce qui rend les trous sans les traiter."""
-    image = Image.new("L", (cadre[4], cadre[5]), 0)
-    dessin = ImageDraw.Draw(image)
-    polygones = []
-    for feat in entites:
-        niveau = niveau_de_feature(feat["properties"])
-        if niveau == 0:
-            continue
-        for anneau in anneaux_de(feat.get("geometry")):
-            pts = en_pixels(anneau, cadre)
-            if len(pts) >= 3:
-                polygones.append((surface(pts), niveau, pts))
-    polygones.sort(key=lambda p: p[0], reverse=True)
-    for _, niveau, pts in polygones:
-        dessin.polygon(pts, fill=niveau)
-    return np.asarray(image), len(polygones)
-
-
-def gommer(cadre, bbox):
-    """Rastérise ce qui ne peut porter aucun arbre quoi qu'en dise la végétation :
-       chaussées goudronnées, terrains de sport, pistes d'aérodrome. La BD TOPO
-       cartographie les HAIES de bord de route ; large de 3 m, une haie gonfle d'un
-       pixel à 10 m/px et déborde sur la chaussée, d'où des arbres sur l'A63. La
-       parade est géométrique : on repasse par-dessus. Renvoie le raster de gomme
-       et le compte par couche."""
-    image = Image.new("L", (cadre[4], cadre[5]), 0)
-    dessin = ImageDraw.Draw(image)
-
-    routes = 0
-    for feat in fetch_pages(bbox, WFS_LAYER_ROUTE, "nature,largeur_de_chaussee,geometrie",
-                            filtre=filtre_natures(bbox, NATURES_ROUTE)):
-        epaisseur = epaisseur_route(feat["properties"].get("largeur_de_chaussee"))
-        for ligne in lignes_de(feat.get("geometry")):
-            pts = en_pixels(ligne, cadre)
-            if len(pts) >= 2:
-                dessin.line(pts, fill=255, width=epaisseur, joint="curve")
-                routes += 1
-
-    surfaces = 0
-    for couche in (WFS_LAYER_SPORT, WFS_LAYER_PISTE):
-        for feat in fetch_pages(bbox, couche):
-            for anneau in anneaux_de(feat.get("geometry")):
-                pts = en_pixels(anneau, cadre)
-                if len(pts) >= 3:
-                    dessin.polygon(pts, fill=255)
-                    surfaces += 1
-
-    return np.asarray(image), routes, surfaces
+from foret.essences import essence_bdforet, essence_bdtopo, porte_des_arbres
+from foret.geometrie import en_pixels, epaisseur_route, surface
+from foret.masque import gommer, peindre
+from foret.reglages import (CHAUSSEE_MIN_M, CONIFERE, FEUILLU, MIXTE,
+                            NATURES_ROUTE, NON_BOISE, PIN, PX_M, WFS_LAYER_DEPT,
+                            WFS_LAYER_ESSENCE, WFS_LAYER_VEGETATION)
+from foret.service_ign import fetch_pages, filtre_natures
 
 
 def autotest():

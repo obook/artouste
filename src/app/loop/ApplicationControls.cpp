@@ -24,20 +24,20 @@ physics::Controls
 Application::computeControls(const physics::Controls& rawInput, float frameDt, float t) {
     /* Mode démo : une vraie action du pilote (manche, palonnier ou collectif)
      * lui rend la main et coupe la démo. Un court délai de grâce après le lancement
-     * (m_demoInputGraceS) ignore cette détection : sans lui, un résidu d'entrée -- par
+     * (m_etatDemo.graceS) ignore cette détection : sans lui, un résidu d'entrée -- par
      * exemple la touche D encore relâchée juste après avoir servi à lancer la démo
      * depuis le menu, D étant aussi le palonnier droit en vol -- coupe la démo dans les
      * toutes premières images, avant que le pilote n'ait rien demandé. */
     if (m_demo.active()) {
-        if (m_demoInputGraceS > 0.0f) {
-            m_demoInputGraceS -= frameDt;
+        if (m_etatDemo.graceS > 0.0f) {
+            m_etatDemo.graceS -= frameDt;
         } else {
             const float pilotInput = std::fabs(rawInput.cyclicLateral) +
                                      std::fabs(rawInput.cyclicLongitudinal) +
                                      std::fabs(rawInput.pedals) + std::fabs(rawInput.collective);
             if (pilotInput > 0.15f) {
                 m_demo.stop();
-                if (m_demoFromMenu) {
+                if (m_etatDemo.depuisMenu) {
                     m_returnToMenu = true; /* démo lancée depuis le menu : on y retourne */
                 }
             }
@@ -67,13 +67,13 @@ Application::computeControls(const physics::Controls& rawInput, float frameDt, f
         }
         /* La démo impose la vue et le HUD, sauf si l'utilisateur a repris la main
            dessus (touches C / H pendant la démo) : on respecte alors son choix. */
-        if (!m_demoUserView) {
+        if (!m_etatDemo.vueReprise) {
             m_viewMode = demoOut.viewMode;
         }
         /* HUD de la démo : il change à chaque cycle de vues (aucun, complet
            superposé, puis quatre coins). Les étiquettes des lieux restent
            affichées même sans HUD (voir le rendu du HUD). */
-        if (!m_demoUserHud) {
+        if (!m_etatDemo.hudRepris) {
             switch (demoOut.hudStyle) {
                 case 1:
                     m_hudMode = ui::HudMode::Overlay;

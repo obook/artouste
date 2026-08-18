@@ -48,7 +48,7 @@ void Application::keyCallback(
         switch (key) {
             case GLFW_KEY_ESCAPE: /* quitte la démo : retour au menu si elle en venait */
                 app->m_demo.stop();
-                if (app->m_demoFromMenu) {
+                if (app->m_etatDemo.depuisMenu) {
                     app->m_returnToMenu = true;
                 }
                 break;
@@ -69,11 +69,11 @@ void Application::keyCallback(
             case GLFW_KEY_H: /* cycle des modes HUD : l'utilisateur reprend la main */
                 app->m_hudMode =
                     static_cast<ui::HudMode>((static_cast<int>(app->m_hudMode) + 1) % 3);
-                app->m_demoUserHud = true;
+                app->m_etatDemo.hudRepris = true;
                 break;
             case GLFW_KEY_C: /* change de vue : l'utilisateur reprend la main */
                 app->m_viewMode = (app->m_viewMode + 1) % 4;
-                app->m_demoUserView = true;
+                app->m_etatDemo.vueReprise = true;
                 break;
             case GLFW_KEY_L: /* défile la livrée : on peut la changer sans couper la démo */
                 app->cycleLivery();
@@ -81,7 +81,7 @@ void Application::keyCallback(
             case GLFW_KEY_R: /* quitte la démo : retour au menu si elle en venait, sinon reprise en
                                 vol */
                 app->m_demo.stop();
-                if (app->m_demoFromMenu) {
+                if (app->m_etatDemo.depuisMenu) {
                     app->m_returnToMenu = true;
                 } else {
                     app->resetToStart(); /* replace l'appareil au pad (le pilote reprend) */

@@ -91,3 +91,6 @@ assets/terrain/*/tuiles/
 # Options par carte, écrites par le gestionnaire de cartes (arbres, bâtiments,
 # tuiles) : réglages personnels, comme assets/config.txt.
 assets/terrain/*/options.txt
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/

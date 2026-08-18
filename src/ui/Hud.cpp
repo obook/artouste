@@ -74,9 +74,10 @@ void Hud::render(const HudData& data,
     renderRadioSubtitle(data, w);
     renderAutolandMessage(data, w);
 
-    /* Alertes de vol (vortex, taux de descente) : par-dessus tous les modes de vol (mais
+    /* Alertes de vol (vortex, vitesse, taux de descente) : par-dessus tous les modes de vol (mais
        pas prioritaires sur les panneaux de confirmation/pause, dessinés ensuite). */
     renderVortexAlert(data, w, h);
+    renderVitesseAlert(data, w, h);
     renderSinkRateAlert(data, w, h);
     renderHvAlert(data, w, h);
     renderCombatHud(data, mode, w, h);

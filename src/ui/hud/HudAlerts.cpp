@@ -1,9 +1,13 @@
 /*
  * HudAlerts.cpp
- * Alertes de vol par-dessus tous les modes de HUD : vortex ring state et taux
- * de descente (façon GPWS). Toutes deux clignotent au même rythme que les LED
- * d'alarme (voir HudData::alarmBlinkOn). Le reste des bandeaux communs est
- * dans ui/Hud.cpp.
+ * Alertes de vol par-dessus tous les modes de HUD : vortex ring state, vitesse
+ * au-delà de la VNE et taux de descente (façon GPWS). Toutes clignotent au même
+ * rythme que les LED d'alarme (voir HudData::alarmBlinkOn). Le reste des
+ * bandeaux communs est dans ui/Hud.cpp.
+ *
+ * Leurs hauteurs sont fixées et espacées pour qu'un piqué rapide près du sol,
+ * qui allume vitesse ET taux de descente, ne les superpose pas : vortex à 0,30,
+ * vitesse à 0,35, taux de descente à 0,40, zone H-V à 0,47.
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -11,6 +15,7 @@
  */
 
 #include "ui/Hud.hpp"
+#include "ui/HudAlarms.hpp"
 #include "ui/HudWidgets.hpp"
 
 #include <imgui.h>
@@ -40,6 +45,31 @@ void Hud::renderVortexAlert(const HudData& data, float w, float h) {
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f)); /* rouge alarme */
     ImGui::Text("         VORTEX");
     ImGui::Text("REPRENDRE DE LA VITESSE");
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
+void Hud::renderVitesseAlert(const HudData& data, float w, float h) {
+    /* Rouge seulement, c'est-à-dire VNE franchie : le jaune du cadran IAS est un
+       préavis à 95 %, il reste à la LED. Même source que ce cadran, donc rien de
+       plus à porter dans HudData. */
+    if (hud_widgets::alarmeIas(data) != hud_widgets::GaugeLed::Red) {
+        return;
+    }
+    /* Clignotement, comme le vortex et les LED d'alarme (~2 Hz). */
+    if (!data.alarmBlinkOn) {
+        return;
+    }
+    constexpr ImGuiWindowFlags flags = hud_widgets::HUD_FLAGS;
+
+    /* Entre le vortex et le taux de descente. Le vortex demande une vitesse
+       faible, les deux ne peuvent donc pas s'allumer ensemble ; le taux de
+       descente, si, d'où la place réservée juste au-dessus de lui. */
+    ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.35f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowBgAlpha(0.55f);
+    ImGui::Begin("vitesse_alert", nullptr, flags);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.25f, 0.20f, 1.0f)); /* rouge alarme */
+    ImGui::Text("VITESSE EXCESSIVE");
     ImGui::PopStyleColor();
     ImGui::End();
 }

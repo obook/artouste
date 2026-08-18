@@ -237,6 +237,10 @@ private:
        trop rapide pres du sol. Aide du simulateur, comme l'alerte vortex. Définie
        dans HudAlerts.cpp. */
     void renderSinkRateAlert(const HudData& data, float w, float h);
+
+    /* Bandeau rouge clignotant quand la VNE est franchie (LED IAS au rouge). Le
+       préavis jaune, lui, reste au seul cadran. Défini dans HudAlerts.cpp. */
+    void renderVitesseAlert(const HudData& data, float w, float h);
     /* Indicateur discret de la zone à éviter du diagramme hauteur-vitesse
        (autorotation non garantie en cas de panne) : texte ambre fixe, sans
        clignotement, l'appareil réel n'ayant aucun avertisseur. Défini dans

@@ -1,3 +1,20 @@
+## v0.40.0 - 18 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Cartes améliorées depuis le jeu** : le gestionnaire de cartes fabrique désormais lui-même les tuiles d'orthophoto en haute résolution ET le relief 3D, récupérés auprès de l'IGN sans quitter le simulateur. La colonne Résolution annonce l'état de chaque carte (LR ou HR, 2D ou 3D, partiel, à refaire), et une fabrication interrompue reprend où elle s'est arrêtée.
+- **Liserets de diagnostic du relief** : la clé `relief_debug` trace les frontières de la fenêtre de relief, contour du noyau en magenta, contour de l'anneau en cyan, cercles du fondu en orange et jaune, avec leur légende dans le HUD. Le terrain garde ses couleurs, le mode s'utilise en vol.
+- **Bandeau VITESSE EXCESSIVE** : alerte rouge clignotante quand la VNE est franchie, du même style que TAUX DE DESCENTE.
+- **Nouvelle page de notice, Des cartes plus vraies** : comment améliorer une carte, ce que cela coûte en disque et en temps.
+
+### Corrections
+
+- **Peigne de lames à la frontière des grilles de relief** : sur une arête vue en rasant, les triangles du noyau laissaient voir la corde de l'anneau, prise pour des pics qui se créaient à l'approche.
+- **Fenêtre de relief bornée au bord de carte** : au-delà, elle répétait l'orthophoto et lisait le relief de l'autre côté de la carte.
+- **Bornes géographiques en double précision** : en simple, l'arrondi décalait le relief de 80 cm sur les versants, et l'orthophoto d'autant.
+- **Écran d'analyse animé** : le rouet tourne pendant les mesures, et non plus seulement entre elles.
+- **Retour de fabrication** : seule la carte remaniée est remesurée, au lieu des onze.
+
 ## v0.33.0 - 12 août 2026
 
 ### Nouvelles fonctionnalités

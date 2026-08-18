@@ -156,18 +156,40 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
                                      vec2{static_cast<float>(m_terrain->gridCols()),
                                           static_cast<float>(m_terrain->gridRows())});
 
-            /* Du noyau vers l'anneau : chacun ne remplit que ce que le
-               précédent a laissé, et marque le pochoir à son tour. */
+            /* De l'ANNEAU vers le noyau, chacun sur toute son emprise, le plus
+               fin par-dessus. Le pochoir ne sert donc plus qu'à écarter le
+               maillage d'ensemble ; entre les deux grilles, c'est la profondeur
+               qui tranche.
+
+               L'ordre compte. Tiré d'abord, le noyau laissait des trous : sur une
+               arête vue en rasant, ses triangles de 2 m se projettent en lamelles
+               qui ne couvrent aucun centre de pixel, rien n'était écrit, le
+               pochoir restait libre et l'anneau y montrait sa corde, plus basse.
+               Il en naissait un peigne de lames sous la ligne de crête, une par
+               cellule d'anneau (mesuré sur ossau et cauterets le 18/08/2026 :
+               11 et 7 traversées de silhouette sur une ligne, contre 1 et 0
+               après). Tiré en second, le noyau recouvre l'anneau là où il est
+               visible, et ses manques laissent voir une surface continue au lieu
+               d'un trou.
+
+               GL_LEQUAL pour le noyau, et non un décalage de profondeur : les
+               deux grilles lisent le même champ à leur jonction, leurs
+               profondeurs y sont donc quasi égales. Un décalage n'y suffit pas,
+               c'est la raison d'être du pochoir (décision du 16/08/2026) ; en
+               revanche, à égalité, le dernier tiré gagne, ce qui donne un
+               vainqueur déterministe sans rien décaler. */
             glEnable(GL_STENCIL_TEST);
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-            for (int niveau = 0; niveau < relief->niveaux(); ++niveau) {
-                glStencilFunc(niveau == 0 ? GL_ALWAYS : GL_NOTEQUAL, 1, 0xFF);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            for (int niveau = relief->niveaux() - 1; niveau >= 0; --niveau) {
+                glDepthFunc(niveau == 0 ? GL_LEQUAL : GL_LESS);
                 m_terrainShader->setInt("u_reliefCote", relief->coteGrille(niveau));
                 m_terrainShader->setVec2("u_reliefPas",
                                          vec2{relief->pasGrille(niveau),
                                               relief->pasGrilleZ(niveau)});
                 relief->dessiner(niveau);
             }
+            glDepthFunc(GL_LESS);
 
             /* Le maillage d'ensemble ne dessine que là où la fenêtre n'a rien
                posé. */

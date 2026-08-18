@@ -18,8 +18,12 @@ prélever ailleurs changerait la teinte du gazon.
 
 Données IGN sous Licence Ouverte Etalab 2.0.
 
+Les trois images sont versionnées à côté de ce script : ce téléchargement ne
+sert qu'à les refaire, si l'IGN republie sa couverture ou si l'on veut changer
+d'emplacement de prélèvement.
+
 Usage : python3 -m decor.fetch_textures_pau [dossier-de-sortie]
-        (défaut : $ARTOUSTE_DECOR_TEXTURES, sinon /tmp)
+        (défaut : le dossier de ce script)
 """
 
 import math
@@ -66,7 +70,8 @@ def prelever(nom, lon, lat, sortie):
 
 
 def main():
-    defaut = os.environ.get("ARTOUSTE_DECOR_TEXTURES", "/tmp")
+    defaut = os.environ.get("ARTOUSTE_DECOR_TEXTURES",
+                            str(Path(__file__).resolve().parent))
     sortie = Path(sys.argv[1] if len(sys.argv) > 1 else defaut)
     sortie.mkdir(parents=True, exist_ok=True)
     for nom, lon, lat in EMPLACEMENTS:

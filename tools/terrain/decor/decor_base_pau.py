@@ -27,8 +27,11 @@ import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
 
-# Dossier des morceaux d'orthophoto servant de textures (voir morceau()).
-TEXTURES_DIR = os.environ.get("ARTOUSTE_DECOR_TEXTURES", "/tmp")
+# Morceaux d'orthophoto servant de textures : versionnés à côté de ce script,
+# comme le masque de la zone militaire. ARTOUSTE_DECOR_TEXTURES permet d'en
+# essayer d'autres sans toucher au dépôt.
+TEXTURES_DIR = os.environ.get("ARTOUSTE_DECOR_TEXTURES",
+                              str(Path(__file__).resolve().parent))
 
 from decor.formes_base import (AXE, BETON, BITUME, surface_lisse, texture)
 from decor.scene_base import dessiner
@@ -62,11 +65,9 @@ def main():
         if not chemin.exists():
             raise SystemExit(
                 "Texture absente : %s\n"
-                "Ce décor demande trois morceaux d'orthophoto à 25 cm prélevés sur\n"
-                "l'herbe de la plateforme, nommés tex_herbe.png, tex_herbe2.png et\n"
-                "tex_herbe3.png (512 px = 128 m). Le béton et le bitume, eux, sont\n"
-                "dessinés et ne demandent aucune photo.\n"
-                "Indiquez leur dossier par ARTOUSTE_DECOR_TEXTURES." % chemin)
+                "Les trois morceaux d'herbe sont normalement versionnés à côté de\n"
+                "ce script. Les refaire : python3 -m decor.fetch_textures_pau\n"
+                "Ou indiquer un autre dossier par ARTOUSTE_DECOR_TEXTURES." % chemin)
         im = Image.open(chemin).convert("RGB")   # 512 px = 128 m
         n = max(8, int(round(cote_m / mpp)))
         im = im.resize((n, n), Image.LANCZOS)

@@ -215,6 +215,9 @@ bool Application::mainLoop() {
             for (const vec3& soundPos : combatEvents.bonusOpenSantePositions) {
                 m_audio.playSphereSante(soundPos, body.position);
             }
+            for (const vec3& soundPos : combatEvents.bonusOpenMortPositions) {
+                m_audio.playSphereMort(soundPos, body.position);
+            }
             if (combatEvents.bonusPickup) {
                 m_audio.playDrink(body.position, body.position);
             }

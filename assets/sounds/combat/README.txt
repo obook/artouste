@@ -10,6 +10,7 @@ Sons du mode zombie, chargés au premier déclenchement
   wave_start.wav      - une nouvelle manche commence (dès la 1re)
   rale.wav            - apparition du largueur (boss d'une manche sur cinq)
   launch_sphere.wav   - départ de la fusée qui monte poser une sphère de bonus
-  sphere.wav          - éclosion d'une sphère de bonus (kérosène ou hécatombe)
+  sphere.wav          - éclosion de la sphère de kérosène
   sphere_sante.wav    - éclosion de la sphère de vie (double kill)
+  death_sphere.wav    - éclosion de la sphère tête de mort (hécatombe)
   drink.wav           - sphère de bonus traversée par l'appareil

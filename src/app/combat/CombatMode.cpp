@@ -182,9 +182,17 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
            retombée à ce pas (comparaison d'état comme ailleurs dans le mode). */
         const float openAge = BONUS_SPHERE_RISE_S + BONUS_SPHERE_FALL_S;
         if (age >= openAge && age - dt < openAge) {
-            (sphere.type == BonusType::Vie ? m_events.bonusOpenSantePositions
-                                           : m_events.bonusOpenPositions)
-                .push_back(sphere.center);
+            switch (sphere.type) {
+                case BonusType::Vie:
+                    m_events.bonusOpenSantePositions.push_back(sphere.center);
+                    break;
+                case BonusType::Mort:
+                    m_events.bonusOpenMortPositions.push_back(sphere.center);
+                    break;
+                case BonusType::Carburant:
+                    m_events.bonusOpenPositions.push_back(sphere.center);
+                    break;
+            }
         }
         sphere.enVol      = age < openAge;
         sphere.propulsion = age < BONUS_SPHERE_RISE_S;

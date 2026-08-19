@@ -231,6 +231,17 @@ void AudioEngine::playSphereSante(const vec3& sourcePos, const vec3& listenerPos
                   sourcePos, listenerPos);
 }
 
+/* Éclosion de la sphère tête de mort, jouée là-haut où elle apparaît : elle
+   s'annonce avec son propre son, comme la sphère de vie. */
+void AudioEngine::playSphereMort(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->sphereMortSound,
+                  m_impl->sphereMortLoaded, m_impl->combatSoundsDir, "death_sphere.wav", 1.0f,
+                  sourcePos, listenerPos);
+}
+
 /* Éclosion de la sphère en bout de chandelle, jouée là-haut où elle apparaît. */
 void AudioEngine::playSphereOpen(const vec3& sourcePos, const vec3& listenerPos) {
     if (!m_impl->engineInit) {

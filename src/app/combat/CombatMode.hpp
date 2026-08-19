@@ -174,10 +174,11 @@ public:
         std::vector<vec3> bonusLaunchPositions;
 
         /* Une entrée par sphère qui commence à s'ouvrir ce pas, à l'altitude où
-           elle apparaît (bout de la chandelle) : liste séparée pour la sphère
-           de vie, qui s'annonce avec son propre son. */
+           elle apparaît (bout de la chandelle) : listes séparées pour les sphères
+           de vie et de mort, qui s'annoncent avec leur propre son. */
         std::vector<vec3> bonusOpenPositions;
         std::vector<vec3> bonusOpenSantePositions;
+        std::vector<vec3> bonusOpenMortPositions;
     };
     [[nodiscard]] const SoundEvents& soundEvents() const noexcept { return m_events; }
 

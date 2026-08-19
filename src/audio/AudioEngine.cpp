@@ -78,6 +78,9 @@ AudioEngine::~AudioEngine() {
     if (m_impl->sphereSanteLoaded) {
         ma_sound_uninit(&m_impl->sphereSanteSound);
     }
+    if (m_impl->sphereMortLoaded) {
+        ma_sound_uninit(&m_impl->sphereMortSound);
+    }
     if (m_impl->waveStartLoaded) {
         ma_sound_uninit(&m_impl->waveStartSound);
     }

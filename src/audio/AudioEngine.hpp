@@ -98,6 +98,7 @@ public:
     void playSphereLaunch(const vec3& sourcePos, const vec3& listenerPos);
     void playSphereOpen(const vec3& sourcePos, const vec3& listenerPos);
     void playSphereSante(const vec3& sourcePos, const vec3& listenerPos);
+    void playSphereMort(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
     void playBroodSpawn();
     /* Coupe toutes les lectures de combat en cours (fin de partie) : setPaused

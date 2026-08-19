@@ -1,7 +1,5 @@
-Sons ponctuels du mode zombie, chargés paresseusement au premier déclenchement
-(voir AudioEngine::initCombatSounds / AudioEngineCombat.cpp). Absents pour
-l'instant : le mode reste silencieux, sans erreur. Déposer ici les fichiers
-suivants (WAV, comme les autres sons du dépôt) pour les activer :
+Sons du mode zombie, chargés au premier déclenchement
+(voir AudioEngine::initCombatSounds / AudioEngineCombat.cpp).
 
   gunfire.wav         - départ d'une roquette (rejoué à chaque tir accepté)
   explosion.wav       - explosion au sol d'une roquette (chaque impact)

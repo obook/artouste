@@ -94,6 +94,3 @@ assets/terrain/*/options.txt
 
 # Configuration locale jamais dans un commit.
 .env
-
-# graft's local graph cache — regenerable, not committed (run `graft build`).
-graft/

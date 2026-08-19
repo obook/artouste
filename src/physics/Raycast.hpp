@@ -2,7 +2,7 @@
  * Raycast.hpp
  * Intersection rayon/sphère, utilitaire géométrique générique et isolé (pas
  * de dépendance au jeu). Sert à la fois à la mitrailleuse (rayon instantané
- * du canon vers chaque zombie) et aux boulettes toxiques (segment parcouru en
+ * du canon vers chaque zombie) et aux pneus toxiques (segment parcouru en
  * une frame contre la sphère de l'hélicoptère) -- voir app::Weapon et
  * app::ProjectileSystem.
  *

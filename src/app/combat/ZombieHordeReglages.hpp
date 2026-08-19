@@ -34,7 +34,7 @@ constexpr float TOXIC_RANGE_MAX_M = 60.0f;
    chaque jet pour désynchroniser la horde (éviter une salve groupée). */
 constexpr float THROW_COOLDOWN_MIN_S = 2.0f;
 constexpr float THROW_COOLDOWN_MAX_S = 4.0f;
-/* Hauteur (m) à laquelle part la boulette, à peu près celle des mains d'un
+/* Hauteur (m) à laquelle part le pneu, à peu près celle des mains d'un
    zombie qui lance le bras en avant. */
 constexpr float THROW_ORIGIN_HEIGHT_M = 1.4f;
 

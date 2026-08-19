@@ -1000,7 +1000,7 @@ Trois points à contrôler sur chacun :
   choc, si bien qu'une touche un peu ferme se paie en minutes de vol (8 L à 5 m/s,
   50 L à 8 m/s, 98 L à 10 m/s) alors qu'un vrai crash vide les 575 L du réservoir
   (578 L à 20 m/s) et cloue l'appareil au sol, turbine éteinte. Le bruit d'impact
-  des boulettes (`toxic_impact.wav`) accompagne le choc, à la position de
+  des pneus (`toxic_impact.wav`) accompagne le choc, à la position de
   l'appareil comme les autres coups reçus.
 
     La vie, elle, ne se perd que face aux zombies. Le contact au sol l'entamait

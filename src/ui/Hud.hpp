@@ -141,7 +141,7 @@ struct HudData {
 
     /* Mode zombie : vie, munitions, vague, chrono et fin de partie (voir
        app::CombatMode). belowCeiling rend visible la mécanique du plafond
-       d'altitude des boulettes toxiques (TOXIC_CEILING_M) : sans ce repère, le
+       d'altitude des pneus toxiques (TOXIC_CEILING_M) : sans ce repère, le
        joueur ne peut pas deviner pourquoi il se fait toucher ou non. */
     struct CombatHud {
         bool active = false;

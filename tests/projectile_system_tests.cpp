@@ -1,6 +1,6 @@
 /*
  * projectile_system_tests.cpp
- * Tests des boulettes toxiques lancées par les zombies (ProjectileSystem) :
+ * Tests des pneus toxiques lancés par les zombies (ProjectileSystem) :
  * trajectoire, impact sur l'appareil et expiration après une durée de vie
  * maximale. Se teste sans contexte graphique.
  *

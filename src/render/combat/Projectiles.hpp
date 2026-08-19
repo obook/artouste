@@ -1,6 +1,6 @@
 /*
  * Projectiles.hpp
- * Boulettes toxiques en billboard face caméra, instanciées, sans texture (la
+ * Pneus toxiques en billboard face caméra, instanciées, sans texture (la
  * forme est procédurale, voir projectile.frag) : plus simple que
  * render::combat::SkinnedZombies (pas de modèle importé ni de squelette, juste
  * une position et une échelle par instance), tampon d'instances mis à jour
@@ -23,7 +23,7 @@ namespace artouste::render {
 class Projectiles {
 public:
     /* Prépare un tampon d'instances dynamique pour au plus 'capacity'
-       boulettes simultanées. */
+       pneus simultanés. */
     explicit Projectiles(std::size_t capacity);
     ~Projectiles();
 

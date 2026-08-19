@@ -18,7 +18,7 @@ namespace artouste::app {
 
 namespace {
 /* Capacité de sécurité : au-delà, on ignore les nouveaux jets plutôt que de
-   laisser le nombre de boulettes actives dériver sans borne. Largement plus
+   laisser le nombre de pneus actifs dériver sans borne. Largement plus
    que ce qu'une horde plafonnée (voir ZOMBIE_CAPACITY, ApplicationScene.cpp)
    peut produire à la fois. */
 constexpr std::size_t MAX_PROJECTILES = 64;
@@ -37,7 +37,7 @@ constexpr float MIN_FLIGHT_TIME_S = 0.4f;
 /* Despawn de sécurité si rien n'est touché (trajectoire manquée, appareil
    qui s'est éloigné entre le jet et l'impact prévu). */
 constexpr float MAX_LIFETIME_S = 4.0f;
-/* Échelle (diamètre, m) du sprite billboard de la boulette. */
+/* Échelle (diamètre, m) du sprite billboard du pneu. */
 constexpr float PROJECTILE_SCALE = 0.4f;
 /* Dégâts infligés au joueur par impact. */
 constexpr float PROJECTILE_DAMAGE = 8.0f;

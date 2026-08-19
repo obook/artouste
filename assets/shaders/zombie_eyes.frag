@@ -5,7 +5,7 @@
  * Lueur ronde procédurale (pas de texture) : un coeur presque blanc qui garde
  * la couleur de l'instance, entouré d'un halo qui s'éteint vers le bord du
  * quad. Dessinée en mélange additif (voir ZombieEyes::draw), donc l'alpha sert
- * de dosage : pas de découpe nette ici, contrairement aux boulettes toxiques,
+ * de dosage : pas de découpe nette ici, contrairement aux pneus toxiques,
  * un bord franc trahirait le quad.
  *
  * Auteur : O. Booklage

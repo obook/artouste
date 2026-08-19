@@ -1,7 +1,7 @@
 /*
  * zombie_horde_tests.cpp
  * Tests du cycle de vie d'un zombie (ZombieHorde) : dégâts, mort et despawn,
- * marche vers le joueur, jets de boulettes toxiques, et cas du largueur
+ * marche vers le joueur, jets de pneus toxiques, et cas du largueur
  * (boss). Se teste sans contexte graphique (ni render::Zombies ni CombatMode
  * ne sont nécessaires).
  *
@@ -69,7 +69,7 @@ TEST_CASE("ZombieHorde : dégâts, mort et despawn", "[combat][zombie]") {
     }
 }
 
-TEST_CASE("ZombieHorde : marche vers le joueur et jets de boulettes toxiques",
+TEST_CASE("ZombieHorde : marche vers le joueur et jets de pneus toxiques",
           "[combat][zombie][ai]") {
     ZombieHorde horde;
     horde.spawn(vec3{100.0f, 0.0f, 0.0f}); /* loin sur l'axe X */

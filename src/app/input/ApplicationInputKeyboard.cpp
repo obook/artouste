@@ -135,7 +135,7 @@ void Application::keyCallback(
        donc l'assistance elle aussi, et une troisième disposition n'aurait pas
        fonctionné. */
     if (app != nullptr && key == input::toucheImprimant('m')) {
-        app->m_assist.toggle();
+        app->toggleAssist();
         return;
     }
 

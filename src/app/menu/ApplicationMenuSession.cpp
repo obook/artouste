@@ -110,6 +110,10 @@ void Application::applyMenuSession() {
         if (m_combat.active()) {
             m_viewMode =
                 1; /* vue bloquée en cockpit pendant le combat (voir ApplicationInput.cpp) */
+            /* Confort de pilotage et pilote automatique coupés en arène, comme
+               au premier lancement (voir ApplicationSceneConfig.cpp). */
+            m_assist.disable();
+            m_autoland.stop();
             /* Turbine et rotor déjà au régime, quel que soit le choix du menu (voir
                ApplicationScene::initScene, même logique au premier lancement). */
             m_flight.turbine().forceRunning();

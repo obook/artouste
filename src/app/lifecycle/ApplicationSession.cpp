@@ -32,7 +32,24 @@ void Application::cycleLivery() {
     m_loadedHeli->setLivery(m_livery);
 }
 
+void Application::toggleAssist() {
+    /* Mode zombie : ni confort de pilotage ni pilote automatique. Le message
+       passe par le même bandeau que l'atterrissage automatique, sans quoi la
+       touche resterait sans effet visible. */
+    if (m_combat.active()) {
+        m_autolandMsg     = "Indisponible en mode zombie";
+        m_autolandMsgShow = 3.0f;
+        return;
+    }
+    m_assist.toggle();
+}
+
 void Application::toggleAutoland() {
+    if (m_combat.active()) {
+        m_autolandMsg     = "Indisponible en mode zombie";
+        m_autolandMsgShow = 3.0f;
+        return;
+    }
     /* Déjà engagé : on rend la main tout de suite, comme le mode assisté (touche M). */
     if (m_autoland.active()) {
         m_autoland.stop();

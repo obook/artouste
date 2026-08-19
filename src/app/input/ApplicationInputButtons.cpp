@@ -64,7 +64,7 @@ void Application::handleActionButtons() {
     }
 
     if (m_input->assistTogglePressed()) { /* LB (L1) : mode assisté (touche M) */
-        m_assist.toggle();
+        toggleAssist();
     }
     if (m_input->autolandTogglePressed()) { /* RB (R1) : atterrissage automatique (touche J) */
         toggleAutoland();

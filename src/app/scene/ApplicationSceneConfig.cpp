@@ -230,6 +230,12 @@ void Application::initSceneConfig() {
                canon fixe, et elle évite les vues externes qui ne serviraient à rien
                dans une arène confinée. */
             m_viewMode = 1;
+            /* Ni confort de pilotage ni pilote automatique en arène : coupés
+               ici, sans quoi une session précédente les y ferait entrer déjà
+               engagés (voir Application::toggleAssist, qui refuse de les
+               rallumer). */
+            m_assist.disable();
+            m_autoland.stop();
             /* Turbine et rotor déjà au régime, quel que soit le choix du menu :
                on entre directement dans le combat, pas de séquence de démarrage
                (~1 min) à subir face à la horde. */

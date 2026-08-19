@@ -95,11 +95,16 @@ bool Application::runStartupMenu() {
 
         const EntreesMenu e = lireEntreesMenu(m_window);
 
-        if (edge(e.haut, precedentes.haut) && selection > 0) {
-            --selection;
-        }
-        if (edge(e.bas, precedentes.bas) && selection + 1 < cartes.size()) {
-            ++selection;
+        /* Déplacement cyclique : monter depuis la première carte ramène à la
+           dernière, descendre depuis la dernière revient à la première. La
+           liste vide (aucune carte trouvée) ne bouge pas, faute de modulo. */
+        if (!cartes.empty()) {
+            if (edge(e.haut, precedentes.haut)) {
+                selection = (selection + cartes.size() - 1) % cartes.size();
+            }
+            if (edge(e.bas, precedentes.bas)) {
+                selection = (selection + 1) % cartes.size();
+            }
         }
         if (edge(e.turbine, precedentes.turbine)) {
             turbine = !turbine;

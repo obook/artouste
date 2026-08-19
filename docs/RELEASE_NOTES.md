@@ -1,3 +1,20 @@
+## v0.41.0 - 19 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Sphères de bonus sur les kills** : une explosion qui fauche des zombies lance une fusée, qui monte poser une sphère à 50 m du sol. Kérosène pour un kill, vie pour un double, hécatombe pour un triple. Chaque coup de roquette coûte 2 L de carburant, ce qui donne un intérêt au ravitaillement.
+- **Trois sons d'éclosion** : la sphère de kérosène, celle de vie et la tête de mort s'annoncent chacune avec le sien, joué là-haut où la sphère apparaît.
+- **Sélection de carte en boucle** : dans le menu, après la dernière carte on revient à la première.
+
+### Changements
+
+- **Mode assisté et atterrissage automatique interdits en mode zombie.**
+- **Pneus toxiques** : ce que lancent les zombies s'appelait des boulettes.
+
+### Documentation
+
+- **Chaîne du rendu des cartes**, du terrain nu au HR 3D : les quatre étapes, les fonctions en jeu, les formules, les difficultés rencontrées et les sources IGN.
+
 ## v0.40.0 - 18 août 2026
 
 ### Nouvelles fonctionnalités

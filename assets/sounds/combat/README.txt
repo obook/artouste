@@ -7,7 +7,11 @@ suivants (WAV, comme les autres sons du dépôt) pour les activer :
   explosion.wav       - explosion au sol d'une roquette (chaque impact)
   zombie_hit.wav      - zombie touché sans être tué par l'explosion
   zombie_death.wav    - zombie tué par l'explosion
-  toxic_throw.wav     - un zombie lance une boulette toxique
-  toxic_impact.wav    - une boulette toxique touche l'appareil
+  toxic_throw.wav     - un zombie lance un pneu toxique
+  toxic_impact.wav    - un pneu toxique touche l'appareil
   wave_start.wav      - une nouvelle manche commence (dès la 1re)
   rale.wav            - apparition du largueur (boss d'une manche sur cinq)
+  launch_sphere.wav   - départ de la fusée qui monte poser une sphère de bonus
+  sphere.wav          - éclosion d'une sphère de bonus (kérosène ou hécatombe)
+  sphere_sante.wav    - éclosion de la sphère de vie (double kill)
+  drink.wav           - sphère de bonus traversée par l'appareil

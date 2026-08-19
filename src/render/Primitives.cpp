@@ -163,12 +163,18 @@ MeshData sphere(float radius, int rings, int sectors, const vec3& color) {
        pôle haut, la longitude fait le tour. La normale d'une sphère centrée sur
        l'origine est simplement la direction du sommet. */
     for (int r = 0; r <= rings; ++r) {
-        const float phi = -HALF_PI + PI * static_cast<float>(r) / static_cast<float>(rings);
+        const float v   = static_cast<float>(r) / static_cast<float>(rings);
+        const float phi = -HALF_PI + PI * v;
         for (int s = 0; s <= sectors; ++s) {
-            const float theta = TWO_PI * static_cast<float>(s) / static_cast<float>(sectors);
+            const float u     = static_cast<float>(s) / static_cast<float>(sectors);
+            const float theta = TWO_PI * u;
             const vec3  n{std::cos(phi) * std::cos(theta), std::sin(phi),
                           std::cos(phi) * std::sin(theta)};
-            out.vertices.push_back({n * radius, n, color});
+            /* u fait le tour, v va du pôle bas au pôle haut : une image posée
+               dessus s'enroule comme une étiquette, sans couture ailleurs qu'à
+               theta = 0. u est retourné (1 - u) parce que la sphère se regarde
+               de l'extérieur : dans l'autre sens, un texte s'y lit en miroir. */
+            out.vertices.push_back({n * radius, n, color, vec2{1.0f - u, v}});
         }
     }
     /* Deux triangles par case du quadrillage. */

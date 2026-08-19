@@ -1,7 +1,7 @@
 /*
  * ApplicationRenderActors.cpp
  * Rendu des entités dynamiques d'une image : mode zombie (personnages
- * skinnés, boulettes toxiques, explosions 3D des roquettes) et l'hélicoptère
+ * skinnés, pneus toxiques, explosions 3D des roquettes) et l'hélicoptère
  * (modèle FlightGear texturé ou repli procédural). Le décor statique est dans
  * ApplicationRenderWorld.cpp et ApplicationRenderTerrain.cpp ; l'orchestration
  * dans ApplicationRender.cpp.
@@ -13,14 +13,18 @@
 
 #include "app/AppConstants.hpp"
 #include "app/Application.hpp"
+#include "app/combat/BonusSphereReglages.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Shader.hpp"
+#include "render/Texture.hpp"
 #include "render/combat/ExplosionFx.hpp"
 #include "render/combat/Projectiles.hpp"
 #include "render/combat/SkinnedZombies.hpp"
 #include "render/combat/ZombieEyes.hpp"
 #include "util/Math.hpp"
+
+#include <glad/glad.h>
 
 #include <algorithm>
 #include <cmath>
@@ -30,6 +34,100 @@
 namespace artouste::app {
 
 void Application::renderCombatEntities(const RenderContext& ctx, float timeSeconds) {
+    /*
+     * Bonus du kill (sphère posée, et fusée qui l'apporte) : dessinés en
+     * premier, tant que l'état de rendu est encore celui du décor -- les
+     * zombies, les yeux et les explosions qui suivent le modifient. Ils gardent
+     * l'écriture de profondeur, même en fin de vie où ils s'effacent : sans
+     * elle, l'appareil dessiné plus tard passerait devant un bonus pourtant plus
+     * proche. Les faces arrière se mélangent alors deux fois par endroits une
+     * fois le fondu commencé, ce qui l'assombrit un peu -- sans conséquence pour
+     * un repère.
+     */
+    if (m_combat.active() && m_bonusSphere) {
+        const std::vector<CombatMode::BonusSphereView> spheres = m_combat.bonusSpheres();
+        if (!spheres.empty()) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            /* Bonus posés : dessinés avec le shader éclairé (m_shader), sinon
+               une sphère d'une seule couleur se lirait comme un disque plat.
+               La teinte et l'opacité du fondu de fin passent par u_tint et
+               u_alpha. */
+            m_shader->use();
+            m_shader->setMat4("u_view", ctx.view);
+            m_shader->setMat4("u_proj", ctx.proj);
+            m_shader->setVec3("u_lightDir", ctx.lightDir);
+            /* Lettrage qui tourne autour de la sphère : le décalage d'UV fait
+               défiler le texte sur la surface, sans faire tourner la géométrie
+               (les pôles resteraient fixes de toute façon). */
+            m_shader->setInt("u_texture", 0);
+            m_shader->setFloat("u_uvSpin", -timeSeconds * BONUS_TEXTE_TOURS_S);
+            for (const CombatMode::BonusSphereView& sphere : spheres) {
+                if (sphere.enVol) {
+                    continue;
+                }
+                const render::Texture* lettrage = m_bonusTexteCarburant.get();
+                vec3                   teinte   = BONUS_SPHERE_COLOR_CARBURANT;
+                if (sphere.type == CombatMode::BonusType::Vie) {
+                    lettrage = m_bonusTexteSante.get();
+                    teinte   = BONUS_SPHERE_COLOR_SANTE;
+                } else if (sphere.type == CombatMode::BonusType::Mort) {
+                    lettrage = m_bonusTexteMort.get();
+                    teinte   = BONUS_SPHERE_COLOR_MORT;
+                }
+                if (lettrage != nullptr) {
+                    lettrage->bind(0);
+                }
+                m_shader->setFloat("u_texMix", lettrage != nullptr ? 1.0f : 0.0f);
+                m_shader->setVec3("u_tint", teinte);
+                m_shader->setFloat("u_alpha", sphere.alpha);
+                m_shader->setMat4("u_model", ctx.toRel *
+                                                 glm::translate(mat4(1.0f), sphere.center) *
+                                                 glm::scale(mat4(1.0f), vec3{sphere.scale}));
+                m_bonusSphere->draw();
+            }
+
+            /* Retour au shader plat pour la fusée et sa flamme. */
+            m_flatShader->use();
+            m_flatShader->setMat4("u_view", ctx.view);
+            m_flatShader->setMat4("u_proj", ctx.proj);
+
+            /* Fusées en route : le tube noir opaque, puis la flamme qui sort par
+               l'arrière tant que le moteur pousse -- lueur additive, profondeur
+               lue mais pas écrite, comme les autres feux du mode (voir
+               ApplicationRenderEffects). La flamme bat légèrement pour ne pas
+               paraître peinte, et s'éteint dès la retombée. */
+            m_flatShader->setVec4("u_color", vec4{0.05f, 0.05f, 0.06f, 1.0f});
+            for (const CombatMode::BonusSphereView& sphere : spheres) {
+                if (!sphere.enVol) {
+                    continue;
+                }
+                m_flatShader->setMat4("u_model",
+                                      ctx.toRel * glm::translate(mat4(1.0f), sphere.center));
+                m_bonusRocket->draw();
+            }
+
+            const float flamme =
+                BONUS_ROCKET_FLAME_M *
+                (0.85f + 0.15f * std::sin(timeSeconds * BONUS_ROCKET_FLAME_HZ));
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glDepthMask(GL_FALSE);
+            m_flatShader->setVec4("u_color", vec4{BONUS_ROCKET_FLAME_COLOR, 0.9f});
+            for (const CombatMode::BonusSphereView& sphere : spheres) {
+                if (!sphere.propulsion || !m_glowSphere) {
+                    continue;
+                }
+                const vec3 arriere = sphere.center - vec3{0.0f, BONUS_ROCKET_LEN_M, 0.0f};
+                m_flatShader->setMat4("u_model", ctx.toRel *
+                                                     glm::translate(mat4(1.0f), arriere) *
+                                                     glm::scale(mat4(1.0f), vec3{flamme}));
+                m_glowSphere->draw();
+            }
+            glDepthMask(GL_TRUE);
+            glDisable(GL_BLEND);
+        }
+    }
+
     /*
      * Mode zombie : pack de personnages SKINNES (marche + bras animés), rendu
      * instancié par groupes de phase (voir render::SkinnedZombies). Mêmes
@@ -107,7 +205,7 @@ void Application::renderCombatEntities(const RenderContext& ctx, float timeSecon
     }
 
     /*
-     * Boulettes toxiques : billboard face caméra, mêmes uniformes que les
+     * Pneus toxiques : billboard face caméra, mêmes uniformes que les
      * zombies (pas de texture, la forme est procédurale, voir
      * projectile.frag).
      */

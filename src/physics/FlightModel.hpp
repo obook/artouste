@@ -117,6 +117,15 @@ public:
         }
     }
 
+    /* Ajoute du carburant hors ravitaillement au sol (bidon ramassé en vol,
+       mode zombie) : le réservoir ne dépasse jamais sa capacité, et une
+       quantité nulle ou négative ne fait rien. */
+    void addFuel(float liters) noexcept {
+        if (liters > 0.0f) {
+            m_fuelLiters = std::min(FUEL_CAPACITY_L, m_fuelLiters + liters);
+        }
+    }
+
     /* Pas collectif réel en degrés de pale (graduation du levier, voir
        PAS_MIN_DEG) : pour l'affichage HUD et la notice. */
     [[nodiscard]] float pasDeg() const noexcept { return m_pasDeg; }

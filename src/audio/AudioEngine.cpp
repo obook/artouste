@@ -66,6 +66,18 @@ AudioEngine::~AudioEngine() {
     if (m_impl->toxicImpactLoaded) {
         ma_sound_uninit(&m_impl->toxicImpactSound);
     }
+    if (m_impl->drinkLoaded) {
+        ma_sound_uninit(&m_impl->drinkSound);
+    }
+    if (m_impl->launchSphereLoaded) {
+        ma_sound_uninit(&m_impl->launchSphereSound);
+    }
+    if (m_impl->sphereOpenLoaded) {
+        ma_sound_uninit(&m_impl->sphereOpenSound);
+    }
+    if (m_impl->sphereSanteLoaded) {
+        ma_sound_uninit(&m_impl->sphereSanteSound);
+    }
     if (m_impl->waveStartLoaded) {
         ma_sound_uninit(&m_impl->waveStartSound);
     }

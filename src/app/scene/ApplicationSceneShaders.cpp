@@ -51,7 +51,7 @@ constexpr std::size_t ZOMBIE_CAPACITY = 300;
 constexpr int ZOMBIE_PHASE_GROUPS = 6;
 
 /*
- * Capacité du tampon d'instances des boulettes toxiques (voir
+ * Capacité du tampon d'instances des pneus toxiques (voir
  * app::ProjectileSystem::MAX_PROJECTILES, même valeur -- inutile de réserver
  * plus côté GPU que ce que la logique de jeu peut produire à la fois).
  */
@@ -132,7 +132,7 @@ void Application::initSceneShaders() {
         m_zombiesRender = std::make_unique<render::SkinnedZombies>(
             zombieModel, ZOMBIE_CAPACITY, ZOMBIE_PHASE_GROUPS);
     }
-    /* Boulettes toxiques : billboard procédural, pas de modèle à charger. */
+    /* Pneus toxiques : billboard procédural, pas de modèle à charger. */
     m_projectilesRender = std::make_unique<render::Projectiles>(PROJECTILE_CAPACITY);
 
     /* Lueur des yeux : billboard procédural lui aussi, indépendant du pack
@@ -167,6 +167,20 @@ void Application::initSceneShaders() {
     const auto sphereData = render::primitives::sphere(1.0f, 12, 16, vec3{1.0f, 1.0f, 1.0f});
     m_glowSphere = std::make_unique<render::Mesh>(sphereData.vertices, sphereData.indices);
 
+    /* Bonus du mode zombie, à sa taille définitive : sphère de
+       BONUS_SPHERE_HALF_M de rayon, lettrée par une texture (voir u_texMix dans
+       basic.frag). La couleur et l'opacité viennent des uniformes. */
+    const auto bonusData =
+        render::primitives::sphere(BONUS_SPHERE_HALF_M, 16, 24, vec3{1.0f, 1.0f, 1.0f});
+    m_bonusSphere = std::make_unique<render::Mesh>(bonusData.vertices, bonusData.indices);
+
+    /* Fusée qui monte le poser : un simple tube noir, pointe au point d'ancrage
+       et corps pendant en dessous (voir primitives::tube). Le shader plat ne lit
+       que la position, la couleur vient de l'uniforme. */
+    const auto rocketData = render::primitives::tube(BONUS_ROCKET_RADIUS_M, BONUS_ROCKET_LEN_M, 12,
+                                                     vec3{1.0f}, vec3{1.0f});
+    m_bonusRocket = std::make_unique<render::Mesh>(rocketData.vertices, rocketData.indices);
+
     /* Hélipad de la zone de départ : disque béton foncé, anneau et grand H blancs
        (marquage d'hélistation civile, sans croix). Centré sur l'origine ; placé au
        départ à l'affichage. Repli seulement : la version texturée le remplace si elle
@@ -199,6 +213,19 @@ void Application::initSceneShaders() {
     const std::filesystem::path detailPath = assets / "textures" / "detail-roche.png";
     if (std::filesystem::exists(detailPath)) {
         m_terrainDetail = std::make_unique<render::Texture>(detailPath);
+    }
+
+    /* Lettrage des sphères de bonus du mode zombie (blanc sur noir, voir
+       tools/textures/bandeau_bonus.py) : le shader garde la teinte de la sphère
+       là où l'image est noire. Absent : la sphère reste unie. */
+    for (const auto& [nom, cible] :
+         {std::pair{"bonus-carburant.png", &m_bonusTexteCarburant},
+          std::pair{"bonus-sante.png", &m_bonusTexteSante},
+          std::pair{"bonus-mort.png", &m_bonusTexteMort}}) {
+        const std::filesystem::path chemin = assets / "textures" / nom;
+        if (std::filesystem::exists(chemin)) {
+            *cible = std::make_unique<render::Texture>(chemin);
+        }
     }
 
     /* Façades tuilées des bâtiments, voir u_facade / u_facadePleine dans

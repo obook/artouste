@@ -168,7 +168,11 @@ bool Application::mainLoop() {
                combien de kérosène le choc a fait fuir, la physique le retire du
                réservoir. Après update(), qui vide les événements sonores, et avant
                leur lecture ci-dessous. */
-            m_flight.drainFuel(m_combat.applyGroundImpact(m_flight.consumeGroundImpact()));
+            m_flight.drainFuel(m_combat.applyGroundImpact(m_flight.consumeGroundImpact()) +
+                               m_combat.shotFuelBurn());
+            /* Sphère traversée (mode zombie) : bidon de kérosène rendu au
+               réservoir. */
+            m_flight.addFuel(m_combat.bonusFuelPickup());
 
             /* Sons ponctuels du mode zombie, déclenchés sur les événements de
                cette image (voir CombatMode::SoundEvents) : même principe que
@@ -201,6 +205,18 @@ bool Application::mainLoop() {
             }
             if (combatEvents.impacted) {
                 m_audio.playToxicImpact(body.position, body.position);
+            }
+            for (const vec3& soundPos : combatEvents.bonusLaunchPositions) {
+                m_audio.playSphereLaunch(soundPos, body.position);
+            }
+            for (const vec3& soundPos : combatEvents.bonusOpenPositions) {
+                m_audio.playSphereOpen(soundPos, body.position);
+            }
+            for (const vec3& soundPos : combatEvents.bonusOpenSantePositions) {
+                m_audio.playSphereSante(soundPos, body.position);
+            }
+            if (combatEvents.bonusPickup) {
+                m_audio.playDrink(body.position, body.position);
             }
             if (combatEvents.waveStart) {
                 m_audio.playWaveStart();

@@ -83,15 +83,36 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
   Fichier : `assets/sounds/combat/zombie_death.wav`.
 
-- **Jet de boulette toxique (mode zombie)** : "Firework Launch (2)"
+- **Jet de pneu toxique (mode zombie)** : "Firework Launch (2)"
   (<https://freesound.org/people/LukaCafuka/sounds/750685/>) par LukaCafuka,
   sous licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_throw.wav`.
 
-- **Impact de boulette toxique (mode zombie)** : "Glass_Shards_Impact_04"
+- **Impact de pneu toxique (mode zombie)** : "Glass_Shards_Impact_04"
   (<https://freesound.org/people/BlondPanda/sounds/778607/>) par BlondPanda, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/toxic_impact.wav`.
+
+- **Départ de la fusée de bonus (mode zombie)** : "explosion_high_to_low_1.wav"
+  (<https://freesound.org/people/eardeer/sounds/402006/>) par eardeer, sous licence
+  [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/launch_sphere.wav`.
+
+- **Apparition d'une sphère de bonus (mode zombie)** : "Firework Explosion 4"
+  (<https://freesound.org/people/TB0Y298/sounds/719796/>) par TB0Y298, sous
+  licence [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Fichier : `assets/sounds/combat/sphere.wav`.
+
+- **Apparition de la sphère de vie (mode zombie)** : "firework_explosion_fizz.wav"
+  (<https://freesound.org/people/soundscalpel.com/sounds/110391/>) par
+  soundscalpel.com, sous licence
+  [Creative Commons Attribution 3.0](http://creativecommons.org/licenses/by/3.0/).
+  Fichier : `assets/sounds/combat/sphere_sante.wav`.
+
+- **Ramassage d'une sphère de bonus (mode zombie)** : "fizzy drink opening"
+  (<https://freesound.org/people/JakesterTV/sounds/202317/>) par JakesterTV, sous
+  licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/drink.wav`.
 
 - **Apparition du largueur (mode zombie)** : "Zombies.wav"
   (<https://freesound.org/people/xtrgamr/sounds/257790/>) par xtrgamr, sous

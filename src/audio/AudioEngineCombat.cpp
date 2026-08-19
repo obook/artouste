@@ -199,6 +199,47 @@ void AudioEngine::playToxicImpact(const vec3& sourcePos, const vec3& listenerPos
                   sourcePos, listenerPos);
 }
 
+/* Gorgée du bidon ramassé en vol (sphere vert du mode zombie) : joué à la
+   position de l'appareil, donc à distance nulle. */
+void AudioEngine::playDrink(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->drinkSound, m_impl->drinkLoaded,
+                  m_impl->combatSoundsDir, "drink.wav", 1.0f, sourcePos, listenerPos);
+}
+
+/* Départ de la chandelle qui monte poser la sphère : joué au point
+   d'explosion d'où elle part. */
+void AudioEngine::playSphereLaunch(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->launchSphereSound,
+                  m_impl->launchSphereLoaded, m_impl->combatSoundsDir, "launch_sphere.wav", 1.0f,
+                  sourcePos, listenerPos);
+}
+
+/* Sphère de santé ramassée : joué à la position de l'appareil, comme la gorgée
+   du bidon (playDrink) qu'il remplace pour ce bonus-là. */
+void AudioEngine::playSphereSante(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->sphereSanteSound,
+                  m_impl->sphereSanteLoaded, m_impl->combatSoundsDir, "sphere_sante.wav", 1.0f,
+                  sourcePos, listenerPos);
+}
+
+/* Éclosion de la sphère en bout de chandelle, jouée là-haut où elle apparaît. */
+void AudioEngine::playSphereOpen(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->sphereOpenSound, m_impl->sphereOpenLoaded,
+                  m_impl->combatSoundsDir, "sphere.wav", 1.0f, sourcePos, listenerPos);
+}
+
 void AudioEngine::playWaveStart() {
     if (!m_impl->engineInit) {
         return;

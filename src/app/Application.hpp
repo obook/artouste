@@ -312,7 +312,7 @@ private:
        ApplicationRenderTerrain.cpp. */
     void renderVegetationAndClouds(const RenderContext& ctx);
 
-    /* Mode zombie : personnages skinnés, boulettes toxiques et explosions 3D
+    /* Mode zombie : personnages skinnés, pneus toxiques et explosions 3D
        des roquettes. Ne dessine rien hors combat. Définie dans
        ApplicationRenderActors.cpp. */
     void renderCombatEntities(const RenderContext& ctx, float timeSeconds);
@@ -438,6 +438,11 @@ private:
        par le pilote automatique m_demo. */
     void startDemo();
 
+    /* Bascule le mode assisté (touche M / LB). Refusé en mode zombie, où le
+       pilotage se fait sans filet : le point de passage est unique pour que le
+       clavier et la manette soient bloqués ensemble. */
+    void toggleAssist();
+
     /* Bascule l'atterrissage automatique (touche J / RB) : engage m_autoland
        vers l'hélipad le plus proche s'il est inactif, le désengage sinon (le pilote
        reprend la main). Sans effet en démo (pas de call site pendant la démo). */
@@ -486,7 +491,7 @@ private:
     std::unique_ptr<render::Shader> m_cloudShader;      /* nuages en billboards (mélange alpha) */
     std::unique_ptr<render::Shader> m_zombieShader; /* mode zombie : modèle 3D skinné instancié */
     std::unique_ptr<render::Shader>
-        m_projectileShader; /* mode zombie : boulettes toxiques (billboard) */
+        m_projectileShader; /* mode zombie : pneus toxiques (billboard) */
     std::unique_ptr<render::Shader>
         m_explosionShader; /* mode zombie : explosion 3D animée (émissive) */
     std::unique_ptr<render::Shader>
@@ -496,11 +501,16 @@ private:
     std::unique_ptr<render::Skybox> m_sky;
     std::unique_ptr<render::Mesh> m_shadowDisc;
     std::unique_ptr<render::Mesh> m_glowSphere;    /* petite sphère lumineuse (strombo, tuyère) */
+    std::unique_ptr<render::Mesh> m_bonusSphere;     /* sphère du double kill (mode zombie) */
+    std::unique_ptr<render::Mesh> m_bonusRocket;   /* tube noir de la fusée qui le porte */
     std::unique_ptr<render::Mesh> m_helipad;       /* marque au sol, repli procédural */
     std::unique_ptr<render::Model> m_helipadModel; /* hélipad texturé (modèle Blender) */
     std::unique_ptr<render::Mesh> m_padSkirt;      /* jupe sous le disque (pad perché) */
     std::unique_ptr<render::Texture> m_loadingImage;  /* fond de l'écran d'attente */
     std::unique_ptr<render::Texture> m_terrainDetail; /* grain rocheux du terrain (unité 1) */
+    std::unique_ptr<render::Texture> m_bonusTexteCarburant; /* lettrage des sphères de bonus */
+    std::unique_ptr<render::Texture> m_bonusTexteSante;
+    std::unique_ptr<render::Texture> m_bonusTexteMort;
     std::unique_ptr<render::Texture> m_buildingFacade; /* façade tuilée des bâtiments (unité 0) */
     std::unique_ptr<render::Texture> m_buildingFacadePleine; /* pignon aveugle (unité 1) */
     std::unique_ptr<render::Mesh> m_sea;               /* grand plan d'océan à l'horizon */
@@ -525,7 +535,7 @@ private:
 
     std::unique_ptr<render::SkinnedZombies>
         m_zombiesRender; /* mode zombie : pack skinné animé, chargé une fois */
-    std::unique_ptr<render::Projectiles> m_projectilesRender; /* mode zombie : boulettes toxiques */
+    std::unique_ptr<render::Projectiles> m_projectilesRender; /* mode zombie : pneus toxiques */
     std::unique_ptr<render::ZombieEyes>
         m_zombieEyesRender; /* mode zombie : lueur des yeux, deux par zombie */
     std::unique_ptr<render::ExplosionFx>

@@ -2,7 +2,7 @@
  * ZombieHorde.hpp
  * État CPU de la horde de zombies : une position, une vie et un état par
  * instance, plus l'IA de déplacement vers le joueur (marche en ligne droite,
- * recalée sur le relief) et les jets de boulettes toxiques. Traduit cet état
+ * recalée sur le relief) et les jets de pneus toxiques. Traduit cet état
  * en matrices de transformation prêtes pour le rendu instancié skinné (voir
  * render::SkinnedZombies), qui anime la marche et les bras côté GPU.
  *
@@ -22,11 +22,11 @@
 
 namespace artouste::app {
 
-/* Demande de jet d'une boulette toxique, produite par ZombieHorde::update()
+/* Demande de jet d'un pneu toxique, produite par ZombieHorde::update()
    pour chaque zombie à portée, hors cooldown, avec le joueur sous le plafond
    d'altitude -- CombatMode la transmet à ProjectileSystem::spawn. */
 struct ThrowRequest {
-    vec3 origin;  /* position de départ de la boulette (à hauteur de bras du zombie) */
+    vec3 origin;  /* position de départ du pneu (à hauteur de bras du zombie) */
     vec3 target;  /* position du joueur au moment du jet (pas de guidage ensuite) */
 };
 
@@ -66,7 +66,7 @@ public:
         float yaw           = 0.0f;  /* orientation (rad), pour varier les silhouettes */
         float phase         = 0.0f;  /* déphasage de l'oscillation d'attente, par zombie */
         float health        = 100.0f;
-        float throwCooldownS = 0.0f;  /* utilisé à partir de l'étape 3 (boulettes toxiques) */
+        float throwCooldownS = 0.0f;  /* utilisé à partir de l'étape 3 (pneus toxiques) */
         State state         = State::Alive;
         float stateTimer    = 0.0f;   /* durée avant despawn une fois Dying */
         float hitFlashTimer = 0.0f;   /* décompte du flash de coup touché (voir applyDamage) */
@@ -117,6 +117,13 @@ public:
        touchés. */
     [[nodiscard]] std::vector<vec3> killBroodlings() noexcept;
 
+    /* Tue le marcheur vivant le plus proche de 'depuis' et rend sa position
+       (sphère noire du mode zombie : l'hécatombe part de l'appareil et gagne de
+       proche en proche). Le largueur en est exempté, il ne tombe que sous les
+       roquettes ; ce qu'il a lâché, lui, y passe. Rend false quand il ne reste
+       plus de marcheur debout. */
+    [[nodiscard]] bool killNearest(const vec3& depuis, vec3& position) noexcept;
+
     /* Vide la horde (fin de partie, changement de carte...). */
     void clear() noexcept { m_zombies.clear(); }
 
@@ -139,7 +146,7 @@ public:
        l'altitude sur le relief (terrainHeight), avance l'anim de chute et le
        flash de coup touché, retire les zombies dont l'anim de chute est
        terminée. playerAgl (hauteur du joueur au-dessus du sol, m) détermine
-       si les zombies à portée et hors cooldown peuvent lancer une boulette
+       si les zombies à portée et hors cooldown peuvent lancer un pneu
        toxique (sous TOXIC_CEILING_M) ; renvoie leurs demandes de jet. */
     std::vector<ThrowRequest> update(float dt, const vec3& playerPos, float playerAgl,
                                      float speedFactor,

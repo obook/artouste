@@ -56,6 +56,32 @@ std::vector<vec3> ZombieHorde::killBroodlings() noexcept {
     return positions;
 }
 
+bool ZombieHorde::killNearest(const vec3& depuis, vec3& position) noexcept {
+    Zombie* victime  = nullptr;
+    float   meilleur = 0.0f;
+    for (Zombie& z : m_zombies) {
+        if (z.state != State::Alive || z.type == Type::Brood) {
+            continue;
+        }
+        const vec3  ecart = z.position - depuis;
+        const float d2    = glm::dot(ecart, ecart);
+        if (victime == nullptr || d2 < meilleur) {
+            victime  = &z;
+            meilleur = d2;
+        }
+    }
+    if (victime == nullptr) {
+        return false;
+    }
+    /* Même mise à mort immédiate que killBroodlings : l'animation de chute est
+       jouée, l'explosion de l'appelant la couvre. */
+    victime->health     = 0.0f;
+    victime->state      = State::Dying;
+    victime->stateTimer = DEATH_ANIM_DURATION_S;
+    position            = victime->position;
+    return true;
+}
+
 bool ZombieHorde::broodAlive() const noexcept {
     return std::any_of(m_zombies.begin(), m_zombies.end(), [](const Zombie& z) {
         return z.type == Type::Brood && z.state == State::Alive;

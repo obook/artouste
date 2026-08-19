@@ -206,6 +206,9 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         }
     } else {
         m_shader->use();
+        m_shader->setFloat("u_alpha", 1.0f);
+        m_shader->setVec3("u_tint", vec3{1.0f});
+        m_shader->setFloat("u_texMix", 0.0f);
         m_shader->setMat4("u_view", ctx.view);
         m_shader->setMat4("u_proj", ctx.proj);
         m_shader->setVec3("u_lightDir", ctx.lightDir);

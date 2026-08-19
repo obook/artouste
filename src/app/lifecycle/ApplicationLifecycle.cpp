@@ -104,6 +104,11 @@ Application::~Application() {
     m_sea.reset();
     m_shadowDisc.reset();
     m_glowSphere.reset();
+    m_bonusSphere.reset();
+    m_bonusRocket.reset();
+    m_bonusTexteCarburant.reset();
+    m_bonusTexteSante.reset();
+    m_bonusTexteMort.reset();
     m_helipad.reset();
     m_helipadModel.reset();
     m_sky.reset();

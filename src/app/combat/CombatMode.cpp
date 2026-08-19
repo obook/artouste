@@ -10,11 +10,12 @@
 #include "app/combat/CombatMode.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace artouste::app {
 
 namespace {
-/* Rayon (m) de la sphère de collision de l'appareil pour les boulettes
+/* Rayon (m) de la sphère de collision de l'appareil pour les pneus
    toxiques : englobant large plutôt qu'une forme précise, cohérent avec le
    reste du mode (mitrailleuse elle aussi en sphères simples).
 
@@ -47,6 +48,18 @@ int killScoreForCount(int killCount) noexcept {
     }
 }
 
+/* Contenu de la sphère lâchée par une explosion, selon le nombre de zombies
+   qu'elle a fauchés : mêmes seuils que l'annonce HUD (double, triple). */
+CombatMode::BonusType bonusTypePourKills(int killCount) noexcept {
+    if (killCount >= BONUS_MORT_KILL_MIN) {
+        return CombatMode::BonusType::Mort;
+    }
+    if (killCount >= BONUS_SANTE_KILL_MIN) {
+        return CombatMode::BonusType::Vie;
+    }
+    return CombatMode::BonusType::Carburant;
+}
+
 /* Annonce HUD correspondant a un nombre de zombies tués par la même explosion,
    mêmes seuils que killScoreForCount : None sous 2 (rien à annoncer pour un
    kill simple, trop fréquent pour être une "annonce"). */
@@ -67,9 +80,9 @@ CombatMode::KillAnnouncement killAnnouncementForCount(int killCount) noexcept {
 void CombatMode::start(const std::filesystem::path& terrainDir,
                        const std::function<float(float, float)>& terrainHeight) noexcept {
     m_horde.clear();
-    /* Repart d'un état propre : sans quoi les boulettes toxiques et roquettes
+    /* Repart d'un état propre : sans quoi les pneus toxiques et roquettes
        d'une partie précédente restent en vol au relancement ("pluie de
-       boulettes"). */
+       pneus"). */
     m_projectiles.clear();
     m_rockets.clear();
     m_active = m_waves.start(terrainDir, m_horde);
@@ -92,6 +105,8 @@ void CombatMode::start(const std::filesystem::path& terrainDir,
     m_killAnnounce      = KillAnnouncement::None;
     m_killAnnounceTimer = 0.0f;
     m_broodWasAlive     = m_horde.broodAlive();
+    m_bonusSpheres.clear();
+    m_hecatombeTimer = -1.0f;
 }
 
 void CombatMode::stop() noexcept {
@@ -106,11 +121,14 @@ void CombatMode::stop() noexcept {
     m_horde.clear();
     m_projectiles.clear();
     m_rockets.clear();
+    m_bonusSpheres.clear();
+    m_hecatombeTimer = -1.0f;
 }
 
 void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigger,
                         const std::function<float(float, float)>& terrainHeight) noexcept {
-    m_events = SoundEvents{};  /* aucun événement tant que rien ne s'est produit ce pas */
+    m_events     = SoundEvents{};  /* aucun événement tant que rien ne s'est produit ce pas */
+    m_bonusFuelL = 0.0f;           /* idem : le ramassage ne vaut que pour ce pas */
     if (!m_active || m_gameOver) {
         return;
     }
@@ -133,6 +151,93 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
        l'axe de tir. */
     m_muzzleFlashTimer  = std::max(0.0f, m_muzzleFlashTimer - dt);
     m_killAnnounceTimer = std::max(0.0f, m_killAnnounceTimer - dt);
+
+    /* Sphères du kill : vieillissent, puis disparaissent d'un coup. L'appareil
+       qui en traverse un fait le plein d'autant, et la sphère s'efface aussitôt
+       (même englobant sphérique que pour les pneus toxiques, élargi du
+       demi-côté de la sphère et d'une marge invisible : le mode entier se contente de
+       sphères, et rater le bidon de peu serait injuste). */
+    const float pickupRadius =
+        HELI_HIT_RADIUS_M + BONUS_SPHERE_HALF_M + BONUS_SPHERE_PICKUP_MARGIN_M;
+    for (BonusSphere& sphere : m_bonusSpheres) {
+        sphere.remainingS -= dt;
+        /* Chandelle de feu d'artifice, en trois temps. La graine part du sol et
+           monte en freinant (progression en 1-(1-t)^2 : la moitié de la hauteur
+           est prise dans le premier tiers du temps, le reste s'étire) jusqu'à
+           son sommet ; elle en redescend doucement, à peine d'abord puis un peu
+           plus vite (progression en u^2), jusqu'à l'altitude de la sphère ; là, elle
+           s'ouvre presque d'un coup. */
+        const float age = std::max(0.0f, BONUS_SPHERE_LIFE_S - sphere.remainingS);
+        if (age < BONUS_SPHERE_RISE_S) {
+            const float t     = age / BONUS_SPHERE_RISE_S;
+            const float reste = (1.0f - t) * (1.0f - t);
+            sphere.center.y     = sphere.groundY + (1.0f - reste) * BONUS_SPHERE_APEX_M;
+        } else {
+            const float u = std::min(1.0f, (age - BONUS_SPHERE_RISE_S) / BONUS_SPHERE_FALL_S);
+            sphere.center.y =
+                sphere.groundY + BONUS_SPHERE_APEX_M - u * u * (BONUS_SPHERE_APEX_M - BONUS_SPHERE_AGL_M);
+        }
+
+        /* Instant précis où l'éclosion commence : la graine vient de finir sa
+           retombée à ce pas (comparaison d'état comme ailleurs dans le mode). */
+        const float openAge = BONUS_SPHERE_RISE_S + BONUS_SPHERE_FALL_S;
+        if (age >= openAge && age - dt < openAge) {
+            (sphere.type == BonusType::Vie ? m_events.bonusOpenSantePositions
+                                           : m_events.bonusOpenPositions)
+                .push_back(sphere.center);
+        }
+        sphere.enVol      = age < openAge;
+        sphere.propulsion = age < BONUS_SPHERE_RISE_S;
+
+        const float grow = std::min(1.0f, std::max(0.0f, age - openAge) / BONUS_SPHERE_GROW_S);
+        const float open = 1.0f - (1.0f - grow) * (1.0f - grow);
+        sphere.scale       = BONUS_SPHERE_SEED_SCALE + open * (1.0f - BONUS_SPHERE_SEED_SCALE);
+        if (glm::distance(body.position, sphere.center) <= pickupRadius) {
+            switch (sphere.type) {
+                case BonusType::Vie:
+                    m_playerHealth =
+                        std::min(PLAYER_HEALTH_MAX,
+                                 m_playerHealth + BONUS_SANTE_FRACTION * PLAYER_HEALTH_MAX);
+                    break;
+                case BonusType::Mort:
+                    /* Hécatombe amorcée : la première victime tombe au prochain
+                       pas, les autres suivent une par une (voir plus bas). */
+                    m_hecatombeTimer = 0.0f;
+                    break;
+                case BonusType::Carburant:
+                    m_bonusFuelL += BONUS_SPHERE_FUEL_L;
+                    break;
+            }
+            m_events.bonusPickup = true;
+            sphere.remainingS = 0.0f;
+        }
+    }
+    m_bonusSpheres.erase(std::remove_if(m_bonusSpheres.begin(), m_bonusSpheres.end(),
+                                      [](const BonusSphere& c) { return c.remainingS <= 0.0f; }),
+                       m_bonusSpheres.end());
+
+    /* Hécatombe de la sphère noire : une mise à mort par intervalle, du plus
+       proche de l'appareil au plus lointain, chacune avec sa boule de feu et son
+       cri (mêmes effets que les marcheurs qui partent avec leur largueur). Le
+       rythme rend la vague de morts lisible, là où tout tuer d'un coup ne
+       faisait qu'un fracas. Le largueur y échappe (voir killNearest) : il reste
+       à abattre à la roquette. */
+    if (m_hecatombeTimer >= 0.0f) {
+        m_hecatombeTimer -= dt;
+        while (m_hecatombeTimer <= 0.0f) {
+            vec3 mort{0.0f};
+            if (!m_horde.killNearest(body.position, mort)) {
+                m_hecatombeTimer = -1.0f;  /* plus personne debout */
+                break;
+            }
+            m_rockets.addExplosion(mort);
+            m_events.explosionPositions.push_back(mort);
+            m_events.zombieDeathPositions.push_back(mort);
+            m_kills += 1;
+            m_score += BONUS_MORT_SCORE;
+            m_hecatombeTimer += BONUS_MORT_INTERVALLE_S;
+        }
+    }
     if (fireResult.fired) {
         m_muzzleFlashTimer = MUZZLE_FLASH_DURATION_S;
         m_lastMuzzlePos    = muzzlePos;
@@ -173,12 +278,28 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
     m_events.zombieHitPositions   = rocketRes.zombieHitPositions;
     m_events.zombieDeathPositions = rocketRes.zombieDeathPositions;
     m_kills += rocketRes.kills;
-    for (int killCount : rocketRes.explosionKillCounts) {
+    for (std::size_t i = 0; i < rocketRes.explosionKillCounts.size(); ++i) {
+        const int killCount = rocketRes.explosionKillCounts[i];
         m_score += killScoreForCount(killCount);
         const KillAnnouncement ann = killAnnouncementForCount(killCount);
         if (ann != KillAnnouncement::None) {
             m_killAnnounce      = ann;
             m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
+        }
+        /* Une fusée part du point d'explosion dès qu'elle a fauché assez de
+           zombies (BONUS_SPHERE_KILL_MIN) poser un volume : un bidon de kérosène,
+           ou une trousse de secours à partir du double kill. Hauteur prise sur
+           le RELIEF sous ce point, pas sur l'altitude de l'explosion elle-même,
+           qui peut avoir eu lieu en plein vol au contact d'un zombie. */
+        if (killCount >= BONUS_SPHERE_KILL_MIN && i < rocketRes.explosionPositions.size()) {
+            const vec3  pos     = rocketRes.explosionPositions[i];
+            const float groundY = terrainHeight(pos.x, pos.z);
+            /* Posé au ras du sol et de taille nulle : la montée de l'image
+               suivante lui donne son altitude et sa taille. */
+            m_bonusSpheres.push_back(
+                BonusSphere{vec3{pos.x, groundY, pos.z}, groundY, 0.0f, BONUS_SPHERE_LIFE_S,
+                            true, true, bonusTypePourKills(killCount)});
+            m_events.bonusLaunchPositions.push_back(vec3{pos.x, groundY, pos.z});
         }
     }
 
@@ -238,6 +359,18 @@ float CombatMode::applyGroundImpact(float speedMs) {
     }
     m_events.impacted = true;
     return litres;
+}
+
+std::vector<CombatMode::BonusSphereView> CombatMode::bonusSpheres() const {
+    std::vector<BonusSphereView> vues;
+    vues.reserve(m_bonusSpheres.size());
+    for (const BonusSphere& sphere : m_bonusSpheres) {
+        const float alpha = std::min(1.0f, sphere.remainingS / BONUS_SPHERE_FADE_S);
+        vues.push_back(
+            BonusSphereView{sphere.center, sphere.scale, alpha, sphere.type, sphere.enVol,
+                            sphere.propulsion});
+    }
+    return vues;
 }
 
 }  /* namespace artouste::app */

@@ -78,6 +78,9 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         if (m_padSkirt) {
             glDepthMask(GL_TRUE);
             m_shader->use();
+            m_shader->setFloat("u_alpha", 1.0f);
+            m_shader->setVec3("u_tint", vec3{1.0f});
+            m_shader->setFloat("u_texMix", 0.0f);
             m_shader->setMat4("u_view", view);
             m_shader->setMat4("u_proj", proj);
             m_shader->setMat4(
@@ -101,6 +104,9 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         } else {
             /* Repli procédural (aplats de couleur). */
             m_shader->use();
+            m_shader->setFloat("u_alpha", 1.0f);
+            m_shader->setVec3("u_tint", vec3{1.0f});
+            m_shader->setFloat("u_texMix", 0.0f);
             m_shader->setMat4("u_view", view);
             m_shader->setMat4("u_proj", proj);
             m_shader->setMat4("u_model", padModel);

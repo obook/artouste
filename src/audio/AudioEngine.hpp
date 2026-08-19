@@ -94,6 +94,10 @@ public:
     void playZombieDeath(const vec3& sourcePos, const vec3& listenerPos);
     void playToxicThrow(const vec3& sourcePos, const vec3& listenerPos);
     void playToxicImpact(const vec3& sourcePos, const vec3& listenerPos);
+    void playDrink(const vec3& sourcePos, const vec3& listenerPos);
+    void playSphereLaunch(const vec3& sourcePos, const vec3& listenerPos);
+    void playSphereOpen(const vec3& sourcePos, const vec3& listenerPos);
+    void playSphereSante(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
     void playBroodSpawn();
     /* Coupe toutes les lectures de combat en cours (fin de partie) : setPaused

@@ -7,7 +7,7 @@
  * de la carte courante (zombies.txt, présence = carte compatible mode
  * zombie) et le pilotage des vagues. Orchestre à chaque image : tir (Weapon)
  * -> vagues (WaveManager, décide des spawns) -> déplacement et jets de la
- * horde (ZombieHorde) -> boulettes toxiques (ProjectileSystem) -> dégâts au
+ * horde (ZombieHorde) -> pneus toxiques (ProjectileSystem) -> dégâts au
  * joueur.
  *
  * Auteur : O. Booklage
@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "app/combat/BonusSphereReglages.hpp"
 #include "app/combat/ProjectileSystem.hpp"
 #include "app/combat/RocketSystem.hpp"
 #include "app/combat/WaveManager.hpp"
@@ -54,7 +55,7 @@ public:
        tenu, depuis le canon de l'appareil (position/cap de body) ; avance le
        gestionnaire de vagues (WaveManager, spawn échelonné et difficulté
        croissante) ; fait avancer la horde (marche vers le joueur, jets de
-       boulettes toxiques selon l'altitude/portée) ; avance les boulettes en
+       pneus toxiques selon l'altitude/portée) ; avance les pneus en
        vol et applique leurs dégâts au joueur, jusqu'à déclencher gameOver()
        sous 0 PV. Sans effet si le mode n'est pas actif, ou déjà en fin de
        partie (gameOver). */
@@ -80,7 +81,7 @@ public:
        rendu skinné y lit variante de personnage et groupe de phase de marche. */
     [[nodiscard]] std::vector<int> zombieKinds() const { return m_horde.buildKinds(); }
 
-    /* Instances de boulettes toxiques courantes, prêtes pour
+    /* Instances de pneus toxiques courants, prêts pour
        render::Projectiles::updateInstances. */
     [[nodiscard]] std::vector<vec4> projectileInstances() const {
         return m_projectiles.buildInstances();
@@ -91,7 +92,7 @@ public:
     [[nodiscard]] int  ammoMax() const noexcept { return Weapon::AMMO_MAX; }
     [[nodiscard]] bool reloading() const noexcept { return m_weapon.reloading(); }
 
-    /* Le joueur est-il actuellement sous le plafond d'altitude des boulettes
+    /* Le joueur est-il actuellement sous le plafond d'altitude des pneus
        toxiques (donc vulnérable) ? Reflète la dernière image mise à jour, pas
        une lecture instantanée. Pour le HUD (indicateur de danger). */
     [[nodiscard]] bool belowCeiling() const noexcept {
@@ -147,11 +148,11 @@ public:
         std::vector<vec3> zombieHitPositions;
         std::vector<vec3> zombieDeathPositions;
 
-        /* Une entrée par boulette toxique lancée ce pas, à son origine (bras du
+        /* Une entrée par pneu toxique lancé ce pas, à son origine (bras du
            zombie lanceur). */
         std::vector<vec3> throwPositions;
 
-        /* L'appareil a encaissé un coup, boulette toxique ou contact avec le sol
+        /* L'appareil a encaissé un coup, pneu toxique ou contact avec le sol
            (voir applyGroundImpact) : même bruit, joué à sa position, donc à
            distance nulle. */
         bool impacted = false;
@@ -163,6 +164,20 @@ public:
            râle par-dessus. */
         bool waveStart   = false;
         bool broodSpawned = false;
+
+        /* Volume traversé ce pas, joué à la position de l'appareil comme un
+           impact (distance nulle). */
+        bool bonusPickup = false;
+
+        /* Une entrée par chandelle partie ce pas (kill payant d'une sphère),
+           au point d'explosion d'où elle décolle. */
+        std::vector<vec3> bonusLaunchPositions;
+
+        /* Une entrée par sphère qui commence à s'ouvrir ce pas, à l'altitude où
+           elle apparaît (bout de la chandelle) : liste séparée pour la sphère
+           de vie, qui s'annonce avec son propre son. */
+        std::vector<vec3> bonusOpenPositions;
+        std::vector<vec3> bonusOpenSantePositions;
     };
     [[nodiscard]] const SoundEvents& soundEvents() const noexcept { return m_events; }
 
@@ -197,6 +212,29 @@ public:
     [[nodiscard]] std::vector<RocketSystem::ExplosionView> explosions() const {
         return m_rockets.explosions();
     }
+    /* Contenu d'une sphère, décidé par le nombre de zombies fauchés d'un coup :
+       kérosène (bleue), vie (rouge) ou hécatombe (noire). */
+    enum class BonusType { Carburant, Vie, Mort };
+
+    /* Sphère prête pour le rendu : centre monde, facteur d'échelle de la
+       sortie de terre (0 au ras du sol, 1 une fois monté) et opacité (pleine
+       d'abord, puis décroissante sur les vingt dernières secondes). */
+    struct BonusSphereView {
+        vec3      center{0.0f};
+        float     scale = 1.0f;
+        float     alpha = 1.0f;
+        BonusType type  = BonusType::Carburant;
+        /* Vrai tant que la fusée monte ou retombe : le rendu dessine alors le
+           tube noir, pas encore le sphere. La flamme, elle, ne sort qu'en montée
+           (propulsion). */
+        bool      enVol      = false;
+        bool      propulsion = false;
+    };
+
+    /* Sphères larguées par un kill, un par sphère encore en place, dans
+       l'ordre d'apparition (voir Application::renderCombatEntities). */
+    [[nodiscard]] std::vector<BonusSphereView> bonusSpheres() const;
+
     /* Traces de brûlure au sol laissées par les impacts (décalques sombres qui
        s'estompent, voir Application::drawScorchMarks). */
     [[nodiscard]] std::vector<RocketSystem::ScorchView> scorches() const {
@@ -206,7 +244,7 @@ public:
     /* Contact avec le sol, à la vitesse d'arrivée mesurée par la physique (voir
        physics::FlightModel::consumeGroundImpact). Au-delà de la vitesse tolérée,
        le choc fend le réservoir : il coûte du CARBURANT, proportionnellement à
-       l'excès de vitesse, et fait le même bruit qu'une boulette reçue. La vie de
+       l'excès de vitesse, et fait le même bruit qu'un pneu reçu. La vie de
        l'appareil, elle, n'est entamée que par les zombies.
 
        Rend les litres à retirer, que l'appelant applique au modèle de vol
@@ -215,6 +253,21 @@ public:
        un posé normal ne coûte rien et ne s'entend pas. À appeler après update(),
        qui remet les événements sonores à zéro. */
     [[nodiscard]] float applyGroundImpact(float speedMs);
+
+    /* Kérosène (L) ramassé pendant le dernier update() en traversant une sphère
+       vert : à ajouter au modèle de vol (addFuel), à lire après update() comme
+       shotFuelBurn. */
+    [[nodiscard]] float bonusFuelPickup() const noexcept { return m_bonusFuelL; }
+
+    /* Kérosène (L) brûlé par les coups partis pendant le dernier update() : le
+       lance-roquettes puise dans le réservoir de l'appareil, si bien qu'arroser
+       la horde en rafale coûte des minutes de vol (voir SHOT_FUEL_L, dans
+       BonusSphereReglages.hpp). À appliquer au modèle de vol (drainFuel) comme le
+       prix d'un choc au sol, et à lire après update(), qui repose les événements
+       du pas. */
+    [[nodiscard]] float shotFuelBurn() const noexcept {
+        return m_events.fired ? SHOT_FUEL_L : 0.0f;
+    }
 
 private:
     static constexpr float PLAYER_HEALTH_MAX = 100.0f;
@@ -271,6 +324,23 @@ private:
     float            m_killAnnounceTimer = 0.0f;  /* s restantes d'affichage de l'annonce */
     vec3             m_lastMuzzlePos{0.0f};
     vec3             m_lastFireDir{1.0f, 0.0f, 0.0f};
+    /* Sphère posée par un kill : centre monde courant (elle monte pendant sa sortie
+       de terre), altitude du sol sous lui d'où il est parti, échelle courante
+       de cette sortie et temps qu'il lui reste à vivre. */
+    struct BonusSphere {
+        vec3  center{0.0f};
+        float groundY    = 0.0f;
+        float scale      = 0.0f;
+        float remainingS = 0.0f;
+        bool      enVol      = true;  /* fusée en route ; faux dès l'éclosion */
+        bool      propulsion = true;  /* moteur allumé : montée seulement */
+        BonusType type       = BonusType::Carburant;
+    };
+    std::vector<BonusSphere> m_bonusSpheres;
+    /* Hécatombe en cours (sphère noire ramassée) : temps restant avant la
+       prochaine mise à mort. Négatif quand aucune n'est en cours. */
+    float                    m_hecatombeTimer = -1.0f;
+    float                  m_bonusFuelL = 0.0f;  /* litres ramassés au dernier update() */
     SoundEvents      m_events;                /* réinitialisés à chaque update() */
     ZombieHorde      m_horde;
     Weapon           m_weapon;

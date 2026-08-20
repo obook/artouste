@@ -67,6 +67,24 @@ echo
 
 echo ">> Tag et compilation des archives"
 git tag -a "$tag" -m "$tag"
+
+# La notice porte un numéro tiré de "git describe", donc elle ne peut afficher la
+# bonne version qu'une fois le tag posé. On la régénère ici, et si elle a changé on
+# la commite et on redéplace le tag dessus : sans ce recalage, le tag pointerait
+# avant la notice et les archives publieraient le numéro de la version précédente.
+if [ -f scripts/notice.sh ]; then
+    # shellcheck source=/dev/null
+    . scripts/notice.sh
+    build_notice
+    if [ -n "$(git status --porcelain docs/notice.pdf docs/version.tex)" ]; then
+        git add docs/notice.pdf docs/version.tex
+        git commit -q -m "docs(notice): Régénérer la notice en ${tag#v}"
+        git tag -d "$tag" >/dev/null
+        git tag -a "$tag" -m "$tag"
+        git push origin "$branche"
+    fi
+fi
+
 git push origin "$tag"
 
 # Un tag portant un tiret (v1.2.3-rc1, v0.0.0-essai) est un essai ou une version

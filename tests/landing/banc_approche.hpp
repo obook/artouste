@@ -49,6 +49,9 @@ struct Resultat {
     float excesMaxM       = 0.0f;   /* plus grand écart observé entre agl et la pente standard
                                        (GAIN_ALT_RETOUR * dist), hors finale : mesure combien
                                        d'altitude "en trop" l'appareil a dû rattraper. */
+    float altMinSurPadM   = 0.0f;   /* plus petite altitude observée par rapport au niveau du
+                                       pad, hors finale : négative si l'appareil est passé sous
+                                       le plateau d'un pad perché. */
     float vitesseSolMinPendantExcesM = -1.0f;  /* plus petite vitesse sol observée tant que
                                        l'excédent dépasse SEUIL_EXCES_NOTABLE_M (hors finale) ;
                                        -1 si l'excédent notable n'a jamais eu lieu. Proche de 0 :
@@ -66,7 +69,7 @@ struct Resultat {
    (setGroundHeight, comme Application::mainLoop) et sur l'anticipation de relief de
    LandingAutopilot (hauteurMinRelief), pour rejouer fidèlement le cas réel. */
 inline Resultat simulerApproche(float distanceInitialeM, float altitudeInitialeM, float dureeMaxS,
-                         const TerrainFn& terrain = {}) {
+                         const TerrainFn& terrain = {}, float altitudePadM = 0.0f) {
     FlightModel model;
     model.reset(vec3{0.0f, altitudeInitialeM, distanceInitialeM}, 0.0f);
     model.turbine().forceRunning();
@@ -79,7 +82,7 @@ inline Resultat simulerApproche(float distanceInitialeM, float altitudeInitialeM
     initial.collective = artouste::physics::COLL_HOVER;
 
     LandingAutopilot landing;
-    landing.start(vec3{0.0f, 0.0f, 0.0f}, initial);
+    landing.start(vec3{0.0f, altitudePadM, 0.0f}, initial);
 
     /* FlightModel a une vraie physique de contact : une fois posé (poussée sous le
        poids), la vitesse est remise à {0,0,0} d'un coup (voir FlightModel.cpp,
@@ -92,6 +95,7 @@ inline Resultat simulerApproche(float distanceInitialeM, float altitudeInitialeM
     float clearanceMinM = 1.0e6f;
     float excesMaxM = 0.0f;
     float vitesseSolMinPendantExcesM = -1.0f;
+    float altMinSurPadM = 1.0e6f;
 
     Resultat res;
     float t = 0.0f;
@@ -123,6 +127,7 @@ inline Resultat simulerApproche(float distanceInitialeM, float altitudeInitialeM
             if (exces > excesMaxM) {
                 excesMaxM = exces;
             }
+            altMinSurPadM = std::min(altMinSurPadM, pos.y - altitudePadM);
             if (exces > SEUIL_EXCES_NOTABLE_M) {
                 const float vitesseSol = std::sqrt(vel.x * vel.x + vel.z * vel.z);
                 if (vitesseSolMinPendantExcesM < 0.0f || vitesseSol < vitesseSolMinPendantExcesM) {
@@ -139,6 +144,7 @@ inline Resultat simulerApproche(float distanceInitialeM, float altitudeInitialeM
             res.dureeS                       = t;
             res.clearanceMinM                = clearanceMinM;
             res.excesMaxM                    = excesMaxM;
+            res.altMinSurPadM                = altMinSurPadM;
             res.vitesseSolMinPendantExcesM    = vitesseSolMinPendantExcesM;
             break;
         }

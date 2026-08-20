@@ -135,3 +135,24 @@ TEST_CASE("Atterrissage automatique : relief loin du pad, limite connue (descent
     CHECK(r.vitesseSolM < 3.0f);
     CHECK(r.distancePadM < 8.0f);
 }
+
+TEST_CASE("Atterrissage automatique : pad perché sur un plateau", "[landing][pad-perche]") {
+    /* Cas du Tourmalet : le pad est posé sur un plateau nettement plus haut que le
+       terrain d'approche. Le plateau n'existe dans terrainHeight que dans les 8 m
+       de PAD_PLATFORM_RADIUS_M, et hauteurMinRelief le rate (sonde tous les 25 m).
+       Une pente d'approche référée au sol local menait donc l'appareil sous le
+       niveau du plateau, avant que le contact ne le remette dessus d'un coup. */
+    constexpr float ALT_PAD = 60.0f;
+    const auto plateau = [](float x, float z) noexcept -> float {
+        constexpr float RAYON = 8.0f;
+        return (x * x + z * z <= RAYON * RAYON) ? ALT_PAD : 0.0f;
+    };
+    /* Départ à 900 m et 120 m de hauteur-sol, soit 60 m au-dessus du plateau. */
+    const Resultat r = simulerApproche(900.0f, 120.0f, 240.0f, plateau, ALT_PAD);
+    REQUIRE(r.pose);
+    /* Le point à vérifier : l'appareil ne descend jamais sous le niveau du pad. */
+    CHECK(r.altMinSurPadM > -0.5f);
+    CHECK(r.tauxDescenteM < 3.0f);
+    CHECK(r.vitesseSolM < 3.0f);
+    CHECK(r.distancePadM < 8.0f);
+}

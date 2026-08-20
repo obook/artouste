@@ -50,10 +50,18 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Autoland : saut sur les pads en relief
 
-- [ ] Sur le pad du Tourmalet, l'autoland (touche J) passe sous le niveau du
-  pad puis "saute" dessus au contact. Trajectoire verticale de l'approche à
-  revoir face à un pad surélevé. Sans lien avec la girouette (physique réelle
-  coupée en autoland).
+- [x] Sur le pad du Tourmalet, l'autoland (touche J) passait sous le niveau du
+  pad puis "sautait" dessus au contact. Cause : pente d'approche référée au sol
+  local, plateau du pad visible seulement dans ses 8 m et raté par la sonde de
+  relief (pas de 25 m). Correctif : pente aussi référée au niveau du pad dans
+  `LandingAutopilot.cpp`. Validé en vol au Tourmalet.
+
+### Pad du Tourmalet à repositionner
+
+- [ ] Le pad du Tourmalet est un repère touristique promu en hélipad, jamais
+  sourcé (position copiée de landmarks.txt ; helipads.txt porte "Positions
+  approximatives, à affiner sur place"). Recherche d'une position fondée en
+  cours (OSM, orthophoto).
 
 ### HAPI (aide à l'approche)
 

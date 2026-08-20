@@ -132,8 +132,16 @@ physics::Controls LandingAutopilot::update(float dt, const vec3& position, const
         const float hauteurPente  = clamp(GAIN_ALT_RETOUR * dist, 0.0f, ALT_PLAFOND);
         const float hauteurRelief = terrainHeight ? hauteurMinRelief(position, m_target, dist, terrainHeight)
                                                    : 0.0f;
-        const float hauteurCible  = (hauteurRelief > hauteurPente) ? hauteurRelief : hauteurPente;
-        collectifCible            = collectifApprocheGpws(hauteurCible, agl, velocity.y);
+        /* Pente référée au niveau du pad : un pad perché n'entre dans terrainHeight
+           que dans ses 8 m (PAD_PLATFORM_RADIUS_M), donc une pente référée au sol
+           local mène l'appareil sous le plateau, puis le contact l'y remet d'un coup. */
+        const float solLocal   = position.y - agl;
+        const float hauteurPad = (m_target.y - solLocal) + hauteurPente;
+        float hauteurCible     = (hauteurRelief > hauteurPente) ? hauteurRelief : hauteurPente;
+        if (hauteurPad > hauteurCible) {
+            hauteurCible = hauteurPad;
+        }
+        collectifCible = collectifApprocheGpws(hauteurCible, agl, velocity.y);
     }
     out.collective = rampeCollectif(collectifCible, dt);
 

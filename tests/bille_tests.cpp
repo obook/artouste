@@ -1,7 +1,7 @@
 /*
  * bille_tests.cpp
- * Aiguille-bille : force spécifique latérale (physics::billeG) et taux de virage
- * (physics::tauxVirageDegS). Se teste sans contexte graphique.
+ * Aiguille-bille (physics::billeG, physics::tauxVirageDegS) et couple de girouette
+ * (physics::coupleGirouette). Se teste sans contexte graphique.
  *
  * Auteur : O. Booklage
  * Date : août 2026
@@ -14,6 +14,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 using artouste::physics::billeG;
+using artouste::physics::coupleGirouette;
 using artouste::physics::tauxVirageDegS;
 using artouste::physics::RigidBody;
 using artouste::vec3;
@@ -77,4 +78,30 @@ TEST_CASE("Lacet fuselage sur la tranche ne fait pas virer", "[bille]") {
     body.orientation     = roulis(1.5707963f);
     body.angularVelocity = vec3{0.0f, -0.2f, 0.0f};
     REQUIRE(tauxVirageDegS(body) == Catch::Approx(0.0f).margin(1e-4f));
+}
+
+TEST_CASE("La girouette ramène le nez vers le vent relatif", "[girouette]") {
+    /* Convention du modèle : palonnier droit = couple de lacet négatif. */
+    const float vAvant = 30.0f;
+    /* Dérive vers la droite du pilote : le vent relatif vient de la droite, le nez
+       doit partir à droite. */
+    REQUIRE(coupleGirouette(vAvant, 5.0f) < 0.0f);
+    REQUIRE(coupleGirouette(vAvant, -5.0f) > 0.0f);
+    /* Le couple croît avec le dérapage et avec la vitesse. */
+    REQUIRE(std::fabs(coupleGirouette(vAvant, 10.0f)) >
+            std::fabs(coupleGirouette(vAvant, 5.0f)));
+    REQUIRE(std::fabs(coupleGirouette(60.0f, 5.0f)) > std::fabs(coupleGirouette(vAvant, 5.0f)));
+}
+
+TEST_CASE("Pas de girouette au stationnaire ni en vol arrière", "[girouette]") {
+    /* L'appelant borne la vitesse avant à zéro : rien ne s'écoule le long du
+       fuselage, donc aucun couple. */
+    REQUIRE(coupleGirouette(0.0f, 5.0f) == Catch::Approx(0.0f));
+}
+
+TEST_CASE("La girouette reste minoritaire devant le palonnier", "[girouette]") {
+    /* À 5 m/s de dérapage en croisière, elle doit peser bien moins que YAW_CTRL,
+       sinon elle prend la main sur le pilote. */
+    const float couple = std::fabs(coupleGirouette(44.0f, 5.0f));
+    REQUIRE(couple < 0.25f * artouste::physics::YAW_CTRL);
 }

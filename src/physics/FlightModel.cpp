@@ -300,15 +300,15 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     m_cyclicLateralLagged      = approach(m_cyclicLateralLagged, controls.cyclicLateral, dt, ROTOR_LAG_TAU);
     m_cyclicLongitudinalLagged = approach(m_cyclicLongitudinalLagged, controls.cyclicLongitudinal, dt, ROTOR_LAG_TAU);
 
-    /* Régimes de vol : les trois mécanismes ci-dessous se superposent et évoluent
+    /* Régimes de vol : les quatre mécanismes ci-dessous se superposent et évoluent
      * chacun continûment avec la vitesse air, sans bascule d'un "mode stationnaire"
      * à un "mode avion". Ils ne valent que physique réelle active (comme le VRS) :
      * en mode assisté et en démo, l'appareil garde sa réponse de base.
      *
      * Physique réelle coupée (mode assisté, démo, atterrissage automatique) :
      * facteurTranslation vaut 1, donc l'appareil garde EXACTEMENT sa tenue
-     * d'avant, la plus stable et la plus prévisible, à toute vitesse. Les deux
-     * effets transitoires plus bas, eux, sont purement et simplement absents.
+     * d'avant, la plus stable et la plus prévisible, à toute vitesse. Les trois
+     * effets plus bas, eux, sont purement et simplement absents.
      *
      * 1. Raffermissement aérodynamique : à vitesse établie, le rotor brasse de
      *    l'air neuf et le stabilisateur horizontal mord, ce qui pose l'appareil en
@@ -350,6 +350,11 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
         ? glm::smoothstep(RBS_V_ONSET * vne, RBS_V_FULL * vne, airspeed)
         : 0.0f;
 
+    /* 4. Girouette de dérive : la poutre de queue réaligne le nez sur le vent
+     *    relatif (voir KVANE). */
+    const float girouette =
+        m_realFlyPhysicsEnabled ? coupleGirouette(vitesseAvant, velocityBody.z) : 0.0f;
+
     const vec3&     w = m_body.angularVelocity;
     vec3 torque;
     torque.x = m_cyclicLateralLagged * ROLL_CTRL           /* roulis (autour de X) */
@@ -369,7 +374,9 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
      * l'appareil doit seulement partir en crabe. */
     torque.y = -controls.pedals * YAW_CTRL * facteurAnticouple
                + REACTIVE_TORQUE * (collective - COLL_HOVER) * rotorFraction
-               - TURN_COORD_GAIN * m_cyclicLateralLagged * translationalLiftFactor - DAMP_YAW * w.y;
+               - TURN_COORD_GAIN * m_cyclicLateralLagged * translationalLiftFactor
+               + girouette                                  /* dérive : nez vers le vent relatif */
+               - DAMP_YAW * w.y;
     torque.z = -m_cyclicLongitudinalLagged * PITCH_CTRL    /* tangage (autour de Z) */
                + RBS_PITCH_UP * m_retreatingStall          /* pale reculante : cabrage */
                + rappelHorizon * levelBody.z - DAMP_PITCH * amortissementAero * w.z;

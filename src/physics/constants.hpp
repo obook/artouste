@@ -186,6 +186,12 @@ inline constexpr float YAW_CTRL     = 3500.0f;  /* N.m  palonniers */
  * la bascule progressive avec la vitesse réutilise ETL_V_LOW/ETL_V_HIGH ci-dessous. */
 inline constexpr float TURN_COORD_GAIN = 1800.0f;  /* N.m à pleine inclinaison, vitesse établie */
 
+/* Girouette de dérive : la poutre de queue réaligne le nez sur le vent relatif.
+ * Sans elle, seule la traînée latérale résorbait le dérapage, en deux minutes :
+ * l'appareil restait en crabe après un virage. Couple = KVANE * vitesse avant *
+ * vitesse latérale. À 160 km/h le nez se réaligne en deux à trois secondes. */
+inline constexpr float KVANE = 1.5f;  /* N.m/(m/s)^2  couple de girouette (dérive) */
+
 /* --- Réponse du rotor principal (retard gyroscopique) ------------------------- */
 /* Le plan des pales ne suit pas instantanément le manche : la précession
  * gyroscopique retarde sa bascule d'une constante de temps caractéristique du

@@ -41,6 +41,20 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
   pour couvrir aussi une descente stabilisée et pas seulement la variation
   du collectif.
 
+### Vol en crabe permanent (absence de girouette)
+
+- [x] L'appareil gardait un dérapage indéfiniment, bille centrée. Cause : aucun
+  couple de lacet ne dépendait de la vitesse latérale dans `FlightModel.cpp`.
+  Correctif : couple de girouette `KVANE` dans `torque.y`, nul au stationnaire
+  et en vol symétrique. Validé en vol (glissade, sortie de virage, autoland).
+
+### Autoland : saut sur les pads en relief
+
+- [ ] Sur le pad du Tourmalet, l'autoland (touche J) passe sous le niveau du
+  pad puis "saute" dessus au contact. Trajectoire verticale de l'approche à
+  revoir face à un pad surélevé. Sans lien avec la girouette (physique réelle
+  coupée en autoland).
+
 ### HAPI (aide à l'approche)
 
 - [x] Balise HAPI (Helicopter Approach Path Indicator, voir

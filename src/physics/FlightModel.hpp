@@ -222,4 +222,12 @@ private:
     return -glm::degrees(omega.y);
 }
 
+/* Couple de girouette en lacet, en N.m (voir KVANE). Une dérive vers la droite
+ * (vitesse latérale positive) ramène le nez à droite, donc un couple négatif par la
+ * convention du modèle. vitesseAvant est bornée à zéro par l'appelant : rien au
+ * stationnaire ni en vol arrière. */
+[[nodiscard]] inline float coupleGirouette(float vitesseAvant, float vitesseLaterale) noexcept {
+    return -KVANE * vitesseAvant * vitesseLaterale;
+}
+
 }  /* namespace artouste::physics */

@@ -110,6 +110,8 @@ struct HudData {
                                   (et en capture, LED figée allumée) */
     float fps = 0.0f;          /* images par seconde (lissées) ; affiché dans le coin
                                   bas-droit du HUD 4 coins. 0 = masqué (ex. en capture) */
+    bool carteHR = false;      /* fenêtre de tuiles d'orthophoto chargée (HR), sinon LR */
+    bool relief3D = false;     /* fenêtre de relief fin chargée (3D), sinon socle seul (2D) */
 
     /* Aide à l'atterrissage : hélipad le plus proche en finale (active seulement
        en mode assisté, voir ApplicationHud.cpp). */

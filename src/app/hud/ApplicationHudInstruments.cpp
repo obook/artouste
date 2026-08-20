@@ -104,6 +104,9 @@ void Application::fillHud(ui::HudData& hud,
        seule ne suffit pas, une carte sans jeu de relief n'en trace aucun. */
     hud.reliefLiserets = m_config.reliefDebug && m_terrain->reliefFin() != nullptr;
 
+    hud.carteHR = m_terrain->detail() != nullptr;
+    hud.relief3D = m_terrain->reliefFin() != nullptr;
+
     hud.radio = m_audio.radioPlaying();
     hud.radioMixPct = static_cast<int>(m_audio.radioMix() * 100.0f + 0.5f);
     if (m_terrain->hasGeo()) { /* longitude / latitude de l'appareil */

@@ -133,6 +133,10 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
         }
         if (data.fps > 0.0f) {
             ImGui::Text("FPS  %3.0f", static_cast<double>(data.fps)); /* cadence lissée */
+            /* Ce que la carte sert réellement sous l'appareil : orthophoto tuilée ou
+               non, relief fin ou socle seul. Suit le FPS car c'est le même sujet, la
+               qualité contre la cadence. */
+            ImGui::Text("CARTE %s %s", data.carteHR ? "HR" : "LR", data.relief3D ? "3D" : "2D");
         }
         ImGui::End();
     }

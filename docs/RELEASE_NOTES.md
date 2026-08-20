@@ -1,3 +1,17 @@
+## v0.43.0 - 20 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Résolution de la carte dans le HUD** : sous le compteur d'images, une ligne indique si l'orthophoto est tuilée (HR) ou non (LR), et si le relief fin est chargé (3D) ou non (2D).
+
+### Corrections
+
+- **Double appui sur A à la manette** : le bouton ignorait un appui sur deux après un chargement de carte. La manette n'était plus lue pendant le chargement, sa file d'événements débordait et une relâche perdue laissait le bouton vu comme enfoncé.
+
+### Changements
+
+- **Carte banc-pic retirée** : ce banc d'essai du relief fin n'avait plus d'objet et pesait 6,2 Mo.
+
 ## v0.42.0 - 20 août 2026
 
 ### Nouvelles fonctionnalités

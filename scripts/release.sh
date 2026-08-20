@@ -76,8 +76,9 @@ if [ -f scripts/notice.sh ]; then
     # shellcheck source=/dev/null
     . scripts/notice.sh
     build_notice
-    if [ -n "$(git status --porcelain docs/notice.pdf docs/version.tex)" ]; then
-        git add docs/notice.pdf docs/version.tex
+    # docs/version.tex est généré et ignoré par git : seul le PDF se commite.
+    if [ -n "$(git status --porcelain docs/notice.pdf)" ]; then
+        git add docs/notice.pdf
         git commit -q -m "docs(notice): Régénérer la notice en ${tag#v}"
         git tag -d "$tag" >/dev/null
         git tag -a "$tag" -m "$tag"

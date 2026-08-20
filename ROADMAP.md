@@ -63,8 +63,8 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
   MNT : 2116 m contre 2115 m réels), décalé de 5 m d'un talus qui aurait calé
   la plate-forme 7 m au-dessus du sol. Livré en v0.42.0 (26e5fe7).
 
-- [ ] Le repère "Col du Tourmalet" de landmarks.txt garde l'ancienne position,
-  115 m au sud du col et 33 m trop bas. À recaler sur la position du pad.
+- [x] Le repère "Col du Tourmalet" de landmarks.txt était resté à l'ancienne
+  position, 115 m au sud du col et 33 m trop bas. Recalé sur celle du pad.
 
 ### HAPI (aide à l'approche)
 

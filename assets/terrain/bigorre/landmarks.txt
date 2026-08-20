@@ -1,7 +1,7 @@
 # Lieux remarquables - Pic du Midi de Bigorre (observatoire, col du Tourmalet, La Mongie) (un par ligne : lon lat nom)
 # Le nom est le reste de la ligne et peut contenir des espaces et des accents.
 0.1411 42.9369 Pic du Midi de Bigorre
-0.1447 42.9075 Col du Tourmalet
+0.144748 42.908493 Col du Tourmalet
 0.1783 42.9094 La Mongie
 0.0658 42.8983 Barèges
 0.2276 42.9843 Sainte-Marie-de-Campan

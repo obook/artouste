@@ -1,3 +1,18 @@
+## v0.42.0 - 20 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Aiguille-bille** : le HUD complet gagne son indicateur de virage, à gauche du variomètre. L'aiguille donne le taux de virage, avec ses repères du virage standard ; la bille dit si le virage est coordonné au palonnier.
+
+### Changements
+
+- **Girouette de dérive** : le fuselage se réaligne sur le vent relatif. L'appareil ne reste plus en crabe après un virage ou un coup de palonnier.
+
+### Corrections
+
+- **Atterrissage automatique sur un pad perché** : la pente d'approche se réfère désormais au niveau du pad. L'appareil passait sous le plateau, puis le contact le remettait dessus d'un coup.
+- **Pad du col du Tourmalet** : il se trouvait 115 m au sud du col et 33 m plus bas, sur le versant.
+
 ## v0.41.0 - 19 août 2026
 
 ### Nouvelles fonctionnalités

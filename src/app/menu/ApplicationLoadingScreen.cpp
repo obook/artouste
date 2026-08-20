@@ -20,6 +20,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include "input/Gamepad.hpp"
 #include "render/Texture.hpp"
 #include "ui/HudWidgets.hpp"
 
@@ -145,6 +146,14 @@ void Application::renderLoadingScreen(const char* message, float progression) {
     /* Vide la file d'événements système : sans ça, l'OS peut estimer la fenêtre
        "ne répond pas" pendant le chargement bloquant qui suit. */
     glfwPollEvents();
+    /* La manette a sa propre file, que glfwPollEvents ne touche pas : GLFW ne la lit
+       qu'au moment où on interroge le joystick. Pendant un chargement de plusieurs
+       secondes elle déborde, et une relâche perdue laisse le bouton vu comme enfoncé
+       (voir Gamepad::viderFile). C'est ce qui obligeait à appuyer deux fois sur A au
+       retour au menu. Cet écran ne suffit pas à lui seul : pour une carte déjà
+       préparée il n'est appelé qu'une fois, au début. Les vidanges intercalées dans
+       loadTerrain couvrent la suite. */
+    input::Gamepad::viderFile();
 }
 
 }  /* namespace artouste::app */

@@ -35,6 +35,17 @@ constexpr float ACTIVE_THRESHOLD = 0.5f;
 
 bool Gamepad::s_collectiveResetRequested = false;
 
+void Gamepad::viderFile() noexcept {
+    const int jid = activePad();
+    if (jid < 0) {
+        return;
+    }
+    /* La lecture seule suffit : c'est elle qui déclenche la vidange de la file
+     * côté GLFW. Le résultat ne nous intéresse pas ici. */
+    int nombre = 0;
+    (void)glfwGetJoystickButtons(jid, &nombre);
+}
+
 int Gamepad::activePad() noexcept {
     /* Renvoie le premier slot GLFW occupé par une manette reconnue (mapping SDL
      * disponible), ou -1 si aucune. On ne se limite pas au slot 0 : un périphérique

@@ -8,6 +8,7 @@
  */
 
 #include "app/Application.hpp"
+#include "input/Gamepad.hpp"
 
 #include "render/Bc7.hpp"
 #include "render/Buildings.hpp"
@@ -70,11 +71,19 @@ void Application::loadTerrain(const std::string& name) {
         racineTuiles(),
         m_reliefWindow);
 
+    /* Chaque étape ci-dessous bloque plusieurs secondes sans rien lire. On vide donc
+       la file de la manette entre elles : sinon elle déborde, le noyau jette des
+       événements et un bouton relâché pendant le chargement reste vu comme enfoncé
+       (voir Gamepad::viderFile). */
+    input::Gamepad::viderFile();
+
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien
        n'est dessiné. */
     m_buildings =
         batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain) : nullptr;
+
+    input::Gamepad::viderFile();
 
     /* Végétation en billboards : arbres semés d'après l'orthophoto, posés sur le
        relief. Activée par défaut ; désactivable par la clé "arbres 0" de config.txt
@@ -86,6 +95,8 @@ void Application::loadTerrain(const std::string& name) {
     } else {
         m_vegetation.reset();
     }
+
+    input::Gamepad::viderFile();
 
     /* Monuments 3D déclarés par la carte (monuments.txt) : modèles ponctuels posés
        à une coordonnée. Chargés après les bâtiments, dont ils ont fait dégager

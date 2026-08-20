@@ -67,6 +67,17 @@ public:
      * commande active (clavier ou manette). */
     [[nodiscard]] static bool isActive() noexcept;
 
+    /* Vide la file d'événements de la manette, sans rien en faire.
+     *
+     * À appeler pendant toute opération bloquante de plusieurs secondes (le
+     * chargement d'une carte). Sans lecture, le tampon evdev du client déborde,
+     * le noyau jette des événements et signale SYN_DROPPED. GLFW le traite mais
+     * ne resynchronise alors que les axes (pollAbsState / EVIOCGABS) : il ne
+     * relit jamais les boutons, faute d'EVIOCGKEY. Un bouton relâché pendant le
+     * trou reste donc vu comme enfoncé jusqu'au prochain événement le concernant,
+     * et le premier appui suivant ne produit plus de front. */
+    static void viderFile() noexcept;
+
     /* À brancher sur glfwSetJoystickCallback. À la déconnexion d'une manette,
      * demande la remise à zéro du levier de collectif, appliquée au prochain
      * poll (donc à la reconnexion). */

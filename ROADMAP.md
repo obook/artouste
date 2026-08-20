@@ -58,10 +58,13 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 ### Pad du Tourmalet à repositionner
 
-- [ ] Le pad du Tourmalet est un repère touristique promu en hélipad, jamais
-  sourcé (position copiée de landmarks.txt ; helipads.txt porte "Positions
-  approximatives, à affiner sur place"). Recherche d'une position fondée en
-  cours (OSM, orthophoto).
+- [x] Le pad du Tourmalet était un repère touristique promu en hélipad, jamais
+  sourcé. Reposé sur le col (position choisie sur l'orthophoto, vérifiée au
+  MNT : 2116 m contre 2115 m réels), décalé de 5 m d'un talus qui aurait calé
+  la plate-forme 7 m au-dessus du sol. Livré en v0.42.0 (26e5fe7).
+
+- [ ] Le repère "Col du Tourmalet" de landmarks.txt garde l'ancienne position,
+  115 m au sud du col et 33 m trop bas. À recaler sur la position du pad.
 
 ### HAPI (aide à l'approche)
 

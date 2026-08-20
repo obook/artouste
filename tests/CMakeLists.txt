@@ -26,6 +26,7 @@ add_executable(artouste_tests
     projectile_system_tests.cpp
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
+    bille_tests.cpp
     ground_impact_tests.cpp
     hud_alarms_tests.cpp
     texture_cache_tests.cpp

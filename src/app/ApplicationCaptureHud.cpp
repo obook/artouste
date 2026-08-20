@@ -38,6 +38,8 @@ ui::HudData Application::hudDeCapture(const vec3& shotPos) {
     hud.reliefLiserets = m_config.reliefDebug && m_terrain->reliefFin() != nullptr;
     hud.altitudeM     = shotPos.y;  /* vraie altitude du point de capture */
     hud.varioMs       = 1.2f;
+    hud.billeG        = shotFloat("ARTOUSTE_SHOT_BILLE", 0.0f);   /* aiguille-bille au repos */
+    hud.virageDegS    = shotFloat("ARTOUSTE_SHOT_VIRAGE", 0.0f);
     hud.collectivePct = 55.0f;
     hud.pasDeg        = 11.0f;    /* pas de sustentation à 55 % de collectif */
     hud.rotorPct      = 100.0f;

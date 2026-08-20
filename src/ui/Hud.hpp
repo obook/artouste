@@ -56,6 +56,10 @@ struct HudData {
     float airspeedKmh = 0.0f; /* vitesse air en km/h (unité d'époque, Alouette II FR) */
     float headingDeg = 0.0f;
     float varioMs = 0.0f; /* taux de montée en m/s (HUD coins et Super HUD) */
+    float billeG  = 0.0f; /* bille (inclinomètre) : force spécifique latérale en g,
+                             positif = bille à droite. Super HUD seulement. */
+    float virageDegS = 0.0f; /* taux de virage en deg/s, positif à droite : aiguille de
+                                l'indicateur de virage. Super HUD seulement. */
     float collectivePct = 0.0f;
     float pasDeg        = 0.0f;     /* pas collectif réel en degrés de pale (12-15 en vol) */
     float rotorPct = 0.0f;

@@ -1,6 +1,7 @@
 /*
  * HudCadran.hpp
- * Cadran rond façon instrument, avec sa LED d'alarme facultative.
+ * Cadran rond façon instrument, avec sa LED d'alarme facultative, et bille
+ * (inclinomètre) au même gabarit de panneau.
  *
  * Auteur : O. Booklage
  * Date : août 2026
@@ -93,6 +94,72 @@ inline void gauge(ImDrawList* dl, float cx, float cy, float r, float value, floa
 
     centeredText(dl, cx, cy - r - sc(16.0f), HUD_GREEN, label);
     centeredText(dl, cx, cy + r + sc(4.0f), HUD_GREEN, valueText);
+}
+
+/* Aiguille-bille : taux de virage en haut (deg/s), bille de dérapage en bas (force
+ * spécifique latérale en g). Les deux sont positifs à droite. Aiguille sur un repère
+ * et bille au milieu = virage coordonné au taux standard. Le panneau reprend le
+ * gabarit du cadran rond pour tenir dans la même rangée. */
+inline void aiguilleBille(ImDrawList* dl, float cx, float cy, float r, float virageDegS,
+                          float valueG, const char* label) {
+    panelRect(dl, ImVec2(cx - r - sc(8.0f), cy - r - sc(18.0f)),
+              ImVec2(cx + r + sc(8.0f), cy + r + sc(20.0f)), sc(6.0f));
+
+    /* Aiguille de virage, pivot en bas. Les deux repères marquent le taux standard
+       (3 deg/s, un tour en deux minutes) ; la butée est au double. */
+    const ImVec2  pivot(cx, cy + r * 0.30f);
+    const float   aigLen  = r * 0.95f;
+    constexpr float STD_DEG_S  = 3.0f;
+    constexpr float STD_INCL   = 0.35f;  /* rad, inclinaison de l'aiguille au taux standard */
+    for (float sgn : {-1.0f, 1.0f}) {  /* repères du taux standard */
+        const float ar = -1.5707963f + sgn * STD_INCL;
+        const float u  = std::cos(ar);
+        const float v  = std::sin(ar);
+        hudLine(dl, ImVec2(pivot.x + u * aigLen * 0.80f, pivot.y + v * aigLen * 0.80f),
+                ImVec2(pivot.x + u * aigLen * 1.05f, pivot.y + v * aigLen * 1.05f), HUD_GREEN,
+                sc(1.5f));
+    }
+    const float incl = std::fmax(-2.0f, std::fmin(2.0f, virageDegS / STD_DEG_S)) * STD_INCL;
+    const float ar   = -1.5707963f + incl;
+    hudLine(dl, pivot, ImVec2(pivot.x + std::cos(ar) * aigLen, pivot.y + std::sin(ar) * aigLen),
+            HUD_BRIGHT, sc(2.0f));
+    dl->AddCircleFilled(pivot, sc(2.5f), HUD_GREEN);
+
+    /* Tube de la bille : arc de grand rayon, centre au-dessus, creux vers le bas. */
+    const float   tubeR    = r * 1.8f;
+    const float   ballR    = sc(6.0f);
+    const ImVec2  c(cx, cy + r * 0.72f - tubeR);
+    /* Demi-course de la bille : réglée pour que les parois et la bille en butée
+       tiennent dans la largeur du panneau (r + 8), pas au-delà. */
+    const float   halfSpan = 0.52f;
+    /* Les deux parois s'arrêtent au même écart latéral, un rayon de bille au-delà de
+       la butée : à angle égal la paroi intérieure (rayon plus court) s'arrêterait
+       trop tôt et la bille en butée déborderait du tube. */
+    const float bout = std::sin(halfSpan) * tubeR + ballR + sc(2.0f);
+    for (float dr : {-(ballR + sc(2.0f)), ballR + sc(2.0f)}) {
+        const float demi = std::asin(std::fmin(bout / (tubeR + dr), 1.0f));
+        dl->PathArcTo(c, tubeR + dr, 1.5707963f - demi, 1.5707963f + demi, 32);
+        dl->PathStroke(HUD_GREEN, 0, sc(1.5f));
+    }
+
+    /* Repères de coordination, de part et d'autre du fond du tube. */
+    for (float sgn : {-1.0f, 1.0f}) {
+        const float a = 1.5707963f + sgn * (ballR + sc(1.0f)) / tubeR;
+        const float u = std::cos(a);
+        const float v = std::sin(a);
+        hudLine(dl, ImVec2(c.x + u * (tubeR - ballR - sc(2.0f)), c.y + v * (tubeR - ballR - sc(2.0f))),
+                ImVec2(c.x + u * (tubeR + ballR + sc(2.0f)), c.y + v * (tubeR + ballR + sc(2.0f))),
+                HUD_GREEN, sc(1.5f));
+    }
+
+    /* Butée à 0,3 g, comme l'instrument réel. L'angle décroît vers la droite (l'axe Y
+       de l'écran pointe vers le bas), d'où le signe moins. */
+    const float t = std::fmax(-1.0f, std::fmin(1.0f, valueG / 0.3f));
+    const float a = 1.5707963f - t * halfSpan;
+    dl->AddCircleFilled(ImVec2(c.x + std::cos(a) * tubeR, c.y + std::sin(a) * tubeR), ballR,
+                        HUD_BRIGHT);
+
+    centeredText(dl, cx, cy - r - sc(16.0f), HUD_GREEN, label);
 }
 
 } /* namespace artouste::ui::hud_widgets */

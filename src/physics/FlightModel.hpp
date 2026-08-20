@@ -202,4 +202,24 @@ private:
     float     m_cyclicLongitudinalLagged = 0.0f;
 };
 
+/* Bille (inclinomètre) : force spécifique latérale, en g, positive à droite.
+ * Pesanteur projetée sur l'axe droit du fuselage plus accélération du virage
+ * omega x v, ce qui évite de dériver la vitesse image par image. L'axe droit est Z
+ * (X est l'avant, Y le haut). Signe inversé : en virage mal coordonné la bille part
+ * vers l'extérieur. */
+[[nodiscard]] inline float billeG(const RigidBody& body) noexcept {
+    const vec3  right  = body.orientation * vec3{0.0f, 0.0f, 1.0f};
+    const vec3  omega  = body.orientation * body.angularVelocity;
+    const float latMs2 = glm::dot(glm::cross(omega, body.velocity), right) + G * right.y;
+    return -latMs2 / G;
+}
+
+/* Taux de virage en degrés par seconde, positif à droite. Rotation autour de la
+ * verticale MONDE, pas de l'axe de lacet du fuselage, qui s'incline avec le roulis.
+ * Le repère monde a Z vers le sud, donc virer à droite est négatif autour de Y. */
+[[nodiscard]] inline float tauxVirageDegS(const RigidBody& body) noexcept {
+    const vec3 omega = body.orientation * body.angularVelocity;
+    return -glm::degrees(omega.y);
+}
+
 }  /* namespace artouste::physics */

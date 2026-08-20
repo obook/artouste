@@ -41,6 +41,15 @@ void Application::fillHud(ui::HudData& hud,
     }
     hud.headingDeg = headingDeg;
     hud.varioMs = body.velocity.y;
+    /* Aiguille-bille du Super HUD, lissée : brute, elle sautait à chaque rafale.
+       La bille est freinée par son liquide, l'aiguille par son gyro. */
+    constexpr float TAU_BILLE_S  = 0.90f;
+    constexpr float TAU_VIRAGE_S = 1.40f;
+    m_billeG += (physics::billeG(body) - m_billeG) * (1.0f - std::exp(-frameDt / TAU_BILLE_S));
+    m_virageDegS += (physics::tauxVirageDegS(body) - m_virageDegS)
+                  * (1.0f - std::exp(-frameDt / TAU_VIRAGE_S));
+    hud.billeG     = m_billeG;
+    hud.virageDegS = m_virageDegS;
     hud.collectivePct = controls.collective * 100.0f;
     hud.pasDeg = m_flight.pasDeg();  /* graduation réelle du levier (degrés de pale) */
     hud.rotorPct = rotorFraction * 100.0f; /* régime rotor, en pourcentage */

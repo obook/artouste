@@ -139,6 +139,10 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     gauge(dl, vsCx, y, vsR, data.varioMs, -15.0f, 15.0f, 0.0f, 0.0f, "V/S m/s", vs, ledVs,
           data.alarmBlinkOn, 180.0f, /*zeroLine=*/true);
 
+    /* Aiguille-bille, à gauche du V/S : taux de virage et coordination au palonnier.
+       Elle n'existe que dans ce mode ; le HUD 4 coins reste en lignes de texte. */
+    aiguilleBille(dl, vsCx - dx, y, vsR, data.virageDegS, data.billeG, "VIRAGE");
+
     /* Voyants d'alerte, empilés au-dessus du rang d'instruments (du plus bas au
      * plus haut). Orange = surveiller, rouge = limite franchie. */
     struct Warn { bool on; ImU32 col; const char* text; };

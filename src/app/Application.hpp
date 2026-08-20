@@ -605,6 +605,10 @@ private:
        exponentielle du frameDt, pour un chiffre stable et lisible. */
     float m_fpsSmoothed = 0.0f;
     bool m_nrLedArmed = false; /* LED NR : rotor arrivé en régime (voir fillHud) */
+    /* Aiguille-bille lissée (voir fillHud) : les valeurs brutes suivent la physique
+       image par image, l'instrument réel a l'inertie de son liquide et de son gyro. */
+    float m_billeG     = 0.0f;
+    float m_virageDegS = 0.0f;
 
     /* --- Menu et configuration ------------------------------------------------------------ */
 

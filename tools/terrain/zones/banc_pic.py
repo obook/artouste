@@ -5,6 +5,10 @@ Banc d'essai : 3 x 3 km autour du sommet du Pic du Midi de Bigorre, grille
 alors le relevé laser : tout écart visible entre le sol et la fenêtre de relief
 vient du moteur ou du drapage de la photo, jamais de la donnée. Carte d'étude,
 pas de tourisme.
+
+Les fichiers du terrain ne sont plus dans le dépôt (6,2 Mo pour un banc dont les
+deux chantiers sont clos). Les refabriquer avec :
+    python3 tools/fetch_terrain.py banc-pic
 """
 
 ZONE = {

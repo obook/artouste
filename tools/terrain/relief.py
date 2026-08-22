@@ -9,6 +9,7 @@ Licence : GPL v2
 """
 
 import json
+import math
 import os
 import time
 import urllib.error
@@ -208,27 +209,46 @@ def write_heightmap(grid):
     return elev_min, elev_max
 
 
+# Prix, en mètres de dénivelé, d'un mètre de déplacement du point de départ.
+# Sans lui, find_flat_start ne compare QUE la planéité et part au bout de sa
+# fenêtre de recherche pour un gain dérisoire : sur arcachon (mailles de 35 x
+# 48 m, donc fenêtre de +/- 628 x +/- 862 m) il a payé 800 m pour gagner 0,20 m,
+# et le départ s'est retrouvé à 1,1 km de l'hélipad qu'il était censé désigner.
+# À 1 mm par mètre, la fenêtre entière ne pèse jamais plus d'un mètre : un vrai
+# replat de montagne, qui se gagne en mètres, l'emporte toujours ; un écart de
+# quelques centimètres sur du plat, qui n'est que le bruit de la donnée source,
+# ne fait plus voyager personne.
+PENALITE_DISTANCE_M_PAR_M = 0.001
+
+
 def find_flat_start(grid, width_m, height_m):
     """Cale le point de départ sur le replat le plus proche de START_LON/LAT : la
-       cellule dont le voisinage (bloc 3x3, ~100 m) a le plus faible dénivelé. Ainsi
-       l'hélipad se pose bien à plat (et non en travers ni flottant sur un flanc)."""
+       cellule dont le voisinage (bloc 3x3, ~100 m) a le plus faible dénivelé, à
+       distance égale. Ainsi l'hélipad se pose bien à plat (et non en travers ni
+       flottant sur un flanc), sans partir chercher au loin un replat à peine
+       meilleur (voir PENALITE_DISTANCE_M_PAR_M)."""
     arr = np.array([[max(0.0, z) if z > config.NODATA else 0.0 for z in row] for row in grid],
                    dtype=np.float32)
     col0 = int(round((config.START_LON - config.LON_MIN)
                      / (config.LON_MAX - config.LON_MIN) * (config.COLS - 1)))
     row0 = int(round((config.LAT_MAX - config.START_LAT)
                      / (config.LAT_MAX - config.LAT_MIN) * (config.ROWS - 1)))
+    # La maille n'est pas carrée : la distance se compte en mètres, pas en cellules.
+    pas_x = width_m / (config.COLS - 1)
+    pas_z = height_m / (config.ROWS - 1)
     win = 18  # cellules autour de la cible (~650 m)
     best = None
     for r in range(max(1, row0 - win), min(config.ROWS - 1, row0 + win + 1)):
         for c in range(max(1, col0 - win), min(config.COLS - 1, col0 + win + 1)):
             block = arr[r - 1:r + 2, c - 1:c + 2]
             rough = float(block.max() - block.min())  # dénivelé du voisinage
-            if best is None or rough < best[0]:
-                best = (rough, r, c)
-    _, r, c = best
+            ecart = math.hypot((c - col0) * pas_x, (r - row0) * pas_z)
+            score = rough + PENALITE_DISTANCE_M_PAR_M * ecart
+            if best is None or score < best[0]:
+                best = (score, rough, ecart, r, c)
+    _, rough, ecart, r, c = best
     start_x = (c / (config.COLS - 1) - 0.5) * width_m   # colonne 0 = ouest, dernière = est
     start_z = (r / (config.ROWS - 1) - 0.5) * height_m   # rangée 0 = nord, dernière = sud
-    print(f"[depart] replat à la cellule ({c},{r}), dénivelé voisinage {best[0]:.1f} m, "
-          f"altitude {arr[r, c]:.0f} m")
+    print(f"[depart] replat à la cellule ({c},{r}), dénivelé voisinage {rough:.1f} m, "
+          f"altitude {arr[r, c]:.0f} m, à {ecart:.0f} m du point demandé")
     return start_x, start_z

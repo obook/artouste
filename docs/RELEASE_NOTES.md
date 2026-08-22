@@ -1,3 +1,9 @@
+## v0.44.0 - 22 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Carte Toulouse** : l'aérodrome de Lasbordes, la Cité de l'espace, la Garonne et le centre-ville (Capitole, Saint-Sernin, les Jacobins, Pont Neuf), sur 12 km de côté. Départ sur l'aire de poser de Lasbordes, hélipads au CHU Purpan et au CHU Rangueil.
+
 ## v0.43.0 - 20 août 2026
 
 ### Nouvelles fonctionnalités

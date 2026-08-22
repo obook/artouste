@@ -215,6 +215,15 @@ private:
        "lon lat altitude cap echelle_h echelle_v rayon_m fichier nom" (un par
        ligne) dans out. Fichier absent : out reste vide. */
     void loadMonuments(const std::filesystem::path& path, std::vector<Monument>& out);
+    /* Cale m_startX / m_startZ sur l'hélipad le plus proche. start_x / start_z
+       de terrain.txt n'est qu'un REPÈRE : find_flat_start y cherche le replat le
+       plus proche, pas le point exact, et la scène pose ensuite l'appareil sur
+       l'hélipad le plus proche de ce repère (ApplicationSceneTerrain.cpp). Les
+       deux divergeaient de 121 à 4245 m selon la carte, si bien que
+       l'aplanissement du départ et la correction du relief fin portaient sur un
+       coin de champ, jamais sur le pad. On applique donc ici la même règle, une
+       fois pour toutes et avant tout le reste. */
+    void calerDepartSurHelipad();
     /* Aplanit le relief sous le point de départ (plateforme plate, pour que sol,
        disque et appareil posé soient à la même hauteur au spawn). */
     void flattenPads();

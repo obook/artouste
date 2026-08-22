@@ -22,6 +22,20 @@
 
 namespace artouste::render {
 
+namespace {
+
+/* Rayons, en mètres, des zones où le relief fin est ramené vers la carte
+   d'ensemble : plat au centre, puis fondu jusqu'au relief fin intact.
+   Le départ est large : l'aplanissement de flattenPads doit être suivi sans
+   marche visible. Un hélipad ordinaire est au plus juste : son plateau ne fait
+   que 8 m de rayon, et raboter plus large gommerait le relief fin autour. */
+constexpr float PLAT_DEPART_M  = 40.0f;
+constexpr float FONDU_DEPART_M = 40.0f;
+constexpr float PLAT_PAD_M     = 12.0f;
+constexpr float FONDU_PAD_M    = 20.0f;
+
+} /* namespace */
+
 void Terrain::ouvrirDetail(const std::filesystem::path& dir, int fenetrePx,
                            const std::filesystem::path& racineTuiles) {
     if (fenetrePx <= 0) {
@@ -134,37 +148,64 @@ void Terrain::ouvrirRelief(const std::filesystem::path& dir,
 
 void Terrain::corrigerTuileRelief(float x0, float z0, float pasX, float pasZ, int cote,
                                   float* hauteurs, bool aDonnee) const noexcept {
-    /* Le départ est aplani dans le maillage d'ensemble (voir flattenPads) : le
-       relief fin doit y revenir, sinon l'appareil naîtrait sur une bosse. */
-    constexpr float PLAT_M  = 40.0f;
-    constexpr float FONDU_M = 40.0f;
-    const float     demiX   = 0.5f * static_cast<float>(cote) * pasX;
-    const float     demiZ   = 0.5f * static_cast<float>(cote) * pasZ;
-    const bool      proche  = m_hasStart &&
-                        std::fabs(x0 + demiX - m_startX) < demiX + PLAT_M + FONDU_M &&
-                        std::fabs(z0 + demiZ - m_startZ) < demiZ + PLAT_M + FONDU_M;
-    if (aDonnee && !proche) {
+    /* Pas de LiDAR sur cette tuile : tout vient de la carte d'ensemble. */
+    if (!aDonnee) {
+        for (int j = 0; j < cote; ++j) {
+            const float z = z0 + static_cast<float>(j) * pasZ;
+            for (int i = 0; i < cote; ++i) {
+                const float x = x0 + static_cast<float>(i) * pasX;
+                hauteurs[static_cast<std::size_t>(j) * static_cast<std::size_t>(cote) +
+                         static_cast<std::size_t>(i)] = heightCoarse(x, z);
+            }
+        }
         return;
     }
 
-    for (int j = 0; j < cote; ++j) {
-        const float z = z0 + static_cast<float>(j) * pasZ;
-        for (int i = 0; i < cote; ++i) {
-            const float       x = x0 + static_cast<float>(i) * pasX;
-            const std::size_t k = static_cast<std::size_t>(j) * static_cast<std::size_t>(cote) +
-                                  static_cast<std::size_t>(i);
-            if (!aDonnee) {
-                hauteurs[k] = heightCoarse(x, z);
-                continue;
+    /* Là où le moteur pose quelque chose de plat, le relief fin doit revenir à
+       la carte, sinon il passe par-dessus :
+
+       - le DÉPART est aplani dans le maillage d'ensemble (flattenPads) ;
+         l'appareil y naîtrait sur une bosse.
+       - chaque HÉLIPAD porte une plate-forme calée sur heightAt, donc sur la
+         carte d'ensemble (buildPadPlatforms). Le relief fin, lui, est levé au
+         LiDAR : mesuré sur toulouse, il dépasse le plateau de 0,18 à 0,45 m
+         selon le pad, et le disque se retrouve à moitié enterré. La jupe du
+         disque n'y peut rien, elle n'habille que le cas inverse.
+
+       On ne parcourt pas tous les points pour chaque zone : une zone fait
+       quelques dizaines de mètres, une tuile plusieurs centaines. On calcule
+       donc la fenêtre d'indices couverte et on s'y tient. */
+    const auto ramener = [&](float px, float pz, float plat, float fondu) {
+        const float rayon = plat + fondu;
+        const int   i0 = std::max(0, static_cast<int>(std::ceil((px - rayon - x0) / pasX)));
+        const int   i1 = std::min(cote - 1, static_cast<int>(std::floor((px + rayon - x0) / pasX)));
+        const int   j0 = std::max(0, static_cast<int>(std::ceil((pz - rayon - z0) / pasZ)));
+        const int   j1 = std::min(cote - 1, static_cast<int>(std::floor((pz + rayon - z0) / pasZ)));
+        for (int j = j0; j <= j1; ++j) {
+            const float z = z0 + static_cast<float>(j) * pasZ;
+            for (int i = i0; i <= i1; ++i) {
+                const float x = x0 + static_cast<float>(i) * pasX;
+                const float d = std::sqrt((x - px) * (x - px) + (z - pz) * (z - pz));
+                if (d >= rayon) {
+                    continue;
+                }
+                const float       t = std::clamp((d - plat) / fondu, 0.0f, 1.0f);
+                const std::size_t k = static_cast<std::size_t>(j) * static_cast<std::size_t>(cote) +
+                                      static_cast<std::size_t>(i);
+                /* Deux zones qui se recouvrent (le départ EST un hélipad depuis
+                   calerDepartSurHelipad) tirent chacune leur tour : le produit
+                   des poids ne fait que ramener davantage vers la carte, jamais
+                   l'inverse. */
+                hauteurs[k] = heightCoarse(x, z) * (1.0f - t) + hauteurs[k] * t;
             }
-            const float d = std::sqrt((x - m_startX) * (x - m_startX) +
-                                      (z - m_startZ) * (z - m_startZ));
-            if (d >= PLAT_M + FONDU_M) {
-                continue;
-            }
-            const float t = std::clamp((d - PLAT_M) / FONDU_M, 0.0f, 1.0f);
-            hauteurs[k]   = heightCoarse(x, z) * (1.0f - t) + hauteurs[k] * t;
         }
+    };
+
+    if (m_hasStart) {
+        ramener(m_startX, m_startZ, PLAT_DEPART_M, FONDU_DEPART_M);
+    }
+    for (const PadPlatform& plateau : m_padPlatforms) {
+        ramener(plateau.x, plateau.z, PLAT_PAD_M, FONDU_PAD_M);
     }
 }
 

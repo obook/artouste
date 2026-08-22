@@ -151,6 +151,30 @@ void Terrain::loadMonuments(const std::filesystem::path& path, std::vector<Monum
     std::printf("[Terrain] %zu monument(s) 3D déclaré(s).\n", out.size());
 }
 
+void Terrain::calerDepartSurHelipad() {
+    if (!m_hasStart || !m_hasGeo || m_helipads.empty()) {
+        return;
+    }
+    float bestX = m_startX, bestZ = m_startZ, bestD2 = -1.0f;
+    for (const Landmark& pad : m_helipads) {
+        float px = 0.0f, pz = 0.0f;
+        worldAt(pad.lon, pad.lat, px, pz);
+        const float d2 = (px - m_startX) * (px - m_startX) + (pz - m_startZ) * (pz - m_startZ);
+        if (bestD2 < 0.0f || d2 < bestD2) {
+            bestD2 = d2;
+            bestX  = px;
+            bestZ  = pz;
+        }
+    }
+    const float ecart = std::sqrt(std::max(bestD2, 0.0f));
+    if (ecart > 1.0f) {
+        std::printf("[Terrain] départ calé sur l'hélipad le plus proche (%.0f m du repère).\n",
+                    static_cast<double>(ecart));
+    }
+    m_startX = bestX;
+    m_startZ = bestZ;
+}
+
 void Terrain::flattenPads() {
     if (m_heights.empty() || m_cols < 2 || m_rows < 2) {
         return;

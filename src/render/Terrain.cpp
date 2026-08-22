@@ -107,6 +107,7 @@ Terrain::Terrain(const std::filesystem::path& dir,
        déforment plus le relief : chacun est une petite plate-forme portée par
        heightAt (voir buildPadPlatforms), le disque et sa jupe habillant le
        surplomb éventuel. */
+    calerDepartSurHelipad();
     flattenPads();
     buildPadPlatforms();
 

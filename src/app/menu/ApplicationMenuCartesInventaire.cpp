@@ -74,7 +74,12 @@ Application::EtatCarte Application::inventorierCarte(const std::filesystem::path
     etat.dossier          = dossier;
     etat.octetsBatiments  = tailleFichier(dossier / "buildings.bin");
     etat.dossierTuiles    = render::tuiles::cheminJeuDeTuiles(dossier, racineTuiles());
-    etat.octetsTuiles     = tailleDossier(etat.dossierTuiles, battre);
+    /* Le résumé écrit par la fabrique évite de peser des centaines de milliers
+       de fichiers ; on ne marche le dossier que s'il manque. */
+    etat.octetsTuiles     = fab::lireResume(etat.dossierTuiles);
+    if (etat.octetsTuiles == 0) {
+        etat.octetsTuiles = tailleDossier(etat.dossierTuiles, battre);
+    }
     /* Finesse du jeu en place : son niveau le plus fin. Ne lit que les
        index, pas les tuiles. */
     if (!etat.dossierTuiles.empty()) {
@@ -97,7 +102,10 @@ Application::EtatCarte Application::inventorierCarte(const std::filesystem::path
     /* Le relief fin vit à côté des tuiles d'image, et le moteur le cherche
        aux mêmes endroits : on lui demande où il le trouverait. */
     etat.dossierRelief = render::relief::cheminJeuDeRelief(dossier, racineTuiles());
-    etat.octetsRelief  = tailleDossier(etat.dossierRelief, battre);
+    etat.octetsRelief  = fab::lireResume(etat.dossierRelief);
+    if (etat.octetsRelief == 0) {
+        etat.octetsRelief = tailleDossier(etat.dossierRelief, battre);
+    }
     if (!etat.dossierRelief.empty()) {
         const fab::GrilleRelief pose  = fab::lireIndexRelief(etat.dossierRelief);
         const fab::GrilleRelief voulu = fab::grilleRelief(dossier);

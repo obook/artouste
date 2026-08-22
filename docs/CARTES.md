@@ -379,6 +379,25 @@ restent tenus pour complets, faute de trace : leur état se vérifie en comptant
 les tuiles présentes, sachant que les tuiles hors couverture (la mer) sont
 absentes à juste titre.
 
+### Poids du jeu : resume.txt
+
+Le gestionnaire de cartes affiche ce que chaque jeu occupe sur le disque. Le
+mesurer demandait de peser les fichiers un par un, et un jeu fin en compte des
+centaines de milliers : 12 s pour les seules tuiles d'une clé USB en FAT32,
+tout en cache, contre 0,1 s pour le même arbre sur ext4. Le pilote FAT
+réanalyse le dossier brut à chaque lecture, là où ext4 tient un index.
+
+La fabrication écrit donc un `resume.txt` dans le dossier de sortie quand elle
+aboutit : nombre d'octets, nombre de fichiers. Le gestionnaire le lit au lieu de
+peser. L'ouverture de l'écran passe de 14,5 s à 0,8 s sur le jeu complet des
+dix cartes, à chiffres identiques.
+
+Le fichier est effacé au démarrage d'une fabrication et réécrit à la fin : sa
+présence vaut "ce jeu est complet et rien n'y a bougé depuis". Absent, on
+retombe sur la pesée. Le supprimer à la main force donc une nouvelle mesure,
+ce qu'il faut faire après avoir ajouté ou retiré des tuiles soi-même.
+`fetch_tuiles.py` et `fetch_relief.py` l'écrivent aux mêmes conditions.
+
 ## Bâtiments 3D (BD TOPO)
 
 Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur

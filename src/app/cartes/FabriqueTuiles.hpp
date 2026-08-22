@@ -137,6 +137,24 @@ inline constexpr const char* NOM_MARQUEUR_INACHEVE = "fabrication_inachevee.txt"
    tenus pour complets, faute de trace. */
 [[nodiscard]] bool fabricationInachevee(const std::filesystem::path& dossierTuiles);
 
+/* Inventaire du jeu, écrit à la fin d'une fabrication complète : le nombre
+   d'octets et de fichiers que le gestionnaire de cartes affiche. Sans lui il
+   faut parcourir le jeu pour le savoir, et un jeu fin en compte des centaines
+   de milliers : 12 s mesurées sur une clé USB en FAT32, tout en cache, contre
+   0,1 s pour le même arbre sur ext4 (le pilote FAT réanalyse le dossier brut à
+   chaque lecture). Il est effacé quand une fabrication démarre et réécrit
+   quand elle aboutit : sa présence vaut donc "ce jeu est complet et personne
+   n'y a touché depuis". Le supprimer à la main force une nouvelle pesée. */
+inline constexpr const char* NOM_RESUME = "resume.txt";
+
+/* Parcourt le dossier et y écrit NOM_RESUME. À appeler une seule fois, à la fin
+   d'une fabrication : c'est le moment où le parcours ne coûte rien de plus à
+   l'utilisateur, qui vient d'attendre un téléchargement. */
+void ecrireResume(const std::filesystem::path& dossier);
+
+/* Octets annoncés par NOM_RESUME, ou 0 s'il est absent ou illisible. */
+[[nodiscard]] std::uintmax_t lireResume(const std::filesystem::path& dossier);
+
 class Fabrique {
 public:
     Fabrique() = default;

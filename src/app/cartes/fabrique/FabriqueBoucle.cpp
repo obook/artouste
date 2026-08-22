@@ -83,6 +83,10 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
        C'est lui, et non l'index, qui dit à l'écran des cartes que le jeu est
        partiel : l'index décrit la grille VOULUE, pas celle qui est sur le disque. */
     {
+        /* Le résumé décrit un jeu complet : il ne doit pas survivre au démarrage
+           d'une fabrication, sinon l'écran des cartes garderait l'ancien poids. */
+        std::error_code ec;
+        std::filesystem::remove(dossierSortie / NOM_RESUME, ec);
         std::ofstream marqueur(dossierSortie / NOM_MARQUEUR_INACHEVE, std::ios::trunc);
         marqueur << "# Fabrication en cours ou interrompue.\n";
         marqueur << "# Ce fichier disparaît quand le jeu de tuiles est complet.\n";
@@ -229,6 +233,7 @@ void Fabrique::boucle(std::filesystem::path dossierCarte,
            sans arrêt ni erreur. */
         std::error_code ec;
         std::filesystem::remove(dossierSortie / NOM_MARQUEUR_INACHEVE, ec);
+        ecrireResume(dossierSortie);
         finir(false, "Terminé : " + std::to_string(tuilesEcrites) + " tuiles, " +
                          formaterOctets(octetsEcrits) + " sur le disque.");
     }

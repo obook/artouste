@@ -102,6 +102,52 @@ bool fabricationInachevee(const std::filesystem::path& dossierTuiles) {
     return std::filesystem::exists(dossierTuiles / NOM_MARQUEUR_INACHEVE, ec);
 }
 
+void ecrireResume(const std::filesystem::path& dossier) {
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dossier, ec)) {
+        return;
+    }
+    std::uintmax_t octets   = 0;
+    std::uintmax_t fichiers = 0;
+    for (const auto& entree : std::filesystem::recursive_directory_iterator(dossier, ec)) {
+        if (entree.is_regular_file(ec)) {
+            octets += entree.file_size(ec);
+            ++fichiers;
+        }
+    }
+    std::ofstream out(dossier / NOM_RESUME, std::ios::trunc);
+    if (!out) {
+        return;
+    }
+    out << "# Inventaire du jeu, écrit à la fin de la fabrication.\n";
+    out << "# Le gestionnaire de cartes le lit au lieu de peser les fichiers un\n";
+    out << "# par un. Supprimer ce fichier force une nouvelle pesée.\n";
+    out << "octets " << octets << "\n";
+    out << "fichiers " << fichiers << "\n";
+}
+
+std::uintmax_t lireResume(const std::filesystem::path& dossier) {
+    if (dossier.empty()) {
+        return 0;
+    }
+    std::ifstream in(dossier / NOM_RESUME);
+    if (!in) {
+        return 0;
+    }
+    std::string cle;
+    while (in >> cle) {
+        if (cle == "octets") {
+            std::uintmax_t octets = 0;
+            if (in >> octets) {
+                return octets;
+            }
+            return 0;
+        }
+        std::getline(in, cle);
+    }
+    return 0;
+}
+
 Interet interet(const std::filesystem::path& dossierCarte) {
     Interet i;
     const CalageCarte carte = lireCalage(dossierCarte);

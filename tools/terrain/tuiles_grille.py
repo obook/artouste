@@ -12,6 +12,7 @@ import math
 import os
 
 NOM_MARQUEUR_INACHEVE = "fabrication_inachevee.txt"
+NOM_RESUME = "resume.txt"
 
 def lire_calage(chemin):
     """Lit le terrain.txt d'une carte : emprise au sol, bornes géographiques et
@@ -156,6 +157,12 @@ def marquer_inacheve(sortie, m_par_pixel, tuiles_attendues):
        ce témoin, un jeu interrompu par ce script ne se distingue pas d'un jeu
        complet, et l'écran des cartes annonce des tuiles qui ne couvrent qu'un
        coin de la carte."""
+    # Le résumé décrit un jeu complet : il ne doit pas survivre au démarrage
+    # d'une fabrication, sinon le gestionnaire de cartes garderait l'ancien poids.
+    try:
+        os.unlink(os.path.join(sortie, NOM_RESUME))
+    except FileNotFoundError:
+        pass
     with open(os.path.join(sortie, NOM_MARQUEUR_INACHEVE), "w", encoding="utf-8") as f:
         f.write("# Fabrication en cours ou interrompue.\n")
         f.write("# Ce fichier disparaît quand le jeu de tuiles est complet.\n")
@@ -172,6 +179,29 @@ def retirer_marque_inacheve(sortie):
         os.unlink(os.path.join(sortie, NOM_MARQUEUR_INACHEVE))
     except FileNotFoundError:
         pass
+    ecrire_resume(sortie)
+
+
+def ecrire_resume(sortie):
+    """Inventaire du jeu, dans les mêmes termes que la fabrication intégrée au
+       jeu (voir src/app/cartes/FabriqueTuiles.hpp). Le gestionnaire de cartes le
+       lit au lieu de peser des centaines de milliers de fichiers : sur une clé
+       USB en FAT32 la pesée prend une douzaine de secondes, tout en cache."""
+    octets = 0
+    fichiers = 0
+    for racine, _, noms in os.walk(sortie):
+        for nom in noms:
+            try:
+                octets += os.path.getsize(os.path.join(racine, nom))
+                fichiers += 1
+            except OSError:
+                pass
+    with open(os.path.join(sortie, NOM_RESUME), "w", encoding="utf-8") as f:
+        f.write("# Inventaire du jeu, écrit à la fin de la fabrication.\n")
+        f.write("# Le gestionnaire de cartes le lit au lieu de peser les fichiers un\n")
+        f.write("# par un. Supprimer ce fichier force une nouvelle pesée.\n")
+        f.write(f"octets {octets}\n")
+        f.write(f"fichiers {fichiers}\n")
 
 
 def marquer_bloc(sortie, col0, rangee0):

@@ -170,3 +170,29 @@ TEST_CASE("une finesse absurde ne produit aucune estimation") {
     CHECK_FALSE(estimer(dossier.chemin(), 0.0f).valide);
     CHECK_FALSE(estimer(dossier.chemin(), -1.0f).valide);
 }
+
+TEST_CASE("le résumé rend le poids du jeu sans le repeser") {
+    const DossierTemporaire dossier("artouste_resume");
+    std::filesystem::create_directories(dossier.chemin() / "12");
+    {
+        std::ofstream a(dossier.chemin() / "index.txt");
+        a << "0123456789";
+    }
+    {
+        std::ofstream b(dossier.chemin() / "12" / "34.dds", std::ios::binary);
+        b << "01234";
+    }
+
+    /* Absent : rien à annoncer, l'appelant retombe sur la marche de dossier. */
+    CHECK(lireResume(dossier.chemin()) == 0);
+
+    ecrireResume(dossier.chemin());
+    CHECK(lireResume(dossier.chemin()) == 15);
+}
+
+TEST_CASE("un résumé illisible vaut un résumé absent") {
+    const DossierTemporaire dossier("artouste_resume_casse");
+    std::ofstream(dossier.chemin() / NOM_RESUME) << "# rien que des commentaires\n";
+
+    CHECK(lireResume(dossier.chemin()) == 0);
+}

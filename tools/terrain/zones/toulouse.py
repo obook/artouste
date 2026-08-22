@@ -13,9 +13,9 @@ aéro-clubs, le long de la piste 15/33.
 ZONE = {
     "bbox": (1.395, 1.545, 43.535, 43.645),
     "recolor_sea": False,
-    # Aire de poser relevée sur l'orthophoto, au nord du parking, près de la
-    # manche à air (noeud OpenStreetMap à 13 m).
-    "start": (1.500467, 43.586835),
+    # Aire de poser relevée sur l'orthophoto par l'utilisateur, au nord du
+    # parking des aéro-clubs, près de la manche à air.
+    "start": (1.500530, 43.586813),
     "start_heading": 300,  # face à l'ouest-nord-ouest : la piste, puis le Capitole
     # À ajuster visuellement : petites annexes du bâti pavillonnaire.
     "height_min": 3.0,
@@ -76,12 +76,12 @@ ZONE = {
         ("Lafourguette", 1.4108, 43.5649),
         ("Hôpital Purpan", 1.4013, 43.6098),
     ],
-    # Aires de poser réelles relevées sur OpenStreetMap. Le pad de départ sert
-    # aussi d'indice au moteur, qui retient l'hélipad le plus proche.
+    # Aires de poser réelles, les trois relevées sur l'orthophoto IGN. Le pad de
+    # départ sert aussi d'indice au moteur, qui retient l'hélipad le plus proche.
     "helipads": [
-        ("Aérodrome de Toulouse-Lasbordes", 1.500467, 43.586835),
-        ("CHU Purpan", 1.4001, 43.6133),
-        ("CHU Rangueil", 1.4486, 43.5613),
+        ("Aérodrome de Toulouse-Lasbordes", 1.500530, 43.586813),
+        ("CHU Purpan", 1.400065, 43.613242),
+        ("CHU Rangueil", 1.448630, 43.561258),
     ],
     # Piste et abords de l'aérodrome : herbe verte dans l'ortho, sinon boisée
     # par erreur (comme La Teste à Arcachon et Seyresse à Dax).
@@ -93,6 +93,6 @@ ZONE = {
     # 15/33, approche vers le nord-ouest (QFU 33). Pente 6 % : valeur usuelle
     # pour une hélistation, faute de relevé d'obstacles réel.
     "hapi": [
-        ("Aérodrome de Toulouse-Lasbordes", 1.500467, 43.586835, 330, 6),
+        ("Aérodrome de Toulouse-Lasbordes", 1.500530, 43.586813, 330, 6),
     ],
 }

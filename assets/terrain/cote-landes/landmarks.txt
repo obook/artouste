@@ -13,7 +13,7 @@
 -1.3055 43.6667 St-Vincent-de-Tyrosse
 -1.3594 43.6342 Bénesse-Maremne
 -1.3972 43.6007 Marais d'Orx
--1.4488 43.6552 Estacade
+-1.446238 43.655183 Estacade
 -1.315111 43.610662 Saubrigues
 -1.4339 43.6981 Seignosse Océan
 -1.4071 43.7719 Étang de Pinsolle

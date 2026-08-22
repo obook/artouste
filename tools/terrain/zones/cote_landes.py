@@ -52,9 +52,18 @@ ZONE = {
         ("St-Vincent-de-Tyrosse", -1.3055, 43.6667),
         ("Bénesse-Maremne", -1.3594, 43.6342),  # mairie
         ("Marais d'Orx", -1.3972, 43.6007),
-        # Repris de la carte capbreton, retirée le 27/07/2026 : c'était le seul
-        # de ses lieux qui manquait ici.
-        ("Estacade de Capbreton", -1.4488, 43.6552),
+        # Milieu de la jetée, mesuré sur l'axe BD TOPO. Le point venait de la
+        # carte capbreton, retirée le 27/07/2026, et valait (-1.4488, 43.6552) :
+        # 110 m au-delà du bout de la jetée, en pleine mer. L'étiquette flottait
+        # sur l'eau et on cherchait la jetée à côté.
+        ("Estacade", -1.446238, 43.655183),
+        # Ajoutés jadis à la main dans landmarks.txt sans passer par ici : une
+        # régénération les effaçait. Le fichier est produit, la zone est la
+        # source, rien ne doit vivre que dans le fichier.
+        ("Saubrigues", -1.315111, 43.610662),
+        ("Seignosse Océan", -1.4339, 43.6981),
+        ("Étang de Pinsolle", -1.4071, 43.7719),
+        ("Les Oyats", -1.4215, 43.7246),
     ],
     # Coordonnées relevées sur Google Maps.
     "helipads": [

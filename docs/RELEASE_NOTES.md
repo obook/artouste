@@ -1,3 +1,20 @@
+## v0.45.0 - 22 août 2026
+
+### Nouvelles fonctionnalités
+
+- **Entrée du port de Capbreton en 3D** : les deux môles du chenal du Boucarot, la passerelle en bois de l'estacade sud et les trois feux d'entrée. La maille de la carte, 25 x 38 m, aplatissait les jetées à 0,2 m.
+
+### Changements
+
+- **Ouverture du gestionnaire de cartes** : 0,8 s au lieu de 14,5 s. La fabrication écrit désormais le poids du jeu dans un resume.txt, au lieu de peser des centaines de milliers de fichiers à chaque ouverture.
+
+### Corrections
+
+- **Hélisurfaces à moitié enterrées** : le relief fin passait par-dessus les plateaux de pad, de 0,18 à 0,45 m mesurés. Et l'aplanissement du départ tombait jusqu'à 1 km à côté du pad où l'appareil se pose.
+- **Point de départ qui voyageait** : la recherche de replat partait au bout de sa fenêtre pour quelques centimètres, 800 m payés pour 0,20 m sur arcachon.
+- **Hélipads de Toulouse** recalés sur l'orthophoto.
+- **Repère de l'estacade de Capbreton** : il tombait 110 m au large du bout de la jetée.
+
 ## v0.44.0 - 22 août 2026
 
 ### Nouvelles fonctionnalités

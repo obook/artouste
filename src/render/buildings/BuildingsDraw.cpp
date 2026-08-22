@@ -54,6 +54,12 @@ bool boxOutsideFrustum(const vec4 planes[6], const vec3& mn, const vec3& mx) {
 
 } /* namespace */
 
+void Buildings::drawTabliers() const {
+    /* Pas de culling : quelques centaines de rubans plats, un seul appel de
+       dessin, à comparer aux dizaines de milliers de bâtiments d'à-côté. */
+    m_tabliers.draw();
+}
+
 void Buildings::draw(const mat4& worldViewProj, const vec3& camWorldPos) const {
     if (m_tiles.empty() || m_mesh.empty()) {
         return;

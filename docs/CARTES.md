@@ -24,7 +24,8 @@ Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
 ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
 ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
-`buildings.bin` (bâtiments 3D), `forest.png` (masque de forêt, voir
+`buildings.bin` (bâtiments 3D), `bridges.bin` (ouvrages d'art, voir
+ci-dessous), `forest.png` (masque de forêt, voir
 ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
 zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
@@ -412,6 +413,53 @@ part par `tools/fetch_buildings.py`, qui interroge le service WFS et écrit
 tools/.venv/bin/python tools/fetch_buildings.py cote-landes
 tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
+
+## Ouvrages d'art (bridges.bin)
+
+Le relief vient de RGE ALTI, un modèle numérique de **terrain** : il donne le
+sol nu, sans ponts ni viaducs. Un pont n'existe donc que dans l'orthophoto
+plaquée dessus, et son tablier suit le creux du lit du fleuve. Mesuré sur le
+pont d'Empalot à Toulouse : 8,5 m de creux entre la berge et le milieu de la
+Garonne, le tablier plongeait dans l'eau.
+
+La BD TOPO, elle, donne aux tronçons de route et de voie ferrée une géométrie
+en trois dimensions, avec l'altitude de la chaussée, et un attribut
+`position_par_rapport_au_sol` qui vaut 1 ou plus quand la voie est portée par un
+ouvrage. `tools/fetch_bridges.py` en tire un ruban par tronçon et écrit
+`assets/terrain/<zone>/bridges.bin` :
+
+```bash
+tools/.venv/bin/python tools/fetch_bridges.py toulouse
+```
+
+Le moteur extrude chaque ruban en tablier (dessus, dessous, deux flancs) à
+l'altitude relevée, dans le même maillage et le même appel de dessin que les
+bâtiments. Quelques dizaines de kilooctets par carte, deux secondes de
+téléchargement. Une carte sans `bridges.bin` garde ses ponts peints au sol,
+comme avant.
+
+Deux écarts assumés, tous deux dus à ce que la BD TOPO ne dit pas :
+
+- **La largeur.** `largeur_de_chaussee` donne le revêtement roulant, pas
+  l'ouvrage : ni bande d'arrêt, ni trottoir, ni parapet, et une deux fois deux
+  voies arrive en deux tronçons distincts. On ajoute donc 2,5 m de débord de
+  chaque côté, plafonnés à 40 % de la chaussée pour ne pas engraisser une
+  passerelle. Mesuré au nadir sur l'orthophoto au franchissement de la Garonne
+  par l'A620 : 33 m de bitume en travers, dont 13,5 m couverts sans le débord et
+  30 m avec.
+- **La photo en dessous.** L'orthophoto continue de peindre le pont au niveau du
+  sol, dans le lit du fleuve. Le tablier le masque vu d'en haut ; en passant
+  dessous, les deux se voient.
+
+La chaussée du tablier, elle, n'est pas grise : elle est **dessinée avec le
+shader du terrain** et non avec celui des bâtiments, ce qui lui donne
+l'orthophoto et les tuiles de détail drapées par coordonnées monde. Le tablier
+montre donc la photo du pont lui-même, marquages et véhicules compris, à la
+finesse du sol qui l'entoure. Seuls le dessous et les flancs restent en béton
+uni. Aucun shader n'a été écrit pour ça : le drapage se fait en donnant aux
+sommets de la chaussée le même UV que le maillage du terrain
+(`TerrainMaillage.cpp`), et le dessin passe après le maillage d'ensemble, hors
+du pochoir de la fenêtre de relief.
 
 ## Masque de forêt (forest.png)
 

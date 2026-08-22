@@ -101,6 +101,20 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
 
         m_terrain->bindTexture(0);
 
+        /* Chaussée des ouvrages d'art, dessinée avec le TERRAIN et non avec les
+           bâtiments : elle reçoit ainsi l'orthophoto et les tuiles de détail du
+           sol, drapées par coordonnées monde. Le tablier montre donc la photo du
+           pont, à la finesse du sol d'à-côté, au lieu d'un aplat gris qui
+           laissait voir la photo du pont dépasser autour de lui.
+           Tirée APRÈS le maillage d'ensemble et hors du pochoir : dans le
+           pochoir elle disparaîtrait sous l'emprise de la fenêtre de relief,
+           c'est-à-dire juste sous l'appareil. */
+        const auto dessinerTabliers = [this] {
+            if (m_buildings && m_buildings->aTabliers()) {
+                m_buildings->drawTabliers();
+            }
+        };
+
         /* Relief fin autour de l'appareil, dessiné AVANT le maillage d'ensemble
            et marquant son emprise dans le pochoir : le maillage d'ensemble en
            est ensuite écarté. Un simple décalage de profondeur ne suffirait pas,
@@ -198,11 +212,13 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
             m_terrain->draw();
             glDisable(GL_STENCIL_TEST);
+            dessinerTabliers();
         } else {
             /* Sans fenêtre de relief, il n'y a aucune frontière à tracer. */
             m_terrainShader->setInt("u_reliefActif", 0);
             m_terrainShader->setFloat("u_reliefLiseret", 0.0f);
             m_terrain->draw();
+            dessinerTabliers();
         }
     } else {
         m_shader->use();

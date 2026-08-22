@@ -112,6 +112,33 @@ def boite(sommets, faces, centre, demi):
         faces.append(tuple(base + k for k in q))
 
 
+def barre(sommets, faces, a, b, demi_cote):
+    """Barreau droit entre deux points, de section carrée ORIENTÉE sur son axe.
+       Une boîte alignée sur les axes du monde faisait, pour un barreau en
+       diagonale, un pavé de plusieurs mètres de côté : la rambarde en devenait
+       un bandeau plein aussi large que le môle."""
+    dx, dy, dz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
+    longueur = math.hypot(math.hypot(dx, dy), dz)
+    if longueur < 1e-6:
+        return
+    ux, uy, uz = dx / longueur, dy / longueur, dz / longueur
+    # Deux perpendiculaires à l'axe du barreau.
+    px, py, pz = (-uz, 0.0, ux) if abs(uy) > 0.9 else (-uz, 0.0, ux)
+    n = math.hypot(px, pz) or 1.0
+    px, pz = px / n, pz / n
+    qx, qy, qz = (uy * pz - uz * py, uz * px - ux * pz, ux * py - uy * px)
+    base = len(sommets)
+    for bout in (a, b):
+        for sp in (-1, 1):
+            for sq in (-1, 1):
+                sommets.append((bout[0] + (px * sp + qx * sq) * demi_cote,
+                                bout[1] + (py * sp + qy * sq) * demi_cote,
+                                bout[2] + (pz * sp + qz * sq) * demi_cote))
+    for q in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
+              (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)):
+        faces.append(tuple(base + k for k in q))
+
+
 def construire(axe_m):
     stations = rallonger(axe_m, PAS_PILOTIS_M)
     demi = 0.5 * LARGEUR_M
@@ -157,16 +184,15 @@ def construire(axe_m):
                 boite(sommets, faces,
                       (mx + mpx * demi * cote, haut + 0.5 * GARDE_CORPS_M, mz + mpz * demi * cote),
                       (POTEAU_COTE_M, 0.5 * GARDE_CORPS_M, POTEAU_COTE_M))
-        # Deux lisses par côté, en barreaux et non en panneau.
+        # Deux lisses par côté, en barreaux orientés sur leur axe.
         if i + 1 < len(stations):
             b2, pb = stations[i + 1], perp[i + 1]
             for cote in (-1, 1):
                 for h in (haut + GARDE_CORPS_M, haut + 0.55 * GARDE_CORPS_M):
-                    ax, az = x + px * demi * cote, z + pz * demi * cote
-                    bx, bz = b2[0] + pb[0] * demi * cote, b2[1] + pb[1] * demi * cote
-                    boite(sommets, faces, (0.5 * (ax + bx), h, 0.5 * (az + bz)),
-                          (0.5 * abs(bx - ax) + LISSE_COTE_M, 0.5 * LISSE_COTE_M,
-                           0.5 * abs(bz - az) + LISSE_COTE_M))
+                    barre(sommets, faces,
+                          (x + px * demi * cote, h, z + pz * demi * cote),
+                          (b2[0] + pb[0] * demi * cote, h, b2[1] + pb[1] * demi * cote),
+                          0.5 * LISSE_COTE_M)
     return sommets, faces
 
 

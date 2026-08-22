@@ -46,7 +46,8 @@ EPAISSEUR_M = 0.35    # sommiers sous les lames
 PAS_PILOTIS_M = 4.0
 PILOTIS_COTE_M = 0.28
 GARDE_CORPS_M = 1.05
-LISSE_COTE_M = 0.10
+LISSE_COTE_M = 0.07
+POTEAU_COTE_M = 0.05
 
 # Une tuile de texture porte quatre lames de 25 cm, soit 1 m de passerelle.
 TUILE_M = 1.0
@@ -97,8 +98,7 @@ def rallonger(axe, pas):
 
 
 def boite(sommets, faces, centre, demi):
-    """Pavé droit aligné sur les axes, six faces. UV pris sur les dimensions
-       réelles pour que la texture garde son échelle partout."""
+    """Pavé droit aligné sur les axes, six faces."""
     cx, cy, cz = centre
     dx, dy, dz = demi
     base = len(sommets)
@@ -107,9 +107,8 @@ def boite(sommets, faces, centre, demi):
             for sz in (-1, 1):
                 sommets.append((cx + sx * dx, cy + sy * dy, cz + sz * dz))
     # indices des 8 coins : bit 2 = x, bit 1 = y, bit 0 = z
-    quads = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
-             (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
-    for q in quads:
+    for q in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
+              (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)):
         faces.append(tuple(base + k for k in q))
 
 
@@ -137,32 +136,54 @@ def construire(axe_m):
                       (base, base + 3, base + 7, base + 4),               # flanc
                       (base + 1, base + 5, base + 6, base + 2)])          # flanc
 
-    # Pilotis et garde-corps, une paire par station.
+    # Pilotis sous chaque station, poteaux de garde-corps deux fois plus serrés :
+    # à quatre mètres ils se confondaient de loin avec les lisses et la rambarde
+    # se lisait en panneau plein.
     for i, (x, z) in enumerate(stations):
         px, pz = perp[i]
         for cote in (-1, 1):
             ex, ez = x + px * demi * cote, z + pz * demi * cote
             boite(sommets, faces, (ex, 0.5 * bas, ez),
                   (0.5 * PILOTIS_COTE_M, 0.5 * bas, 0.5 * PILOTIS_COTE_M))
-            boite(sommets, faces, (ex, haut + 0.5 * GARDE_CORPS_M, ez),
-                  (0.06, 0.5 * GARDE_CORPS_M, 0.06))
-        # Deux lisses continues par côté, entre cette station et la suivante.
+            for f in (0.0, 0.5):
+                if f and i + 1 >= len(stations):
+                    continue
+                if f:
+                    b2, pb = stations[i + 1], perp[i + 1]
+                    mx = x + f * (b2[0] - x); mz = z + f * (b2[1] - z)
+                    mpx = px + f * (pb[0] - px); mpz = pz + f * (pb[1] - pz)
+                else:
+                    mx, mz, mpx, mpz = x, z, px, pz
+                boite(sommets, faces,
+                      (mx + mpx * demi * cote, haut + 0.5 * GARDE_CORPS_M, mz + mpz * demi * cote),
+                      (POTEAU_COTE_M, 0.5 * GARDE_CORPS_M, POTEAU_COTE_M))
+        # Deux lisses par côté, en barreaux et non en panneau.
         if i + 1 < len(stations):
             b2, pb = stations[i + 1], perp[i + 1]
             for cote in (-1, 1):
                 for h in (haut + GARDE_CORPS_M, haut + 0.55 * GARDE_CORPS_M):
-                    base = len(sommets)
-                    for (sx, sz), pp in (((x, z), (px, pz)), (b2, pb)):
-                        for dh in (LISSE_COTE_M * 0.5, -LISSE_COTE_M * 0.5):
-                            sommets.append((sx + pp[0] * demi * cote, h + dh,
-                                            sz + pp[1] * demi * cote))
-                    faces.append((base, base + 1, base + 3, base + 2))
+                    ax, az = x + px * demi * cote, z + pz * demi * cote
+                    bx, bz = b2[0] + pb[0] * demi * cote, b2[1] + pb[1] * demi * cote
+                    boite(sommets, faces, (0.5 * (ax + bx), h, 0.5 * (az + bz)),
+                          (0.5 * abs(bx - ax) + LISSE_COTE_M, 0.5 * LISSE_COTE_M,
+                           0.5 * abs(bz - az) + LISSE_COTE_M))
     return sommets, faces
 
 
+def plaquer(sommets, face):
+    """UV par face, sur les deux axes du monde les moins alignés avec sa
+       normale. La projection unique que portait la première version dégénérait
+       sur toute face parallèle à elle, d'où l'aplat brun."""
+    a, b, c = (sommets[k] for k in face[:3])
+    u = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
+    v = (c[0] - a[0], c[1] - a[1], c[2] - a[2])
+    n = (abs(u[1] * v[2] - u[2] * v[1]), abs(u[2] * v[0] - u[0] * v[2]),
+         abs(u[0] * v[1] - u[1] * v[0]))
+    axes = (1, 2) if n[0] >= max(n[1], n[2]) else ((0, 2) if n[1] >= n[2] else (0, 1))
+    return [(sommets[k][axes[0]] / TUILE_M, sommets[k][axes[1]] / TUILE_M) for k in face]
+
+
 def ecrire_ac(chemin, sommets, faces, nom):
-    """UV pris sur les coordonnées monde : la texture garde son échelle sur
-       toutes les faces, quelle que soit leur orientation."""
     with open(chemin, "w", encoding="utf-8") as f:
         f.write("AC3Db\n")
         f.write("MATERIAL \"bois\" rgb 1 1 1 amb 1 1 1 emis 0 0 0 "
@@ -174,11 +195,11 @@ def ecrire_ac(chemin, sommets, faces, nom):
             f.write(f"{x:.4f} {y:.4f} {z:.4f}\n")
         f.write(f"numsurf {len(faces)}\n")
         for face in faces:
+            uv = plaquer(sommets, face)
             f.write("SURF 0x30\nmat 0\n")
             f.write(f"refs {len(face)}\n")
-            for k in face:
-                x, y, z = sommets[k]
-                f.write(f"{k} {(x + z) / TUILE_M:.4f} {(y - z * 0.5) / TUILE_M:.4f}\n")
+            for k, (u, v) in zip(face, uv):
+                f.write(f"{k} {u:.4f} {v:.4f}\n")
         f.write("kids 0\n")
 
 

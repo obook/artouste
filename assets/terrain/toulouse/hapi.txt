@@ -1,0 +1,5 @@
+# Balises HAPI - Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace) (un par ligne : lon lat azimut_deg pente_pct nom)
+# azimut_deg : cap d'approche suivi par le pilote (0 = nord).
+# pente_pct : pente d'approche visée, en pourcentage (6 = valeur usuelle).
+# Position et calage provisoires, à affiner sur place.
+1.500467 43.586835 330 6 Aérodrome de Toulouse-Lasbordes

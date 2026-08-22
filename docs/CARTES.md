@@ -14,7 +14,9 @@ recadrée sur la ville pour un sol net, voir ci-dessous),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
 Tourmalet, la station de La Mongie), `assets/terrain/paris/` (Paris intra-muros :
 la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de
-Vincennes) et `assets/terrain/dax-arene/` (arène recadrée depuis `dax`, dédiée
+Vincennes), `assets/terrain/toulouse/` (Toulouse et l'aérodrome de Lasbordes :
+le Capitole, Saint-Sernin, les Jacobins, la Garonne, la Cité de l'espace et
+l'ancienne piste de Montaudran) et `assets/terrain/dax-arene/` (arène recadrée depuis `dax`, dédiée
 au mode zombie -- voir la section dédiée ci-dessous, affichée au menu sous le
 nom **Happy DeathHour**).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),

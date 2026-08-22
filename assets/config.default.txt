@@ -21,6 +21,7 @@
 #   bordeaux     Bordeaux (la Garonne, port de la Lune, Mérignac, Pessac), terre intérieure
 #   dax          Dax (Adour, arènes, aérodrome de Seyresse et musée de l'ALAT), terre intérieure
 #   paris        Paris intra-muros (tour Eiffel, Notre-Dame, Montmartre), terre intérieure
+#   toulouse     Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace), terre intérieure
 #   dax-arene    Happy DeathHour, arène du mode zombie (lancement direct en combat)
 # La variable d'environnement ARTOUSTE_TERRAIN, si définie, a la priorité.
 terrain ossau

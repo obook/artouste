@@ -267,10 +267,10 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 
 ## Cartes (terrains)
 
-**Les neuf cartes sont livrées avec le jeu**, dans l'archive : Ossau, côte
-landaise, Happy DeathHour (l'arène du mode zombie), Dax, Bordeaux, Paris, bassin
-d'Arcachon, Cauterets-Gavarnie et Pic du Midi de Bigorre. À choisir dans
-`assets/config.txt` (clé `terrain`), au menu de démarrage, ou via la variable
+**Les dix cartes sont livrées avec le jeu**, dans l'archive : Ossau, côte
+landaise, Happy DeathHour (l'arène du mode zombie), Dax, Bordeaux, Paris,
+Toulouse, bassin d'Arcachon, Cauterets-Gavarnie et Pic du Midi de Bigorre.
+À choisir dans `assets/config.txt` (clé `terrain`), au menu de démarrage, ou via la variable
 d'environnement `ARTOUSTE_TERRAIN`.
 
 Elles sont en basse résolution, ce qui suffit en vol haut : leur photo aérienne

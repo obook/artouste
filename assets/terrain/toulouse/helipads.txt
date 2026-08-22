@@ -1,0 +1,5 @@
+# Helipads - Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace) (un par ligne : lon lat nom)
+# Positions approximatives, à affiner sur place.
+1.500467 43.586835 Aérodrome de Toulouse-Lasbordes
+1.4001 43.6133 CHU Purpan
+1.4486 43.5613 CHU Rangueil

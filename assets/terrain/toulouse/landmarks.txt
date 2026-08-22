@@ -1,0 +1,51 @@
+# Lieux remarquables - Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace) (un par ligne : lon lat nom)
+# Le nom est le reste de la ligne et peut contenir des espaces et des accents.
+1.4442 43.6045 Toulouse
+1.4443 43.6044 Le Capitole
+1.4419 43.6084 Basilique Saint-Sernin
+1.4504 43.5999 Cathédrale Saint-Étienne
+1.4402 43.6035 Église des Jacobins
+1.4399 43.6009 Basilique Notre-Dame de la Daurade
+1.4391 43.5993 Pont Neuf
+1.4365 43.5998 Hôtel-Dieu Saint-Jacques
+1.4463 43.601 Musée des Augustins
+1.4496 43.5934 Muséum d'Histoire naturelle
+1.4508 43.593 Jardin des Plantes
+1.4545 43.5999 La Halle aux Grains
+1.4366 43.5956 Prairie des Filtres
+1.4336 43.5832 Île du Ramier
+1.434 43.5832 Stadium de Toulouse
+1.4354 43.6122 Palais des Sports
+1.4542 43.6114 Gare de Toulouse-Matabiau
+1.4119 43.609 Pont de l'Embouchure
+1.428 43.6032 Pont des Catalans
+1.4998 43.5872 Aérodrome de Toulouse-Lasbordes
+1.493 43.586 Cité de l'espace
+1.4781 43.5728 Halle de La Machine
+1.4775 43.5741 L'Envol des Pionniers
+1.4886 43.5736 Piste de Montaudran
+1.4475 43.5861 Le Castelet
+1.4306 43.5979 Saint-Cyprien
+1.4274 43.5846 Croix de Pierre
+1.4397 43.5799 Empalot
+1.4591 43.574 Rangueil
+1.4625 43.5959 Côte Pavée
+1.463 43.6143 Jolimont
+1.4782 43.6105 Soupetard
+1.4367 43.6183 Les Minimes
+1.4109 43.6144 Sept Deniers
+1.4154 43.6218 Stade Ernest-Wallon
+1.4109 43.6387 Ginestous
+1.4527 43.6387 Borderouge
+1.464 43.6356 Croix Daurade
+1.498 43.6097 Balma
+1.5337 43.6283 Pin-Balma
+1.5252 43.6428 Montrabé
+1.5283 43.5855 Quint-Fonsegrives
+1.534 43.552 Saint-Orens-de-Gameville
+1.4749 43.5461 Ramonville-Saint-Agne
+1.4544 43.548 Pouvourville
+1.4521 43.5604 Hôpital Rangueil
+1.4537 43.5526 Hôpital Larrey
+1.4108 43.5649 Lafourguette
+1.4013 43.6098 Hôpital Purpan

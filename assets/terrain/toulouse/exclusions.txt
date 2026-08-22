@@ -1,0 +1,3 @@
+# Zones d'exclusion de végétation - Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace) (un cercle par ligne : lon lat rayon_m)
+# Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
+1.4995 43.5862 650   # Aérodrome de Toulouse-Lasbordes (LFCL)

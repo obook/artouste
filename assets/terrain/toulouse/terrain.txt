@@ -1,0 +1,19 @@
+# Terrain Artouste - Toulouse (aérodrome de Lasbordes, Capitole, Garonne, Cité de l'espace)
+# Données IGN Géoplateforme (RGE ALTI + BD ORTHO), Licence Ouverte Etalab 2.0
+# width_m / height_m : dimensions au sol du maillage, en mètres
+cols 1024
+rows 1024
+width_m 12094.2
+height_m 12245.2
+elev_min 0.00
+elev_max 264.21
+lon_min 1.395
+lon_max 1.545
+lat_min 43.535
+lat_max 43.645
+ortho_width 5926
+ortho_height 6000
+sea 0
+start_x 2654.1
+start_z 329.2
+start_heading 300

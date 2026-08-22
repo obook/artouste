@@ -34,6 +34,7 @@ from .dax import ZONE as _DAX
 from .ossau import ZONE as _OSSAU
 from .pau import ZONE as _PAU
 from .paris import ZONE as _PARIS
+from .toulouse import ZONE as _TOULOUSE
 
 ZONES = {
     "ossau": _OSSAU,
@@ -46,6 +47,7 @@ ZONES = {
     "dax": _DAX,
     "paris": _PARIS,
     "pau": _PAU,
+    "toulouse": _TOULOUSE,
 }
 
 DEFAULT_ZONE = "ossau"

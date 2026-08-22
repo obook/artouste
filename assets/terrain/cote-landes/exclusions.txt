@@ -1,3 +1,4 @@
 # Zones d'exclusion de végétation - côte landaise (Labenne -> Vieux-Boucau) (un cercle par ligne : lon lat rayon_m)
 # Aucun arbre n'est planté dans ces cercles (aérodromes, etc.).
--1.4488 43.6552 200   # Estacade de Capbreton
+-1.446597 43.655243 136   # Estacade de Capbreton
+-1.447875 43.655975 71   # Jetée nord de Capbreton

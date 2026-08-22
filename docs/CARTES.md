@@ -413,6 +413,73 @@ tools/.venv/bin/python tools/fetch_buildings.py cote-landes
 tools/.venv/bin/python tools/fetch_buildings.py ossau
 ```
 
+## Pièces de surface (LiDAR HD)
+
+Là où la maille de la carte est trop lâche pour un ouvrage, on pose un morceau
+de terrain relevé au laser, texturé par la BD ORTHO à 0,20 m/px, chargé comme un
+monument. `tools/piece_surface.py` le fabrique et affiche les deux lignes à
+reporter.
+
+```bash
+python3 tools/piece_surface.py --carte cote-landes --nom estacade-capbreton \
+        --lon -1.44636 --lat 43.65523 --demi-x 100 --demi-z 45 --pas 0.6 \
+        --titre "Estacade de Capbreton"
+```
+
+La pièce ne remplace pas le relief, elle se pose dessus : le rayon de dégagement
+de `monuments.txt` efface les bâtiments extrudés sous elle, le cercle
+d'`exclusions.txt` en écarte les arbres.
+
+Seule l'altitude se raccorde à la carte, sur une marge de 20 m. La texture, elle,
+est opaque jusqu'au bord : sur une carte à `recolor_sea`, où le moteur remplace
+la photo par une couleur de mer unie, la portion d'eau que couvre la pièce se
+voit. Serrer l'emprise sur le sujet.
+
+Pièce en place : l'observatoire du Pic du Midi (`bigorre`, voir
+`tools/observatoire.py`).
+
+Le procédé ne vaut que sur un sujet à terre. Essayé sur l'estacade de Capbreton,
+il a rendu un monticule : le laser aéroporté ne résout pas les blocs
+d'enrochement, il les moyenne, et l'emprise rectangulaire posée sur la mer y
+ajoutait un plateau. L'estacade est donc un modèle balayé, voir ci-dessous.
+
+## Estacade de Capbreton
+
+`tools/monuments/estacade.py` balaie une section de môle le long de l'axe relevé
+par la BD TOPO. La section reprend celle du môle générique de FlightGear
+(`Models/Maritime/Misc/pier_200m.ac`, GPL v2) aux cotes de Capbreton : crête à
+2,7 m, enrochement de 24 m de large, promenade et muret pare-lame. La texture
+est un carré de 24 m d'enrochement prélevé dans la BD ORTHO, replié en miroir
+pour se raccorder.
+
+40 sommets, 29 faces, 4 ko. La pierre de FlightGear a été essayée d'abord :
+c'est un grès beige, qui rendait le môle plus sableux que la photo.
+
+`tools/monuments/feux_capbreton.py` fabrique les trois feux d'entrée du port,
+d'après les fiches ARLHS FRA-808 et FRA-809 : la tour en pierre de 1948 (8 m,
+lanterne verte, galerie blanche) et le pylône blanc du feu avant, 40 m plus à
+l'ouest, tous deux sur la jetée sud ; la tour béton de 1975 sur la jetée nord
+(6 m, fût blanc, bande rouge, lanterne rouge, contrefort triangulaire côté
+terre). Les tours sont basses : leur portée vient de la hauteur des jetées.
+
+Ce que ces modèles ne portent pas : l'inscription "CAPBRETON" en lettres rouges
+sur la face ouest de la tour rouge, et le platelage de bois de l'estacade, une
+passerelle sur pilotis qui court le long de la jetée sud.
+
+**Piège de couleur** : `monument.frag` ne lit qu'une texture, jamais la couleur
+de matériau AC3D ni celle des sommets. Un modèle peint sort entièrement gris.
+Les feux passent donc par un atlas de pastilles de teinte, chaque face pointant
+sur la sienne.
+
+Deux pièges de placement, rencontrés sur ce monument :
+
+- le moteur recentre le modèle sur sa **boîte englobante en plan** avant de le
+  poser. La coordonnée de `monuments.txt` désigne donc ce centre-là, pas celui
+  que l'auteur avait en tête. Ici les deux différaient de 9,8 m, la section
+  étant plus large côté océan ;
+- la BD TOPO arrête son tracé où finit le cheminement, pas où finit l'ouvrage.
+  La tête d'enrochement continue 40 m au large, mesurés sur la BD ORTHO.
+
 ## Masque de forêt (forest.png)
 
 Le semis d'arbres ne jugeait "c'est de la forêt" que sur la couleur du pixel

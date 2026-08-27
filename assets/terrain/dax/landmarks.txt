@@ -4,7 +4,7 @@
 -1.053 43.7088 Cathédrale Notre-Dame de Dax
 -1.0526 43.711 Fontaine chaude
 -1.0541 43.7125 Pont Vieux
--1.0498 43.7131 Les Arènes de Dax
+-1.0498 43.7131 Les Arènes
 -1.0692 43.6884 Aérodrome de Dax-Seyresse
 #-1.069514 43.690724 Tour de contrôle de Dax-Seyresse
 -1.0635 43.6922 Musée de l'ALAT
@@ -13,7 +13,7 @@
 -1.0635 43.684 Seyresse
 -1.0511 43.7125 Parc Théodore Denis
 -1.0458 43.7121 Stade Maurice Boyau
--1.0589 43.7111 Casino de Dax
+-1.0589 43.7111 Casino
 -1.0549 43.7115 Le Splendid
 -1.0535 43.7163 Le Sablar
 -1.0688 43.7289 Lac de Christus
@@ -26,3 +26,4 @@
 -1.0823 43.6945 Stade Colette Besson
 -1.0516 43.6973 Aquae
 -1.0351 43.6846 Étang des Gravières
+-1.050256 43.720754 Gare

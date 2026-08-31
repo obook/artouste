@@ -144,10 +144,18 @@ Le simulateur en reconnaît bien davantage (voir plus bas), mais ces modèles-l�
 
 | Manette | Connexion | Remarque |
 |---|---|---|
-| Xbox 360, One, Series X/S | USB, Bluetooth | rien à faire |
+| Xbox 360, One, Series X/S | USB, Bluetooth | rien à faire, sauf firmware Xbox ancien en Bluetooth (voir sous le tableau) |
 | PlayStation 4 (DualShock 4) | USB, Bluetooth | rien à faire |
 | PlayStation 5 (DualSense) | USB, Bluetooth | rien à faire |
 | Gamepad Freebox, et les autres manettes DragonRise PC TWIN SHOCK | USB | mode analogique obligatoire, diode rouge allumée |
+
+Les manettes Xbox Series X/S dont le firmware n'a jamais été mis à jour
+(version 5.x) n'échangent aucune donnée avec la pile Bluetooth de Linux : la
+liaison s'établit, le système les affiche comme connectées, mais aucune
+commande ne passe et la manette reste en clignotement rapide. Le
+branchement USB fonctionne sans rien configurer. Mettre le firmware à jour
+depuis l'application Accessoires Xbox sous Windows, ou depuis une console,
+rétablit le sans-fil.
 
 Cette reconnaissance étendue s'appuie sur la base communautaire SDL embarquée (`assets/gamecontrollerdb.txt`), chargée au démarrage. Elle couvre plus de 2 200 manettes (2 242 à ce jour) sur Linux, Windows et macOS, dont les modèles Xbox sans fil récents (Series X/S) en Bluetooth, absents de la base intégrée de GLFW. Pour rester à jour au fil des nouveaux modèles, il suffit de remplacer ce fichier par la dernière version publiée sur le dépôt [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB).
 

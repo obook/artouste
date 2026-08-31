@@ -51,6 +51,42 @@ if [ ! -x "$BIN" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Carte graphique : sur un portable Optimus, le rendu part par défaut sur la
+# puce intégrée et le simulateur plafonne à 30 fps. Ces variables le confient
+# à la carte NVIDIA. Elles sont sans effet sur une machine où celle-ci assure
+# déjà le rendu, et ne sont posées que si son pilote répond.
+# ---------------------------------------------------------------------------
+
+VENDEUR_EGL_NVIDIA="/usr/share/glvnd/egl_vendor.d/10_nvidia.json"
+
+# nvidia-smi est livré avec le pilote propriétaire : son absence signale une
+# machine sans carte NVIDIA, ou sous nouveau, où ces variables ne serviraient
+# à rien. L'exécuter réellement vérifie en plus que le module est chargé, le
+# binaire pouvant subsister après une mise à jour ratée.
+if [ "${ARTOUSTE_SANS_NVIDIA:-0}" -ne 0 ]; then
+    echo ">> Rendu laissé à la carte par défaut (ARTOUSTE_SANS_NVIDIA)"
+
+elif command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+    echo ">> Rendu confié à la carte NVIDIA (pilote propriétaire)"
+    export __NV_PRIME_RENDER_OFFLOAD=1
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+
+    # Le rendu EGL, utilisé par les applications Wayland natives, ignore la
+    # variable GLX ci-dessus et réclame le chemin du pilote.
+    if [ -f "$VENDEUR_EGL_NVIDIA" ]; then
+        export __EGL_VENDOR_LIBRARY_FILENAMES="$VENDEUR_EGL_NVIDIA"
+    fi
+
+elif [ -e /dev/dri/renderD129 ]; then
+    # Pile Mesa : carte AMD dédiée, ou NVIDIA sous nouveau ou NVK. Le pilote
+    # propriétaire est absent, donc les variables ci-dessus n'ont aucun effet :
+    # c'est DRI_PRIME qui commande le déport. Un second noeud de rendu DRI
+    # signale la présence d'une seconde carte.
+    echo ">> Rendu confié à la carte dédiée (Mesa)"
+    export DRI_PRIME=1
+fi
+
+# ---------------------------------------------------------------------------
 # gamemode : optimise CPU/GPU pendant la session (governor performance, I/O
 # priorité, etc). Facultatif : le jeu tourne tout aussi bien sans lui.
 # ---------------------------------------------------------------------------

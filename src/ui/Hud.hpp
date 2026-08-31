@@ -112,6 +112,10 @@ struct HudData {
                                   bas-droit du HUD 4 coins. 0 = masqué (ex. en capture) */
     bool carteHR = false;      /* fenêtre de tuiles d'orthophoto chargée (HR), sinon LR */
     bool relief3D = false;     /* fenêtre de relief fin chargée (3D), sinon socle seul (2D) */
+    const char* gpuNom = nullptr; /* vendeur de la carte qui rend l'image ("NVIDIA",
+                                     "INTEL"...) ; nullptr = ligne masquée */
+    bool gpuIntegre = false;   /* rendu sur la puce intégrée alors qu'une carte dédiée
+                                  existe : la ligne passe en ambre */
 
     /* Aide à l'atterrissage : hélipad le plus proche en finale (active seulement
        en mode assisté, voir ApplicationHud.cpp). */

@@ -91,6 +91,11 @@ OptionsLancement lireLigneCommande(int argc, char** argv) {
             return o;
         }
 
+        if (est(a, "--gpu")) {
+            o.gpu = true;
+            return o;
+        }
+
         /* Toutes les autres options attendent une valeur. On le vérifie une fois
            ici plutôt qu'à chaque branche : une option en fin de ligne sans sa
            valeur est une erreur, pas une option booléenne. */
@@ -162,6 +167,8 @@ void afficherAide(const char* programme) {
         "                        0 pose l'appareil sur le relief. Défaut : 300.\n"
         "      --cap DEG         Cap boussole (0 = nord, 90 = est). Sans lui, le\n"
         "                        cap de départ de la carte.\n"
+        "      --gpu             Lister les cartes graphiques de la machine et\n"
+        "                        sortir. Utile sur un portable à deux cartes.\n"
         "  -h, --aide            Cette aide.\n"
         "\n"
         "Dès qu'un point d'apparition est demandé, la turbine et le rotor sont mis\n"

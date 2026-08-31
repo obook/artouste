@@ -43,6 +43,7 @@ struct OptionsLancement {
     bool  aCap = false;
 
     bool aide   = false; /* --aide / --help : afficher l'aide et sortir */
+    bool gpu    = false; /* --gpu : lister les cartes graphiques et sortir */
     bool erreur = false; /* option inconnue ou valeur manquante */
 
     /* Vrai si un point d'apparition a été demandé, sous quelque forme que ce

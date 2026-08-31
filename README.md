@@ -58,6 +58,38 @@ _Alouette II SNCASE SE.3130 - Musée de l'ALAT et de l'hélicoptère - Dax (40)_
 > À partir du menu, appuyer sur la touche `D` : l'appareil effectue seul,
 > en boucle, un vol panoramique au-dessus du bassin d'Arcachon. La touche `Échap` ou une action franche sur le manche en sort.
 
+### Portables à double carte graphique
+
+Sur un portable Optimus (puce Intel intégrée et carte NVIDIA), le rendu part
+par défaut sur la puce intégrée. Le simulateur plafonne alors à 30 fps sur un
+écran 60 Hz : dès qu'une image manque son créneau, la synchronisation
+verticale rabat sur le diviseur suivant.
+
+Lister les cartes de la machine :
+
+```sh
+./build/bin/artouste --gpu
+```
+
+La carte réellement utilisée est affichée au démarrage, ligne `Renderer`, et
+dans le coin bas-droit du HUD.
+
+Si c'est la puce intégrée, le lanceur bascule sur la carte dédiée tout seul,
+pilote NVIDIA propriétaire comme pile Mesa :
+
+```sh
+./play-linux.sh
+```
+
+Pour lancer le binaire directement, poser les variables à la main :
+
+```sh
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ./build/bin/artouste
+```
+
+Sous pilote Mesa (AMD, nouveau, NVK), c'est `DRI_PRIME=1` qui remplace ces deux
+variables. `ARTOUSTE_SANS_NVIDIA=1` désactive la bascule du lanceur.
+
 ## Fonctionnalités du simulateur
 
 * Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.

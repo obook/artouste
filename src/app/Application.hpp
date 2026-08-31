@@ -467,6 +467,11 @@ private:
     int m_width = 1280;
     int m_height = 720;
 
+    /* Carte graphique effectivement utilisée, lue une fois après création du
+       contexte : glGetString ne change pas de réponse en cours de session. */
+    const char* m_gpuNom     = nullptr;
+    bool        m_gpuIntegre = false;
+
     /* --- Monde : caméra, shaders, maillages et décor ------------------------------ */
 
     render::Camera m_camera;

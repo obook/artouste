@@ -105,6 +105,8 @@ void Application::fillHud(ui::HudData& hud,
     hud.reliefLiserets = m_config.reliefDebug && m_terrain->reliefFin() != nullptr;
 
     hud.carteHR = m_terrain->detail() != nullptr;
+    hud.gpuNom     = m_gpuNom;
+    hud.gpuIntegre = m_gpuIntegre;
     hud.relief3D = m_terrain->reliefFin() != nullptr;
 
     hud.radio = m_audio.radioPlaying();

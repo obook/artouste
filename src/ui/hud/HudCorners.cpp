@@ -137,6 +137,18 @@ void Hud::renderCorners(const HudData& data, float w, float h, float m) {
                non, relief fin ou socle seul. Suit le FPS car c'est le même sujet, la
                qualité contre la cadence. */
             ImGui::Text("CARTE %s %s", data.carteHR ? "HR" : "LR", data.relief3D ? "3D" : "2D");
+            /* Carte graphique qui rend l'image. Même sujet que les deux lignes
+               précédentes : ce qui explique la cadence obtenue. En ambre quand le
+               rendu part sur la puce intégrée d'une machine qui a mieux à offrir. */
+            if (data.gpuNom != nullptr) {
+                if (data.gpuIntegre) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, HUD_AMBER);
+                    ImGui::Text("GPU   %s", data.gpuNom);
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::Text("GPU   %s", data.gpuNom);
+                }
+            }
         }
         ImGui::End();
     }

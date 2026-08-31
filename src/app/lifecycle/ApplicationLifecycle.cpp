@@ -21,6 +21,7 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
+#include "app/CartesGraphiques.hpp"
 #include "input/Gamepad.hpp"
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
@@ -43,6 +44,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -82,6 +84,8 @@ bool chargerIconeFenetre(const std::filesystem::path& path, GLFWimage& image) {
     image.pixels = pixels;
     return true;
 }
+
+
 
 }  /* namespace */
 
@@ -222,6 +226,14 @@ bool Application::initGL() {
     std::printf("OpenGL  : %s\n", glGetString(GL_VERSION));
     std::printf("GLSL    : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     std::printf("Renderer: %s\n", glGetString(GL_RENDERER));
+
+    const char* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    m_gpuNom     = nomCourtGpu(renderer);
+    m_gpuIntegre = renduSurCarteIntegree(renderer);
+    if (m_gpuIntegre) {
+        std::printf("          une carte dédiée est présente mais inutilisée ;"
+                    " lancer via ./play-linux.sh pour l'activer\n");
+    }
 
     glfwGetFramebufferSize(m_window, &m_width, &m_height);
     std::printf("Framebuffer : %d x %d\n", m_width, m_height);

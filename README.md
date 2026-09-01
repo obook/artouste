@@ -262,6 +262,26 @@ build\Release\artouste.exe
 Les bibliothèques tierces et le runtime C++ sont liés en statique : l'exécutable
 est autonome, sans DLL ni redistribuable Visual C++ à installer.
 
+Préférez l'invite de commande Developer à PowerShell. En locale française,
+PowerShell interprète un argument comme `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`
+comme un nombre et le transmet tronqué en `3`, la virgule étant le séparateur
+décimal ; la configuration échoue alors sur une valeur invalide. Sous PowerShell,
+passer les arguments dans un tableau de chaînes explicite.
+
+### Journal de lancement
+
+L'exécutable Windows est une application graphique : le processus n'a pas de
+console, pas même celle du terminal qui le lance, et les messages de diagnostic
+n'apparaissent nulle part. Le jeu les écrit donc dans `artouste.log`, à côté de
+l'exécutable, et les rend au terminal appelant quand il y en a un. Si le dossier
+du jeu est en lecture seule, comme sous `Program Files`, le journal va dans
+`%LOCALAPPDATA%\Artouste`. Le journal du lancement précédent est conservé sous
+`artouste-precedent.log`.
+
+C'est ce fichier qu'il faut joindre à un signalement de problème sous Windows :
+il contient la carte graphique, la version d'OpenGL, la carte chargée et tout ce
+que le moteur a eu le temps de dire.
+
 ### Avec VSCode
 
 La configuration partagée est dans `.vscode/`. Lancer une fois la tâche

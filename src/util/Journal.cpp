@@ -84,13 +84,19 @@ void recopier() {
 }
 
 /* Choisit la destination miroir. Un handle déjà valide signifie que
-   l'utilisateur a redirigé lui-même ("artouste.exe > sortie.txt") : on le garde
-   pour ne pas casser sa redirection. Sinon on se raccroche à la console du
-   terminal appelant. En double-clic il n'y en a pas, et on n'ouvre rien. */
+   l'utilisateur a redirigé lui-même ("artouste.exe > sortie.txt") : on en prend
+   une COPIE, jamais la référence. _dup2 ferme le descripteur 1 avant de le
+   remplacer, et referme du même coup le handle qui est dessous ; le garder tel
+   quel donnerait un handle mort, ou pire, recyclé sur l'entrée du tube. Sinon
+   on se raccroche à la console appelante. En double-clic il n'y en a pas. */
 void preparerEcho() {
     const HANDLE deja = GetStdHandle(STD_OUTPUT_HANDLE);
     if (deja != nullptr && deja != INVALID_HANDLE_VALUE) {
-        echo = deja;
+        HANDLE copie = INVALID_HANDLE_VALUE;
+        if (DuplicateHandle(GetCurrentProcess(), deja, GetCurrentProcess(), &copie, 0, FALSE,
+                            DUPLICATE_SAME_ACCESS)) {
+            echo = copie;
+        }
         return;
     }
     if (AttachConsole(ATTACH_PARENT_PROCESS) == 0) {
@@ -210,7 +216,12 @@ Journal::~Journal() {
         filDeRecopie.join();
     }
     /* Sans condition : le détournement a pu échouer après l'ouverture du
-       fichier, auquel cas aucun fil n'a démarré. */
+       fichier, auquel cas aucun fil n'a démarré. echo nous appartient toujours,
+       qu'il vienne de DuplicateHandle ou de CreateFileW. */
+    if (echo != INVALID_HANDLE_VALUE) {
+        CloseHandle(echo);
+        echo = INVALID_HANDLE_VALUE;
+    }
     if (tubeLecture != INVALID_HANDLE_VALUE) {
         CloseHandle(tubeLecture);
         tubeLecture = INVALID_HANDLE_VALUE;

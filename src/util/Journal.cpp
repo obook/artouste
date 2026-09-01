@@ -108,8 +108,21 @@ void preparerEcho() {
                        OPEN_EXISTING, 0, nullptr);
 }
 
+/* Dossier de l'exécutable, et non le dossier courant : on veut le journal à
+   côté du jeu même s'il est lancé depuis ailleurs. Vide si Windows refuse le
+   chemin ou s'il dépasse le tampon, auquel cas on prendra le repli. */
+std::filesystem::path dossierExecutable() {
+    std::array<wchar_t, MAX_PATH> tampon{};
+    const DWORD                   longueur =
+        GetModuleFileNameW(nullptr, tampon.data(), static_cast<DWORD>(tampon.size()));
+    if (longueur == 0 || longueur >= tampon.size()) {
+        return {};
+    }
+    return std::filesystem::path(tampon.data()).parent_path();
+}
+
 /* _wgetenv et non getenv, pour qu'un nom d'utilisateur accentué reste lisible. */
-std::filesystem::path composerChemin() {
+std::filesystem::path cheminDansDonneesLocales() {
     std::filesystem::path base;
     const wchar_t*        local = _wgetenv(L"LOCALAPPDATA");
     if (local != nullptr && local[0] != L'\0') {
@@ -124,29 +137,44 @@ std::filesystem::path composerChemin() {
     return base / L"Artouste" / L"artouste.log";
 }
 
-/* Le journal précédent est mis de côté : on relance souvent le jeu juste après
-   une panne, et sans ça le second lancement effacerait la trace du premier. */
-void ouvrirFichier() {
-    cheminRetenu = composerChemin();
-    if (cheminRetenu.empty()) {
-        return;
-    }
+/* Ouvre le journal ici, rotation comprise. Rend false si l'emplacement refuse
+   l'écriture, ce qui invite à essayer le suivant. On le constate en ouvrant
+   plutôt qu'en interrogeant les droits : sous Windows, la virtualisation peut
+   accorder ce qu'un test aurait refusé, et l'inverse. */
+bool ouvrirA(const std::filesystem::path& candidat) {
     std::error_code ec;
-    std::filesystem::create_directories(cheminRetenu.parent_path(), ec);
+    std::filesystem::create_directories(candidat.parent_path(), ec);
     if (ec) {
-        cheminRetenu.clear();
-        return;
+        return false;
     }
 
-    std::filesystem::path precedent = cheminRetenu;
+    /* Le journal précédent est mis de côté : on relance souvent le jeu juste
+       après une panne, et sans ça le second effacerait la trace du premier. */
+    std::filesystem::path precedent = candidat;
     precedent.replace_filename(L"artouste-precedent.log");
     std::filesystem::remove(precedent, ec);
-    std::filesystem::rename(cheminRetenu, precedent, ec);
+    std::filesystem::rename(candidat, precedent, ec);
 
-    fichier = CreateFileW(cheminRetenu.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+    fichier = CreateFileW(candidat.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (fichier == INVALID_HANDLE_VALUE) {
-        cheminRetenu.clear();
+        return false;
+    }
+    cheminRetenu = candidat;
+    return true;
+}
+
+/* À côté de l'exécutable d'abord : c'est là que l'utilisateur ira le chercher,
+   avec le jeu et ses assets. Repli sur %LOCALAPPDATA% si ce dossier est en
+   lecture seule, ce qui est le cas sous Program Files. */
+void ouvrirFichier() {
+    const std::filesystem::path dossier = dossierExecutable();
+    if (!dossier.empty() && ouvrirA(dossier / L"artouste.log")) {
+        return;
+    }
+    const std::filesystem::path repli = cheminDansDonneesLocales();
+    if (!repli.empty()) {
+        (void)ouvrirA(repli);
     }
 }
 

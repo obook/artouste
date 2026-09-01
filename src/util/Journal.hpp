@@ -6,7 +6,8 @@
  * src/CMakeLists.txt), donc le processus n'a pas de console, pas même celle du
  * terminal qui le lance : les printf du moteur sont perdus. Cette classe les
  * rend à la console appelante quand il y en a une, et les écrit toujours dans
- * %LOCALAPPDATA%\Artouste\artouste.log.
+ * artouste.log, à côté de l'exécutable. Si ce dossier est en lecture seule,
+ * comme sous Program Files, le journal va dans %LOCALAPPDATA%\Artouste.
  *
  * Sous Linux et macOS elle ne fait rien : le terminal reçoit déjà tout.
  *

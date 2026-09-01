@@ -192,6 +192,7 @@ add_executable(artouste
     audio/radio/RadioLecture.cpp
     audio/radio/RadioReseau.cpp
     audio/radio/RadioSource.cpp
+    util/Journal.cpp
 )
 
 # Racine des includes du projet : permet les chemins "render/...", "util/...".
@@ -250,8 +251,9 @@ set_target_properties(artouste PROPERTIES
 # une application console : sinon une fenêtre d'invite de commande s'ouvre derrière
 # le jeu. WIN32_EXECUTABLE passe en /SUBSYSTEM:WINDOWS ; comme on garde un int main()
 # classique (et non WinMain), on force l'entrée standard du CRT (mainCRTStartup)
-# pour que main() reste le point d'entrée. Les messages console ne s'affichent plus
-# dans une fenêtre dédiée ; pour les voir en debug, lancer depuis un terminal.
+# pour que main() reste le point d'entrée. Un tel binaire n'hérite d'aucune
+# console, pas même de celle du terminal qui le lance : c'est util/Journal.cpp
+# qui rattrape les diagnostics.
 if(WIN32)
     set_target_properties(artouste PROPERTIES WIN32_EXECUTABLE TRUE)
     if(MSVC)

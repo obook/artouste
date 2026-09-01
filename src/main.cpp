@@ -13,6 +13,7 @@
 #include "app/Application.hpp"
 #include "app/CartesGraphiques.hpp"
 #include "app/LigneCommande.hpp"
+#include "util/Journal.hpp"
 
 #include <cstdlib>
 
@@ -31,6 +32,11 @@ __declspec(dllexport) int           AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 int main(int argc, char** argv) {
+    /* Rend les diagnostics sous Windows, qui n'a pas de console ici. Avant
+       toute écriture, et sa destruction referme le journal même sur les
+       sorties anticipées ci-dessous. Sans effet ailleurs. */
+    const artouste::util::Journal journal;
+
     const artouste::app::OptionsLancement options =
         artouste::app::lireLigneCommande(argc, argv);
     if (options.aide) {

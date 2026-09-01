@@ -184,7 +184,12 @@ void afficherCartesGraphiques() {
 #else
 
 void afficherCartesGraphiques() {
+    /* Énumérer les cartes sous Windows demanderait DXGI ou WMI. En attendant, on
+       renvoie à la seule information disponible, celle que le pilote donne au
+       démarrage, plutôt que de laisser l'utilisateur sans réponse. */
     std::printf("L'énumération des cartes graphiques n'est disponible que sous Linux.\n");
+    std::printf("La carte réellement utilisée est affichée au démarrage, "
+                "ligne \"Renderer\".\n");
 }
 
 #endif

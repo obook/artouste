@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <random>
 
 namespace artouste::app {
@@ -22,7 +23,13 @@ void ZombieHorde::spawn(const vec3& position, float yaw, float phase) {
     z.position = position;
     z.yaw      = yaw;
     z.phase    = phase;
-    z.kind     = static_cast<unsigned int>(m_rng());  /* variante + groupe de phase déduits au rendu */
+    /* Les neuf personnages du pack sont tirés, pour la variété des silhouettes.
+       Chacun avance à la vitesse de sa propre animation, plancher compris (voir
+       vitesseVariante) : le rendu fait variante = kind % VARIANTES_PACK, le
+       reste du nombre décorrélant le groupe de phase (voir
+       render::SkinnedZombies::bucketIndex). */
+    z.kind        = static_cast<unsigned int>(m_rng());
+    z.clipSpeedMs = vitesseVariante(z.kind);
     m_zombies.push_back(z);
 }
 
@@ -158,9 +165,16 @@ std::vector<ThrowRequest> ZombieHorde::update(float dt, const vec3& playerPos, f
         const vec3  toPlayer = vec3{playerPos.x - z.position.x, 0.0f, playerPos.z - z.position.z};
         const float dist     = glm::length(toPlayer);
         if (dist > 0.01f) {
-            const vec3  dir   = toPlayer / dist;
-            const float speed = WALK_SPEED_MS * speedFactor *
-                                (z.type == Type::Brood ? BROOD_SPEED_FACTOR : 1.0f);
+            const vec3  dir = toPlayer / dist;
+            /* Chaque zombie avance à la vitesse de SA propre animation, mise à
+               l'échelle de sa taille : un zombie agrandi de scale allonge sa
+               foulée d'autant, donc il couvre scale fois plus de terrain. C'est
+               la seule combinaison qui ne fait pas glisser les pieds. Reste le
+               facteur de difficulté, qui accélère la marche sans accélérer
+               l'animation : le glissement revient donc avec les manches.
+               ponytail: cadence d'animation fixe, à piloter par groupe de rendu
+               (render::SkinnedZombies) si le glissement en fin de partie gêne. */
+            const float speed = z.clipSpeedMs * z.scale * speedFactor;
             const float step  = std::min(speed * dt, dist);
             z.position.x += dir.x * step;
             z.position.z += dir.z * step;

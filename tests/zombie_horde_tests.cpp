@@ -11,6 +11,9 @@
  */
 
 #include "app/combat/ZombieHorde.hpp"
+#include "app/combat/ZombieHordeReglages.hpp"
+
+#include <set>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -120,20 +123,67 @@ TEST_CASE("ZombieHorde : marche vers le joueur et jets de pneus toxiques",
 TEST_CASE("ZombieHorde : largueur (boss)", "[combat][zombie][boss]") {
     ZombieHorde horde;
 
-    SECTION("un largueur est repérable, très résistant et plus lent") {
+    SECTION("un largueur est repérable, très résistant, et avance à la mesure de ses jambes") {
         horde.spawnBrood(vec3{100.0f, 0.0f, 0.0f});
         REQUIRE(horde.broodAlive());
         CHECK(horde.zombies()[0].type == ZombieHorde::Type::Brood);
         CHECK(horde.zombies()[0].health == Catch::Approx(ZombieHorde::BROOD_HEALTH));
         CHECK(horde.broodHealthPct() == Catch::Approx(1.0f));
+        CHECK(horde.zombies()[0].scale == Catch::Approx(ZombieHorde::BROOD_SCALE));
 
-        /* Un marcheur parti du même point avance plus loin sur le même pas de temps. */
-        ZombieHorde marcheurs;
-        marcheurs.spawn(vec3{100.0f, 0.0f, 0.0f});
+        /* Chaque zombie avance à la vitesse de SA propre animation (mesurée,
+           voir VARIANTES_MARCHE) mise à l'échelle de sa taille. Le largueur
+           n'échappe pas à la règle : c'est le même modèle agrandi, donc sa
+           foulée est BROOD_SCALE fois plus longue et il doit couvrir
+           BROOD_SCALE fois plus de terrain. Toute autre valeur le fait patiner. */
         const vec3 player{0.0f, 0.0f, 0.0f};
         horde.update(1.0f, player, 100.0f, 1.0f, flatGround);
+
+        const float avance  = 100.0f - horde.zombies()[0].position.x;
+        const float attendu = horde.zombies()[0].clipSpeedMs * ZombieHorde::BROOD_SCALE;
+        CHECK(avance == Catch::Approx(attendu));
+
+        /* Un marcheur du même modèle, lui, avance d'une foulée simple. */
+        ZombieHorde marcheurs;
+        marcheurs.spawn(vec3{100.0f, 0.0f, 0.0f});
         marcheurs.update(1.0f, player, 100.0f, 1.0f, flatGround);
-        CHECK(horde.zombies()[0].position.x > marcheurs.zombies()[0].position.x);
+        const float avanceMarcheur = 100.0f - marcheurs.zombies()[0].position.x;
+        CHECK(avanceMarcheur == Catch::Approx(marcheurs.zombies()[0].clipSpeedMs));
+    }
+
+    SECTION("les neuf personnages sortent du chapeau, et aucun ne reste planté") {
+        /* On garde les neuf silhouettes du pack, y compris les cinq qui n'ont
+           pas de marche propre : elles empruntent l'allure plancher (voir
+           VITESSE_PLANCHER_MS). Sans ce plancher, deux variantes sur neuf
+           resteraient immobiles et ne rejoindraient jamais le joueur. */
+        ZombieHorde  beaucoup;
+        std::set<unsigned int> vues;
+        for (int i = 0; i < 400; ++i) {
+            beaucoup.spawn(vec3{static_cast<float>(i), 0.0f, 0.0f});
+        }
+        for (const ZombieHorde::Zombie& z : beaucoup.zombies()) {
+            const unsigned int variante = z.kind % artouste::app::VARIANTES_PACK;
+            vues.insert(variante);
+            CHECK(z.clipSpeedMs == Catch::Approx(artouste::app::vitesseVariante(variante)));
+            CHECK(z.clipSpeedMs >= artouste::app::SEUIL_VRAIE_MARCHE_MS);
+        }
+        CHECK(vues.size() == artouste::app::VARIANTES_PACK);
+    }
+
+    SECTION("une vraie marche garde SA vitesse, seules les autres empruntent") {
+        /* Le remplacement ne doit toucher que les animations qui n'avancent
+           pas : dégrader une marche mesurée juste la ferait glisser pour rien. */
+        using artouste::app::SEUIL_VRAIE_MARCHE_MS;
+        using artouste::app::VITESSE_EMPRUNTEE_MS;
+        using artouste::app::VITESSE_VARIANTE_MS;
+        using artouste::app::vitesseVariante;
+        for (unsigned int v = 0; v < artouste::app::VARIANTES_PACK; ++v) {
+            if (VITESSE_VARIANTE_MS[v] >= SEUIL_VRAIE_MARCHE_MS) {
+                CHECK(vitesseVariante(v) == Catch::Approx(VITESSE_VARIANTE_MS[v]));
+            } else {
+                CHECK(vitesseVariante(v) == Catch::Approx(VITESSE_EMPRUNTEE_MS));
+            }
+        }
     }
 
     SECTION("une roquette ne suffit pas : il en faut cinq") {

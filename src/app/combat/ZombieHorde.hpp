@@ -57,9 +57,10 @@ public:
        normalisé à 1,80 m), et une cible plus facile à toucher en compensation du
        nombre de roquettes nécessaires. */
     static constexpr float BROOD_SCALE = 3.2f;
-    /* Le largueur avance nettement moins vite qu'un marcheur : sa menace est ce
-       qu'il largue, pas sa course. */
-    static constexpr float BROOD_SPEED_FACTOR = 0.45f;
+    /* Pas de constante de vitesse propre au largueur : elle est déduite de son
+       échelle (voir update). Un facteur libre s'était désaccordé de l'animation
+       et le largueur patinait sur place, ses jambes couvrant 3,2 fois plus de
+       terrain que son déplacement. */
 
     struct Zombie {
         vec3  position{0.0f};        /* centre au sol (monde) */
@@ -80,6 +81,10 @@ public:
            (voir render::SkinnedZombies). La horde reste ignorante de leur
            nombre. */
         unsigned int kind = 0;
+        /* Vitesse propre de l'animation de sa variante (m/s), recopiée à
+           l'apparition depuis VARIANTES_MARCHE. Le déplacement s'y cale, à
+           l'échelle près : c'est ce qui empêche les pieds de glisser. */
+        float clipSpeedMs = 1.0f;
         /* Marcheur lâché par le largueur, et non venu du bord de l'arène : il ne
            lui survit pas (voir killBroodlings). */
         bool fromBrood = false;
@@ -141,8 +146,8 @@ public:
     void snapToGround(const std::function<float(float, float)>& terrainHeight) noexcept;
 
     /* Avance chaque zombie vivant d'un pas de temps : le fait marcher en
-       ligne droite vers playerPos (plan horizontal, vitesse WALK_SPEED_MS *
-       speedFactor -- voir WaveManager pour l'escalade de difficulté), recale
+       ligne droite vers playerPos (plan horizontal, vitesse clipSpeedMs *
+       scale * speedFactor -- voir WaveManager pour l'escalade de difficulté), recale
        l'altitude sur le relief (terrainHeight), avance l'anim de chute et le
        flash de coup touché, retire les zombies dont l'anim de chute est
        terminée. playerAgl (hauteur du joueur au-dessus du sol, m) détermine

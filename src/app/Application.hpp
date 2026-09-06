@@ -618,6 +618,17 @@ private:
        exponentielle du frameDt, pour un chiffre stable et lisible. */
     float m_fpsSmoothed = 0.0f;
     bool m_nrLedArmed = false; /* LED NR : rotor arrivé en régime (voir fillHud) */
+    /* Régimes tels que les CADRANS les montrent, amortis comme l'est une aiguille
+       réelle par son inertie (voir fillHud). Le régime physique, lui, garde son
+       battement : c'est l'affichage qui traîne, pas la turbine. */
+    float m_aiguilleTurbineRpm = 0.0f;
+    float m_aiguilleRotorRpm   = 0.0f;
+    /* Valeurs réellement affichées : les précédentes calées sur la graduation de
+       l'instrument, avec hystérésis. Sans elle, un régime posé sur une frontière
+       d'arrondi ferait osciller le compteur entre deux graduations, ce qui est
+       plus agaçant qu'un chiffre qui saute. */
+    float m_turbineRpmAffiche = 0.0f;
+    float m_rotorRpmAffiche   = 0.0f;
     /* Aiguille-bille lissée (voir fillHud) : les valeurs brutes suivent la physique
        image par image, l'instrument réel a l'inertie de son liquide et de son gyro. */
     float m_billeG     = 0.0f;

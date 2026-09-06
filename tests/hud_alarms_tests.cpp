@@ -62,3 +62,75 @@ TEST_CASE("Voyant carburant : éteint au parking, réservoir plein", "[hud][alar
     d.turbineRpm = 0.0f;
     CHECK(alarmeCarb(d) == GaugeLed::Off);
 }
+
+/*
+ * Le régime nominal de la turbine (34 000 tr/min) est le HAUT de la bande verte
+ * du cadran, et le régulateur fait respirer le régime autour de ce nominal.
+ * Sans marge, la LED virait au jaune à chaque inspiration.
+ */
+TEST_CASE("Voyant turbine : le battement du régulateur ne le fait pas clignoter",
+          "[hud][alarmes][turbine]") {
+    using artouste::ui::hud_widgets::alarmeTurbine;
+    using artouste::ui::hud_widgets::TURBINE_RPM_NOMINAL;
+    using artouste::ui::hud_widgets::TURBINE_RPM_TOLERANCE;
+
+    HudData d;
+
+    SECTION("vert sur tout le battement, en haut comme en bas") {
+        const float amplitude = TURBINE_RPM_NOMINAL * artouste::physics::BATTEMENT_REGIME;
+        for (int i = -20; i <= 20; ++i) {
+            d.turbineRpm = TURBINE_RPM_NOMINAL + amplitude * static_cast<float>(i) / 20.0f;
+            CHECK(alarmeTurbine(d) == GaugeLed::Green);
+        }
+        /* La marge couvre le battement avec de la réserve. */
+        CHECK(TURBINE_RPM_TOLERANCE > amplitude);
+    }
+
+    SECTION("un vrai surrégime allume toujours le jaune") {
+        d.turbineRpm = TURBINE_RPM_NOMINAL + TURBINE_RPM_TOLERANCE + 1.0f;
+        CHECK(alarmeTurbine(d) == GaugeLed::Yellow);
+    }
+
+    SECTION("et le rouge plus haut encore") {
+        d.turbineRpm = 34500.0f + TURBINE_RPM_TOLERANCE + 1.0f;
+        CHECK(alarmeTurbine(d) == GaugeLed::Red);
+    }
+
+    SECTION("la bande verte garde son plancher") {
+        d.turbineRpm = 33000.0f;
+        CHECK(alarmeTurbine(d) == GaugeLed::Green);
+        d.turbineRpm          = 32999.0f;
+        d.turbineSpoolingUp   = false;
+        CHECK(alarmeTurbine(d) == GaugeLed::Off);
+    }
+}
+
+/*
+ * Sous-régime turbine établie : le régulateur n'a pas suivi la charge (droop
+ * transitoire). Le voyant doit alerter, pas s'éteindre.
+ */
+TEST_CASE("Voyant turbine : le creux de droop alerte au lieu d'éteindre",
+          "[hud][alarmes][turbine]") {
+    using artouste::ui::hud_widgets::alarmeTurbine;
+
+    HudData d;
+    d.turbineRpm = 32300.0f;  /* creux d'une action franche au collectif */
+
+    SECTION("turbine établie : jaune") {
+        d.turbineEtabli = true;
+        CHECK(alarmeTurbine(d) == GaugeLed::Yellow);
+    }
+
+    SECTION("pendant le démarrage : clignotement, pas d'alerte") {
+        d.turbineEtabli     = false;
+        d.turbineSpoolingUp = true;
+        d.alarmBlinkOn      = true;
+        CHECK(alarmeTurbine(d) == GaugeLed::Green);
+    }
+
+    SECTION("pendant l'extinction : éteint, un régime bas y est normal") {
+        d.turbineEtabli     = false;
+        d.turbineSpoolingUp = false;
+        CHECK(alarmeTurbine(d) == GaugeLed::Off);
+    }
+}

@@ -72,6 +72,8 @@ struct HudData {
                                      la LED NR tant que le régime nominal n'est pas
                                      atteint, plutôt que de la laisser éteinte */
     float turbineRpm = 0.0f;        /* régime turbine en tr/min */
+    bool turbineEtabli = false;     /* turbine au régime établi : un régime bas
+                                       n'y est plus normal, c'est un sous-régime */
     bool turbineSpoolingUp = false; /* turbine en cours de montée en régime
                                    (démarrage) : fait clignoter la LED TURBINE
                                    tant que le régime nominal n'est pas atteint,

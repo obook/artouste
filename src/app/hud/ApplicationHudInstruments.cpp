@@ -52,8 +52,34 @@ void Application::fillHud(ui::HudData& hud,
     hud.virageDegS = m_virageDegS;
     hud.collectivePct = controls.collective * 100.0f;
     hud.pasDeg = m_flight.pasDeg();  /* graduation réelle du levier (degrés de pale) */
-    hud.rotorPct = rotorFraction * 100.0f; /* régime rotor, en pourcentage */
-    hud.rotorRpm = rotorFraction * 360.0f; /* régime rotor nominal : 360 tr/min */
+    /* Aiguilles amorties. Le régime respire en permanence (voir
+       physics::BATTEMENT_REGIME) : affiché brut, le compteur voyait ses derniers
+       chiffres changer à chaque image, ce qu'aucun instrument réel ne fait -- une
+       aiguille a de l'inertie, et le cadran turbine se lit de toute façon par
+       milliers de tours. L'amortissement ne touche QUE l'affichage et les
+       voyants qui le suivent ; la physique, le son et le droop gardent le régime
+       instantané. La constante est courte, pour que le creux de droop reste
+       lisible presque tout de suite. */
+    constexpr float TAU_AIGUILLE_S = 0.60f;
+    m_aiguilleRotorRpm =
+        lowPass(m_aiguilleRotorRpm, rotorFraction * 360.0f, frameDt, TAU_AIGUILLE_S);
+    m_aiguilleTurbineRpm =
+        lowPass(m_aiguilleTurbineRpm, turbineFraction * 34000.0f, frameDt, TAU_AIGUILLE_S);
+
+    /* Calage sur la graduation de l'instrument, avec hystérésis : la valeur ne
+       change que si l'aiguille s'en est écartée de plus des trois quarts d'un
+       pas. Le battement résiduel, bien plus petit, ne la fait donc plus bouger,
+       alors que le creux de droop (700 à 1 000 tr/min) la déplace aussitôt. */
+    const auto caler = [](float& affiche, float aiguille, float pas) {
+        if (std::fabs(aiguille - affiche) > pas * 0.75f) {
+            affiche = std::round(aiguille / pas) * pas;
+        }
+    };
+    caler(m_turbineRpmAffiche, m_aiguilleTurbineRpm, 100.0f);  /* cadran gradué x 1 000 */
+    caler(m_rotorRpmAffiche, m_aiguilleRotorRpm, 1.0f);
+
+    hud.rotorPct = rotorFraction * 100.0f;  /* régime rotor, en pourcentage */
+    hud.rotorRpm = m_rotorRpmAffiche;       /* régime rotor nominal : 360 tr/min */
     /* LED du cadran NR : armée quand le rotor atteint la bande nominale (340 tr/min,
        bas de la bande verte du cadran), désarmée dès que la turbine quitte son régime.
        Pendant le démarrage et l'extinction, le NR est légitimement bas : LED éteinte
@@ -67,9 +93,10 @@ void Application::fillHud(ui::HudData& hud,
     /* LED du cadran NR clignotante pendant la montée en régime du rotor (état Embrayage :
        frein lâché, le rotor accélère jusqu'au régime de vol), plutôt qu'éteinte. */
     hud.rotorSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Embrayage);
-    hud.turbineRpm = turbineFraction * 34000.0f; /* régime turbine en puissance : 34 000 tr/min (manuel de vol) */
+    hud.turbineRpm = m_turbineRpmAffiche; /* régime turbine en puissance : 34 000 tr/min (manuel de vol) */
     /* LED du cadran TURBINE clignotante pendant la montée en régime (état Demarrage : la
        turbine seule accélère, rotor encore immobile), plutôt qu'éteinte comme à l'arrêt. */
+    hud.turbineEtabli     = (m_flight.turbine().state() == physics::Turbine::State::Regime);
     hud.turbineSpoolingUp = (m_flight.turbine().state() == physics::Turbine::State::Demarrage);
     hud.exhaustTempC = m_flight.turbine().exhaustTempC(); /* température tuyère (T4) */
     hud.fuelLiters = m_flight.fuelLiters();

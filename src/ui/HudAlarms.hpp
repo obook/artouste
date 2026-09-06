@@ -39,20 +39,37 @@ inline GaugeLed alarmeNr(const HudData& d) noexcept {
     return GaugeLed::Green;
 }
 
-/* Régime turbine : verte dans la bande nominale du cadran (33 000-34 000 tr/min),
- * clignotante pendant la montée en régime (démarrage), éteinte à l'arrêt complet et
- * pendant l'extinction (un régime bas y est normal mais ne monte pas), jaune puis
- * rouge au-dessus (surrégime, théorique avec la régulation actuelle).
+/* Tolérance au battement du régulateur. Le régime nominal (34 000 tr/min) est le
+ * HAUT de la bande verte du cadran, et une turbine régulée respire autour de son
+ * nominal (voir physics::BATTEMENT_REGIME, +-0,40 %, soit +-136 tr/min ici) :
+ * sans marge, la LED virait au jaune à chaque inspiration et clignotait en
+ * permanence au régime établi. La marge couvre le battement avec de la réserve,
+ * tout en restant bien en deçà d'un vrai surrégime. */
+inline constexpr float TURBINE_RPM_NOMINAL   = 34000.0f;
+inline constexpr float TURBINE_RPM_TOLERANCE = 250.0f;  /* environ 0,7 % */
+
+/* Régime turbine : verte dans la bande nominale du cadran (33 000-34 000 tr/min,
+ * battement du régulateur compris), clignotante pendant la montée en régime
+ * (démarrage), éteinte à l'arrêt complet et pendant l'extinction (un régime bas y
+ * est normal mais ne monte pas), jaune puis rouge au-dessus (surrégime, théorique
+ * avec la régulation actuelle).
  * Sert surtout d'indicateur "turbine prête" pendant la séquence de démarrage. */
 inline GaugeLed alarmeTurbine(const HudData& d) noexcept {
-    if (d.turbineRpm > 34500.0f) {
+    if (d.turbineRpm > 34500.0f + TURBINE_RPM_TOLERANCE) {
         return GaugeLed::Red;
     }
-    if (d.turbineRpm > 34000.0f) {
+    if (d.turbineRpm > TURBINE_RPM_NOMINAL + TURBINE_RPM_TOLERANCE) {
         return GaugeLed::Yellow;
     }
     if (d.turbineRpm >= 33000.0f) {
         return GaugeLed::Green;
+    }
+    if (d.turbineEtabli) {
+        /* Sous-régime turbine établie : le régulateur n'a pas suivi la charge
+           (droop transitoire sur une action franche au collectif). C'est une
+           alerte, pas une extinction -- éteindre le voyant se lirait comme une
+           turbine coupée alors qu'elle peine. */
+        return GaugeLed::Yellow;
     }
     if (d.turbineSpoolingUp) {  /* montée en régime : clignote plutôt que de rester éteinte */
         return d.alarmBlinkOn ? GaugeLed::Green : GaugeLed::Off;

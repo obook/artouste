@@ -50,6 +50,8 @@ void Hud::renderOverlay(const HudData& data, float w, float h, float m) {
     /* Valeurs pré-formatées (formats littéraux : pas de format dynamique). */
     char nr[16], turb[16], ias[16], vs[16], coll[16], tmp[16], fuel[16];
     std::snprintf(nr,   sizeof(nr),   "%.0f",  static_cast<double>(data.rotorRpm));
+    /* Déjà calé sur la graduation de l'instrument en amont (voir fillHud) : le
+       cadran turbine se lit par milliers de tours, pas au tour près. */
     std::snprintf(turb, sizeof(turb), "%.0f",  static_cast<double>(data.turbineRpm));
     std::snprintf(ias,  sizeof(ias),  "%.0f",  static_cast<double>(data.airspeedKmh));
     std::snprintf(vs,   sizeof(vs),   "%+.1f", static_cast<double>(data.varioMs));

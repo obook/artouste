@@ -24,7 +24,7 @@ namespace artouste::render {
 using namespace heli_detail;
 
 void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
-                            bool fullPilot, float rudder, float cyclicLong,
+                            float rotorFraction, bool fullPilot, float rudder, float cyclicLong,
                             float cyclicLat, float collective, float rollRad,
                             float pitchRad, float altitudeFt, float varioFpm,
                             float headingRad, float airspeedKt, float torquePct) const {
@@ -40,7 +40,7 @@ void LoadedHelicopter::draw(Shader& shader, const mat4& base, float rotorAngle,
     drawAirframe(shader, root, fullPilot, rudder, cyclicLong, cyclicLat, collective);
     drawInstruments(shader, root, rollRad, pitchRad, altitudeFt, varioFpm, headingRad,
                     airspeedKt, torquePct);
-    drawRotors(shader, root, rotorAngle);
+    drawRotors(shader, root, rotorAngle, rotorFraction);
     drawLivery(shader, root);
 }
 

@@ -125,6 +125,14 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
     m_mainBlade = loadPart(dir / "Externals/MainRotor/blade.ac", skipRotor);
     m_tailHub   = loadPart(dir / "Externals/TailRotor/tailrotor.ac", skipRotor);
     m_tailBlade = loadPart(dir / "Externals/TailRotor/blade.ac", skipRotor);
+    /* Plans flous du modèle : ils sont dans blade.ac, à côté de la pale nette. On
+       recharge donc le fichier deux fois en écartant ce qu'on ne veut pas. Le
+       propblur (pale élargie) se pose sur chaque pale, le propdisc (secteur de
+       disque) se répète tout autour du mât, d'où deux pièces séparées. */
+    m_mainBlur = loadPart(dir / "Externals/MainRotor/blade.ac", {"blade", "disc"});
+    m_mainDisc = loadPart(dir / "Externals/MainRotor/blade.ac", {"blade", "blur"});
+    m_tailBlur = loadPart(dir / "Externals/TailRotor/blade.ac", {"blade", "disc"});
+    m_tailDisc = loadPart(dir / "Externals/TailRotor/blade.ac", {"blade", "blur"});
     /* Livrée Gendarmerie des pales de queue : texture de rechange (jaune zébré
        rouge), préchargée dans le cache de la pale et activée à la demande. */
     m_tailBladeLivery =
@@ -195,19 +203,9 @@ void LoadedHelicopter::setLivery(Livery livery) {
 }
 
 void LoadedHelicopter::drawModel(Shader& shader, const Model& model, const mat4& transform,
-                                 Pass pass) const {
+                                 Pass pass, float opacityScale) const {
     shader.setMat4("u_model", transform);
-    model.draw(shader, pass);
-}
-
-vec3 LoadedHelicopter::mainHubWorld(const mat4& base) const {
-    /* Même chaîne de transformations que pour le rotor dans draw(), jusqu'au plan
-       des pales : sert à poser le disque flou du rotor au bon endroit. */
-    const mat4 correction = glm::translate(mat4(1.0f), vec3{0.0f, Y_OFFSET, 0.0f}) *
-                            glm::rotate(mat4(1.0f), PI, vec3{0.0f, 1.0f, 0.0f});
-    const mat4 hub = base * correction * glm::translate(mat4(1.0f), MAIN_HUB) *
-                     glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f});
-    return vec3(hub[3]);
+    model.draw(shader, pass, opacityScale);
 }
 
 }  /* namespace artouste::render */

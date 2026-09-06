@@ -20,7 +20,8 @@ uniform sampler2D u_relief;    /* carte de relief en espace tangent, unité 1 */
 uniform int       u_hasRelief; /* 0 = la pièce n'en a pas, on garde sa normale */
 uniform vec3      u_lightDir;  /* direction VERS la lumière, déjà normalisée */
 uniform vec3      u_camPos;    /* position de la caméra (sert de lumière d'appoint) */
-uniform float     u_opacity;   /* 1 = opaque, < 1 = translucide (verrière) */
+uniform float     u_opacity;   /* 1 = opaque, < 1 = translucide */
+uniform int       u_glass;     /* 1 = vitrage : ajouter le reflet de Fresnel */
 
 /*
  * Repère tangent reconstruit dans le fragment, à partir des dérivées d'écran de
@@ -81,13 +82,13 @@ void main() {
     float alpha = albedo.a * u_opacity;
 
     /*
-     * Verrière (u_opacity < 1) : une vitre vue de face est presque invisible, au
-     * point de sembler absente. On ajoute un reflet de Fresnel (plus fort aux
-     * angles rasants) qui éclaircit et opacifie les bords : la cabine se lit
-     * alors comme du verre depuis l'intérieur, sans assombrir la vue de face.
-     * abs() rend l'effet identique des deux côtés de la vitre.
+     * Verrière : une vitre vue de face est presque invisible, au point de sembler
+     * absente. On ajoute un reflet de Fresnel (plus fort aux angles rasants) qui
+     * éclaircit et opacifie les bords : la cabine se lit alors comme du verre
+     * depuis l'intérieur, sans assombrir la vue de face. abs() rend l'effet
+     * identique des deux côtés de la vitre.
      */
-    if (u_opacity < 0.999) {
+    if (u_glass == 1) {
         float fresnel = pow(1.0 - abs(dot(n, viewDir)), 3.0);
         color = mix(color, vec3(0.85, 0.90, 0.95), fresnel * 0.6);
         alpha = clamp(alpha + fresnel * 0.5, 0.0, 1.0);

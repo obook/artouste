@@ -286,6 +286,7 @@ void Application::renderHelicopter(const RenderContext& ctx,
         m_loadedHeli->draw(*m_modelShader,
                            ctx.toRel * base,
                            rotorAngle,
+                           rotorFraction,
                            m_viewMode != 1,
                            rudder,
                            cyclicLong,
@@ -298,10 +299,6 @@ void Application::renderHelicopter(const RenderContext& ctx,
                            headingRad,
                            airspeedKt,
                            torquePct);
-
-        /* (Un disque rotor translucide remplaçant les pales distinctes à haut régime,
-           pour éviter l'effet stroboscopique, reste à étudier ; voir l'historique
-           git pour une ébauche.) */
     } else {
         m_helicopter->draw(*m_shader, ctx.toRel * base, rotorAngle);
     }

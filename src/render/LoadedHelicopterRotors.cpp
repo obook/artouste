@@ -21,7 +21,8 @@ namespace artouste::render {
 
 using namespace heli_detail;
 
-void LoadedHelicopter::drawRotors(Shader& shader, const mat4& root, float rotorAngle) const {
+void LoadedHelicopter::drawRotors(Shader& shader, const mat4& root, float rotorAngle,
+                                  float rotorFraction) const {
     /* L'angle du rotor principal est fourni par l'application (sens horaire vu de
        dessus, comme sur l'Alouette II ; à l'arrêt, une pale est alignée sur l'axe de
        l'appareil). La correction de nez appliquée à 'root' (demi-tour autour de Y)
@@ -49,19 +50,64 @@ void LoadedHelicopter::drawRotors(Shader& shader, const mat4& root, float rotorA
                glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f});
     };
 
-    drawModel(shader, m_mainHub, mainBase, Pass::Opaque);
-    for (int k = 0; k < MAIN_BLADES; ++k) {
-        drawModel(shader, m_mainBlade, mainBladeMat(k), Pass::Opaque);
-    }
-    drawModel(shader, m_tailHub, tailBase, Pass::Opaque);
-    for (int k = 0; k < TAIL_BLADES; ++k) {
+    /* Position d'une pale du rotor de queue, même principe. */
+    const auto tailBladeMat = [&](int k) {
         const float heading =
             static_cast<float>(k) * (TWO_PI / static_cast<float>(TAIL_BLADES));
-        const mat4 bladeMat = tailBase *
-                              glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
-                              glm::translate(mat4(1.0f), vec3{0.0f, TAIL_BLADE_RISE, 0.0f});
-        drawModel(shader, m_tailBlade, bladeMat, Pass::Opaque);
+        return tailBase * glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
+               glm::translate(mat4(1.0f), vec3{0.0f, TAIL_BLADE_RISE, 0.0f});
+    };
+
+    drawModel(shader, m_mainHub, mainBase, Pass::Opaque);
+    drawModel(shader, m_tailHub, tailBase, Pass::Opaque);
+
+    /* Rotor lent ou arrêté : les pales nettes, opaques. */
+    const float blur = blurFade(rotorFraction);
+    if (blur <= 0.0f) {
+        for (int k = 0; k < MAIN_BLADES; ++k) {
+            drawModel(shader, m_mainBlade, mainBladeMat(k), Pass::Opaque);
+        }
+        for (int k = 0; k < TAIL_BLADES; ++k) {
+            drawModel(shader, m_tailBlade, tailBladeMat(k), Pass::Opaque);
+        }
+        return;
     }
+
+    /* En régime : les pales s'effacent, les plans flous du modèle prennent leur
+       place. Les deux se dessinent en mélange, profondeur en lecture seule pour
+       qu'un plan n'en cache pas un autre. */
+    const float sharp   = 1.0f - blur;
+    const float opacity = blur * BLUR_OPACITY;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    for (int k = 0; k < MAIN_BLADES; ++k) {
+        if (sharp > 0.0f) {
+            drawModel(shader, m_mainBlade, mainBladeMat(k), Pass::Opaque, sharp);
+        }
+        drawModel(shader, m_mainBlur, mainBladeMat(k), Pass::Opaque, opacity);
+    }
+    for (int k = 0; k < TAIL_BLADES; ++k) {
+        if (sharp > 0.0f) {
+            drawModel(shader, m_tailBlade, tailBladeMat(k), Pass::Opaque, sharp);
+        }
+        drawModel(shader, m_tailBlur, tailBladeMat(k), Pass::Opaque, opacity);
+    }
+    /* Secteurs de disque, répétés pour faire le tour complet des deux rotors. */
+    for (int k = 0; k < DISC_COPIES; ++k) {
+        const float heading =
+            static_cast<float>(k) * (TWO_PI / static_cast<float>(DISC_COPIES));
+        drawModel(shader, m_mainDisc,
+                  mainBase * glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
+                      glm::translate(mat4(1.0f), vec3{0.0f, MAIN_BLADE_RISE, 0.0f}),
+                  Pass::Opaque, opacity);
+        drawModel(shader, m_tailDisc,
+                  tailBase * glm::rotate(mat4(1.0f), heading, vec3{0.0f, 1.0f, 0.0f}) *
+                      glm::translate(mat4(1.0f), vec3{0.0f, TAIL_BLADE_RISE, 0.0f}),
+                  Pass::Opaque, opacity);
+    }
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
@@ -98,10 +144,6 @@ void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
     drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Transparent);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
-
-    /* (Un disque flou translucide remplaçant les pales distinctes à haut régime,
-       pour éviter l'effet stroboscopique, reste à étudier ; voir l'historique git
-       pour une ébauche, ainsi que mainHubWorld() qui en pose le centre.) */
 }
 
 } /* namespace artouste::render */

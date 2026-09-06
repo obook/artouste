@@ -47,17 +47,15 @@ public:
        pédales et, en vue cockpit, les jambes du pilote.
        'cyclicLong' et 'cyclicLat' ([-1, +1]) inclinent le manche cyclique (tangage
        et roulis) ; en vue cockpit, l'avant-bras droit du pilote suit le manche.
-       'collective' ([0, +1]) lève le levier de collectif (commande de la main gauche). */
-    void draw(Shader& shader, const mat4& base, float rotorAngle, bool fullPilot = true,
+       'collective' ([0, +1]) lève le levier de collectif (commande de la main gauche).
+       'rotorFraction' ([0, 1]) est le régime rotor : il fait passer les pales nettes
+       aux plans flous du modèle. */
+    void draw(Shader& shader, const mat4& base, float rotorAngle, float rotorFraction = 0.0f,
+              bool fullPilot = true,
               float rudder = 0.0f, float cyclicLong = 0.0f, float cyclicLat = 0.0f,
               float collective = 0.0f, float rollRad = 0.0f, float pitchRad = 0.0f,
               float altitudeFt = 0.0f, float varioFpm = 0.0f, float headingRad = 0.0f,
               float airspeedKt = 0.0f, float torquePct = 0.0f) const;
-
-    /* Centre du disque rotor dans le monde (pour dessiner un jour le disque flou
-       translucide à haut régime, voir le code mis en commentaire). 'base' est la
-       pose de l'appareil. */
-    [[nodiscard]] vec3 mainHubWorld(const mat4& base) const;
 
     /* Applique une livrée : origine (métal), Gendarmerie (bleu) ou armée de terre
        (olive). Commute la texture du fuselage, des pales et de l'arceau de queue,
@@ -81,8 +79,10 @@ private:
         vec3  offset;
     };
 
-    /* Petit raccourci de rendu : fixe la matrice du modèle puis dessine la pièce. */
-    void drawModel(Shader& shader, const Model& model, const mat4& transform, Pass pass) const;
+    /* Petit raccourci de rendu : fixe la matrice du modèle puis dessine la pièce.
+       'opacityScale' sert au fondu des pales selon le régime. */
+    void drawModel(Shader& shader, const Model& model, const mat4& transform, Pass pass,
+                   float opacityScale = 1.0f) const;
 
     /* Chargement des six instruments animés du tableau de bord (horizon, altimètre,
        vario, compas, anémomètre, couplemètre), chacun découpé en cadran fixe et
@@ -100,8 +100,9 @@ private:
                          float torquePct) const;
 
     /* Dessine les rotors (moyeux et pales, principaux et de queue), animés à partir
-       de l'angle du rotor principal. */
-    void drawRotors(Shader& shader, const mat4& root, float rotorAngle) const;
+       de l'angle du rotor principal. Le régime commande le fondu vers le flou. */
+    void drawRotors(Shader& shader, const mat4& root, float rotorAngle,
+                    float rotorFraction) const;
 
     /* Passe transparente : marquages de la livrée courante puis vitrages. */
     void drawLivery(Shader& shader, const mat4& root) const;
@@ -214,8 +215,12 @@ private:
     bool               m_hasTorque = false;
     Model              m_mainHub;
     Model              m_mainBlade;
+    Model              m_mainBlur;           /* propblur : pale élargie, une par pale */
+    Model              m_mainDisc;           /* propdisc : secteur répété autour du mât */
     Model              m_tailHub;
     Model              m_tailBlade;
+    Model              m_tailBlur;
+    Model              m_tailDisc;
     Model              m_tailGuard;          /* arceau de protection du rotor de queue */
     Model              m_decalGendarmerie;  /* mot "GENDARMERIE" (flancs de cabine) */
     Model              m_decalReg;          /* immatriculation "F-BRHP" (Gendarmerie) */

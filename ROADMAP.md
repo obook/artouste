@@ -16,6 +16,11 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [x] Vérifier la livrée du rotor principal, il semble qu'il n'y a aucune, donc faire en gris foncé
 
+- [x] Disque flou du rotor à haut régime, à la place des pales distinctes : les
+  plans `propblur` et `propdisc` du modèle FlightGear sont maintenant chargés et
+  dessinés, en fondu entre 200 et 300 tr/min. Le secteur `propdisc` ne couvrant
+  que 45 degrés, il est répété huit fois pour fermer le disque.
+
 ### Mode assisté conservé d'une carte à l'autre
 
 - [x] Le mode assisté restait allumé au démarrage d'une carte alors qu'il doit

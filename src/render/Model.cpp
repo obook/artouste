@@ -67,6 +67,10 @@ void Model::draw(Shader& shader, Pass pass, float opacityScale) const {
         /* On transmet au shader les réglages propres à cette partie, puis on
            dessine son maillage. */
         shader.setFloat("u_opacity", part.opacity * opacityScale);
+        /* Reflet de verre : réservé aux pièces translucides du modèle (les
+           vitrages). Une pièce opaque mise en fondu ne doit pas s'en voir
+           affublée, d'où ce drapeau plutôt qu'un test sur u_opacity. */
+        shader.setInt("u_glass", part.opacity < 0.999f ? 1 : 0);
         /* Livrée de rechange : si elle est posée, elle remplace la texture des
            parties texturées (le vitrage, sans texture, garde son rendu). */
         const Texture* texture = (m_livery != nullptr && part.texture != nullptr)

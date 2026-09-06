@@ -48,6 +48,30 @@ inline constexpr int   TAIL_BLADES     = 2;
 inline constexpr float MAIN_SPIN = 15.0f;
 inline constexpr float TAIL_SPIN = 52.5f;  /* 3,5 x MAIN_SPIN */
 
+/* Régime rotor nominal, comme au cadran NR du HUD. */
+inline constexpr float ROTOR_NOMINAL_RPM = 360.0f;
+
+/* Régimes entre lesquels les pales nettes s'effacent au profit du flou, en
+   fraction du nominal. En dessous de 200 tr/min le rotor est assez lent pour
+   qu'on suive chaque pale : pas de flou du tout. */
+inline constexpr float BLUR_START = 200.0f / ROTOR_NOMINAL_RPM;
+inline constexpr float BLUR_FULL  = 300.0f / ROTOR_NOMINAL_RPM;
+
+/* Opacité des plans flous à plein régime. Le modèle les donne sur un matériau
+   "transparent" (trans 0.7 dans le .ac), que le chargeur n'exploite pas : on
+   reprend sa valeur ici. Monter = disque plus dense. */
+inline constexpr float BLUR_OPACITY = 0.24f;
+
+/* Le secteur propdisc du modèle couvre 45 degrés. Posé une fois par pale, il
+   laisserait des trous entre les pales ; on le répète tout autour du mât. */
+inline constexpr int DISC_COPIES = 8;  /* 8 x 45 deg = le tour complet */
+
+/* Part du flou : 0 = pales nettes seules, 1 = flou seul. */
+inline float blurFade(float rotorFraction) {
+    const float t = (rotorFraction - BLUR_START) / (BLUR_FULL - BLUR_START);
+    return t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
+}
+
 /* Convertit une position exprimée dans le repère FlightGear (x avant/arrière,
    y latéral, z vertical) vers le repère du modèle (x, y vertical, z latéral). */
 inline vec3 fgToAssimp(const vec3& fg) {

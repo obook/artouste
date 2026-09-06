@@ -10,6 +10,7 @@
  */
 
 #include "app/combat/CombatMode.hpp"
+#include "physics/constants.hpp"
 #include "physics/FlightModel.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -20,6 +21,8 @@
 #include <string>
 
 using artouste::app::CombatMode;
+namespace physics = artouste::physics;
+
 using artouste::physics::Controls;
 using artouste::physics::FlightModel;
 
@@ -91,14 +94,14 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
     REQUIRE(combat.healthPct() == Catch::Approx(1.0f));
 
     SECTION("un posé normal ne coûte rien") {
-        CHECK(combat.applyGroundImpact(2.0f) == Catch::Approx(0.0f));
+        CHECK(combat.applyGroundImpact(2.0f, physics::FUEL_CAPACITY_L) == Catch::Approx(0.0f));
         CHECK_FALSE(combat.soundEvents().impacted);
     }
 
     SECTION("le choc fend le réservoir, il n'entame pas la vie") {
         /* La vie ne se perd que face aux zombies. Un posé brutal se paie en
            kérosène, donc en minutes de vol restantes. */
-        const float litres = combat.applyGroundImpact(10.0f);
+        const float litres = combat.applyGroundImpact(10.0f, physics::FUEL_CAPACITY_L);
         CHECK(litres > 0.0f);
         CHECK(combat.healthPct() == Catch::Approx(1.0f));
         CHECK_FALSE(combat.gameOver());
@@ -113,7 +116,7 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
             CombatMode doux;
             doux.start(dir, solPlat);
             INFO("arrivée à " << vitesse << " m/s");
-            CHECK(doux.applyGroundImpact(vitesse) == Catch::Approx(0.0f));
+            CHECK(doux.applyGroundImpact(vitesse, physics::FUEL_CAPACITY_L) == Catch::Approx(0.0f));
             CHECK_FALSE(doux.soundEvents().impacted);
         }
     }
@@ -125,28 +128,55 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
             CombatMode dur;
             dur.start(dir, solPlat);
             INFO("arrivée à " << vitesse << " m/s");
-            CHECK(dur.applyGroundImpact(vitesse) >= 0.5f);
+            CHECK(dur.applyGroundImpact(vitesse, physics::FUEL_CAPACITY_L) >= 0.5f);
             CHECK(dur.soundEvents().impacted);
         }
     }
 
     SECTION("plus le contact est rapide, plus il coûte") {
-        const float leger = combat.applyGroundImpact(6.0f);
+        const float leger = combat.applyGroundImpact(6.0f, physics::FUEL_CAPACITY_L);
         CombatMode autre;
         autre.start(dir, solPlat);
-        CHECK(autre.applyGroundImpact(12.0f) > leger);
+        CHECK(autre.applyGroundImpact(12.0f, physics::FUEL_CAPACITY_L) > leger);
     }
 
-    SECTION("un vrai crash vide le réservoir") {
-        /* 575 L de contenance : au-delà, l'appareil est cloué au sol, turbine
-           éteinte faute de carburant. C'est la sanction du crash, à la place de
-           l'ancienne mort instantanée. */
-        CHECK(combat.applyGroundImpact(20.0f) >= 575.0f);
+    SECTION("un vrai crash vide presque le réservoir, mais laisse la réserve") {
+        /* Sanction du crash, à la place de l'ancienne mort instantanée : il ne
+           reste que le fond du réservoir. Mais JAMAIS zéro -- sans ce plafond,
+           la courbe au carré dépasse la contenance dès 20 m/s et clouait
+           l'appareil au sol, la partie perdue d'un seul contact. */
+        const float perdu = combat.applyGroundImpact(20.0f, physics::FUEL_CAPACITY_L);
+        CHECK(perdu == Catch::Approx(physics::FUEL_CAPACITY_L - CombatMode::IMPACT_RESERVE_L));
+        CHECK(physics::FUEL_CAPACITY_L - perdu == Catch::Approx(CombatMode::IMPACT_RESERVE_L));
+    }
+
+    SECTION("le choc le plus violent ne prend pas plus que le crash ordinaire") {
+        CombatMode enorme;
+        enorme.start(dir, solPlat);
+        CHECK(enorme.applyGroundImpact(80.0f, physics::FUEL_CAPACITY_L)
+              == Catch::Approx(physics::FUEL_CAPACITY_L - CombatMode::IMPACT_RESERVE_L));
+    }
+
+    SECTION("un réservoir déjà sous la réserve ne perd plus rien") {
+        /* Rien à prendre : le choc s'entend quand même (il est violent), mais
+           il ne peut pas creuser sous ce qui reste. */
+        CombatMode presqueVide;
+        presqueVide.start(dir, solPlat);
+        const float restant = CombatMode::IMPACT_RESERVE_L - 5.0f;
+        CHECK(presqueVide.applyGroundImpact(20.0f, restant) == Catch::Approx(0.0f));
+        CHECK(presqueVide.soundEvents().impacted);
+    }
+
+    SECTION("entre les deux, le choc s'arrête pile sur la réserve") {
+        CombatMode moitie;
+        moitie.start(dir, solPlat);
+        const float restant = CombatMode::IMPACT_RESERVE_L + 40.0f;
+        CHECK(moitie.applyGroundImpact(20.0f, restant) == Catch::Approx(40.0f));
     }
 
     SECTION("hors combat, le sol ne coûte rien") {
         CombatMode inactif;
-        CHECK(inactif.applyGroundImpact(30.0f) == Catch::Approx(0.0f));
+        CHECK(inactif.applyGroundImpact(30.0f, physics::FUEL_CAPACITY_L) == Catch::Approx(0.0f));
         CHECK_FALSE(inactif.soundEvents().impacted);
     }
 }

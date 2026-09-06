@@ -166,13 +166,22 @@ void AudioEngine::playZombieHit(const vec3& sourcePos, const vec3& listenerPos) 
                   m_impl->combatSoundsDir, "zombie_hit.wav", 0.6f, sourcePos, listenerPos);
 }
 
-void AudioEngine::playZombieDeath(const vec3& sourcePos, const vec3& listenerPos) {
+void AudioEngine::playZombieDeathSimple(const vec3& sourcePos, const vec3& listenerPos) {
     if (!m_impl->engineInit) {
         return;
     }
-    playPositional(m_impl->engine, m_impl->oneShots, m_impl->zombieDeathSound,
-                  m_impl->zombieDeathLoaded, m_impl->combatSoundsDir, "zombie_death.wav", 0.7f,
-                  sourcePos, listenerPos);
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->zombieDeathSimpleSound,
+                  m_impl->zombieDeathSimpleLoaded, m_impl->combatSoundsDir,
+                  "zombie_death_simple.wav", 0.7f, sourcePos, listenerPos);
+}
+
+void AudioEngine::playZombieDeathBonus(const vec3& sourcePos, const vec3& listenerPos) {
+    if (!m_impl->engineInit) {
+        return;
+    }
+    playPositional(m_impl->engine, m_impl->oneShots, m_impl->zombieDeathBonusSound,
+                  m_impl->zombieDeathBonusLoaded, m_impl->combatSoundsDir,
+                  "zombie_death_bonus.wav", 0.7f, sourcePos, listenerPos);
 }
 
 /* Deux exemplaires au plus, et à volume modéré : l'échantillon dure sept
@@ -274,7 +283,7 @@ void AudioEngine::playWaveStart() {
     ma_sound_start(&m_impl->waveStartSound);
 }
 
-void AudioEngine::playBroodSpawn() {
+void AudioEngine::playRale() {
     if (!m_impl->engineInit) {
         return;
     }

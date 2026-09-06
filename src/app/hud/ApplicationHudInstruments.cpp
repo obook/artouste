@@ -177,10 +177,20 @@ void Application::fillHud(ui::HudData& hud,
             case KillAnnouncement::Brood:
                 hud.combat.killAnnounceKind = 4;
                 break;
+            case KillAnnouncement::Loin:
+                hud.combat.killAnnounceKind = 5;
+                break;
+            case KillAnnouncement::LongueDistance:
+                hud.combat.killAnnounceKind = 6;
+                break;
+            case KillAnnouncement::Maitre:
+                hud.combat.killAnnounceKind = 7;
+                break;
             case KillAnnouncement::None:
                 hud.combat.killAnnounceKind = 0;
                 break;
         }
+        hud.combat.killAnnounceDistanceM = m_combat.killAnnounceDistanceM();
         hud.combat.broodActive = m_combat.broodActive();
         hud.combat.broodHealthPct = m_combat.broodHealthPct();
 

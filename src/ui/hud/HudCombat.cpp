@@ -121,6 +121,9 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
             case 1:  texte = "DOUBLE KILL !";      couleur = HUD_GREEN; echelle = 1.3f; break;
             case 2:  texte = "TRIPLE KILL !";      couleur = HUD_AMBER; echelle = 1.6f; break;
             case 3:  texte = "CARNAGE !";          couleur = HUD_RED;   echelle = 2.0f; break;
+            case 5:  texte = "TIR DE LOIN !";       couleur = HUD_GREEN; echelle = 1.3f; break;
+            case 6:  texte = "TIR LONGUE DISTANCE !"; couleur = HUD_AMBER; echelle = 1.6f; break;
+            case 7:  texte = "TIR DE MAÎTRE !";     couleur = HUD_RED;   echelle = 2.0f; break;
             default: texte = "LARGUEUR NEUTRALISÉ !"; couleur = HUD_RED; echelle = 2.0f; break;
         }
         ImGui::SetNextWindowPos(ImVec2(w * 0.5f, h * 0.22f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -128,7 +131,17 @@ void Hud::renderCombatHud(const HudData& data, HudMode mode, float w, float h) {
         ImGui::Begin("kill_announce", nullptr, HUD_FLAGS | ImGuiWindowFlags_NoBackground);
         ImGui::SetWindowFontScale(echelle);
         ImGui::PushStyleColor(ImGuiCol_Text, couleur);
-        ImGui::TextUnformatted(texte);
+        /* Le préfixe "BONUS" est posé ici et non dans les libellés ci-dessus :
+           toute annonce en gagne un, et un libellé ajouté plus tard ne peut pas
+           l'oublier. La distance, elle, complète le libellé sur la MÊME ligne --
+           un double kill réussi de loin reste annoncé comme un double kill, la
+           performance de tir venant en suffixe plutôt qu'en concurrence. */
+        if (data.combat.killAnnounceDistanceM > 0.0f) {
+            ImGui::Text("BONUS %s - %.0f m", texte,
+                        static_cast<double>(data.combat.killAnnounceDistanceM));
+        } else {
+            ImGui::Text("BONUS %s", texte);
+        }
         ImGui::PopStyleColor();
         ImGui::End();
     }

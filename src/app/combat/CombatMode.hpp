@@ -23,11 +23,13 @@
 #include "app/combat/WaveManager.hpp"
 #include "app/combat/Weapon.hpp"
 #include "app/combat/ZombieHorde.hpp"
+#include "physics/constants.hpp"
 #include "physics/RigidBody.hpp"
 #include "util/Math.hpp"
 
 #include <filesystem>
 #include <functional>
+#include <random>
 #include <vector>
 
 namespace artouste::app {
@@ -146,7 +148,14 @@ public:
            RocketSystem::ExplosionEvent). */
         std::vector<vec3> explosionPositions;
         std::vector<vec3> zombieHitPositions;
-        std::vector<vec3> zombieDeathPositions;
+        /* Les morts sont réparties en deux listes selon le sort de la fusée de
+           bonus tirée par leur explosion (voir chanceFuseeBonus) : le joueur
+           entend au cri s'il a gagné quelque chose, sans quitter des yeux ce
+           qu'il pilote. Un zombie qui meurt autrement qu'en explosion de
+           roquette (marcheurs d'un largueur abattu, sphère noire) va toujours
+           en Simple : aucune fusée n'en part. */
+        std::vector<vec3> zombieDeathSimplePositions;
+        std::vector<vec3> zombieDeathBonusPositions;
 
         /* Une entrée par pneu toxique lancé ce pas, à son origine (bras du
            zombie lanceur). */
@@ -159,11 +168,14 @@ public:
 
         /* Nouvelle vague et apparition d'un largueur : sons non spatiaux, à
            volume fixe -- seules exceptions au principe "volume selon la distance
-           à l'hélico" (voir AudioEngine::playWaveStart et playBroodSpawn). Une
+           à l'hélico" (voir AudioEngine::playWaveStart et playRale). Une
            manche de boss lève les deux le même pas : l'annonce de vague, puis le
            râle par-dessus. */
         bool waveStart   = false;
         bool broodSpawned = false;
+        /* Largueur abattu : même râle qu'à son arrivée, pour clore
+           l'affrontement par le cri qui l'avait ouvert. */
+        bool broodKilled  = false;
 
         /* Volume traversé ce pas, joué à la position de l'appareil comme un
            impact (distance nulle). */
@@ -187,9 +199,54 @@ public:
        le largueur tombe (Brood, qui prime sur un kill multiple simultané) : reste
        affichée KILL_ANNOUNCE_DURATION_S après l'événement qui l'a déclenchée,
        puis retombe à None. */
-    enum class KillAnnouncement { None, Double, Triple, Carnage, Brood };
+    enum class KillAnnouncement { None, Double, Triple, Carnage, Brood,
+                                 Loin, LongueDistance, Maitre };
     [[nodiscard]] KillAnnouncement killAnnouncement() const noexcept {
         return m_killAnnounceTimer > 0.0f ? m_killAnnounce : KillAnnouncement::None;
+    }
+
+    /* Prime de tir lointain, en trois paliers. La distance est celle du canon
+       au point d'impact (RocketSystem::UpdateResult::explosionRangesM) : dans
+       l'espace, pas au sol, un tir plongeant de 300 m valant un tir tendu de
+       300 m. Le dernier palier demande de la hauteur : une roquette tirée à
+       plat depuis 30 m touche le sol vers 290 m, il faut monter pour lui donner
+       le temps d'aller plus loin. Prime attachée à l'EXPLOSION, pas au zombie :
+       un double kill lointain ne la double pas, il cumule simplement avec la
+       prime de kill multiple (killScoreForCount). */
+    static constexpr float TIR_LOIN_M      = 150.0f;
+    static constexpr float TIR_LONGUE_M    = 300.0f;
+    static constexpr float TIR_MAITRE_M    = 400.0f;
+    static constexpr int   TIR_LOIN_SCORE   = 50;
+    static constexpr int   TIR_LONGUE_SCORE = 100;
+    static constexpr int   TIR_MAITRE_SCORE = 200;
+
+    [[nodiscard]] static int scoreDistance(float rangeM) noexcept {
+        if (rangeM >= TIR_MAITRE_M) {
+            return TIR_MAITRE_SCORE;
+        }
+        if (rangeM >= TIR_LONGUE_M) {
+            return TIR_LONGUE_SCORE;
+        }
+        return rangeM >= TIR_LOIN_M ? TIR_LOIN_SCORE : 0;
+    }
+
+    /* Annonce propre au tir lointain, retenue seulement faute de kill multiple
+       à annoncer : un double kill garde son libellé, la distance ne devenant
+       alors qu'un suffixe (voir killAnnounceDistanceM). */
+    [[nodiscard]] static KillAnnouncement annonceDistance(float rangeM) noexcept {
+        if (rangeM >= TIR_MAITRE_M) {
+            return KillAnnouncement::Maitre;
+        }
+        if (rangeM >= TIR_LONGUE_M) {
+            return KillAnnouncement::LongueDistance;
+        }
+        return rangeM >= TIR_LOIN_M ? KillAnnouncement::Loin : KillAnnouncement::None;
+    }
+
+    /* Distance à afficher en suffixe de l'annonce courante, 0 si l'événement
+       annoncé n'a pas atteint le premier palier (rien à ajouter). */
+    [[nodiscard]] float killAnnounceDistanceM() const noexcept {
+        return m_killAnnounceTimer > 0.0f ? m_killAnnounceDistanceM : 0.0f;
     }
 
     /* Flash de bouche courant (retour visuel du tir, indépendant du son -- voir
@@ -252,8 +309,20 @@ public:
        (physics::FlightModel::drainFuel) : le combat décide du prix, la physique
        tient le réservoir. Rend 0 hors combat, partie perdue, ou sous le seuil --
        un posé normal ne coûte rien et ne s'entend pas. À appeler après update(),
-       qui remet les événements sonores à zéro. */
-    [[nodiscard]] float applyGroundImpact(float speedMs);
+       qui remet les événements sonores à zéro.
+
+       'fuelLiters' est le contenu courant du réservoir : un choc ne le vide
+       JAMAIS complètement, il s'arrête à la réserve (voir IMPACT_RESERVE_L).
+       Sans ce plafond, la courbe au carré dépasse la contenance dès 20 m/s et
+       tout contact un peu violent clouait l'appareil au sol, la partie perdue
+       sans qu'aucun zombie y soit pour rien. Un réservoir déjà sous la réserve
+       ne perd plus rien : il n'y a plus rien à prendre. */
+    [[nodiscard]] float applyGroundImpact(float speedMs, float fuelLiters);
+    /* Kérosène qu'un choc laisse toujours dans le réservoir. Calé sur le seuil
+       du voyant bas carburant (physics::FUEL_LOW_L) : le pilote se relève avec
+       l'alarme allumée et cinq à huit minutes de vol (112 à 194 L/h) pour
+       trouver une sphère bleue. C'est une chance, pas un pardon. */
+    static constexpr float IMPACT_RESERVE_L = physics::FUEL_LOW_L;
 
     /* Kérosène (L) ramassé pendant le dernier update() en traversant une sphère
        vert : à ajouter au modèle de vol (addFuel), à lire après update() comme
@@ -288,6 +357,7 @@ private:
        chercher la perte ailleurs. Avec le coefficient ci-dessus, cela place le
        premier vrai choc à 3,5 m/s d'arrivée. */
     static constexpr float GROUND_IMPACT_MIN_LITERS = 0.5f;
+
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */
@@ -322,6 +392,7 @@ private:
     float            m_lastPlayerAgl = 0.0f;  /* hauteur sol de la dernière image (voir belowCeiling) */
     float            m_muzzleFlashTimer = 0.0f;  /* s restantes d'affichage du flash de bouche */
     KillAnnouncement m_killAnnounce      = KillAnnouncement::None;
+    float            m_killAnnounceDistanceM = 0.0f;
     float            m_killAnnounceTimer = 0.0f;  /* s restantes d'affichage de l'annonce */
     vec3             m_lastMuzzlePos{0.0f};
     vec3             m_lastFireDir{1.0f, 0.0f, 0.0f};
@@ -338,6 +409,10 @@ private:
         BonusType type       = BonusType::Carburant;
     };
     std::vector<BonusSphere> m_bonusSpheres;
+    /* Tirage au sort du lancement de fusée (chanceFuseeBonus). Propre au mode :
+       le semer depuis les autres générateurs ferait dépendre la chance du
+       nombre de zombies déjà apparus. */
+    std::mt19937             m_bonusRng{std::random_device{}()};
     /* Hécatombe en cours (sphère noire ramassée) : temps restant avant la
        prochaine mise à mort. Négatif quand aucune n'est en cours. */
     float                    m_hecatombeTimer = -1.0f;

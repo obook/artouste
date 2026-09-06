@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <random>
 
 namespace artouste::app {
 
@@ -102,8 +103,9 @@ void CombatMode::start(const std::filesystem::path& terrainDir,
     m_elapsedS          = 0.0f;
     m_kills             = 0;
     m_score             = 0;
-    m_killAnnounce      = KillAnnouncement::None;
-    m_killAnnounceTimer = 0.0f;
+    m_killAnnounce          = KillAnnouncement::None;
+    m_killAnnounceTimer     = 0.0f;
+    m_killAnnounceDistanceM = 0.0f;
     m_broodWasAlive     = m_horde.broodAlive();
     m_bonusSpheres.clear();
     m_hecatombeTimer = -1.0f;
@@ -240,7 +242,7 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
             }
             m_rockets.addExplosion(mort);
             m_events.explosionPositions.push_back(mort);
-            m_events.zombieDeathPositions.push_back(mort);
+            m_events.zombieDeathSimplePositions.push_back(mort);
             m_kills += 1;
             m_score += BONUS_MORT_SCORE;
             m_hecatombeTimer += BONUS_MORT_INTERVALLE_S;
@@ -282,24 +284,51 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
        fauchant plusieurs zombies d'un coup fasse entendre autant de cris
        distincts plutôt qu'un seul. */
     const RocketSystem::UpdateResult rocketRes = m_rockets.update(dt, terrainHeight, m_horde);
-    m_events.explosionPositions   = rocketRes.explosionPositions;
-    m_events.zombieHitPositions   = rocketRes.zombieHitPositions;
-    m_events.zombieDeathPositions = rocketRes.zombieDeathPositions;
+    m_events.explosionPositions = rocketRes.explosionPositions;
+    m_events.zombieHitPositions = rocketRes.zombieHitPositions;
     m_kills += rocketRes.kills;
+    /* Les morts arrivent groupées par explosion et dans le même ordre que
+       explosionKillCounts (voir RocketSystem::update) : ce curseur avance
+       d'autant de morts que l'explosion courante en a faites, ce qui permet de
+       router chaque cri vers la liste correspondant au sort de sa fusée. */
+    std::size_t premiereMort = 0;
     for (std::size_t i = 0; i < rocketRes.explosionKillCounts.size(); ++i) {
         const int killCount = rocketRes.explosionKillCounts[i];
         m_score += killScoreForCount(killCount);
-        const KillAnnouncement ann = killAnnouncementForCount(killCount);
-        if (ann != KillAnnouncement::None) {
-            m_killAnnounce      = ann;
-            m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
+
+        /* Prime de distance : une explosion qui n'a tué personne ne rapporte
+           rien, si loin soit-elle -- c'est le tir réussi qu'on récompense, pas
+           le tir raté. */
+        const float portee =
+            i < rocketRes.explosionRangesM.size() ? rocketRes.explosionRangesM[i] : 0.0f;
+        const int primeLoin = killCount > 0 ? scoreDistance(portee) : 0;
+        m_score += primeLoin;
+
+        /* Le kill multiple garde le libellé quand il y en a un ; le tir lointain
+           ne prend le bandeau que faute de mieux, mais ajoute ses mètres dans
+           les deux cas. */
+        KillAnnouncement ann = killAnnouncementForCount(killCount);
+        if (ann == KillAnnouncement::None && primeLoin > 0) {
+            ann = annonceDistance(portee);
         }
-        /* Une fusée part du point d'explosion dès qu'elle a fauché assez de
-           zombies (BONUS_SPHERE_KILL_MIN) poser un volume : un bidon de kérosène,
-           ou une trousse de secours à partir du double kill. Hauteur prise sur
-           le RELIEF sous ce point, pas sur l'altitude de l'explosion elle-même,
+        if (ann != KillAnnouncement::None) {
+            m_killAnnounce          = ann;
+            m_killAnnounceTimer     = KILL_ANNOUNCE_DURATION_S;
+            m_killAnnounceDistanceM = primeLoin > 0 ? portee : 0.0f;
+        }
+        /* Une explosion qui a fauché assez de zombies (BONUS_SPHERE_KILL_MIN)
+           PEUT lancer une fusée du point d'explosion pour poser un volume : un
+           bidon de kérosène, ou une trousse de secours à partir du double kill.
+           Le tirage (chanceFuseeBonus) se raréfie de manche en manche, et n'est
+           jamais gagné d'avance, même sur un carnage. Hauteur prise sur le
+           RELIEF sous ce point, pas sur l'altitude de l'explosion elle-même,
            qui peut avoir eu lieu en plein vol au contact d'un zombie. */
-        if (killCount >= BONUS_SPHERE_KILL_MIN && i < rocketRes.explosionPositions.size()) {
+        std::bernoulli_distribution tirage{
+            static_cast<double>(chanceFuseeBonus(m_waves.waveNumber(), killCount))};
+        const bool fuseeLancee = killCount >= BONUS_SPHERE_KILL_MIN
+                                 && i < rocketRes.explosionPositions.size()
+                                 && tirage(m_bonusRng);
+        if (fuseeLancee) {
             const vec3  pos     = rocketRes.explosionPositions[i];
             const float groundY = terrainHeight(pos.x, pos.z);
             /* Posé au ras du sol et de taille nulle : la montée de l'image
@@ -309,6 +338,20 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
                             true, true, bonusTypePourKills(killCount)});
             m_events.bonusLaunchPositions.push_back(vec3{pos.x, groundY, pos.z});
         }
+
+        /* Une entrée par zombie fauché, comme avant, mais dans la liste que le
+           tirage désigne : tous les morts d'une même explosion crient de la
+           même façon, puisque c'est l'explosion, pas le zombie, qui gagne ou
+           non sa fusée. */
+        std::vector<vec3>& cris =
+            fuseeLancee ? m_events.zombieDeathBonusPositions : m_events.zombieDeathSimplePositions;
+        const std::size_t finMorts =
+            std::min(premiereMort + static_cast<std::size_t>(std::max(killCount, 0)),
+                     rocketRes.zombieDeathPositions.size());
+        for (std::size_t k = premiereMort; k < finMorts; ++k) {
+            cris.push_back(rocketRes.zombieDeathPositions[k]);
+        }
+        premiereMort = finMorts;
     }
 
     /* Largueur neutralisé : prime de score et annonce dédiée, qui écrase un
@@ -326,14 +369,16 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
         for (const vec3& pos : eclates) {
             m_rockets.addExplosion(pos);
             m_events.explosionPositions.push_back(pos);
-            m_events.zombieDeathPositions.push_back(pos);
+            m_events.zombieDeathSimplePositions.push_back(pos);
         }
         m_kills += static_cast<int>(eclates.size());
         m_score += BROODLING_SCORE * static_cast<int>(eclates.size());
 
         m_score += BROOD_SCORE;
-        m_killAnnounce      = KillAnnouncement::Brood;
-        m_killAnnounceTimer = KILL_ANNOUNCE_DURATION_S;
+        m_events.broodKilled    = true;
+        m_killAnnounce          = KillAnnouncement::Brood;
+        m_killAnnounceTimer     = KILL_ANNOUNCE_DURATION_S;
+        m_killAnnounceDistanceM = 0.0f;
     }
     /* Apparition : le gestionnaire de vagues vient de la poser (manche de boss),
        c'est le moment du râle. */
@@ -350,7 +395,7 @@ void CombatMode::update(float dt, const physics::RigidBody& body, bool fireTrigg
     }
 }
 
-float CombatMode::applyGroundImpact(float speedMs) {
+float CombatMode::applyGroundImpact(float speedMs, float fuelLiters) {
     if (!m_active || m_gameOver || speedMs <= GROUND_IMPACT_FREE_MS) {
         return 0.0f;
     }
@@ -366,7 +411,10 @@ float CombatMode::applyGroundImpact(float speedMs) {
         return 0.0f;
     }
     m_events.impacted = true;
-    return litres;
+    /* Le bruit du choc dépend de sa violence, pas du réservoir : il est acquis
+       ci-dessus. Ce qui suit ne limite que la facture -- le choc s'arrête à la
+       réserve, et ne prend rien du tout si elle est déjà entamée. */
+    return std::min(litres, std::max(0.0f, fuelLiters - IMPACT_RESERVE_L));
 }
 
 std::vector<CombatMode::BonusSphereView> CombatMode::bonusSpheres() const {

@@ -24,6 +24,8 @@ add_executable(artouste_tests
     weapon_tests.cpp
     rocket_system_tests.cpp
     projectile_system_tests.cpp
+    bonus_sphere_tests.cpp
+    tir_longue_distance_tests.cpp
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
     bille_tests.cpp

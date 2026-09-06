@@ -168,8 +168,18 @@ bool Application::mainLoop() {
                combien de kérosène le choc a fait fuir, la physique le retire du
                réservoir. Après update(), qui vide les événements sonores, et avant
                leur lecture ci-dessous. */
-            m_flight.drainFuel(m_combat.applyGroundImpact(m_flight.consumeGroundImpact()) +
-                               m_combat.shotFuelBurn());
+            const float fuiteChoc = m_combat.applyGroundImpact(m_flight.consumeGroundImpact(),
+                                                              m_flight.fuelLiters());
+            m_flight.drainFuel(fuiteChoc + m_combat.shotFuelBurn());
+            if (fuiteChoc > 0.0f) {
+                /* Le choc a fendu le réservoir mais lui a laissé sa réserve (voir
+                   CombatMode::IMPACT_RESERVE_L) : on rend l'appareil en état de
+                   repartir, turbine et rotor au régime. En arène le retour au pad
+                   est refusé (voir demanderRetourAuPad) et rallumer une turbine
+                   sous une horde n'est pas une épreuve de pilotage, c'est une fin
+                   de partie déguisée. Sans effet si rien ne s'était éteint. */
+                m_flight.turbine().forceRunning();
+            }
             /* Sphère traversée (mode zombie) : bidon de kérosène rendu au
                réservoir. */
             m_flight.addFuel(m_combat.bonusFuelPickup());
@@ -194,8 +204,11 @@ bool Application::mainLoop() {
             for (const vec3& soundPos : combatEvents.explosionPositions) {
                 m_audio.playExplosion(soundPos, body.position);
             }
-            for (const vec3& soundPos : combatEvents.zombieDeathPositions) {
-                m_audio.playZombieDeath(soundPos, body.position);
+            for (const vec3& soundPos : combatEvents.zombieDeathSimplePositions) {
+                m_audio.playZombieDeathSimple(soundPos, body.position);
+            }
+            for (const vec3& soundPos : combatEvents.zombieDeathBonusPositions) {
+                m_audio.playZombieDeathBonus(soundPos, body.position);
             }
             for (const vec3& soundPos : combatEvents.zombieHitPositions) {
                 m_audio.playZombieHit(soundPos, body.position);
@@ -224,8 +237,8 @@ bool Application::mainLoop() {
             if (combatEvents.waveStart) {
                 m_audio.playWaveStart();
             }
-            if (combatEvents.broodSpawned) {
-                m_audio.playBroodSpawn();
+            if (combatEvents.broodSpawned || combatEvents.broodKilled) {
+                m_audio.playRale();
             }
         }
 

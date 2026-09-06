@@ -122,7 +122,8 @@ struct AudioEngine::Impl {
     ma_sound  gunfireSound{};
     ma_sound  explosionSound{};
     ma_sound  zombieHitSound{};
-    ma_sound  zombieDeathSound{};
+    ma_sound  zombieDeathSimpleSound{};
+    ma_sound  zombieDeathBonusSound{};
     ma_sound  toxicThrowSound{};
     ma_sound  toxicImpactSound{};
     ma_sound  drinkSound{};
@@ -131,13 +132,14 @@ struct AudioEngine::Impl {
     ma_sound  sphereSanteSound{};
     ma_sound  sphereMortSound{};
     /* Ces deux-là sont les exceptions : rejoués depuis le début, jamais copiés
-       (voir playWaveStart et playBroodSpawn). */
+       (voir playWaveStart et playRale). */
     ma_sound  waveStartSound{};
     ma_sound  broodSpawnSound{};
     bool      gunfireLoaded     = false;
     bool      explosionLoaded   = false;
     bool      zombieHitLoaded   = false;
-    bool      zombieDeathLoaded = false;
+    bool      zombieDeathSimpleLoaded = false;
+    bool      zombieDeathBonusLoaded  = false;
     bool      toxicThrowLoaded  = false;
     bool      toxicImpactLoaded = false;
     bool      drinkLoaded       = false;

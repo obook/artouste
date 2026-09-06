@@ -53,6 +53,12 @@ public:
            les kills multiples (plusieurs zombies fauchés par la même
            roquette) plutôt que de simplement compter les morts une à une. */
         std::vector<int>  explosionKillCounts;
+        /* Distance parcourue par CHAQUE roquette, du canon au point d'impact
+           (même ordre/longueur que explosionPositions) : sert à primer les tirs
+           de loin (voir CombatMode::scoreDistance). Distance dans l'espace, pas
+           au sol : un tir plongeant depuis 300 m est aussi long qu'un tir tendu
+           de 300 m. */
+        std::vector<float> explosionRangesM;
     };
 
     /* Avance chaque roquette (gravité + position), détecte l'impact (sol via

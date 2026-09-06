@@ -12,10 +12,14 @@
 
 #include "util/Math.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 namespace artouste::app {
 
-/* Zombies qu'une même explosion doit faucher pour lancer une fusée (1 : mise au
-   point ; 2 : seuil de jeu, le double kill). */
+/* Zombies qu'une même explosion doit faucher pour PRÉTENDRE à une fusée (1 :
+   mise au point ; 2 : seuil de jeu, le double kill). Le seuil atteint, la
+   fusée n'est encore que possible : voir chanceFuseeBonus plus bas. */
 constexpr int BONUS_SPHERE_KILL_MIN = 1;
 
 /* Volume posé : rayon (m), hauteur du centre au-dessus du relief (m). Bleu pour
@@ -31,6 +35,29 @@ constexpr vec3  BONUS_SPHERE_COLOR_MORT{0.04f, 0.04f, 0.05f};
    sphère : soin au double kill, hécatombe au triple. */
 constexpr int BONUS_SANTE_KILL_MIN = 2;
 constexpr int BONUS_MORT_KILL_MIN  = 3;
+
+/* Une explosion meurtrière ne lance plus la fusée à coup sûr : elle la tire au
+   sort. La chance part de BONUS_CHANCE_MANCHE1 et décroît en exponentielle vers
+   BONUS_CHANCE_PLANCHER (environ 70 % en manche 3, 55 % en manche 5, 35 % en
+   manche 10), pour que le kérosène se raréfie à mesure que le jeu durcit. Un
+   kill multiple multiplie cette chance sans jamais la garantir : la trousse de
+   secours et la sphère noire restent des récompenses, pas des acquis. */
+constexpr float BONUS_CHANCE_MANCHE1  = 0.95f;
+constexpr float BONUS_CHANCE_PLANCHER = 0.25f;
+constexpr float BONUS_CHANCE_DECROIS  = 0.22f;  /* par manche */
+constexpr float BONUS_CHANCE_X_SANTE  = 1.5f;   /* à partir du double kill */
+constexpr float BONUS_CHANCE_X_MORT   = 2.0f;   /* à partir du triple kill */
+
+[[nodiscard]] inline float chanceFuseeBonus(int wave, int killCount) noexcept {
+    const float manches = static_cast<float>(std::max(wave, 1) - 1);
+    const float base    = BONUS_CHANCE_PLANCHER
+                          + (BONUS_CHANCE_MANCHE1 - BONUS_CHANCE_PLANCHER)
+                                * std::exp(-BONUS_CHANCE_DECROIS * manches);
+    const float multi   = killCount >= BONUS_MORT_KILL_MIN    ? BONUS_CHANCE_X_MORT
+                          : killCount >= BONUS_SANTE_KILL_MIN ? BONUS_CHANCE_X_SANTE
+                                                              : 1.0f;
+    return saturate(base * multi);
+}
 
 /* Chandelle, en trois temps : montée (s) jusqu'au sommet (m), retombée (s)
    jusqu'à l'altitude du volume, éclosion (s). La graine mesure

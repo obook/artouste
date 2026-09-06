@@ -82,7 +82,7 @@ public:
      * (deux zombies tués la même image, par exemple) sans se couper la parole.
      * 'sourcePos' est la position monde de l'événement (explosion, zombie...),
      * 'listenerPos' celle de l'hélico ; le volume décroît avec leur distance.
-     * playWaveStart() et playBroodSpawn() sont les exceptions : annonces non
+     * playWaveStart() et playRale() sont les exceptions : annonces non
      * spatiales, à volume fixe, qui réutilisent chacune un unique son rejoué
      * depuis le début. Le largueur apparaît au bord de l'arène, à quelques
      * centaines de mètres : un râle spatialisé y serait inaudible, alors que
@@ -91,7 +91,12 @@ public:
     void playGunfire(const vec3& sourcePos, const vec3& listenerPos);
     void playExplosion(const vec3& sourcePos, const vec3& listenerPos);
     void playZombieHit(const vec3& sourcePos, const vec3& listenerPos);
-    void playZombieDeath(const vec3& sourcePos, const vec3& listenerPos);
+    /* Deux cris de mort distincts : le zombie qui ne laisse rien derrière
+     * lui (Simple) et celui dont l'explosion a lancé une fusée de bonus
+     * (Bonus). Le joueur entend donc à l'oreille, sans regarder le ciel,
+     * si sa roquette lui a rapporté quelque chose. */
+    void playZombieDeathSimple(const vec3& sourcePos, const vec3& listenerPos);
+    void playZombieDeathBonus(const vec3& sourcePos, const vec3& listenerPos);
     void playToxicThrow(const vec3& sourcePos, const vec3& listenerPos);
     void playToxicImpact(const vec3& sourcePos, const vec3& listenerPos);
     void playDrink(const vec3& sourcePos, const vec3& listenerPos);
@@ -100,7 +105,10 @@ public:
     void playSphereSante(const vec3& sourcePos, const vec3& listenerPos);
     void playSphereMort(const vec3& sourcePos, const vec3& listenerPos);
     void playWaveStart();
-    void playBroodSpawn();
+    /* Râle du largueur : à son arrivée ET à sa mort. Même échantillon
+     * (rale.wav), rejoué depuis le début -- les deux moments ne peuvent pas
+     * tomber sur la même image, un largueur ne meurt pas en apparaissant. */
+    void playRale();
     /* Coupe toutes les lectures de combat en cours (fin de partie) : setPaused
      * ne suspend que les boucles, et la purge des sons ponctuels s'arrête avec
      * update(). Sans effet s'il n'y a rien à couper. */

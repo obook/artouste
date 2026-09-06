@@ -57,8 +57,11 @@ AudioEngine::~AudioEngine() {
     if (m_impl->zombieHitLoaded) {
         ma_sound_uninit(&m_impl->zombieHitSound);
     }
-    if (m_impl->zombieDeathLoaded) {
-        ma_sound_uninit(&m_impl->zombieDeathSound);
+    if (m_impl->zombieDeathSimpleLoaded) {
+        ma_sound_uninit(&m_impl->zombieDeathSimpleSound);
+    }
+    if (m_impl->zombieDeathBonusLoaded) {
+        ma_sound_uninit(&m_impl->zombieDeathBonusSound);
     }
     if (m_impl->toxicThrowLoaded) {
         ma_sound_uninit(&m_impl->toxicThrowSound);

@@ -101,6 +101,7 @@ RocketSystem::UpdateResult RocketSystem::update(
         ++res.explosions;
         m_explosions.push_back(Explosion{center, 0.0f});
         res.explosionPositions.push_back(center);
+        res.explosionRangesM.push_back(glm::distance(center, r.origin));
         /* Trace de brûlure persistante au sol (s'estompe en ~45 s), de forme et
            de taille propres à cet impact : angle d'arrivée et portée du tir
            (voir scorchShapeFor). Figées ici une fois pour toutes, la roquette

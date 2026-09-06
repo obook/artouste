@@ -170,7 +170,7 @@ void Application::keyCallback(
             break;
         case GLFW_KEY_R: /* demande la confirmation avant de replacer l'appareil au départ */
             if (app != nullptr) {
-                app->m_confirmReset = true;
+                app->demanderRetourAuPad();
             }
             break;
         case GLFW_KEY_H: /* fait défiler les modes HUD : coins -> superposé -> rien */

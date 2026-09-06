@@ -116,7 +116,7 @@ void Application::handleActionButtons() {
             m_paused = !m_paused;
         }
         if (m_input->resetPressed()) { /* X : demande la confirmation du reset (comme R) */
-            m_confirmReset = true;
+            demanderRetourAuPad();
         }
         if (m_input->menuPressed()) { /* LB + RB : retour au menu (comme Échap) */
             m_returnToMenu = true;

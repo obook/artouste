@@ -72,6 +72,17 @@ void Application::toggleAutoland() {
     m_autolandMsgShow = 3.0f;
 }
 
+void Application::demanderRetourAuPad() {
+    /* Même refus et même bandeau que toggleAssist/toggleAutoland : en arène, on
+       se débrouille avec ce qu'on a dans le réservoir. */
+    if (m_combat.active()) {
+        m_autolandMsg     = "Indisponible en mode zombie";
+        m_autolandMsgShow = 3.0f;
+        return;
+    }
+    m_confirmReset = true;
+}
+
 void Application::resetToStart() {
     m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
     m_input->reset();

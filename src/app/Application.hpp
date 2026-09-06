@@ -430,6 +430,14 @@ private:
        Gendarmerie -> armée de terre -> origine. */
     void cycleLivery();
 
+    /* Ouvre le panneau de confirmation du retour au pad (touches R et X). Refusé
+       en mode zombie, comme le confort de pilotage et le pilote automatique :
+       resetToStart refait le plein (voir physics::FlightModel::reset), si bien
+       que la touche annulait d'un coup tout le prix du kérosène -- celui des
+       coups tirés, celui d'un choc au sol, et l'intérêt même des sphères
+       bleues -- sans rien coûter à la partie en cours, ni score ni manche. */
+    void demanderRetourAuPad();
+
     /* Replace l'appareil au départ (appelé une fois la confirmation acceptée). */
     void resetToStart();
 

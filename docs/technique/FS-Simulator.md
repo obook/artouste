@@ -73,6 +73,23 @@ Aucun lien avec la branche aspect-modele.
    (`ApplicationHudInstruments.cpp`, `ApplicationCapture.cpp`) ; LED
    inchangée, la bande verte du cadran est déjà 33 000-34 000.
 
+   REVU (06/09/2026). La LED a dû bouger. Le régime nominal étant le HAUT de
+   la bande verte, le seuil jaune tombait exactement dessus : dès que le
+   simulateur a modélisé le battement du régulateur, le voyant clignotait au
+   rythme de la respiration de la turbine. Seuil jaune porté à 34 000 + 250
+   tr/min (`TURBINE_RPM_TOLERANCE`, `src/ui/HudAlarms.hpp`), rouge décalé
+   d'autant. La bande verte AFFICHÉE au cadran reste 33 000-34 000, conforme
+   au document : seul le déclenchement du voyant tolère le battement. Aucune
+   source d'époque ne donne l'amplitude de ce battement, la valeur retenue
+   (+-0,15 %) est un choix de simulation, pas une donnée mesurée.
+
+   REVU (06/09/2026, suite). Le voyant reçoit aussi un jaune de SOUS-régime,
+   turbine établie sous 33 000 tr/min : le creux transitoire du droop
+   (`DROOP_TRANSITOIRE`) sort de la bande basse, et l'éteindre s'y lisait comme
+   une turbine coupée alors qu'elle peine. Le droop lui-même n'a pas de source
+   d'époque : statisme 2 % au plein pas, creux 3 %, rattrapage 1,2 s, valeurs
+   plausibles pour une régulation de cette génération, pas des mesures.
+
 ## Rien à changer, validé par le document
 
 - VNE : plateau 195 km/h puis 20 km/h perdus par 1000 m, conforme à la table

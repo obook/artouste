@@ -213,6 +213,83 @@ ARRÊT
 La transition de 0 à 360 tr/min au démarrage prend 30 à 60 secondes.
 La transition inverse à l'arrêt (avec frein) prend 20 à 40 secondes.
 
+### Forme des montées et des descentes de régime
+
+Les durées ci-dessus disent combien de temps prend chaque transition, pas
+comment le régime s'y déplace. Une turbine à gaz n'accélère pas linéairement, et
+le simulateur reproduit la forme réelle du trajet.
+
+Le démarreur lance seul le compresseur. Sa résistance croît à peu près comme le
+carré du régime, si bien que la montée part vite puis s'essouffle : le démarreur
+ne peut pas dépasser 15 % du nominal à lui seul. L'allumage du carburant relance
+franchement l'accélération, ce qui produit la rupture de pente que l'on entend
+au démarrage. Le régulateur la modère ensuite, et l'arrivée au régime nominal
+est asymptotique : les derniers pour cent prennent un temps disproportionné.
+
+| Temps écoulé | Régime turbine | Rampe linéaire, pour comparaison |
+|---|---|---|
+| 10 % | 10,5 % | 10 % |
+| 22 % (allumage) | 15,0 % | 22 % |
+| 50 % | 70,8 % | 50 % |
+| 75 % | 94,5 % | 75 % |
+| 90 % | 99,4 % | 90 % |
+
+L'extinction suit la logique inverse. Carburant coupé, il ne reste que la
+traînée aérodynamique et les frottements : la chute est franche au début, puis
+traîne longuement dans les bas régimes. À la moitié du temps d'extinction, la
+turbine n'est déjà plus qu'à 22 % de son régime, et c'est cette traîne qui
+produit le sifflement qui n'en finit pas. Le rotor en roue libre se comporte de
+même, sur son propre temps.
+
+L'engagement du rotor a sa forme propre, celle d'un embrayage centrifuge : le
+couple transmis est maximal au premier contact, quand le glissement entre les
+deux vitesses est grand, puis décroît à mesure qu'elles se rejoignent. Montée
+franche, arrivée douce.
+
+Une fois le régime établi, rien ne se fige. L'Artouste II est une turbine
+monoarbre : l'embrayage fermé, rotor et turbine tournent dans un rapport fixe
+imposé par le réducteur, et leurs régimes varient donc ensemble, jamais
+séparément. La roue libre ne sert qu'à laisser le rotor prendre de l'avance en
+autorotation.
+
+Deux choses les font bouger. Le régulateur, d'abord, qui corrige en permanence
+sans jamais converger tout à fait : il en résulte une respiration lente
+d'environ 0,15 %, que l'énorme inertie du rotor embarquée dans la même ligne
+d'arbre suffit à contenir. Ce battement reste dans la bande verte du cadran, qui
+lui laisse une marge exprès (voir `TURBINE_RPM_TOLERANCE`) : un voyant qui
+clignoterait au rythme de la respiration se lirait comme une panne.
+
+La charge, ensuite, et c'est de loin le plus visible en vol. Tirer du collectif
+augmente le pas, donc le couple que les pales absorbent : le régime s'affaisse
+avant que le régulateur ne remette la puissance. Deux effets se superposent. Le
+statisme est permanent : à charge établie, le régime se cale d'autant plus bas
+que la charge est forte, jusqu'à 2 % de moins au plein pot. Le creux
+transitoire, lui, est passager : sur une action franche au collectif, le régime
+plonge de 3 % supplémentaires le temps que le carburant suive, puis remonte en
+une seconde environ. C'est très perceptible sur les régulations simples de cette
+génération, à l'aiguille comme à l'oreille.
+
+| Pas collectif | Régime turbine | Régime rotor |
+|---|---|---|
+| 11 deg (sustentation) | 34 000 tr/min | 360,0 tr/min |
+| 13 deg | 33 660 tr/min | 356,4 tr/min |
+| 15 deg (plein pot) | 33 320 tr/min | 352,8 tr/min |
+| creux d'une action franche | 32 300 tr/min | 342,0 tr/min |
+
+Le statisme ne joue qu'au-dessus du pas de sustentation : en dessous la turbine a
+de la marge et le régulateur tient le nominal, un surrégime allumerait le voyant
+à tort. Le creux, lui, sort de la bande verte : le voyant turbine passe alors au
+jaune, ce qui est bien une alerte de sous-régime et non une extinction.
+
+Toutes ces formes se règlent dans `src/physics/constants.hpp`, section "Forme
+des montées et des descentes de régime".
+
+Une réserve sur la provenance : ces courbes viennent de la physique générale des
+turbomoteurs, pas d'une planche de démarrage de l'Artouste IIC6, dont nous ne
+disposons pas. Les durées, elles, restent celles du manuel et des sons. La forme
+du trajet est donc un choix de simulation vraisemblable, à ne pas confondre avec
+les données numérisées de `docs/technique/`, qui sont sourcées et datées.
+
 ### Effets de vol modélisés
 
 Au-delà de l'effet de sol et de l'effet de translation, le simulateur reproduit

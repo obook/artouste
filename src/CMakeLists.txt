@@ -282,6 +282,25 @@ if(ARTOUSTE_BUILD_TOOLS)
         CXX_EXTENSIONS        OFF
     )
 
+    # Sonde de cadence de marche : mesure sur le clip la vitesse à laquelle le
+    # sol doit défiler pour que les pieds ne glissent pas. Demande un contexte
+    # OpenGL masqué (le chargement du modèle crée la texture atlas).
+    add_executable(clip_probe
+        tools/clip_probe.cpp
+        render/SkinnedModelAnim.cpp
+        render/SkinnedModelCalage.cpp
+        render/SkinnedModelLoad.cpp
+        render/Texture.cpp
+    )
+    target_include_directories(clip_probe PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(clip_probe PRIVATE
+        artouste_warnings assimp::assimp glm::glm glad glfw stb_image)
+    set_target_properties(clip_probe PROPERTIES
+        CXX_STANDARD          20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS        OFF
+    )
+
     # Découpage d'une orthophoto en tuiles BC7 (jeu de détail d'une carte). Ne
     # touche pas à OpenGL : compression et conteneur DDS sont du calcul pur, ce
     # qui laisse l'outil utilisable sur une machine sans carte graphique.

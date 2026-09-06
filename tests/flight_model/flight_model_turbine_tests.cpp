@@ -17,6 +17,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cmath>
+#include <memory>
 
 using artouste::physics::Controls;
 using artouste::physics::FlightModel;
@@ -223,7 +224,7 @@ TEST_CASE("Fond de réservoir : le démarrage est refusé", "[flight][turbine][c
     model.setGroundHeight(0.0f);
     model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f); /* jauge : 0 L */
 
-    CHECK_FALSE(model.toggleTurbine());
+    CHECK(model.toggleTurbine() == artouste::physics::ActionTurbine::ReservoirTropBas);
     CHECK(model.turbine().state() == artouste::physics::Turbine::State::Arret);
 
     /* Et rien ne se met en route au fil des pas suivants. */
@@ -241,21 +242,64 @@ TEST_CASE("Réservoir suffisant : le démarrage est accepté", "[flight][turbine
     model.drainFuel(artouste::physics::FUEL_CAPACITY_L - artouste::physics::FUEL_START_MIN_L -
                     1.0f);
 
-    CHECK(model.toggleTurbine());
+    CHECK(model.toggleTurbine() == artouste::physics::ActionTurbine::Faite);
     CHECK(model.turbine().state() == artouste::physics::Turbine::State::Demarrage);
 }
 
-TEST_CASE("Couper la turbine reste toujours possible", "[flight][turbine][carburant]") {
-    /* Le garde-fou ne vaut que pour le démarrage : on doit pouvoir couper une
-       turbine qui tourne, même avec un fond de réservoir. */
-    FlightModel model;
-    model.reset(0.0f);
-    model.setGroundHeight(0.0f);
-    model.turbine().forceRunning();
-    model.drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f);
+TEST_CASE("Couper la turbine demande d'être posé", "[flight][turbine][securite]") {
+    using artouste::physics::ActionTurbine;
+    using State = artouste::physics::Turbine::State;
+    const Controls commandes{};
 
-    CHECK(model.toggleTurbine());
-    CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
+    /* Prépare un appareil turbine tournante à l'altitude voulue, et laisse un pas
+       de simulation établir (ou non) le contact avec le sol. */
+    const auto enVolA = [&](float altitude) {
+        auto model = std::make_unique<FlightModel>();
+        model->reset(altitude);
+        model->setGroundHeight(0.0f);
+        model->turbine().forceRunning();
+        model->update(commandes, SIM_DT);
+        return model;
+    };
+
+    SECTION("posé, la coupure passe même avec un fond de réservoir") {
+        auto model = enVolA(0.0f);
+        REQUIRE(model->auSol());
+        model->drainFuel(artouste::physics::FUEL_CAPACITY_L - 0.3f);
+        CHECK(model->toggleTurbine() == ActionTurbine::Faite);
+        CHECK(model->turbine().state() == State::Extinction);
+    }
+
+    SECTION("en vol, la coupure est refusée") {
+        /* Couper en vol, c'est se mettre en autorotation sans l'avoir voulu :
+           une touche pressée par erreur ne doit pas terminer le vol. */
+        auto model = enVolA(100.0f);
+        REQUIRE_FALSE(model->auSol());
+        CHECK(model->toggleTurbine() == ActionTurbine::PasAuSol);
+        CHECK(model->turbine().state() == State::Regime);
+    }
+
+    SECTION("en vol, la turbine continue de tourner après le refus") {
+        auto model = enVolA(100.0f);
+        (void)model->toggleTurbine();
+        for (int i = 0; i < 240 * 3; ++i) {
+            model->update(commandes, SIM_DT);
+        }
+        CHECK(model->turbine().state() == State::Regime);
+        CHECK(model->turbine().rotorFraction() > 0.9f);
+    }
+
+    SECTION("rallumer en vol reste permis") {
+        /* C'est la procédure après une extinction, pas une fausse manoeuvre. */
+        auto model = std::make_unique<FlightModel>();
+        model->reset(100.0f);
+        model->setGroundHeight(0.0f);
+        model->update(commandes, SIM_DT);
+        REQUIRE_FALSE(model->auSol());
+        REQUIRE(model->turbine().state() == State::Arret);
+        CHECK(model->toggleTurbine() == ActionTurbine::Faite);
+        CHECK(model->turbine().state() == State::Demarrage);
+    }
 }
 
 /*

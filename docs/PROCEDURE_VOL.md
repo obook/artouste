@@ -146,6 +146,12 @@ Comportement en vol :
    - Le compresseur tourne en roue libre quelques secondes avant l'arrêt complet.
    - Durée arrêt turbine : 10 à 20 secondes.
 
+Le simulateur refuse cette coupure tant que l'appareil n'a pas touché le sol, et
+affiche pourquoi. Le vrai appareil ne l'interdit pas : rien n'empêche de fermer
+le robinet coupe-feu en vol, ce qui met en autorotation. Mais au clavier, la
+touche est voisine des autres et une pression involontaire terminait le vol sans
+recours. Rallumer en vol reste permis, c'est la procédure après une extinction.
+
 ### 3.4 Coupures finales
 
 5. Robinet carburant électrique : FERMÉ.

@@ -438,6 +438,11 @@ private:
        bleues -- sans rien coûter à la partie en cours, ni score ni manche. */
     void demanderRetourAuPad();
 
+    /* Bascule la turbine (touche T, bouton Start) et affiche le motif quand
+       c'est refusé : sans message, la commande reste sans effet visible et le
+       pilote croit à une panne de touche. */
+    void basculerTurbine();
+
     /* Replace l'appareil au départ (appelé une fois la confirmation acceptée). */
     void resetToStart();
 

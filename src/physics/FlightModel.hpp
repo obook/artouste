@@ -20,6 +20,11 @@
 
 namespace artouste::physics {
 
+/* Suite donnée à une demande de bascule de la turbine (touche T, bouton Start) :
+   faite, ou refusée avec son motif, pour que l'appelant puisse le dire au pilote
+   plutôt que de laisser la commande sans effet visible. */
+enum class ActionTurbine { Faite, ReservoirTropBas, PasAuSol };
+
 class FlightModel {
 public:
     /* Avance la simulation d'un pas de durée dt (appelé à cadence régulière). */
@@ -97,15 +102,28 @@ public:
        simulation) mais le fond de réservoir : la jauge affiche des litres entiers,
        donc "0 L" peut cacher un demi-litre, de quoi amorcer un démarrage
        parfaitement inutile. */
-    bool toggleTurbine() noexcept {
+    [[nodiscard]] ActionTurbine toggleTurbine() noexcept {
         const bool aLArret = m_turbine.state() == Turbine::State::Arret ||
                              m_turbine.state() == Turbine::State::Extinction;
-        if (aLArret && m_fuelLiters < FUEL_START_MIN_L) {
-            return false; /* pas assez de carburant pour mener un démarrage à terme */
+        if (aLArret) {
+            if (m_fuelLiters < FUEL_START_MIN_L) {
+                return ActionTurbine::ReservoirTropBas;
+            }
+            /* Rallumer EN VOL reste permis : c'est la procédure après une
+               extinction, pas une fausse manoeuvre. */
+        } else if (!m_inGroundContact) {
+            /* Couper la turbine en vol, c'est se mettre en autorotation sans
+               l'avoir voulu. Le vrai appareil a un robinet coupe-feu que rien
+               n'empêche de fermer ; ici, une touche pressée par erreur ne doit
+               pas terminer le vol. */
+            return ActionTurbine::PasAuSol;
         }
         m_turbine.toggle();
-        return true;
+        return ActionTurbine::Faite;
     }
+
+    /* L'appareil touche le sol (patins posés ou en contact). */
+    [[nodiscard]] bool auSol() const noexcept { return m_inGroundContact; }
 
     /* Vide une quantité de carburant hors consommation de la turbine : une
        cellule qui encaisse un choc perd du kérosène (voir le contact avec le sol

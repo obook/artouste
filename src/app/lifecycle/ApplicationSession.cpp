@@ -72,6 +72,20 @@ void Application::toggleAutoland() {
     m_autolandMsgShow = 3.0f;
 }
 
+void Application::basculerTurbine() {
+    switch (m_flight.toggleTurbine()) {
+        case physics::ActionTurbine::Faite:
+            return;
+        case physics::ActionTurbine::PasAuSol:
+            m_autolandMsg = "Posez-vous avant de couper la turbine";
+            break;
+        case physics::ActionTurbine::ReservoirTropBas:
+            m_autolandMsg = "Pas assez de carburant pour démarrer";
+            break;
+    }
+    m_autolandMsgShow = 3.0f;
+}
+
 void Application::demanderRetourAuPad() {
     /* Même refus et même bandeau que toggleAssist/toggleAutoland : en arène, on
        se débrouille avec ce qu'on a dans le réservoir. */

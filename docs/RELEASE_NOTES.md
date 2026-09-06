@@ -1,3 +1,27 @@
+## v0.47.0 - 6 septembre 2026
+
+### Nouvelles fonctionnalités
+
+- **Diagnostics sous Windows** : les sorties partent à la fois au terminal et à un journal écrit à côté de l'exécutable. Il n'y avait rien jusqu'ici.
+- **Sécurité turbine** : la coupure demande d'avoir touché le sol. Au clavier, la touche T est voisine des autres et une pression involontaire mettait en autorotation, sans recours. Rallumer en vol reste permis.
+- **Flou des pales** à haut régime.
+- **Mode zombie** : la fusée de bonus n'est plus automatique, elle est tirée au sort, de moins en moins souvent au fil des manches. Un tir qui tue au-delà de 150 m rapporte une prime, annoncée avec la distance et cumulable avec le kill multiple. Deux cris de mort distincts selon que l'explosion a lancé une fusée.
+- **clip_probe** : outil qui mesure sur un modèle animé la vitesse à laquelle le sol doit défiler pour que les pieds ne glissent pas.
+
+### Changements
+
+- **Régime turbine** : la montée n'est plus une rampe. Le démarreur s'essouffle, l'allumage relance l'accélération, l'arrivée au nominal s'étire ; l'extinction chute d'abord puis traîne. Les durées ne changent pas, seule la forme. Le régime fléchit aussi sous la charge, 2 % au plein pas et 3 % de creux passager sur une action franche au collectif.
+- **Vitesse des zombies** calée sur leur animation. Le pack contient neuf animations différentes, dont cinq qui ne se déplacent pas : tout le monde avançait à la même vitesse et le largueur, agrandi 3,2 fois, patinait sur place.
+- **Sons du mode zombie** renouvelés.
+- **Retour au pad** refusé en arène, comme le mode assisté et le pilote automatique : il refaisait le plein et annulait tout le prix du kérosène.
+- **Énumération des cartes graphiques** annoncée comme propre à Linux.
+
+### Corrections
+
+- **Choc au sol** : il vidait le réservoir dès 20 m/s et clouait l'appareil au sol, partie perdue d'un seul contact. Il laisse maintenant la réserve du voyant bas carburant et remet turbine et rotor au régime.
+- **Tir à sec** : les sphères bleues naissent des zombies abattus, donc un joueur qui ne pouvait plus tirer ne pouvait plus se ravitailler. Le canon est désormais gratuit sur les cinq derniers litres.
+- **Voyant et compteur turbine** qui sautillaient : le seuil jaune tombait pile sur le régime nominal, et le compteur affichait cinq chiffres au tour près.
+
 ## v0.45.0 - 22 août 2026
 
 ### Nouvelles fonctionnalités

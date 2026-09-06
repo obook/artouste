@@ -77,11 +77,16 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   [Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/).
   Fichier : `assets/sounds/combat/zombie_hit.wav`.
 
-- **Zombie tué (mode zombie)** : "Zombie_36.wav"
+- **Zombie tué avec fusée de bonus (mode zombie)** : "Zombie_36.wav"
   (<https://freesound.org/people/LittleRobotSoundFactory/sounds/316264/>) par
   LittleRobotSoundFactory, sous licence
   [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
-  Fichier : `assets/sounds/combat/zombie_death.wav`.
+  Fichier : `assets/sounds/combat/zombie_death_bonus.wav`.
+
+- **Zombie tué sans bonus (mode zombie)** : "Zombie Groan 0"
+  (<https://freesound.org/people/OwNathan/sounds/754438/>) par OwNathan,
+  sous licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
+  (domaine public). Fichier : `assets/sounds/combat/zombie_death_simple.wav`.
 
 - **Jet de pneu toxique (mode zombie)** : "Firework Launch (2)"
   (<https://freesound.org/people/LukaCafuka/sounds/750685/>) par LukaCafuka,
@@ -119,7 +124,7 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
   licence [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/).
   Fichier : `assets/sounds/combat/rale.wav`.
 
-- **Nouvelle vague (mode zombie)** : "PENNERATH_Claire_2019_2020_KeyFound.aiff"
-  (<https://freesound.org/people/univ_lyon3/sounds/485635/>) par univ_lyon3, sous
+- **Nouvelle vague (mode zombie)** : "Mysterious Magical Bell Flourish"
+  (<https://freesound.org/people/SkySpeira/sounds/848847/>) par SkySpeira, sous
   licence [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/)
   (domaine public). Fichier : `assets/sounds/combat/wave_start.wav`.

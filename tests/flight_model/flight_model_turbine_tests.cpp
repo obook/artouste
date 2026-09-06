@@ -13,6 +13,7 @@
 
 #include "physics/constants.hpp"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <cmath>
@@ -101,7 +102,10 @@ TEST_CASE("Le rotor attend le plein régime de la turbine", "[flight][turbine]")
             artouste::physics::TURBINE_START_TIME * 0.5f +
                 artouste::physics::ROTOR_BRAKE_DELAY * 0.5f);
     REQUIRE(model.turbine().state() == State::Attente);
-    REQUIRE(model.turbine().turbineFraction() == 1.0f);
+    /* Au régime, la turbine respire autour du nominal (voir BATTEMENT_REGIME) :
+       elle ne tient pas 1,0 au chiffre près, une vraie machine non plus. */
+    REQUIRE(model.turbine().turbineFraction()
+            == Catch::Approx(1.0f).margin(artouste::physics::BATTEMENT_REGIME));
     REQUIRE(model.turbine().rotorFraction() == 0.0f);  /* pales toujours à l'arrêt */
 
     /* Frein lâché après le délai : le rotor s'accouple puis atteint son régime. */
@@ -109,7 +113,8 @@ TEST_CASE("Le rotor attend le plein régime de la turbine", "[flight][turbine]")
     REQUIRE(model.turbine().state() == State::Embrayage);
     advance(model, idle, artouste::physics::ROTOR_ENGAGE_TIME + 1.0f);
     REQUIRE(model.turbine().state() == State::Regime);
-    REQUIRE(model.turbine().rotorFraction() == 1.0f);
+    REQUIRE(model.turbine().rotorFraction()
+            == Catch::Approx(1.0f).margin(artouste::physics::BATTEMENT_REGIME));
 
     /* Arrêt : turbine et rotor redescendent (le rotor, plus lent, donne le tempo).
        On attend la somme des deux temps pour être sûr que tout est immobile. */
@@ -251,4 +256,200 @@ TEST_CASE("Couper la turbine reste toujours possible", "[flight][turbine][carbur
 
     CHECK(model.toggleTurbine());
     CHECK(model.turbine().state() == artouste::physics::Turbine::State::Extinction);
+}
+
+/*
+ * Forme des régimes. Une turbine à gaz n'accélère ni ne ralentit linéairement :
+ * la montée s'essouffle au lancement, repart à l'allumage, puis arrive au régime
+ * de façon asymptotique ; l'extinction chute franchement avant de traîner dans
+ * les bas régimes. Ces tests fixent la forme, pas seulement les durées.
+ */
+TEST_CASE("La montée en régime n'est pas linéaire", "[flight][turbine]") {
+    using artouste::physics::Turbine;
+    using artouste::physics::ALLUMAGE_INSTANT;
+
+    SECTION("elle part de zéro et arrive pile au régime") {
+        CHECK(Turbine::regimeMontee(0.0f) == Catch::Approx(0.0f));
+        CHECK(Turbine::regimeMontee(1.0f) == Catch::Approx(1.0f));
+        CHECK(Turbine::regimeExtinction(0.0f) == Catch::Approx(1.0f));
+        CHECK(Turbine::regimeExtinction(1.0f) == Catch::Approx(0.0f));
+    }
+
+    SECTION("elle ne redescend jamais en chemin") {
+        float precedent = -1.0f;
+        for (int i = 0; i <= 100; ++i) {
+            const float v = Turbine::regimeMontee(static_cast<float>(i) / 100.0f);
+            CHECK(v > precedent);
+            precedent = v;
+        }
+    }
+
+    SECTION("à mi-parcours, la turbine est déjà bien au-delà de la moitié") {
+        /* C'est tout l'écart avec la rampe qu'on remplace : la montée fait le
+           gros du chemin tôt, puis s'étire. */
+        CHECK(Turbine::regimeMontee(0.5f) > 0.6f);
+    }
+
+    SECTION("les derniers pour cent prennent un temps disproportionné") {
+        /* Arrivée asymptotique : atteindre 99 % coûte plus des trois quarts du
+           temps de démarrage, ce que tout pilote reconnaît à l'oreille. */
+        CHECK(Turbine::progresMontee(0.99f) > 0.75f);
+    }
+
+    SECTION("l'allumage marque une rupture de pente") {
+        /* Avant l'allumage le démarreur s'essouffle, après le carburant relance
+           l'accélération : la pente doit remonter en franchissant le seuil. */
+        constexpr float h = 0.01f;
+        const float avant = Turbine::regimeMontee(ALLUMAGE_INSTANT - h)
+                            - Turbine::regimeMontee(ALLUMAGE_INSTANT - 2.0f * h);
+        const float apres = Turbine::regimeMontee(ALLUMAGE_INSTANT + 2.0f * h)
+                            - Turbine::regimeMontee(ALLUMAGE_INSTANT + h);
+        CHECK(apres > avant);
+    }
+
+    SECTION("l'extinction chute d'abord, puis traîne") {
+        CHECK(Turbine::regimeExtinction(0.5f) < 0.35f);
+        CHECK(Turbine::regimeExtinction(0.9f) > 0.0f);
+    }
+
+    SECTION("chaque courbe et son inverse se rendent l'aller-retour") {
+        for (int i = 0; i <= 20; ++i) {
+            const float v = static_cast<float>(i) / 20.0f;
+            CHECK(Turbine::regimeMontee(Turbine::progresMontee(v))
+                  == Catch::Approx(v).margin(1e-3f));
+            CHECK(Turbine::regimeEmbrayage(Turbine::progresEmbrayage(v))
+                  == Catch::Approx(v).margin(1e-3f));
+            CHECK(Turbine::regimeExtinction(Turbine::progresExtinction(v))
+                  == Catch::Approx(v).margin(1e-3f));
+        }
+    }
+}
+
+TEST_CASE("Le régime établi respire au lieu de rester figé", "[flight][turbine]") {
+    using artouste::physics::BATTEMENT_REGIME;
+
+    FlightModel    model;
+    const Controls idle;
+    model.turbine().forceRunning();
+    advance(model, idle, 1.0f);
+
+    float mini = 2.0f;
+    float maxi = 0.0f;
+    for (int i = 0; i < 600; ++i) {
+        advance(model, idle, 0.05f);
+        const float f = model.turbine().turbineFraction();
+        mini = std::min(mini, f);
+        maxi = std::max(maxi, f);
+        /* Le battement reste dans son amplitude : une turbine qui respire, pas
+           une turbine qui pompe. */
+        CHECK(std::abs(f - 1.0f) <= BATTEMENT_REGIME + 1e-4f);
+        /* Monoarbre : le rotor suit exactement la turbine une fois embrayé. */
+        CHECK(model.turbine().rotorFraction() == Catch::Approx(f));
+    }
+    /* Et il bouge vraiment : sans cela on aurait juste remis une constante. */
+    CHECK(maxi - mini > BATTEMENT_REGIME);
+}
+
+/*
+ * Droop : le régime résulte de l'équilibre entre le couple fourni et celui
+ * qu'absorbent les pales. Tirer du collectif charge le rotor, le régime
+ * s'affaisse, puis le régulateur le rattrape.
+ */
+TEST_CASE("Le régime fléchit sous la charge", "[flight][turbine][droop]") {
+    using artouste::physics::DROOP_PAS_REF_DEG;
+    using artouste::physics::DROOP_STATIQUE;
+    using artouste::physics::PAS_MAX_DEG;
+    using artouste::physics::Turbine;
+
+    /* Régime moyen sur une seconde : gomme le battement, qui n'a rien à voir
+       avec la charge et fausserait une mesure instantanée. */
+    const auto regimeMoyen = [](Turbine& t, float pasDeg) {
+        float somme = 0.0f;
+        for (int i = 0; i < 240; ++i) {
+            t.update(SIM_DT, 450.0f, pasDeg);
+            somme += t.turbineFraction();
+        }
+        return somme / 240.0f;
+    };
+    const auto stabiliser = [&](Turbine& t, float pasDeg) {
+        for (int i = 0; i < 240 * 10; ++i) {
+            t.update(SIM_DT, 450.0f, pasDeg);
+        }
+    };
+
+    SECTION("plein pot coûte le statisme annoncé") {
+        Turbine t;
+        t.forceRunning();
+        stabiliser(t, PAS_MAX_DEG);
+        CHECK(regimeMoyen(t, PAS_MAX_DEG)
+              == Catch::Approx(1.0f - DROOP_STATIQUE).margin(0.002f));
+    }
+
+    SECTION("au pas de sustentation, le régulateur tient le nominal") {
+        Turbine t;
+        t.forceRunning();
+        stabiliser(t, DROOP_PAS_REF_DEG);
+        CHECK(regimeMoyen(t, DROOP_PAS_REF_DEG) == Catch::Approx(1.0f).margin(0.002f));
+    }
+
+    SECTION("sous le pas de sustentation, pas de surrégime") {
+        /* Un régime au-dessus du nominal allumerait le voyant à tort. */
+        Turbine t;
+        t.forceRunning();
+        stabiliser(t, 6.0f);
+        CHECK(regimeMoyen(t, 6.0f) <= 1.0f + artouste::physics::BATTEMENT_REGIME);
+    }
+
+    SECTION("plus la charge est forte, plus le régime est bas") {
+        float precedent = 2.0f;
+        for (const float pas : {11.0f, 12.0f, 13.0f, 14.0f, 15.0f}) {
+            Turbine t;
+            t.forceRunning();
+            stabiliser(t, pas);
+            const float r = regimeMoyen(t, pas);
+            CHECK(r < precedent);
+            precedent = r;
+        }
+    }
+
+    SECTION("une action franche creuse le régime, puis il remonte") {
+        Turbine t;
+        t.forceRunning();
+        stabiliser(t, 6.0f);
+
+        /* Collectif tiré d'un coup de la butée basse au plein pot. */
+        float creux = 2.0f;
+        for (int i = 0; i < 240; ++i) {
+            t.update(SIM_DT, 450.0f, PAS_MAX_DEG);
+            creux = std::min(creux, t.turbineFraction());
+        }
+        /* Le creux passe SOUS le statisme : c'est tout l'intérêt du transitoire. */
+        CHECK(creux < 1.0f - DROOP_STATIQUE - 0.005f);
+
+        /* Puis le régulateur rattrape et le régime se cale sur le statisme. */
+        stabiliser(t, PAS_MAX_DEG);
+        CHECK(regimeMoyen(t, PAS_MAX_DEG) > creux + 0.005f);
+    }
+
+    SECTION("relâcher le collectif ne creuse rien") {
+        /* Décharger la turbine ne peut pas faire plonger le régime. */
+        Turbine t;
+        t.forceRunning();
+        stabiliser(t, PAS_MAX_DEG);
+        float mini = 2.0f;
+        for (int i = 0; i < 240; ++i) {
+            t.update(SIM_DT, 450.0f, 6.0f);
+            mini = std::min(mini, t.turbineFraction());
+        }
+        CHECK(mini >= 1.0f - DROOP_STATIQUE - artouste::physics::BATTEMENT_REGIME);
+    }
+
+    SECTION("le rotor suit la turbine au chiffre près (monoarbre)") {
+        Turbine t;
+        t.forceRunning();
+        for (int i = 0; i < 240 * 3; ++i) {
+            t.update(SIM_DT, 450.0f, 14.0f);
+            CHECK(t.rotorFraction() == Catch::Approx(t.turbineFraction()));
+        }
+    }
 }

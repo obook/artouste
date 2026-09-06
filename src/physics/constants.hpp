@@ -87,6 +87,69 @@ inline constexpr float ROTOR_STOP_TIME    = 40.0f;  /* s : rotor de 100 % à 0 (
  * réelles : ROTOR_BRAKE_DELAY et ROTOR_ENGAGE_TIME ci-dessus. */
 inline constexpr float DEMO_TURBINE_START_TIME = 10.0f;  /* s : turbine 0 -> 100 % (accéléré) */
 
+/* --- Forme des montées et des descentes de régime ------------------------------
+ * Une turbine à gaz n'accélère pas linéairement. Le démarreur lance seul le
+ * compresseur, dont la résistance croît à peu près comme le carré du régime :
+ * la montée part vite puis s'essouffle, et le démarreur seul ne peut pas
+ * dépasser ALLUMAGE_REGIME. L'allumage du carburant, à ALLUMAGE_INSTANT du
+ * temps de démarrage, relance franchement l'accélération : c'est la rupture de
+ * pente que l'on entend. Le régulateur la modère ensuite, et l'arrivée au
+ * régime nominal est asymptotique, les derniers pour cent prenant un temps
+ * disproportionné.
+ *
+ * Les durées totales ne changent pas : seule la forme du trajet change. */
+inline constexpr float ALLUMAGE_INSTANT = 0.22f;  /* fraction du temps de démarrage */
+inline constexpr float ALLUMAGE_REGIME  = 0.15f;  /* régime atteint au lancement seul */
+inline constexpr float MONTEE_EXPOSANT  = 2.4f;   /* traîne de l'approche du régime */
+
+/* Embrayage centrifuge du rotor : le couple transmis est maximal au premier
+ * contact, quand le glissement est grand, puis décroît à mesure que les deux
+ * vitesses se rejoignent. Montée franche, arrivée douce. */
+inline constexpr float EMBRAYAGE_EXPOSANT = 2.0f;
+
+/* Extinction : carburant coupé, la machine ne ralentit plus que par sa traînée
+ * aérodynamique et ses frottements. La chute est franche au début, puis traîne
+ * longuement dans les bas régimes -- le sifflement qui n'en finit pas. Vaut
+ * pour la turbine comme pour le rotor en roue libre. */
+inline constexpr float EXTINCTION_EXPOSANT = 2.2f;
+
+/* --- Battement du régime établi ------------------------------------------------
+ * L'Artouste II est une turbine MONOARBRE : une fois l'embrayage fermé, rotor
+ * et turbine tournent dans un rapport fixe imposé par le réducteur, la roue
+ * libre ne servant qu'à laisser le rotor prendre de l'avance en autorotation.
+ * Leurs régimes ne peuvent donc pas varier indépendamment : un seul battement
+ * les anime tous les deux.
+ *
+ * Une turbine régulée ne tient pas un régime rigoureusement constant : le
+ * régulateur corrige en permanence, la combustion et la charge le font respirer.
+ * L'énorme inertie du rotor, embarquée dans la même ligne d'arbre, en filtre
+ * l'essentiel : il ne reste qu'une ondulation lente et faible. Deux sinus de
+ * périodes incommensurables évitent le battement régulier, qui s'entendrait
+ * comme un défaut plutôt que comme une machine vivante. */
+inline constexpr float BATTEMENT_REGIME     = 0.0015f;  /* +- 0,15 % */
+inline constexpr float BATTEMENT_REGIME_HZ1 = 0.21f;
+inline constexpr float BATTEMENT_REGIME_HZ2 = 0.53f;
+
+/* --- Droop (affaissement du régime en charge) ----------------------------------
+ * Le régime résulte de l'équilibre entre le couple fourni et celui qu'absorbent
+ * les pales. Tirer du collectif augmente le pas, donc le couple absorbé : le
+ * régime s'affaisse avant que le régulateur ne remette la puissance. Deux effets
+ * se superposent.
+ *
+ * Le statisme, permanent : à charge établie, le régime se cale d'autant plus bas
+ * que la charge est forte. Il ne joue qu'au-dessus du pas de sustentation ; en
+ * dessous, la turbine a de la marge et le régulateur tient le nominal (un
+ * surrégime allumerait d'ailleurs le voyant à tort).
+ *
+ * Le creux transitoire, passager : sur une action franche au collectif, le
+ * régime plonge le temps que le carburant suive, puis remonte. C'est très
+ * perceptible sur les régulations simples de cette génération, à l'aiguille
+ * comme à l'oreille. */
+inline constexpr float DROOP_STATIQUE     = 0.020f;  /* régime perdu à plein pas */
+inline constexpr float DROOP_TRANSITOIRE  = 0.030f;  /* creux sur une action pleine amplitude */
+inline constexpr float DROOP_TAU_S        = 1.2f;    /* rattrapage du régulateur */
+inline constexpr float DROOP_PAS_REF_DEG  = 11.0f;   /* pas de sustentation : régime nominal */
+
 /* --- Température de la tuyère (gaz d'échappement, T4) -------------------------- */
 /* La cible de température suit la relation pas/température du manuel (planche
  * Abb. 2-23, numérisée le 11/08/2026) : environ 27 degrés de t4 par degré de

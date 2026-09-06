@@ -94,7 +94,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
                                   - T4_LOI_ALT_C_PAR_KM * m_body.position.y / 1000.0f,
                               EXHAUST_TEMP_IDLE_C, T4_LOI_PLAFOND_C);
     const float t4Cible = t4Loi + (EXHAUST_TEMP_MAX_C - t4Loi) * clamp(m_surchauffe, 0.0f, 1.0f);
-    m_turbine.update(dt, t4Cible);
+    m_turbine.update(dt, t4Cible, pasDeg);
     const float rotorFraction = m_turbine.rotorFraction();
 
     const vec3 worldUp{0.0f, 1.0f, 0.0f};

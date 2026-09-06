@@ -44,11 +44,29 @@ public:
      * Celsius : l'appelant la calcule d'après la loi pas/température du manuel
      * (voir T4_LOI_* et FlightModel), transitoire compris. Pendant la montée en
      * régime, la cible est proportionnelle au régime turbine. */
-    void update(float dt, float t4CibleC) noexcept;
+    /* 'pasDeg' est le pas collectif courant, c'est-à-dire la charge que les
+     * pales opposent à la turbine : c'est lui qui fait fléchir le régime (voir
+     * DROOP_*). Sa valeur par défaut est le pas de sustentation, donc aucun
+     * droop : de quoi appeler update sans se soucier de la charge quand seule la
+     * séquence de démarrage intéresse. */
+    void update(float dt, float t4CibleC, float pasDeg = DROOP_PAS_REF_DEG) noexcept;
 
     /* Met directement la turbine et le rotor en régime établi (100 %). Utile pour
      * les tests et pour un éventuel démarrage immédiat. */
     void forceRunning() noexcept;
+
+    /* --- Forme des régimes, exposée pour être vérifiable -----------------------
+     * Chaque couple (regime, progres) est une bijection sur [0,1] : regime donne
+     * le régime atteint après une fraction 'p' du temps de la phase, progres
+     * fait le chemin inverse. C'est ce retour en arrière qui permet de couper
+     * une turbine en pleine montée, ou de la relancer en pleine extinction, sans
+     * mémoriser autre chose que le régime lui-même. */
+    [[nodiscard]] static float regimeMontee(float p) noexcept;
+    [[nodiscard]] static float progresMontee(float regime) noexcept;
+    [[nodiscard]] static float regimeEmbrayage(float p) noexcept;
+    [[nodiscard]] static float progresEmbrayage(float regime) noexcept;
+    [[nodiscard]] static float regimeExtinction(float p) noexcept;
+    [[nodiscard]] static float progresExtinction(float regime) noexcept;
 
     /* Lance un démarrage rapide (mode démo) : mêmes étapes que le démarrage normal,
      * mais avec des durées raccourcies (voir les constantes DEMO_*). Sans effet si
@@ -89,6 +107,21 @@ private:
     bool  m_fastStart  = false;  /* démarrage rapide en cours (mode démo) */
     float m_brakeTimer = 0.0f;  /* s écoulées en Attente, frein rotor serré */
     bool  m_rotorHold  = false; /* maintien du frein rotor (attente autorisation radio) */
+    /* Avancement dans la phase en cours, de 0 à 1, pour la turbine et pour le
+       rotor. On le MÉMORISE au lieu de le relire du régime à chaque pas : les
+       courbes s'aplatissent en approchant du but, si bien qu'y lire une
+       progression y devient trop sensible et la montée n'atteignait jamais tout
+       à fait son terme. L'inversion ne sert donc qu'une fois, au changement de
+       phase, là où la courbe a encore de la pente. */
+    /* Pas collectif filtré : ce que le régulateur a EU LE TEMPS de suivre.
+       L'écart avec le pas réel est le creux transitoire du droop. */
+    float m_pasLisse = DROOP_PAS_REF_DEG;
+    float m_progresTurbine = 0.0f;
+    float m_progresRotor   = 0.0f;
+    /* Horloge du battement de régime établi, remise à zéro à chaque coupure
+       pour qu'une machine relancée ne reprenne pas la respiration de la
+       précédente au même endroit. */
+    float m_regimeS  = 0.0f;
     float m_exhaustC = EXHAUST_TEMP_AMBIENT_C;  /* température tuyère, degrés Celsius */
     float m_residuC  = EXHAUST_TEMP_AMBIENT_C;  /* chaleur du métal autour de la sonde :
                                                    cible de la tuyère une fois coupée */

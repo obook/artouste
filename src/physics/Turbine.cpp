@@ -11,28 +11,96 @@
 #include "physics/Turbine.hpp"
 
 #include "physics/constants.hpp"
+#include "util/Math.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace artouste::physics {
 
+namespace {
+
+/* Battement du régime établi : deux sinus de périodes incommensurables, pour
+   que l'oreille n'y entende pas une pulsation régulière. */
+float battement(float t, float amplitude, float hz1, float hz2) noexcept {
+    return amplitude * (0.6f * std::sin(TWO_PI * hz1 * t)
+                        + 0.4f * std::sin(TWO_PI * hz2 * t + 1.7f));
+}
+
+}  /* namespace */
+
+/* Montée en régime, en deux temps séparés par l'allumage. Avant : le démarreur
+   lance seul le compresseur, vite d'abord puis de moins en moins, la résistance
+   croissant avec la vitesse. Après : le carburant brûle, l'accélération repart
+   franchement, puis le régulateur la modère jusqu'à une arrivée asymptotique. */
+float Turbine::regimeMontee(float p) noexcept {
+    const float pc = std::clamp(p, 0.0f, 1.0f);
+    if (pc < ALLUMAGE_INSTANT) {
+        const float u = pc / ALLUMAGE_INSTANT;
+        return ALLUMAGE_REGIME * (1.0f - (1.0f - u) * (1.0f - u));
+    }
+    const float u = (pc - ALLUMAGE_INSTANT) / (1.0f - ALLUMAGE_INSTANT);
+    return ALLUMAGE_REGIME
+           + (1.0f - ALLUMAGE_REGIME) * (1.0f - std::pow(1.0f - u, MONTEE_EXPOSANT));
+}
+
+float Turbine::progresMontee(float regime) noexcept {
+    const float r = std::clamp(regime, 0.0f, 1.0f);
+    if (r < ALLUMAGE_REGIME) {
+        const float u = 1.0f - std::sqrt(1.0f - r / ALLUMAGE_REGIME);
+        return u * ALLUMAGE_INSTANT;
+    }
+    const float reste = 1.0f - (r - ALLUMAGE_REGIME) / (1.0f - ALLUMAGE_REGIME);
+    const float u     = 1.0f - std::pow(std::max(reste, 0.0f), 1.0f / MONTEE_EXPOSANT);
+    return ALLUMAGE_INSTANT + u * (1.0f - ALLUMAGE_INSTANT);
+}
+
+/* Embrayage centrifuge : couple maximal au premier contact, quand le glissement
+   est grand, puis de moins en moins à mesure que les vitesses se rejoignent. */
+float Turbine::regimeEmbrayage(float p) noexcept {
+    const float u = std::clamp(p, 0.0f, 1.0f);
+    return 1.0f - std::pow(1.0f - u, EMBRAYAGE_EXPOSANT);
+}
+
+float Turbine::progresEmbrayage(float regime) noexcept {
+    const float r = std::clamp(regime, 0.0f, 1.0f);
+    return 1.0f - std::pow(1.0f - r, 1.0f / EMBRAYAGE_EXPOSANT);
+}
+
+/* Extinction : plus de carburant, il ne reste que la traînée et les
+   frottements. Chute franche, puis longue traîne dans les bas régimes. */
+float Turbine::regimeExtinction(float p) noexcept {
+    const float u = std::clamp(p, 0.0f, 1.0f);
+    return std::pow(1.0f - u, EXTINCTION_EXPOSANT);
+}
+
+float Turbine::progresExtinction(float regime) noexcept {
+    const float r = std::clamp(regime, 0.0f, 1.0f);
+    return 1.0f - std::pow(r, 1.0f / EXTINCTION_EXPOSANT);
+}
+
 void Turbine::toggle() noexcept {
     switch (m_state) {
         case State::Arret:
         case State::Extinction:
-            m_state = State::Demarrage;  /* (re)lance la turbine */
+            /* (Re)lance la turbine, en reprenant la montée là où le régime
+               courant la situe : une turbine coupée puis relancée aussitôt
+               repart de son régime, pas de zéro. */
+            m_progresTurbine = progresMontee(m_turbine);
+            m_state          = State::Demarrage;
             break;
         case State::Demarrage:
         case State::Attente:
         case State::Embrayage:
         case State::Regime:
-            m_state = State::Extinction;  /* coupe la turbine */
+            m_progresTurbine = progresExtinction(m_turbine);
+            m_progresRotor   = progresExtinction(m_rotor);
+            m_state          = State::Extinction;  /* coupe la turbine */
             break;
     }
 }
 
-void Turbine::update(float dt, float t4CibleC) noexcept {
+void Turbine::update(float dt, float t4CibleC, float pasDeg) noexcept {
     /* Durée de la montée en régime turbine : raccourcie pendant un démarrage rapide
      * (mode démo), sinon celle de la séquence réelle. La phase rotor (frein puis
      * embrayage centrifuge) garde ses durées réelles dans tous les cas. */
@@ -44,8 +112,9 @@ void Turbine::update(float dt, float t4CibleC) noexcept {
         case State::Demarrage:
             /* La turbine monte seule en régime ; le rotor reste immobile, pales
              * arrêtées. */
-            m_turbine += dt / turbineStartTime;
-            if (m_turbine >= 1.0f) {
+            m_progresTurbine += dt / turbineStartTime;
+            m_turbine = regimeMontee(m_progresTurbine);
+            if (m_progresTurbine >= 1.0f) {
                 m_turbine    = 1.0f;
                 m_brakeTimer = 0.0f;
                 m_state      = State::Attente;  /* turbine au régime, frein encore serré */
@@ -57,14 +126,16 @@ void Turbine::update(float dt, float t4CibleC) noexcept {
              * Ce délai écoulé, on passe à l'embrayage du rotor. */
             m_brakeTimer += dt;
             if (m_brakeTimer >= rotorBrakeDelay && !m_rotorHold) {
-                m_state = State::Embrayage;  /* frein lâché : le rotor s'engage */
+                m_progresRotor = progresEmbrayage(m_rotor);
+                m_state        = State::Embrayage;  /* frein lâché : le rotor s'engage */
             }
             break;
         case State::Embrayage:
             /* Frein lâché : le rotor s'engage par la roue libre (celle qui permet
              * aussi l'autorotation) et les pales accélèrent jusqu'au régime de vol. */
-            m_rotor += dt / rotorEngageTime;
-            if (m_rotor >= 1.0f) {
+            m_progresRotor += dt / rotorEngageTime;
+            m_rotor = regimeEmbrayage(m_progresRotor);
+            if (m_progresRotor >= 1.0f) {
                 m_rotor     = 1.0f;
                 m_fastStart = false;  /* régime atteint : le démarrage rapide est terminé */
                 m_state     = State::Regime;  /* régime établi */
@@ -73,14 +144,17 @@ void Turbine::update(float dt, float t4CibleC) noexcept {
         case State::Extinction:
             /* Coupure : la turbine s'éteint, et le rotor redescend plus lentement
              * encore, porté par sa forte inertie (roue libre). */
-            m_rotor -= dt / ROTOR_STOP_TIME;
-            if (m_rotor < 0.0f) {
+            m_progresRotor += dt / ROTOR_STOP_TIME;
+            m_rotor = regimeExtinction(m_progresRotor);
+            if (m_progresRotor >= 1.0f) {
                 m_rotor = 0.0f;
             }
-            m_turbine -= dt / TURBINE_STOP_TIME;
-            if (m_turbine < 0.0f) {
+            m_progresTurbine += dt / TURBINE_STOP_TIME;
+            m_turbine = regimeExtinction(m_progresTurbine);
+            if (m_progresTurbine >= 1.0f) {
                 m_turbine = 0.0f;
             }
+            m_regimeS = 0.0f;
             m_fastStart = false;  /* une coupure annule le démarrage rapide en cours */
             if (m_rotor <= 0.0f && m_turbine <= 0.0f) {
                 m_state = State::Arret;  /* tout est arrêté */
@@ -89,6 +163,41 @@ void Turbine::update(float dt, float t4CibleC) noexcept {
         case State::Arret:
         case State::Regime:
             break;  /* états stables : rien à faire */
+    }
+
+    /* Régime établi : la turbine respire autour du nominal, et fléchit sous la
+       charge. Hors régime établi, le régulateur suit le pas sans retard, pour
+       qu'un collectif déjà tiré au moment de l'embrayage ne produise pas un faux
+       creux à la seconde même où le rotor s'accouple. */
+    if (m_state != State::Regime) {
+        m_pasLisse = pasDeg;
+    }
+    if (m_state == State::Attente || m_state == State::Embrayage
+        || m_state == State::Regime) {
+        m_regimeS += dt;
+        float facteur = 1.0f
+                        + battement(m_regimeS, BATTEMENT_REGIME, BATTEMENT_REGIME_HZ1,
+                                    BATTEMENT_REGIME_HZ2);
+        if (m_state == State::Regime) {
+            m_pasLisse = lowPass(m_pasLisse, pasDeg, dt, DROOP_TAU_S);
+            /* Statisme : ne joue qu'au-dessus du pas de sustentation. */
+            const float charge = std::max(0.0f, pasDeg - DROOP_PAS_REF_DEG)
+                                 / (PAS_MAX_DEG - DROOP_PAS_REF_DEG);
+            /* Creux transitoire : ce que le régulateur n'a pas encore rattrapé.
+               Seulement à la montée du pas -- relâcher le collectif décharge la
+               turbine, ça ne creuse pas le régime. */
+            const float retard = std::max(0.0f, pasDeg - m_pasLisse)
+                                 / (PAS_MAX_DEG - PAS_MIN_DEG);
+            facteur -= DROOP_STATIQUE * charge + DROOP_TRANSITOIRE * retard;
+        }
+        m_turbine = facteur;
+        /* Monoarbre : une fois l'embrayage fermé, le rotor suit la turbine dans
+           le rapport fixe du réducteur. Battement et droop sont donc les mêmes
+           pour les deux. Pendant l'embrayage il glisse encore, et sa progression
+           se lit dans m_rotor : on n'y touche pas. */
+        if (m_state == State::Regime) {
+            m_rotor = facteur;
+        }
     }
 
     /* Température de la tuyère : l'appelant fournit la cible de plein régime
@@ -130,6 +239,9 @@ void Turbine::forceRunning() noexcept {
     m_state     = State::Regime;
     m_turbine   = 1.0f;
     m_rotor     = 1.0f;
+    m_progresTurbine = 1.0f;
+    m_progresRotor   = 1.0f;
+    m_regimeS   = 0.0f;
     m_fastStart = false;
     m_exhaustC  = EXHAUST_TEMP_IDLE_C;  /* tuyère déjà chaude (régime établi, charge minimale) */
 }
@@ -148,6 +260,9 @@ void Turbine::stopNow() noexcept {
     m_fastStart  = false;
     m_brakeTimer = 0.0f;
     m_rotorHold  = false;
+    m_progresTurbine = 0.0f;
+    m_progresRotor   = 0.0f;
+    m_regimeS        = 0.0f;
     m_exhaustC   = EXHAUST_TEMP_AMBIENT_C;
     m_residuC    = EXHAUST_TEMP_AMBIENT_C;  /* remise à froid complète : stopNow est un
                                                reset d'état, pas une extinction */

@@ -90,6 +90,14 @@ constexpr float BONUS_SPHERE_PICKUP_MARGIN_M = 3.0f;
 constexpr float BONUS_SPHERE_FUEL_L = 50.0f;
 constexpr float SHOT_FUEL_L       = 2.0f;
 
+/* Kérosène qu'un coup parti laisse toujours dans le réservoir. Tirer ne doit
+   jamais couper la turbine : les sphères bleues naissent des zombies abattus,
+   donc un joueur à sec qui ne peut plus tirer ne peut plus se ravitailler non
+   plus, et la partie se termine sans qu'il y puisse rien. Le canon devient donc
+   gratuit sur les derniers litres. Ce qui reste décide encore de la fin de
+   partie, mais c'est la consommation de vol qui tranche, pas le tir. */
+constexpr float TIR_RESERVE_L     = 5.0f;
+
 /* Sphère noire ramassée : les zombies n'explosent pas tous ensemble mais l'un
    après l'autre, du plus proche de l'appareil au plus lointain, à cet
    intervalle (s). Points comptés un par un, comme ceux que le largueur emporte

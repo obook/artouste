@@ -9,8 +9,10 @@
  * Licence : GPL v2
  */
 
+#include "app/combat/BonusSphereReglages.hpp"
 #include "app/combat/CombatMode.hpp"
 #include "physics/constants.hpp"
+#include "physics/RigidBody.hpp"
 #include "physics/FlightModel.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -20,6 +22,7 @@
 #include <fstream>
 #include <string>
 
+using artouste::vec3;
 using artouste::app::CombatMode;
 namespace physics = artouste::physics;
 
@@ -172,6 +175,31 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
         moitie.start(dir, solPlat);
         const float restant = CombatMode::IMPACT_RESERVE_L + 40.0f;
         CHECK(moitie.applyGroundImpact(20.0f, restant) == Catch::Approx(40.0f));
+    }
+
+    SECTION("tirer ne peut jamais couper la turbine") {
+        /* Les sphères bleues naissent des zombies abattus : un joueur à sec qui
+           ne peut plus tirer ne peut plus se ravitailler. Le canon devient donc
+           gratuit sur les derniers litres. */
+        CombatMode           canon;
+        canon.start(dir, solPlat);
+        physics::RigidBody   appareil;
+        appareil.position = vec3{0.0f, 50.0f, 0.0f};
+        canon.update(1.0f / 60.0f, appareil, true, solPlat);
+        REQUIRE(canon.soundEvents().fired);
+
+        const float reserve = artouste::app::TIR_RESERVE_L;
+        CHECK(canon.shotFuelBurn(physics::FUEL_CAPACITY_L)
+              == Catch::Approx(artouste::app::SHOT_FUEL_L));
+        CHECK(canon.shotFuelBurn(reserve + 1.0f) == Catch::Approx(1.0f));
+        CHECK(canon.shotFuelBurn(reserve) == Catch::Approx(0.0f));
+        CHECK(canon.shotFuelBurn(1.0f) == Catch::Approx(0.0f));
+    }
+
+    SECTION("un coup qui ne part pas ne coûte rien") {
+        CombatMode silencieux;
+        silencieux.start(dir, solPlat);
+        CHECK(silencieux.shotFuelBurn(physics::FUEL_CAPACITY_L) == Catch::Approx(0.0f));
     }
 
     SECTION("hors combat, le sol ne coûte rien") {

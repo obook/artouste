@@ -170,7 +170,11 @@ bool Application::mainLoop() {
                leur lecture ci-dessous. */
             const float fuiteChoc = m_combat.applyGroundImpact(m_flight.consumeGroundImpact(),
                                                               m_flight.fuelLiters());
-            m_flight.drainFuel(fuiteChoc + m_combat.shotFuelBurn());
+            m_flight.drainFuel(fuiteChoc);
+            /* Le prix du tir se calcule sur ce qui RESTE après le choc, sinon
+               les deux prélèvements cumulés passeraient sous les réserves que
+               chacun croit respecter. */
+            m_flight.drainFuel(m_combat.shotFuelBurn(m_flight.fuelLiters()));
             if (fuiteChoc > 0.0f) {
                 /* Le choc a fendu le réservoir mais lui a laissé sa réserve (voir
                    CombatMode::IMPACT_RESERVE_L) : on rend l'appareil en état de

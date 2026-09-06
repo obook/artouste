@@ -27,6 +27,7 @@
 #include "physics/RigidBody.hpp"
 #include "util/Math.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <random>
@@ -334,9 +335,17 @@ public:
        la horde en rafale coûte des minutes de vol (voir SHOT_FUEL_L, dans
        BonusSphereReglages.hpp). À appliquer au modèle de vol (drainFuel) comme le
        prix d'un choc au sol, et à lire après update(), qui repose les événements
-       du pas. */
-    [[nodiscard]] float shotFuelBurn() const noexcept {
-        return m_events.fired ? SHOT_FUEL_L : 0.0f;
+       du pas.
+
+       'fuelLiters' est le contenu courant du réservoir : le tir s'arrête à
+       TIR_RESERVE_L et devient gratuit en dessous. Il ne peut donc jamais
+       éteindre la turbine, sans quoi un joueur à court de kérosène perdait avec
+       le canon le seul moyen d'en récupérer. */
+    [[nodiscard]] float shotFuelBurn(float fuelLiters) const noexcept {
+        if (!m_events.fired) {
+            return 0.0f;
+        }
+        return std::min(SHOT_FUEL_L, std::max(0.0f, fuelLiters - TIR_RESERVE_L));
     }
 
 private:

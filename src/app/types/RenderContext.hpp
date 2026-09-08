@@ -21,6 +21,9 @@ struct RenderContext {
     mat4 toRel;     /* translation -m_renderOrigin, appliquée aux modèles */
     vec3 camPosRel; /* position caméra, relative à m_renderOrigin */
     vec3 fogColor;  /* couleur de brume, assombrie la nuit */
+    /* 1 en plein jour, 0 le soleil couché. Sert au fond d'écran, à la brume
+       ci-dessus et aux fenêtres allumées (voir building.frag). */
+    float isDay;
 };
 
 } /* namespace artouste::app */

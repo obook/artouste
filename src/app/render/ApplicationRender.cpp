@@ -69,7 +69,7 @@ void Application::renderScene(const mat4& base,
        garde un léger fond bleuté nocturne (facteur plancher) accordé au ciel de nuit. */
     const vec3 fogColor = FOG_COLOR * glm::mix(0.06f, 1.0f, isDay);
 
-    const RenderContext ctx{lightDir, proj, view, toRel, camPosRel, fogColor};
+    const RenderContext ctx{lightDir, proj, view, toRel, camPosRel, fogColor, isDay};
 
     if (!poison) {
         renderSkyAndSea(ctx, timeSeconds);

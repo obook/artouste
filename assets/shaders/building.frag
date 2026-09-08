@@ -19,6 +19,11 @@
  * pour un seul bit. Les deux tuiles sont lues puis mélangées plutôt que lues
  * dans une branche, pour que les dérivées (donc le niveau de mipmap) restent
  * définies.
+ * La nuit, une part des carreaux s'allume (PROPORTION_ALLUMEES). Le tirage est
+ * fait ici et non dans la texture : celle-ci est tuilée en GL_REPEAT, une
+ * fenêtre allumée dedans le serait sur tous les murs au même endroit. En
+ * contrepartie, la géométrie des carreaux est redite ici -- si la tuile change
+ * dans tools/facade/generer_facade.py, ces constantes suivent.
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -28,6 +33,7 @@ in vec3 v_normal;
 in vec3 v_color;
 in vec2 v_uv;
 in vec3 v_worldPos;
+in vec3 v_pos;
 
 out vec4 frag_color;
 
@@ -38,6 +44,25 @@ uniform vec3  u_camPos;     /* position de la caméra (pour la distance de brume
 uniform vec3  u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float u_fogStart;   /* distance où la brume commence (m) */
 uniform float u_fogEnd;     /* distance où tout est noyé dans la brume (m) */
+uniform float u_isDay;      /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
+
+/* Découpe des carreaux dans la tuile de façade, recopiée de generer_facade.py :
+   BAYS x FLOORS cellules, la fenêtre occupant win_w/win_h au centre de chacune. */
+const vec2  FACADE_GRILLE = vec2(3.0, 2.0);   /* travées x étages par tuile */
+const vec2  FENETRE_DEMI  = vec2(0.28, 0.26); /* demi-carreau, en fraction de cellule */
+const float TRAVEE_M      = 4.0;              /* largeur d'une travée (12 m / 3 travées) */
+
+/* Part des fenêtres allumées. Se règle ici : le shader est relu depuis assets/
+   au lancement, donc l'ajuster ne demande pas de recompiler le jeu. */
+const float PROPORTION_ALLUMEES = 0.12;
+/* Blanc chaud d'ampoule derrière un rideau, pas un néon. */
+const vec3  LUEUR_FENETRE = vec3(1.00, 0.82, 0.48);
+
+/* Tirage au sort à partir d'une position : même entrée, même résultat, donc une
+   fenêtre allumée le reste d'une image à l'autre. */
+float alea(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
 
 void main() {
     vec3  n       = normalize(v_normal);
@@ -55,6 +80,37 @@ void main() {
     float ambient = 0.4;
     float light   = ambient + (1.0 - ambient) * diffuse;
     vec3  color   = albedo * light;
+
+    /* Fenêtres allumées, sur les seuls murs percés et seulement la nuit. La
+       lueur remplace la couleur éclairée au lieu de s'y ajouter : un carreau
+       allumé ne dépend plus de la lune qui tombe dessus, et ne peut pas non plus
+       saturer en blanc. */
+    float nuit = 1.0 - u_isDay;
+    if (nuit > 0.0 && wallMask > 0.5 && plein < 0.5) {
+        vec2 cellule = v_uv * FACADE_GRILLE;
+        /* Bords adoucis sur la largeur d'un pixel : sans cela, les carreaux
+           scintillent au loin, là où la texture de façade est déjà floutée par
+           ses mipmaps alors que ce masque, lui, reste net. La dérivée est prise
+           sur cellule et non sur sa partie fractionnaire, qui saute d'une
+           cellule à l'autre et ferait une ligne blanche à chaque bord. */
+        vec2 flou   = fwidth(cellule) * 0.5 + 1e-4;
+        vec2 d      = abs(fract(cellule) - 0.5);
+        vec2 dedans = 1.0 - smoothstep(FENETRE_DEMI - flou, FENETRE_DEMI + flou, d);
+
+        /* Identité de la fenêtre : le centre de sa cellule, en repère modèle.
+           L'UV repart de zéro sur chaque mur (voir BuildingsGeometrie.cpp), donc
+           le tirer sur la cellule seule allumerait les mêmes carreaux sur tous
+           les bâtiments. Le mur étant vertical, sa tangente se déduit de sa
+           normale. Le pas de 4 m entre deux centres laisse 2 m de marge à
+           l'arrondi au mètre : tous les fragments d'un carreau tombent sur le
+           même entier, donc sur le même tirage. */
+        vec3  tangente = normalize(cross(vec3(0.0, 1.0, 0.0), n));
+        vec3  centre   = v_pos - tangente * (fract(cellule.x) - 0.5) * TRAVEE_M;
+        float tirage   = alea(vec3(floor(centre.xz + 0.5), floor(cellule.y)));
+
+        float allumee = dedans.x * dedans.y * step(tirage, PROPORTION_ALLUMEES);
+        color = mix(color, LUEUR_FENETRE, allumee * nuit);
+    }
 
     /* Brume : proportion croissante de couleur d'horizon avec la distance. */
     float dist = length(u_camPos - v_worldPos);

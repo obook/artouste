@@ -6,6 +6,9 @@
  * monde, couleur du sommet, position monde (pour la brume au loin, comme le
  * terrain) et coordonnées de texture (UV, murs seulement -- voir building.frag)
  * pour la façade tuilée.
+ * Sort aussi la position en repère modèle (v_pos). v_worldPos est recalé sur la
+ * caméra à chaque image (m_renderOrigin) : bon pour la brume, mais le tirage des
+ * fenêtres allumées a besoin d'une position qui ne bouge pas.
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -24,10 +27,12 @@ out vec3 v_normal;
 out vec3 v_color;
 out vec2 v_uv;
 out vec3 v_worldPos;
+out vec3 v_pos;
 
 void main() {
     vec4 world  = u_model * vec4(a_pos, 1.0);
     v_worldPos  = world.xyz;
+    v_pos       = a_pos;
     v_normal    = mat3(u_model) * a_normal;
     v_color     = a_color;
     v_uv        = a_uv;

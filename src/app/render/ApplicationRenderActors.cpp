@@ -256,6 +256,11 @@ void Application::renderHelicopter(const RenderContext& ctx,
         m_modelShader->setVec3("u_lightDir", ctx.lightDir);
         m_modelShader->setVec3("u_camPos", ctx.camPosRel);
         m_modelShader->setInt("u_texture", 0);
+        /* Verrière fêlée en mode zombie : la casse suit la vie perdue (voir
+           fissures(), model.frag). Remis à zéro hors combat, le shader servant
+           aussi aux autres modèles. */
+        m_modelShader->setFloat("u_damage",
+                                m_combat.active() ? 1.0f - m_combat.healthPct() : 0.0f);
         /* Assiette réelle (roulis, tangage) extraite de l'orientation rendue, pour
            animer l'horizon artificiel du tableau de bord. Axes du corps dans le
            monde : avant = colonne 0, haut = colonne 1, droite = colonne 2. */

@@ -384,7 +384,7 @@ void FlightModel::update(const Controls& controls, float dt) noexcept {
     const vec3 inertia{I_ROLL, I_YAW, I_PITCH};
     m_body.integrate(force, torque, MASS, inertia, dt);
 
-    briderEtPoser();
+    briderEtPoser(dt);
 }
 
 }  /* namespace artouste::physics */

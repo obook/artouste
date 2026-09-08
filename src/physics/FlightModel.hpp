@@ -183,8 +183,9 @@ public:
 
 private:
     /* Après l'intégration : bride vitesses et rotations, applique le contact
-       sol et le maintien sur les patins. Défini dans FlightModelContact.cpp. */
-    void briderEtPoser() noexcept;
+       sol et le maintien sur les patins. Défini dans FlightModelContact.cpp.
+       'dt' sert à mesurer la vitesse de rapprochement du sol. */
+    void briderEtPoser(float dt) noexcept;
 
     /* Repositionner l'appareil ne doit pas laisser derrière lui un contact non
        lu : la partie suivante encaisserait les dégâts d'un posé qui n'a pas eu
@@ -193,6 +194,9 @@ private:
     void clearGroundImpact() noexcept {
         m_groundImpactMs  = 0.0f;
         m_inGroundContact = false;
+        /* La garde au sol repart d'ici, sinon le premier pas après un saut de
+           position lirait l'écart comme un rapprochement. */
+        m_clearancePrev = m_body.position.y - m_groundHeight;
     }
 
     /* Un repositionnement doit ramener le plan des pales au neutre : sinon
@@ -215,6 +219,9 @@ private:
     float     m_retreatingStall = 0.0f;        /* décrochage de pale reculante, 0..1 */
     float     m_groundImpactMs = 0.0f;         /* vitesse du dernier contact, non lue */
     bool      m_inGroundContact = false;       /* déjà au sol au pas précédent */
+    /* Garde au sol (position.y - m_groundHeight) au pas précédent. Sa baisse
+       donne la vitesse de rapprochement du sol, seule grandeur qui fasse mal. */
+    float     m_clearancePrev = 0.0f;
     bool      m_realFlyPhysicsEnabled = true;  /* coupé en mode assisté et en démo */
     float     m_cyclicLateralLagged      = 0.0f;  /* bascule du plan de pales, retard gyroscopique */
     float     m_cyclicLongitudinalLagged = 0.0f;

@@ -25,7 +25,7 @@ namespace {
 
 } /* namespace */
 
-void FlightModel::briderEtPoser() noexcept {
+void FlightModel::briderEtPoser(float dt) noexcept {
     /* --- Garde-fous numériques ------------------------------------ */
     /* On limite vitesses et rotations pour que la simulation reste stable. */
     m_body.velocity.x = clampAbs(m_body.velocity.x, MAX_SPEED);
@@ -35,15 +35,25 @@ void FlightModel::briderEtPoser() noexcept {
     m_body.angularVelocity.y = clampAbs(m_body.angularVelocity.y, MAX_OMEGA);
     m_body.angularVelocity.z = clampAbs(m_body.angularVelocity.z, MAX_OMEGA);
 
+    /* Vitesse de rapprochement du sol : de combien la garde au sol a baissé
+       pendant ce pas. Au-dessus d'un terrain plat, c'est le taux de chute ; elle
+       monte toute seule quand le relief se soulève sous l'appareil, donc rentrer
+       dans un versant à plat reste un choc. On prenait avant la vitesse
+       complète : frôler une plaine à 40 m/s coûtait le prix d'un crash.
+       Plafonnée à la vitesse de l'appareil, sinon un saut de m_groundHeight
+       (changement de carte) passerait pour un choc. */
+    const float clearance   = m_body.position.y - m_groundHeight;
+    const float rapprochement =
+        (dt > 0.0f) ? std::min((m_clearancePrev - clearance) / dt, glm::length(m_body.velocity))
+                    : 0.0f;
+
     /* Contact avec le sol : l'appareil ne descend pas sous le relief. */
     if (m_body.position.y < m_groundHeight) {
-        /* Vitesse d'arrivée, relevée AVANT d'annuler la composante verticale --
-           après, il n'en reste rien. On prend la vitesse complète et non le seul
-           taux de chute : rentrer dans un versant à l'horizontale reste un
-           contact avec le sol. Seul le pas qui ENTRE en contact compte, sans quoi
-           un appareil posé se blesserait à chaque pas de simulation. */
+        /* Relevée avant d'annuler la vitesse verticale, sinon il n'en reste
+           rien. Seul le pas qui entre en contact compte : un appareil posé se
+           blesserait sinon à chaque pas. */
         if (!m_inGroundContact) {
-            m_groundImpactMs = std::max(m_groundImpactMs, glm::length(m_body.velocity));
+            m_groundImpactMs = std::max(m_groundImpactMs, std::max(0.0f, rapprochement));
         }
         m_body.position.y = m_groundHeight;
         if (m_body.velocity.y < 0.0f) {
@@ -51,6 +61,7 @@ void FlightModel::briderEtPoser() noexcept {
         }
     }
     m_inGroundContact = m_body.position.y <= m_groundHeight;
+    m_clearancePrev   = m_body.position.y - m_groundHeight;
 
     /* Posé sur les patins : tant que la poussée ne dépasse pas le poids, l'appareil
      * reste collé au sol, sans glisser ni tourner. Dès que le collectif suffit à

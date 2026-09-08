@@ -303,8 +303,10 @@ public:
     /* Contact avec le sol, à la vitesse d'arrivée mesurée par la physique (voir
        physics::FlightModel::consumeGroundImpact). Au-delà de la vitesse tolérée,
        le choc fend le réservoir : il coûte du CARBURANT, proportionnellement à
-       l'excès de vitesse, et fait le même bruit qu'un pneu reçu. La vie de
-       l'appareil, elle, n'est entamée que par les zombies.
+       l'excès de vitesse, et fait le même bruit qu'un pneu reçu. Il entame
+       aussi la vie, sur la même courbe. Le sol ne tue jamais, si violente que
+       soit la chute : il s'arrête à IMPACT_RESERVE_PV comme il s'arrête à la
+       réserve de kérosène. Seuls les zombies achèvent.
 
        Rend les litres à retirer, que l'appelant applique au modèle de vol
        (physics::FlightModel::drainFuel) : le combat décide du prix, la physique
@@ -324,6 +326,10 @@ public:
        l'alarme allumée et cinq à huit minutes de vol (112 à 194 L/h) pour
        trouver une sphère bleue. C'est une chance, pas un pardon. */
     static constexpr float IMPACT_RESERVE_L = physics::FUEL_LOW_L;
+    /* Vie qu'un choc au sol laisse toujours, si violent soit-il. Un dixième de
+       la jauge : de quoi aller chercher une sphère de santé, pas de quoi
+       encaisser le pneu suivant. Sous ce seuil, un choc ne prend plus rien. */
+    static constexpr float IMPACT_RESERVE_PV = 10.0f; /* PLAYER_HEALTH_MAX vaut 100 */
 
     /* Kérosène (L) ramassé pendant le dernier update() en traversant une sphère
        vert : à ajouter au modèle de vol (addFuel), à lire après update() comme
@@ -366,6 +372,10 @@ private:
        chercher la perte ailleurs. Avec le coefficient ci-dessus, cela place le
        premier vrai choc à 3,5 m/s d'arrivée. */
     static constexpr float GROUND_IMPACT_MIN_LITERS = 0.5f;
+    /* Vie perdue par (m/s) d'excès au carré, sur le même excès que la fuite de
+       kérosène : 1 PV à 4,7 m/s, 9 PV à 8 m/s, 28 PV à 12 m/s. Sous le seuil de
+       fuite, rien n'est retiré : un posé reste un posé. */
+    static constexpr float GROUND_IMPACT_HEALTH_COEFF = 0.35f;
 
     /* Décalage du canon visible par rapport au centre de l'appareil : en avant
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue

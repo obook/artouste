@@ -82,6 +82,20 @@ TEST_CASE("FlightModel : vitesse d'arrivée au contact du sol", "[physics][conta
         CHECK(vol.consumeGroundImpact() == Catch::Approx(0.0f));
     }
 
+    SECTION("se poser tout doucement ne relève aucune vitesse d'arrivée") {
+        /* Le bug d'origine : la vitesse d'arrivée était prise sur la vitesse
+           COMPLÈTE, si bien qu'effleurer le sol en vol horizontal se lisait comme
+           une arrivée à la vitesse de croisière -- prix d'un crash pour un
+           appareil qui n'avait presque rien touché. Seul le rapprochement du sol
+           compte désormais. Ici, l'appareil est posé à 4 mm du sol sans vitesse :
+           le pas qui traverse ne doit relever qu'un souffle. */
+        vol.reset(vec3{0.0f, 0.004f, 0.0f});
+        vol.setGroundHeight(0.0f);
+        const Controls neutre{};
+        vol.update(neutre, 1.0f / 240.0f);
+        CHECK(vol.consumeGroundImpact() < 1.0f);
+    }
+
     SECTION("repositionner l'appareil oublie le contact non lu") {
         chuteLibre(vol, 20.0f);  /* valeur laissée en attente */
         vol.reset();
@@ -101,12 +115,12 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
         CHECK_FALSE(combat.soundEvents().impacted);
     }
 
-    SECTION("le choc fend le réservoir, il n'entame pas la vie") {
-        /* La vie ne se perd que face aux zombies. Un posé brutal se paie en
-           kérosène, donc en minutes de vol restantes. */
+    SECTION("le choc fend le réservoir ET entame la vie") {
+        /* Un posé brutal se paie deux fois : en kérosène, donc en minutes de vol
+           restantes, et en points de vie, comme un pneu toxique reçu. */
         const float litres = combat.applyGroundImpact(10.0f, physics::FUEL_CAPACITY_L);
         CHECK(litres > 0.0f);
-        CHECK(combat.healthPct() == Catch::Approx(1.0f));
+        CHECK(combat.healthPct() < 1.0f);
         CHECK_FALSE(combat.gameOver());
         CHECK(combat.soundEvents().impacted);
     }
@@ -200,6 +214,52 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
         CombatMode silencieux;
         silencieux.start(dir, solPlat);
         CHECK(silencieux.shotFuelBurn(physics::FUEL_CAPACITY_L) == Catch::Approx(0.0f));
+    }
+
+    SECTION("le sol entame aussi la santé, proportionnellement au choc") {
+        CombatMode doux;
+        doux.start(dir, solPlat);
+        doux.applyGroundImpact(3.0f, physics::FUEL_CAPACITY_L);
+        CHECK(doux.healthPct() == Catch::Approx(1.0f));
+
+        CombatMode ferme;
+        ferme.start(dir, solPlat);
+        ferme.applyGroundImpact(8.0f, physics::FUEL_CAPACITY_L);
+        CHECK(ferme.healthPct() < 1.0f);
+        CHECK_FALSE(ferme.gameOver());
+
+        CombatMode crash;
+        crash.start(dir, solPlat);
+        crash.applyGroundImpact(25.0f, physics::FUEL_CAPACITY_L);
+        CHECK(crash.healthPct() < 0.5f);
+        CHECK_FALSE(crash.gameOver());
+    }
+
+    SECTION("la chute la plus brutale laisse la réserve de vie") {
+        /* Le sol amoche, il ne tue pas : la partie ne se perd que face aux
+           zombies. Sans ce plancher, la courbe au carré passait sous zéro dès
+           20 m/s et un seul contact suffisait à perdre. */
+        CombatMode enorme;
+        enorme.start(dir, solPlat);
+        enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
+        CHECK(enorme.healthPct()
+              == Catch::Approx(CombatMode::IMPACT_RESERVE_PV / 100.0f));
+        CHECK_FALSE(enorme.gameOver());
+
+        /* Deux crashs d'affilée ne creusent pas sous la réserve non plus. */
+        enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
+        CHECK(enorme.healthPct()
+              == Catch::Approx(CombatMode::IMPACT_RESERVE_PV / 100.0f));
+        CHECK_FALSE(enorme.gameOver());
+    }
+
+    SECTION("un réservoir vide n'épargne pas la cellule") {
+        /* La facture en kérosène s'arrête à la réserve, pas les dégâts : sans
+           cela, un joueur à sec encaissait les crashs gratuitement. */
+        CombatMode sec;
+        sec.start(dir, solPlat);
+        sec.applyGroundImpact(10.0f, 0.0f);
+        CHECK(sec.healthPct() < 1.0f);
     }
 
     SECTION("hors combat, le sol ne coûte rien") {

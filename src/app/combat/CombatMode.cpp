@@ -411,6 +411,11 @@ float CombatMode::applyGroundImpact(float speedMs, float fuelLiters) {
         return 0.0f;
     }
     m_events.impacted = true;
+    /* La cellule encaisse aussi, sur la même énergie que le réservoir. Mais le
+       sol ne tue pas : il laisse toujours IMPACT_RESERVE_PV, comme le choc
+       laisse la réserve de kérosène. Seuls les zombies achèvent. */
+    m_playerHealth = std::max(std::min(m_playerHealth, IMPACT_RESERVE_PV),
+                              m_playerHealth - exces * exces * GROUND_IMPACT_HEALTH_COEFF);
     /* Le bruit du choc dépend de sa violence, pas du réservoir : il est acquis
        ci-dessus. Ce qui suit ne limite que la facture -- le choc s'arrête à la
        réserve, et ne prend rien du tout si elle est déjà entamée. */

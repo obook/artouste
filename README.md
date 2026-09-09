@@ -239,69 +239,48 @@ configuration : après avoir ajouté une carte dans `assets/terrain/`, relancez
 
 ## Fonctionnalités du simulateur
 
-* Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
-* Effets liés à l'altitude et au domaine de vol : la portance et la puissance de la turbine décroissent quand on monte, au point d'interdire le stationnaire en haute montagne (vers 3 300 m), conformément à la vocation montagnarde de l'Alouette II. Au-delà de la vitesse à ne pas dépasser (VNE, plus basse en altitude), une traînée d'onde freine l'appareil. Le vol latéral ou arrière prononcé réduit l'autorité au palonnier. Une descente verticale rapide à faible vitesse fait décrocher le rotor (vortex ring state), dont on se dégage en reprenant de la vitesse vers l'avant. Toutes ces difficultés sont désactivées en mode assisté, pendant la démo et pendant l'atterrissage automatique, où le vol reste facile et prévisible.
-* En vue cockpit, une légère vibration de la cabine traduit le passage des trois pales du rotor. L'effet est purement visuel et n'agit pas sur la physique.
-* Démarrage et arrêt de la turbine Artouste en deux temps. La turbine monte en régime, puis le rotor s'accélère, il faut la lancer pour décoller (touche `T`).
-* Entrées manette (recommandée) et clavier, avec détection automatique de la source. Manette Xbox, ou manette PlayStation 4 (DualShock 4) / PlayStation 5 (DualSense) en USB ou Bluetooth. La base communautaire de correspondances SDL (`assets/gamecontrollerdb.txt`) est chargée au lancement : elle étend la reconnaissance à un large éventail de manettes, dont les modèles Xbox récents en Bluetooth que la base intégrée de GLFW ne couvrait pas.
-* Mode assisté (touche `M`) : couche de confort qui compense le lacet, ramène le cyclique au neutre, lisse les commandes et borne le collectif, sans toucher à la physique. La bascule est progressive.
-* Atterrissage automatique (touche `J` / `RB`) : engage le pilote automatique vers l'hélipad le plus proche (dans un rayon de 999 m, sinon la touche n'a aucun effet), qui rejoint la pente d'approche du HAPI (6 %), se pose en douceur et rend la main une fois le collectif ramené au sol. Une action franche sur le manche, le palonnier ou le collectif désengage l'atterrissage automatique et rend la main tout de suite.
-* Commandes animées dans la cabine : palonnier, manche cyclique (la main droite suit) et levier de collectif (la main gauche se pose dessus et le suit).
-* Quatre vues (cycle avec `C`) : poursuite, cockpit, orbite et orbite solaire, cette
-  dernière plaçant la caméra face au soleil pour mettre en valeur le ciel.
-* HUD transparent à trois modes (cycle avec `H`) : panneaux dans les coins,
-  instruments ronds verts superposés (Super HUD) ou rien. Le panneau supérieur droit
-  affiche l'heure du simulateur (ligne `HRE`), avec un deux-points clignotant. En mode
-  coins, le coin bas-droit indique aussi le nombre d'images par seconde (FPS).
-  Cinq paramètres sont surveillés par une alarme à trois états (vert = normal,
-  jaune = surveiller, rouge = limite franchie) : régime rotor (autour de la bande
-  nominale, inhibée tant que le rotor n'est pas en régime), régime turbine (verte
-  au régime, elle sert d'indicateur "turbine prête" au démarrage), vitesse (sur la
-  VNE réelle du moment, qui décroît avec l'altitude), température tuyère et
-  carburant (jaune sous 60 L, rouge sous 15 L). En Super HUD, l'alarme est une LED
-  en haut à droite du cadran ; en HUD coins, la ligne concernée passe au jaune ou
-  au rouge.
-* Balise HAPI (Helicopter Approach Path Indicator) sur le pad de départ de chaque
-  carte : un repère au sol qui indique la pente d'approche par sa couleur, selon
-  les seuils du guide DGAC/STAC : vert clignotant si trop haut, vert fixe sur la
-  pente, rouge fixe légèrement trop bas, rouge clignotant si trop bas. Le point de
-  l'étiquette HUD (coin ou minimap) reprend cette couleur, sur l'étiquette la plus
-  proche de la balise et sur elle seule, pour qu'une balise n'en éclaire jamais
-  deux ; hors des seuils, le point s'éteint plutôt que de passer à une couleur
-  intermédiaire. Données par carte dans un fichier optionnel
-  `hapi.txt` (`lon lat azimut_deg pente_pct nom`), voir [docs/CARTES.md](docs/CARTES.md).
-* Interface à l'échelle de la fenêtre : le HUD (rubans, cadrans, réticule, minimap,
-  étiquettes) et le menu de démarrage suivent la taille réelle de l'affichage
-  (référence 1280x720, facteur borné de 0,75 à 3,5), et la police est reconstruite
-  nette à chaque changement de taille. L'affichage reste lisible et proportionné
-  du petit fenêtré au plein écran 4K, y compris en fenêtre étroite.
-* Cycle jour/nuit : le soleil suit sa course et colore le ciel au fil des heures, de
-  l'aube au coucher orangé puis à la nuit, en orientant l'éclairage de toute la scène.
-  La vitesse du temps se règle dans `assets/config.txt` (`soleil_vitesse`) : par
-  défaut, une journée complète défile en vingt minutes, mais on peut aussi choisir le
-  temps réel (heure du PC), un autre rythme, ou figer le temps à 8h du matin. La nuit, les deux
-  feux de position avant s'allument, rouge à bâbord et vert à tribord.
-* Mode démo automatique (bouton `Démo` du menu de démarrage) : l'appareil joue seul,
-  en boucle, un vol panoramique au-dessus du bassin d'Arcachon (démarrage accéléré de
-  la turbine puis embrayage du rotor à vitesse réelle, décollage, survol de la Dune du
-  Pilat à 2000 m, passage bas sur la pointe nord du cap Ferret, survol d'Arcachon à
-  1000 m, retour et pose). Pendant la démo, la touche `Échap`, ou une action franche
-  sur le manche, en sort et ramène au menu de démarrage ; la vue (`C` ou bouton `Y`),
-  le HUD (`H` ou bouton `B`), le plein écran (`F`) et la radio (`K`, `-`/`+`) restent
-  actifs sans l'interrompre.
+* Modèle de vol Newton-Euler à pas fixe : poussée, gravité, traînée, moments
+  cycliques et anti-couple, effet de sol et effet de translation.
+* Le domaine de vol se resserre avec l'altitude (plus de stationnaire vers
+  3 300 m, VNE plus basse, décrochage du rotor en descente verticale rapide),
+  sauf en mode assisté, en démo et à l'atterrissage automatique.
+* En vue cockpit, une légère vibration de la cabine traduit le passage des
+  pales, sans effet sur la physique.
+* Démarrage de la turbine Artouste en deux temps (touche `T`) : elle monte en
+  régime, puis le rotor s'accélère.
+* Manette (Xbox, DualShock 4, DualSense, en USB ou Bluetooth) ou clavier, avec
+  détection automatique et la base communautaire SDL
+  `assets/gamecontrollerdb.txt` chargée au lancement.
+* Mode assisté (`M`) : compense le lacet, recentre le cyclique, lisse les
+  commandes et borne le collectif, sans toucher à la physique.
+* Atterrissage automatique (`J` / `RB`) : rejoint l'hélipad le plus proche à
+  moins de 999 m, suit la pente du HAPI et se pose, jusqu'à ce qu'une action
+  franche sur les commandes reprenne la main.
+* Commandes animées dans la cabine : palonnier, cyclique et collectif, que les
+  mains du pilote suivent.
+* Quatre vues (`C`) : poursuite, cockpit, orbite et orbite solaire, face au
+  soleil.
+* HUD transparent à trois modes (`H`) : panneaux dans les coins, instruments
+  ronds verts (Super HUD) ou rien.
+* Alarme à trois états sur cinq paramètres : régime rotor, régime turbine,
+  vitesse (sur la VNE du moment), température tuyère et carburant.
+* Balise HAPI sur le pad de départ : sa couleur donne la pente d'approche et se
+  décrit par carte dans un fichier `hapi.txt` optionnel, voir
+  [docs/CARTES.md](docs/CARTES.md).
+* Le HUD et le menu suivent la taille de la fenêtre, du petit fenêtré au plein
+  écran 4K, avec une police reconstruite nette à chaque changement.
+* Cycle jour/nuit : le soleil colore le ciel et oriente l'éclairage, à la
+  vitesse réglée par `soleil_vitesse` dans `assets/config.txt`.
+* Mode démo (bouton `Démo` du menu) : l'appareil joue seul, en boucle, un vol
+  panoramique au-dessus du bassin d'Arcachon.
 * Son du moteur et du rotor, ciel en dégradé, ombre portée.
-* Radio internet optionnelle (touche `K`) : un flux MP3 configurable joué dans le
-  cockpit sous les sons moteur, avec un voyant `RADIO` dans le HUD.
-* Effets moteur quand la turbine tourne, flash rouge anti-collision sur le toit de
-  la cabine et tuyère (distorsion thermique de l'air chaud, halo bleuté à la sortie de la turbine).
-* Souffle du rotor au ras du sol : sous une quinzaine de mètres, l'appareil soulève
-  un nuage de poussière qui s'écarte en anneau puis remonte autour de lui, d'autant
-  plus dense qu'il est près du sol, que le rotor tourne vite et que le pas est fort :
-  un nuage au contact, un voile à cinq mètres, une trace à dix. Sa
-  couleur est prise sur la photo aérienne du terrain, donc ocre sur une piste,
-  grise sur un éboulis, et remplacée par des embruns au-dessus de l'eau. La clé
-  `souffle` de la configuration l'éteint.
-* Modèle 3D réel optionnel (voir ci-dessous) ; sinon, hélicoptère procédural.
+* Radio internet optionnelle (`K`) : un flux MP3 configurable joué dans le
+  cockpit, sous les sons moteur.
+* Effets moteur turbine tournante : flash rouge anti-collision sur le toit et
+  distorsion thermique à la tuyère.
+* Souffle du rotor au ras du sol : un nuage de poussière ou d'embruns, teinté
+  par la photo aérienne du terrain, d'autant plus dense qu'on vole bas.
+* Modèle 3D réel optionnel (voir ci-dessous), sinon hélicoptère procédural.
 
 ## Commandes
 

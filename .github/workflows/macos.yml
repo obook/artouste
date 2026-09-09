@@ -35,8 +35,11 @@ jobs:
       - name: Configurer
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
+      # -j sans nombre lance autant de compilations que possible : sur les trois
+      # coeurs du runner, la machine passe son temps à jongler. Le premier run a
+      # mis 74 minutes ; un nombre explicite évite ça.
       - name: Compiler
-        run: cmake --build build -j
+        run: cmake --build build -j 3
 
       - name: Tester
         run: ctest --test-dir build --output-on-failure

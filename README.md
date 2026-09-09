@@ -92,10 +92,13 @@ variables. `ARTOUSTE_SANS_NVIDIA=1` désactive la bascule du lanceur.
 
 ## Téléchargement
 
-Des exécutables prêts à l'emploi pour Linux et Windows sont publiés dans la
-section [Releases](https://github.com/obook/artouste/releases) du dépôt. Chaque
-archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
-`artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
+Des exécutables prêts à l'emploi pour Linux, macOS et Windows sont publiés dans
+la section [Releases](https://github.com/obook/artouste/releases) du dépôt.
+Chaque archive est autonome : décompressez-la et lancez `artouste` (Linux,
+macOS) ou `artouste.exe` (Windows), les ressources sont à côté du binaire.
+L'archive macOS est compilée pour Apple Silicon (arm64) et n'a jamais été
+essayée sur une vraie machine : sur un Mac Intel, ou en cas de souci, compilez
+depuis les sources. Les archives
 sont construites automatiquement par GitHub Actions à chaque version
 (voir `.github/workflows/release.yml`).
 
@@ -109,10 +112,11 @@ sont construites automatiquement par GitHub Actions à chaque version
    ./scripts/release.sh v0.30.0
    ```
 
-Le script pose le tag, le pousse (la compilation des deux plateformes démarre
-et prend une quinzaine de minutes) et crée aussitôt la release, avec le seul
-texte de cette version. La CI se contente ensuite d'y attacher les deux
-archives.
+Le script pose le tag, le pousse (la compilation des trois plateformes démarre)
+et crée aussitôt la release, avec le seul texte de cette version. La CI se
+contente ensuite d'y attacher les trois archives. Compter une quinzaine de
+minutes pour Linux et Windows ; macOS est plus lent, et bien plus encore quand
+le cache des dépendances est vide.
 
 Créer la release depuis le poste, et non depuis la CI, n'est pas décoratif :
 l'auteur d'une release est figé à sa création et ne se change plus ensuite.

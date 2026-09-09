@@ -57,6 +57,44 @@ jobs:
           path: build/artouste-*.tar.gz
           if-no-files-found: error
 
+  build-macos:
+    name: Build macOS
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      # Rien à installer : clang et CMake sont sur le runner, libcurl et le
+      # framework OpenGL viennent du SDK. L'archive produite est arm64 : elle ne
+      # tourne pas sur un Mac Intel. Pour couvrir les deux, il faudrait
+      # -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" et une compilation deux fois
+      # plus longue.
+      - name: Cache des dépendances FetchContent
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-macos-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configurer
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+      # Nombre de tâches explicite : voir le commentaire de macos.yml, un -j nu
+      # noie les trois coeurs du runner.
+      - name: Compiler
+        run: cmake --build build -j 3
+
+      - name: Tester
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Empaqueter
+        run: cd build && cpack
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artouste-macos
+          path: build/artouste-Darwin-*.tar.gz
+          if-no-files-found: error
+
   build-windows:
     name: Build Windows
     runs-on: windows-latest
@@ -104,7 +142,7 @@ jobs:
 
   release:
     name: Publier la release
-    needs: [build-linux, build-windows]
+    needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     # Une release n'est créée que pour un tag, pas pour un lancement manuel.
     if: startsWith(github.ref, 'refs/tags/')

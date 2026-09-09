@@ -228,6 +228,17 @@ target_link_libraries(artouste
         ${CMAKE_DL_LIBS}
 )
 
+# macOS : miniaudio passe par CoreAudio, qui vit dans des frameworks système.
+# Sans eux, l'édition de liens échoue sur des symboles _AudioObjectGetPropertyData
+# et consorts. GLFW, lui, déclare déjà les siens (Cocoa, IOKit).
+if(APPLE)
+    target_link_libraries(artouste PRIVATE
+        "-framework CoreFoundation"
+        "-framework CoreAudio"
+        "-framework AudioToolbox"
+    )
+endif()
+
 # Radio internet : libcurl optionnelle. Si présente, on l'ajoute et on définit
 # ARTOUSTE_HAS_CURL ; sinon audio/RadioStream.cpp se compile en coquille vide.
 if(CURL_FOUND)

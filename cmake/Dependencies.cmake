@@ -258,5 +258,7 @@ else()
         "  - Debian/Ubuntu : sudo apt install libcurl4-openssl-dev\n"
         "  - Fedora        : sudo dnf install libcurl-devel\n"
         "  - Arch          : sudo pacman -S curl\n"
+        "  - macOS         : normalement inutile (libcurl vient du SDK Xcode) ;\n"
+        "                    si le message persiste, brew install curl\n"
         "  - Windows/vcpkg : vcpkg install curl")
 endif()

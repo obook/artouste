@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# build.sh -- Compilation du simulateur Artouste sous Linux.
+# build.sh -- Compilation du simulateur Artouste sous Linux et macOS.
 #
 # Enchaîne configuration CMake, compilation parallèle, tests et, en option,
 # packaging CPack. Reprend les commandes documentées dans le README mais sous
@@ -26,8 +26,14 @@ set -euo pipefail
 # Se placer à la racine du dépôt, quel que soit le répertoire d'appel : les
 # scripts sourcés juste après (scripts/common.sh, deps.sh, notice.sh) sont
 # alors trouvés par leur chemin relatif, sans dépendre du cwd d'origine.
-cd "$(dirname "$(readlink -f "$0")")" || {
+# readlink -f manque aux macOS antérieurs à Monterey 12.3 (readlink BSD) : on
+# retombe alors sur $0 tel quel, correct sauf si le script est appelé par un
+# lien symbolique.
+RACINE="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+cd "$(dirname "$RACINE")" || {
     echo "ERREUR : impossible de se placer à la racine du dépôt." >&2
+    echo "Chemin déduit du script : $RACINE" >&2
+    echo "Place-toi à la racine du dépôt Artouste et relance ./build.sh." >&2
     exit 1
 }
 
@@ -78,9 +84,10 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
-# Nombre de tâches parallèles : valeur fournie, sinon nombre de coeurs.
+# Nombre de tâches parallèles : valeur fournie, sinon nombre de coeurs. macOS
+# n'a pas nproc (coreutils) : sysctl donne la même information.
 if [ -z "$JOBS" ]; then
-    JOBS="$(nproc 2>/dev/null || echo 1)"
+    JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)"
 fi
 
 # La valeur de -j doit être un entier strictement positif : sinon cmake --build

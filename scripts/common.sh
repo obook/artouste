@@ -2,7 +2,8 @@
 #
 # scripts/common.sh
 # Fonctions partagées par build.sh et play-linux.sh : question oui/non et
-# détection/préfixage du gestionnaire de paquets système (apt, dnf, pacman).
+# détection/préfixage du gestionnaire de paquets système (apt, dnf, pacman,
+# ou brew sous macOS).
 # Ce fichier est sourcé (jamais exécuté directement) depuis la racine du
 # dépôt ou depuis scripts/, peu importe : il ne contient que des fonctions.
 #
@@ -22,16 +23,22 @@ ask_yes_no() {
         return 1
     fi
     read -rp "$1 [o/N] : " rep
-    case "${rep,,}" in
-        o | oui | y | yes) return 0 ;;
+    # Motifs insensibles à la casse écrits à la main : la conversion "${rep,,}"
+    # est du bash 4, et macOS ne fournit que bash 3.2.
+    case "$rep" in
+        [oO] | [oO][uU][iI] | [yY] | [yY][eE][sS]) return 0 ;;
         *) return 1 ;;
     esac
 }
 
 # Détecte le gestionnaire de paquets système et l'affiche sur stdout ("apt",
-# "dnf" ou "pacman") ; rien si aucun n'est reconnu.
+# "dnf", "pacman" ou "brew") ; rien si aucun n'est reconnu. Homebrew passe en
+# premier : une machine macOS n'a aucun des trois autres, et l'inverse est vrai
+# aussi, l'ordre n'a donc d'importance que pour la lisibilité.
 detect_pkg_mgr() {
-    if command -v apt-get >/dev/null 2>&1; then
+    if command -v brew >/dev/null 2>&1; then
+        echo "brew"
+    elif command -v apt-get >/dev/null 2>&1; then
         echo "apt"
     elif command -v dnf >/dev/null 2>&1; then
         echo "dnf"
@@ -41,7 +48,8 @@ detect_pkg_mgr() {
 }
 
 # Préfixe la commande donnée ($1) par sudo si l'utilisateur courant n'est pas
-# root. Affiche la commande (préfixée ou non) sur stdout dans tous les cas ;
+# root -- ne jamais l'appeler pour brew, qui refuse de tourner en root.
+# Affiche la commande (préfixée ou non) sur stdout dans tous les cas ;
 # renvoie 1 si sudo est requis mais introuvable (la commande affichée reste
 # alors non préfixée, inutilisable telle quelle) : à l'appelant de décider
 # comment réagir, les deux scripts ne se comportent pas pareil sur ce cas.

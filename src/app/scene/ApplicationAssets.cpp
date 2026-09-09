@@ -16,13 +16,18 @@
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
 #  include <windows.h>
+#elif defined(__APPLE__)
+/* macOS n'a pas /proc : _NSGetExecutablePath donne le chemin du binaire. */
+#  include <mach-o/dyld.h>
 #endif
 
 #include "app/Application.hpp"
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
+#include <string>
 
 #ifndef ARTOUSTE_ASSET_DIR
 #define ARTOUSTE_ASSET_DIR "assets"
@@ -35,7 +40,7 @@ namespace {
 /* Dossier contenant le binaire en cours d'exécution, ou un chemin vide si on ne
  * sait pas le déterminer. Sert à trouver les ressources installées à côté du
  * binaire (cas d'une release). Portable : GetModuleFileNameW sous Windows,
- * /proc/self/exe sous Linux. */
+ * _NSGetExecutablePath sous macOS, /proc/self/exe sous Linux. */
 std::filesystem::path executableDir() {
     namespace fs = std::filesystem;
 #if defined(_WIN32)
@@ -43,6 +48,23 @@ std::filesystem::path executableDir() {
     const DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
     if (n > 0 && n < MAX_PATH) {
         return fs::path(buf, buf + n).parent_path();
+    }
+#elif defined(__APPLE__)
+    /* Premier appel avec un tampon nul : _NSGetExecutablePath renvoie la taille
+       nécessaire (le chemin peut dépasser PATH_MAX). Il peut contenir des liens
+       symboliques et des ".." : canonical les résout, comme sous Linux. */
+    unsigned int taille = 0;
+    _NSGetExecutablePath(nullptr, &taille);
+    if (taille > 0) {
+        std::string chemin(taille, '\0');
+        if (_NSGetExecutablePath(chemin.data(), &taille) == 0) {
+            chemin.resize(std::strlen(chemin.c_str()));
+            std::error_code ec;
+            const fs::path  exe = fs::canonical(chemin, ec);
+            if (!ec) {
+                return exe.parent_path();
+            }
+        }
     }
 #else
     std::error_code ec;

@@ -4,7 +4,7 @@
 
 - **Fenêtres allumées la nuit** : une fenêtre sur huit environ s'éclaire au coucher du soleil, d'un blanc chaud d'ampoule derrière un rideau. Le tirage est fait dans le shader et non dans la texture, qui est tuilée : une fenêtre allumée dedans le serait sur tous les murs au même endroit.
 - **Verrière fêlée** : en mode zombie, le vitrage se casse en écailles jointives à mesure que la vie baisse, jusqu'à la mise en miettes. Un réseau de Voronoï accroché au repère du modèle, donc les fêlures ne bougent pas d'une image à l'autre.
-- **Compilation sous macOS** : le simulateur compile et passe ses tests sur Apple Silicon. `build.sh` reconnaît Darwin, saute les vérifications X11 et OpenGL qui n'y ont pas de sens, et explique quoi installer plutôt que de proposer une commande apt. Personne ne l'a encore lancé sur un vrai Mac : les serveurs d'intégration n'ont pas d'écran.
+- **Compilation sous macOS** : le simulateur compile et passe ses tests sur Apple Silicon. `build.sh` reconnaît Darwin, saute les vérifications X11 et OpenGL qui n'y ont pas de sens, et explique quoi installer plutôt que de proposer une commande apt. Un utilisateur l'a lancé sur un vrai Mac : il tourne.
 - **Archive macOS** publiée à chaque version, à côté de Linux et Windows. Elle est compilée pour Apple Silicon (arm64) et ne tournera pas sur un Mac Intel.
 
 ### Changements

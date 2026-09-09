@@ -142,8 +142,9 @@ se compile et tourne normalement sans cette fonctionnalité.
 
 ## Compilation (macOS)
 
-Jamais compilé ni essayé sur un Mac faute de machine : le code est écrit pour y
-tourner, mais personne ne l'a vérifié. Les retours sont bienvenus.
+Testé sur un Mac Apple Silicon : le simulateur compile, se lance et tourne.
+L'archive publiée est arm64 ; sur un Mac Intel, il faut compiler depuis les
+sources. Les retours restent bienvenus.
 
 Tout, dans l'ordre :
 

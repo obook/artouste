@@ -92,10 +92,12 @@ variables. `ARTOUSTE_SANS_NVIDIA=1` désactive la bascule du lanceur.
 
 ## Téléchargement
 
-Des exécutables prêts à l'emploi pour Linux et Windows sont publiés dans la
-section [Releases](https://github.com/obook/artouste/releases) du dépôt. Chaque
-archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
-`artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
+Des exécutables prêts à l'emploi pour Linux, macOS et Windows sont publiés dans
+la section [Releases](https://github.com/obook/artouste/releases) du dépôt.
+Chaque archive est autonome : décompressez-la et lancez `artouste` (Linux,
+macOS) ou `artouste.exe` (Windows), les ressources sont à côté du binaire.
+L'archive macOS est compilée pour Apple Silicon (arm64) ; sur un Mac Intel,
+compilez depuis les sources. Les archives
 sont construites automatiquement par GitHub Actions à chaque version
 (voir `.github/workflows/release.yml`).
 

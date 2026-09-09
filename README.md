@@ -90,6 +90,153 @@ __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ./build/bin/artoust
 Sous pilote Mesa (AMD, nouveau, NVK), c'est `DRI_PRIME=1` qui remplace ces deux
 variables. `ARTOUSTE_SANS_NVIDIA=1` désactive la bascule du lanceur.
 
+## Téléchargement
+
+Des exécutables prêts à l'emploi pour Linux et Windows sont publiés dans la
+section [Releases](https://github.com/obook/artouste/releases) du dépôt. Chaque
+archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
+`artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
+sont construites automatiquement par GitHub Actions à chaque version
+(voir `.github/workflows/release.yml`).
+
+<details>
+<summary>Publier une version (mémo)</summary>
+
+1. Écrire les notes dans `docs/RELEASE_NOTES.md`, bumper `VERSION` dans
+   `CMakeLists.txt`, commiter et pousser.
+2. Publier :
+   ```bash
+   ./scripts/release.sh v0.30.0
+   ```
+
+Le script pose le tag, le pousse (la compilation des deux plateformes démarre
+et prend une quinzaine de minutes) et crée aussitôt la release, avec le seul
+texte de cette version. La CI se contente ensuite d'y attacher les deux
+archives.
+
+Créer la release depuis le poste, et non depuis la CI, n'est pas décoratif :
+l'auteur d'une release est figé à sa création et ne se change plus ensuite.
+Créée par l'action, elle porte le compte du robot, qui apparaît alors parmi les
+contributeurs du projet. Tant que c'était une étape séparée, elle a été oubliée
+trois fois ; le workflow refuse désormais de créer une release lui-même.
+</details>
+
+## Compilation (Linux)
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+./build/bin/artouste
+```
+
+Dépendances récupérées automatiquement (FetchContent) : GLFW, GLM, Dear ImGui,
+Assimp, stb, miniaudio, Catch2 ; GLAD est versionné dans `third_party/`.
+Prérequis système : pilotes OpenGL, bibliothèques de développement X11, et un
+compilateur C++20. libcurl (paquet de développement) est une dépendance système
+**optionnelle** : présente, elle active la radio internet ; absente, le simulateur
+se compile et tourne normalement sans cette fonctionnalité.
+
+## Compilation (macOS)
+
+Jamais compilé ni essayé sur un Mac faute de machine : le code est écrit pour y
+tourner, mais personne ne l'a vérifié. Les retours sont bienvenus.
+
+Tout, dans l'ordre :
+
+```bash
+xcode-select --install          # compilateur C++, make et git (outils Xcode)
+brew install cmake              # Homebrew : https://brew.sh
+git clone https://github.com/obook/artouste.git
+cd artouste
+./build.sh -T                   # configure, compile et lance les tests
+./build/bin/artouste
+```
+
+git est livré avec les outils Xcode : la première commande le fournit, d'où
+l'ordre. libcurl et OpenGL viennent du système, il n'y a rien à installer pour
+eux non plus. La fenêtre passe par Cocoa : X11 n'est pas utilisé.
+
+Le premier `./build.sh` télécharge et compile les bibliothèques tierces (Assimp,
+GLFW, flite et les autres) : compter un bon moment, et une connexion.
+
+`build.sh` détecte macOS et adapte ses vérifications ; s'il manque quelque chose,
+il affiche la marche à suivre complète plutôt qu'une commande `apt`.
+
+Le moteur demande un contexte OpenGL 4.1 core, dernière version qu'Apple ait
+implémentée. Elle est marquée dépréciée depuis macOS 10.14 mais fonctionne
+toujours ; le jour où Apple la retirera, il faudra passer par Metal (via MoltenVK
+ou une réécriture du rendu), ce qui est un autre chantier.
+
+## Compilation (Windows)
+
+Avec Visual Studio 2022 (MSVC) et CMake. Dans une invite de commande Developer :
+
+```bat
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j
+ctest --test-dir build -C Release --output-on-failure
+build\Release\artouste.exe
+```
+
+Les bibliothèques tierces et le runtime C++ sont liés en statique : l'exécutable
+est autonome, sans DLL ni redistribuable Visual C++ à installer.
+
+Préférez l'invite de commande Developer à PowerShell. En locale française,
+PowerShell interprète un argument comme `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`
+comme un nombre et le transmet tronqué en `3`, la virgule étant le séparateur
+décimal ; la configuration échoue alors sur une valeur invalide. Sous PowerShell,
+passer les arguments dans un tableau de chaînes explicite.
+
+### Journal de lancement
+
+L'exécutable Windows est une application graphique : le processus n'a pas de
+console, pas même celle du terminal qui le lance, et les messages de diagnostic
+n'apparaissent nulle part. Le jeu les écrit donc dans `artouste.log`, à côté de
+l'exécutable, et les rend au terminal appelant quand il y en a un. Si le dossier
+du jeu est en lecture seule, comme sous `Program Files`, le journal va dans
+`%LOCALAPPDATA%\Artouste`. Le journal du lancement précédent est conservé sous
+`artouste-precedent.log`.
+
+C'est ce fichier qu'il faut joindre à un signalement de problème sous Windows :
+il contient la carte graphique, la version d'OpenGL, la carte chargée et tout ce
+que le moteur a eu le temps de dire.
+
+### Avec VSCode
+
+La configuration partagée est dans `.vscode/`. Lancer une fois la tâche
+"CMake : configurer" (menu Terminal > Exécuter la tâche), puis :
+
+* Ctrl+Maj+B : compiler (tâche "CMake : compiler").
+* F5 : compiler puis lancer le simulateur sous gdb.
+* Tâches "CMake : tester", "Artouste : lancer", "CMake : nettoyer" pour le reste.
+
+L'IntelliSense s'appuie sur `build/compile_commands.json`.
+
+## Packaging
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+cd build && cpack
+```
+
+Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
+`.zip` sous Windows) contenant le binaire autonome, les ressources (shaders,
+modèle 3D, sons, textures) et **les neuf cartes**, prête à distribuer. Comptez
+environ 140 Mo.
+
+Une carte se conditionne aussi à part, pour la passer à quelqu'un sans lui
+envoyer l'archive entière :
+
+```bash
+cmake --build build --target cartes
+```
+
+Produit un `build/carte-<nom>.zip` par carte. La liste est établie à la
+configuration : après avoir ajouté une carte dans `assets/terrain/`, relancez
+`cmake` avant de reconstruire cette cible.
+
 ## Fonctionnalités du simulateur
 
 * Modèle de vol Newton-Euler (poussée, gravité, traînée, moments cycliques, anti-couple), effet de sol et effet de translation, intégration à pas fixe.
@@ -200,122 +347,6 @@ Si une manette n'est pas reconnue, l'outil `gamepad_probe` livré avec les sourc
 ```sh
 ./build/bin/gamepad_probe
 ```
-
-## Téléchargement
-
-Des exécutables prêts à l'emploi pour Linux et Windows sont publiés dans la
-section [Releases](https://github.com/obook/artouste/releases) du dépôt. Chaque
-archive est autonome : décompressez-la et lancez `artouste` (Linux) ou
-`artouste.exe` (Windows), les ressources sont à côté du binaire. Les archives
-sont construites automatiquement par GitHub Actions à chaque version
-(voir `.github/workflows/release.yml`).
-
-<details>
-<summary>Publier une version (mémo)</summary>
-
-1. Écrire les notes dans `docs/RELEASE_NOTES.md`, bumper `VERSION` dans
-   `CMakeLists.txt`, commiter et pousser.
-2. Publier :
-   ```bash
-   ./scripts/release.sh v0.30.0
-   ```
-
-Le script pose le tag, le pousse (la compilation des deux plateformes démarre
-et prend une quinzaine de minutes) et crée aussitôt la release, avec le seul
-texte de cette version. La CI se contente ensuite d'y attacher les deux
-archives.
-
-Créer la release depuis le poste, et non depuis la CI, n'est pas décoratif :
-l'auteur d'une release est figé à sa création et ne se change plus ensuite.
-Créée par l'action, elle porte le compte du robot, qui apparaît alors parmi les
-contributeurs du projet. Tant que c'était une étape séparée, elle a été oubliée
-trois fois ; le workflow refuse désormais de créer une release lui-même.
-</details>
-
-## Compilation (Linux)
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-ctest --test-dir build --output-on-failure
-./build/bin/artouste
-```
-
-Dépendances récupérées automatiquement (FetchContent) : GLFW, GLM, Dear ImGui,
-Assimp, stb, miniaudio, Catch2 ; GLAD est versionné dans `third_party/`.
-Prérequis système : pilotes OpenGL, bibliothèques de développement X11, et un
-compilateur C++20. libcurl (paquet de développement) est une dépendance système
-**optionnelle** : présente, elle active la radio internet ; absente, le simulateur
-se compile et tourne normalement sans cette fonctionnalité.
-
-## Compilation (Windows)
-
-Avec Visual Studio 2022 (MSVC) et CMake. Dans une invite de commande Developer :
-
-```bat
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release -j
-ctest --test-dir build -C Release --output-on-failure
-build\Release\artouste.exe
-```
-
-Les bibliothèques tierces et le runtime C++ sont liés en statique : l'exécutable
-est autonome, sans DLL ni redistribuable Visual C++ à installer.
-
-Préférez l'invite de commande Developer à PowerShell. En locale française,
-PowerShell interprète un argument comme `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`
-comme un nombre et le transmet tronqué en `3`, la virgule étant le séparateur
-décimal ; la configuration échoue alors sur une valeur invalide. Sous PowerShell,
-passer les arguments dans un tableau de chaînes explicite.
-
-### Journal de lancement
-
-L'exécutable Windows est une application graphique : le processus n'a pas de
-console, pas même celle du terminal qui le lance, et les messages de diagnostic
-n'apparaissent nulle part. Le jeu les écrit donc dans `artouste.log`, à côté de
-l'exécutable, et les rend au terminal appelant quand il y en a un. Si le dossier
-du jeu est en lecture seule, comme sous `Program Files`, le journal va dans
-`%LOCALAPPDATA%\Artouste`. Le journal du lancement précédent est conservé sous
-`artouste-precedent.log`.
-
-C'est ce fichier qu'il faut joindre à un signalement de problème sous Windows :
-il contient la carte graphique, la version d'OpenGL, la carte chargée et tout ce
-que le moteur a eu le temps de dire.
-
-### Avec VSCode
-
-La configuration partagée est dans `.vscode/`. Lancer une fois la tâche
-"CMake : configurer" (menu Terminal > Exécuter la tâche), puis :
-
-* Ctrl+Maj+B : compiler (tâche "CMake : compiler").
-* F5 : compiler puis lancer le simulateur sous gdb.
-* Tâches "CMake : tester", "Artouste : lancer", "CMake : nettoyer" pour le reste.
-
-L'IntelliSense s'appuie sur `build/compile_commands.json`.
-
-## Packaging
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-cd build && cpack
-```
-
-Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
-`.zip` sous Windows) contenant le binaire autonome, les ressources (shaders,
-modèle 3D, sons, textures) et **les neuf cartes**, prête à distribuer. Comptez
-environ 140 Mo.
-
-Une carte se conditionne aussi à part, pour la passer à quelqu'un sans lui
-envoyer l'archive entière :
-
-```bash
-cmake --build build --target cartes
-```
-
-Produit un `build/carte-<nom>.zip` par carte. La liste est établie à la
-configuration : après avoir ajouté une carte dans `assets/terrain/`, relancez
-`cmake` avant de reconstruire cette cible.
 
 ## Modèle 3D, sons et textures
 

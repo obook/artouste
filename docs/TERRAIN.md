@@ -49,13 +49,13 @@ Conséquences chiffrées :
 
 | Piste | Résolution | Couverture | Licence | vs nous |
 |-------|-----------|-----------|---------|---------|
-| RGE ALTI (actuel) | 1 m / 5 m natif | France | gratuit Etalab | déjà excellent, on le sous-échantillonne à 256 |
-| LiDAR HD, MNT et MNS | 1 m réels | France | gratuit Etalab | servi en BIL par le MÊME service WMS ; sol plus propre, et le MNS porte les bâtiments (voir `tools/observatoire.py`) |
+| LiDAR HD, MNT et MNS (actuel) | 1 m réels | France | gratuit Etalab | relevé laser aéroporté : c'est la source du relief 3D ; le MNS porte en plus les bâtiments (voir `tools/observatoire.py`) |
+| RGE ALTI | 1 m / 5 m natif | France | gratuit Etalab | rééchantillonné, plus lisse ; sert de secours là où le LiDAR ne couvre pas |
 | Copernicus DEM GLO-30 | 30 m | Monde | gratuit | mondial, mais 3x plus grossier que RGE ALTI en France |
 | SRTM | 30 m (~90 m hors USA) | quasi-monde | gratuit | vieux, trous en montagne |
 | Copernicus GLO-90 / ASTER | 90 m | Monde | gratuit | trop grossier pour la montagne |
 
-RGE ALTI est la meilleure source pour la France (donc Pyrénées, dont la vallée
+Le LiDAR HD est la meilleure source pour la France (donc Pyrénées, dont la vallée
 d'Ossau, et Alpes). Copernicus n'a d'intérêt que pour sortir de France.
 
 ### Axe 2 - Source de la texture
@@ -115,7 +115,7 @@ puis LOD) donne un meilleur résultat pour moins de complexité.
 
 ---
 
-Relief, orthophotos, emprises de bâtiments et LiDAR HD : [IGN](https://www.ign.fr/),
-sous [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+Relief 3D (LiDAR HD, relevé laser aéroporté), orthophotos et emprises de
+bâtiments : [IGN](https://www.ign.fr/), sous [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
 
 <img src="IGN_logo_2012.png" alt="IGN" width="64" />

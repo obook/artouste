@@ -200,8 +200,8 @@ Ces sources ne relèvent pas du modèle de vol mais sont citées ici pour rassem
 en un seul endroit tout ce que le simulateur doit à des tiers.
 
 Institut national de l'information géographique et forestière. (2026).
-*Géoplateforme* [Jeux de données RGE ALTI, BD ORTHO, BD TOPO, BD Forêt V2, ADMIN
-EXPRESS]. Licence Ouverte Etalab 2.0. https://data.geopf.fr
+*Géoplateforme* [Jeux de données LiDAR HD (relevé laser aéroporté, source du
+relief 3D), RGE ALTI, BD ORTHO, BD TOPO, BD Forêt V2, ADMIN EXPRESS]. Licence Ouverte Etalab 2.0. https://data.geopf.fr
 
 > Relief, orthophotos, bâtiments, masque de forêt et contours administratifs de
 > toutes les cartes. Voir `docs/CARTES.md` et `tools/`.

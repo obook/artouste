@@ -32,8 +32,8 @@ deux ou trois cartes.
 donnée fine est fabriquée chez le joueur, à la demande, depuis les services de
 l'IGN.**
 
-Ce n'est pas un contournement : les données IGN (RGE ALTI, BD ORTHO, BD TOPO)
-sont sous Licence Ouverte Etalab 2.0. Chacun a le droit de les récupérer, et le
+Ce n'est pas un contournement : les données IGN (LiDAR HD pour le relief 3D,
+RGE ALTI, BD ORTHO, BD TOPO) sont sous Licence Ouverte Etalab 2.0. Chacun a le droit de les récupérer, et le
 jeu le fait déjà, mais aujourd'hui seulement du côté de l'auteur, dans des
 scripts Python. Il s'agit de mettre cette capacité entre les mains du joueur.
 

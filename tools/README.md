@@ -41,7 +41,7 @@ ajout à sys.path pour importer tools/common/ ou tools/terrain/.
 ## Paquets
 
 - `common/` : chemins du dépôt (paths.py), bruit procédural (imaging.py).
-- `terrain/` : téléchargement et mise à jour des cartes IGN (voir son
-  propre docstring de paquet).
+- `terrain/` : téléchargement et mise à jour des cartes IGN, relief 3D issu du
+  LiDAR HD (voir son propre docstring de paquet).
 - `livree/` : génération des livrées du fuselage, du pilote et des rotors.
 - `vegetation/` : atlas de sprites d'arbres.

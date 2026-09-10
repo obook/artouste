@@ -380,7 +380,9 @@ le rotor sont mis au régime : naître en vol moteur arrêté, c'est tomber.
 `ARTOUSTE_*` restent lues et gardent la priorité sur les options équivalentes.
 
 Les terrains et bâtiments 3D sont générés hors-ligne depuis les données de
-l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Détails, configuration
+l'[IGN](https://www.ign.fr/) (Licence Ouverte Etalab 2.0). Le relief vient du
+**LiDAR HD**, le relevé laser aéroporté de l'IGN : c'est lui qui donne au terrain
+son détail métrique, crêtes et barres rocheuses comprises. Détails, configuration
 complète et régénération : [docs/CARTES.md](docs/CARTES.md) ; étude du pipeline de
 terrain : [docs/TERRAIN.md](docs/TERRAIN.md). Les sources documentaires du modèle
 de vol et des données sont réunies dans [REFERENCES.md](REFERENCES.md).

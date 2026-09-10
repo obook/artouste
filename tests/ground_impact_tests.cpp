@@ -219,18 +219,18 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
     SECTION("le sol entame aussi la santé, proportionnellement au choc") {
         CombatMode doux;
         doux.start(dir, solPlat);
-        doux.applyGroundImpact(3.0f, physics::FUEL_CAPACITY_L);
+        (void)doux.applyGroundImpact(3.0f, physics::FUEL_CAPACITY_L);
         CHECK(doux.healthPct() == Catch::Approx(1.0f));
 
         CombatMode ferme;
         ferme.start(dir, solPlat);
-        ferme.applyGroundImpact(8.0f, physics::FUEL_CAPACITY_L);
+        (void)ferme.applyGroundImpact(8.0f, physics::FUEL_CAPACITY_L);
         CHECK(ferme.healthPct() < 1.0f);
         CHECK_FALSE(ferme.gameOver());
 
         CombatMode crash;
         crash.start(dir, solPlat);
-        crash.applyGroundImpact(25.0f, physics::FUEL_CAPACITY_L);
+        (void)crash.applyGroundImpact(25.0f, physics::FUEL_CAPACITY_L);
         CHECK(crash.healthPct() < 0.5f);
         CHECK_FALSE(crash.gameOver());
     }
@@ -241,13 +241,13 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
            20 m/s et un seul contact suffisait à perdre. */
         CombatMode enorme;
         enorme.start(dir, solPlat);
-        enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
+        (void)enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
         CHECK(enorme.healthPct()
               == Catch::Approx(CombatMode::IMPACT_RESERVE_PV / 100.0f));
         CHECK_FALSE(enorme.gameOver());
 
         /* Deux crashs d'affilée ne creusent pas sous la réserve non plus. */
-        enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
+        (void)enorme.applyGroundImpact(200.0f, physics::FUEL_CAPACITY_L);
         CHECK(enorme.healthPct()
               == Catch::Approx(CombatMode::IMPACT_RESERVE_PV / 100.0f));
         CHECK_FALSE(enorme.gameOver());
@@ -258,7 +258,7 @@ TEST_CASE("CombatMode : carburant perdu au contact du sol", "[combat][contact]")
            cela, un joueur à sec encaissait les crashs gratuitement. */
         CombatMode sec;
         sec.start(dir, solPlat);
-        sec.applyGroundImpact(10.0f, 0.0f);
+        (void)sec.applyGroundImpact(10.0f, 0.0f);
         CHECK(sec.healthPct() < 1.0f);
     }
 

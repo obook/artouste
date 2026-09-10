@@ -231,8 +231,10 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_buildingShader->setVec3("u_fogColor", ctx.fogColor);
         m_buildingShader->setFloat("u_fogStart", m_fogStart);
         m_buildingShader->setFloat("u_fogEnd", m_fogEnd);
-        /* Nuit : allume une partie des fenêtres (voir building.frag). */
+        /* Nuit : allume une partie des fenêtres, d'autant moins qu'il est tard
+           (voir building.frag et CycleJourNuit.hpp). */
         m_buildingShader->setFloat("u_isDay", ctx.isDay);
+        m_buildingShader->setFloat("u_partAllumees", ctx.partFenetresAllumees);
         m_buildingShader->setInt("u_facade", 0);
         m_buildingShader->setInt("u_facadePleine", 1);
         if (m_buildingFacade) {

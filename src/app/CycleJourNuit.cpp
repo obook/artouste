@@ -1,6 +1,7 @@
 /*
  * CycleJourNuit.cpp
- * Calcul de l'heure simulée (voir CycleJourNuit.hpp).
+ * Calcul de l'heure simulée et de l'éclairage des fenêtres (voir
+ * CycleJourNuit.hpp).
  *
  * Auteur : O. Booklage
  * Date : juillet 2026
@@ -20,6 +21,12 @@ constexpr float JOUR = 86400.0f;           /* secondes dans une journée */
 constexpr float LEVER = 6.0f * 3600.0f;    /* le soleil passe l'horizon */
 constexpr float COUCHER = 18.0f * 3600.0f; /* et repasse dessous */
 constexpr float MOITIE = JOUR * 0.5f;      /* 12 h de jour, 12 h de nuit */
+
+/* Fondu doux entre deux bornes, comme le smoothstep de GLSL. */
+float palier(float a, float b, float x) {
+    const float u = std::clamp((x - a) / (b - a), 0.0f, 1.0f);
+    return u * u * (3.0f - 2.0f * u);
+}
 
 /* Ramène une heure quelconque dans [0, 86400[. */
 float normaliser(float secondes) {
@@ -75,6 +82,16 @@ float vitesseCourante(float vitesseJour, float facteurNuit, float heureSecondes)
     /* Le facteur est borné exactement comme dans heureDuJour : la vitesse affichée
        doit être celle qui sert vraiment au calcul, jusque dans les cas absurdes. */
     return nuit ? vitesseJour * std::max(facteurNuit, 0.1f) : vitesseJour;
+}
+
+float partFenetresAllumees(float heureSecondes) {
+    /* Heures comptées depuis le coucher (18 h -> 0, minuit -> 6, lever -> 12) :
+       la nuit devient un intervalle continu, sans passage par zéro à traiter. */
+    const float n = std::fmod(normaliser(heureSecondes) / 3600.0f + 6.0f, 24.0f);
+
+    float part = std::lerp(0.04f, 0.20f, palier(0.0f, 3.0f, n));  /* 18 h -> 21 h */
+    part = std::lerp(part, 0.03f, palier(3.0f, 8.0f, n));         /* 21 h -> 2 h */
+    return std::lerp(part, 0.12f, palier(10.0f, 12.0f, n));       /* 4 h -> 6 h */
 }
 
 } /* namespace artouste::app */

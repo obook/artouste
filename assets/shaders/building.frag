@@ -19,8 +19,9 @@
  * pour un seul bit. Les deux tuiles sont lues puis mélangées plutôt que lues
  * dans une branche, pour que les dérivées (donc le niveau de mipmap) restent
  * définies.
- * La nuit, une part des carreaux s'allume (PROPORTION_ALLUMEES). Le tirage est
- * fait ici et non dans la texture : celle-ci est tuilée en GL_REPEAT, une
+ * La nuit, une part des carreaux s'allume (u_partAllumees, calculée d'après
+ * l'heure par CycleJourNuit.cpp : la ville s'endort puis se rallume avant le
+ * lever). Le tirage est fait ici et non dans la texture : celle-ci est tuilée en GL_REPEAT, une
  * fenêtre allumée dedans le serait sur tous les murs au même endroit. En
  * contrepartie, la géométrie des carreaux est redite ici -- si la tuile change
  * dans tools/facade/generer_facade.py, ces constantes suivent.
@@ -45,6 +46,7 @@ uniform vec3  u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float u_fogStart;   /* distance où la brume commence (m) */
 uniform float u_fogEnd;     /* distance où tout est noyé dans la brume (m) */
 uniform float u_isDay;      /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
+uniform float u_partAllumees; /* part des fenêtres allumées à cette heure de la nuit */
 
 /* Découpe des carreaux dans la tuile de façade, recopiée de generer_facade.py :
    BAYS x FLOORS cellules, la fenêtre occupant win_w/win_h au centre de chacune. */
@@ -52,9 +54,6 @@ const vec2  FACADE_GRILLE = vec2(3.0, 2.0);   /* travées x étages par tuile */
 const vec2  FENETRE_DEMI  = vec2(0.28, 0.26); /* demi-carreau, en fraction de cellule */
 const float TRAVEE_M      = 4.0;              /* largeur d'une travée (12 m / 3 travées) */
 
-/* Part des fenêtres allumées. Se règle ici : le shader est relu depuis assets/
-   au lancement, donc l'ajuster ne demande pas de recompiler le jeu. */
-const float PROPORTION_ALLUMEES = 0.12;
 /* Blanc chaud d'ampoule derrière un rideau, pas un néon. */
 const vec3  LUEUR_FENETRE = vec3(1.00, 0.82, 0.48);
 
@@ -108,7 +107,7 @@ void main() {
         vec3  centre   = v_pos - tangente * (fract(cellule.x) - 0.5) * TRAVEE_M;
         float tirage   = alea(vec3(floor(centre.xz + 0.5), floor(cellule.y)));
 
-        float allumee = dedans.x * dedans.y * step(tirage, PROPORTION_ALLUMEES);
+        float allumee = dedans.x * dedans.y * step(tirage, u_partAllumees);
         color = mix(color, LUEUR_FENETRE, allumee * nuit);
     }
 

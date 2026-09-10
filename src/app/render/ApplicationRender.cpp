@@ -18,6 +18,7 @@
 
 #include "app/AppConstants.hpp"
 #include "app/Application.hpp"
+#include "app/CycleJourNuit.hpp"
 #include "render/Camera.hpp"
 #include "util/Math.hpp"
 
@@ -69,7 +70,8 @@ void Application::renderScene(const mat4& base,
        garde un léger fond bleuté nocturne (facteur plancher) accordé au ciel de nuit. */
     const vec3 fogColor = FOG_COLOR * glm::mix(0.06f, 1.0f, isDay);
 
-    const RenderContext ctx{lightDir, proj, view, toRel, camPosRel, fogColor, isDay};
+    const RenderContext ctx{lightDir, proj, view, toRel, camPosRel, fogColor, isDay,
+                            partFenetresAllumees(timeOfDaySeconds(timeSeconds))};
 
     if (!poison) {
         renderSkyAndSea(ctx, timeSeconds);

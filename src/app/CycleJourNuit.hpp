@@ -48,4 +48,16 @@ float heureDuJour(float baseSecondes, float t, float vitesseJour, float facteurN
    chose que le calcul. */
 float vitesseCourante(float vitesseJour, float facteurNuit, float heureSecondes);
 
+/* Part des fenêtres allumées à l'heure donnée, dans [0, 1] : le seuil que
+   building.frag compare au tirage de chaque carreau. La ville s'allume en début
+   de soirée, s'éteint peu à peu jusqu'au creux de la nuit, puis se rallume avant
+   le lever. Comme le tirage par carreau est stable dans le temps, un seuil qui
+   descend éteint les fenêtres une à une, sans clignotement.
+
+     heureSecondes : heure simulée, en secondes depuis minuit
+
+   Le jour, la valeur rendue n'a pas d'effet : le shader n'allume rien tant que
+   le soleil est levé. */
+float partFenetresAllumees(float heureSecondes);
+
 } /* namespace artouste::app */

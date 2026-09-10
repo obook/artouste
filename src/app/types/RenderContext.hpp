@@ -24,6 +24,9 @@ struct RenderContext {
     /* 1 en plein jour, 0 le soleil couché. Sert au fond d'écran, à la brume
        ci-dessus et aux fenêtres allumées (voir building.frag). */
     float isDay;
+    /* Part des fenêtres allumées à l'heure courante (voir CycleJourNuit.hpp) :
+       la ville s'endort au fil de la nuit et se rallume avant le lever. */
+    float partFenetresAllumees;
 };
 
 } /* namespace artouste::app */

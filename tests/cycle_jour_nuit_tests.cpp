@@ -4,7 +4,8 @@
  * continuité au coucher et au lever, durée d'un cycle complet, et cas
  * particuliers (temps figé, marche arrière, facteur absurde). Vérifie aussi la
  * vitesse annoncée par le HUD (app::vitesseCourante), qui doit être celle qui
- * sert vraiment au calcul, de nuit comme de jour.
+ * sert vraiment au calcul, de nuit comme de jour. Vérifie enfin la part de
+ * fenêtres allumées (app::partFenetresAllumees), qui suit l'heure de la nuit.
  *
  * Auteur : O. Booklage
  * Licence : GPL v2
@@ -18,6 +19,7 @@
 #include <cmath>
 
 using artouste::app::heureDuJour;
+using artouste::app::partFenetresAllumees;
 using artouste::app::vitesseCourante;
 using Catch::Approx;
 
@@ -149,4 +151,26 @@ TEST_CASE("vitesse affichée : temps figé, marche arrière et facteur absurde",
     /* Une heure hors bornes est ramenée dans la journée, comme partout ailleurs. */
     REQUIRE(vitesseCourante(72.0f, 2.0f, MIDI + 86400.0f) == Approx(72.0f));
     REQUIRE(vitesseCourante(72.0f, 2.0f, -3600.0f) == Approx(144.0f)); /* 23 h */
+}
+
+TEST_CASE("les fenêtres s'éteignent au fil de la nuit", "[cycle]") {
+    const auto part = [](float heures) { return partFenetresAllumees(heures * 3600.0f); };
+
+    /* Le soir allume, la nuit éteint, le petit matin rallume. */
+    CHECK(part(21.0f) > part(19.0f));
+    CHECK(part(23.0f) < part(21.0f));
+    CHECK(part(3.0f) < part(23.0f));
+    CHECK(part(6.0f) > part(3.0f));
+
+    /* Une part reste une fraction, à toute heure, y compris hors bornes. */
+    for (float h = -30.0f; h < 50.0f; h += 0.25f) {
+        const float p = part(h);
+        CHECK(p >= 0.0f);
+        CHECK(p <= 1.0f);
+    }
+
+    /* Le creux de la nuit laisse quelques veilleuses, jamais le noir complet. */
+    CHECK(part(3.0f) > 0.0f);
+    /* Et la ville la plus éveillée n'allume pas tout. */
+    CHECK(part(21.0f) < 0.5f);
 }

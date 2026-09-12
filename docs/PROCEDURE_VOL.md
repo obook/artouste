@@ -1,4 +1,4 @@
-# Procédure de vol - Alouette II SE 3130 / SA 313B
+# Procédure de vol - Alouette II SE 3130 / SE 313B
 
 Procédure simplifiée pour le simulateur. Version pour la turbine Artouste IIC.
 Sources : documents techniques helimat.free.fr, consignes DGAC/EASA, témoignages

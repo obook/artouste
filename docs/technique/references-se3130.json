@@ -1,6 +1,6 @@
 {
   "aircraft": "SE 3130 / SE 313B Alouette II",
-  "engine": "Turbomeca Artouste IIB1 / IIC6",
+  "engine": "Turbomeca Artouste II (IIB1, IIC, IIC1, IIC2, IIC5, IIC6 au certificat 7H1)",
   "_lisez_moi": [
     "Donnees de reference de l'enveloppe de vol, rassemblees le 09/08/2026 pour le",
     "calage du modele physique. Les sources divergent entre elles, y compris entre",

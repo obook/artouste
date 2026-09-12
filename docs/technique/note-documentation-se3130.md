@@ -50,7 +50,7 @@ Plutôt que de coder les valeurs de performance en dur dans le moteur physique, 
 ```json
 {
   "aircraft": "SE 3130 / SE 313B",
-  "engine": "Turbomeca Artouste IIC6",
+  "engine": "Turbomeca Artouste II (IIB1, IIC, IIC1, IIC2, IIC5, IIC6 au certificat 7H1)",
   "reference_values": [
     {
       "quantity": "vitesse_ascensionnelle_max",
@@ -94,6 +94,16 @@ Champs recommandés pour chaque entrée :
 - `conditions` : masse, altitude, vitesse, variante moteur. Une valeur sans conditions précisées n'est pas comparable à une autre.
 - `source` : référence bibliographique complète, pas juste un nom de site.
 - `authority_level` : 1 (certification officielle) à 4 (référence générique non spécifique à l'appareil), pour pondérer les sources en cas de conflit.
+
+## Ce qui est réellement simulé
+
+Le modèle reproduit les performances publiées de la cellule SE 3130 : taux de
+montée, plafond de stationnaire, limites du certificat 7H1, communes aux six
+Artouste II certifiées. La puissance au rotor est résolue depuis ces
+performances, si bien que le vol rend une Alouette II quelle que soit la turbine
+montée, et l'écart entre IIB1 et IIC y reste invisible. La NOTE 6 du certificat
+explique pourquoi : les 400 ch sont une limite de transmission, et toutes les
+variantes y sont bridées.
 
 ## Méthode d'analyse et de validation du moteur physique
 

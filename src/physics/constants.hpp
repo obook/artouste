@@ -297,7 +297,9 @@ inline constexpr float DAMP_YAW     = 4000.0f;  /* N.m/(rad/s) */
 /* POWER_ROTOR_W n'est pas la puissance de la turbine : c'est ce qui reste au rotor
  * principal en montée continue, une fois payés le rotor de queue, la transmission,
  * les accessoires, et l'écart entre une puissance nominale de certificat et ce que
- * la machine tient réellement en continu. Elle vaut 74 % des 269 kW documentés.
+ * la machine tient réellement en continu. Pour situer, cela fait 67 % des
+ * 400 ch du certificat (298 kW) et 74 % des 269 kW dératés que cite
+ * heli-archive ; aucun de ces deux chiffres n'entre dans le calcul.
  *
  * Elle n'est pas déduite de ces postes un à un, ce qui n'aurait donné qu'un
  * empilement d'hypothèses : elle est RÉSOLUE à partir des performances publiées.

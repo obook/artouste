@@ -1,7 +1,6 @@
 # Note technique : sources documentaires d'époque, structuration et analyse des données de référence
 
 Projet : Artouste (simulateur Alouette II SE 3130, C++20 / OpenGL 3.3)
-Destinataire : Claude Code, pour la collecte, le stockage et l'analyse des données de performance de référence
 
 ## Objectif
 

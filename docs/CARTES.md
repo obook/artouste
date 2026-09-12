@@ -17,7 +17,7 @@ la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de
 Vincennes), `assets/terrain/toulouse/` (Toulouse et l'aérodrome de Lasbordes :
 le Capitole, Saint-Sernin, les Jacobins, la Garonne, la Cité de l'espace et
 l'ancienne piste de Montaudran) et `assets/terrain/dax-arene/` (arène recadrée depuis `dax`, dédiée
-au mode zombie -- voir la section dédiée ci-dessous, affichée au menu sous le
+au mode zombie -- voir la section ci-dessous, affichée au menu sous le
 nom **Happy DeathHour**).
 Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `ortho.jpg` (orthophoto), `landmarks.txt` (lieux remarquables) et, facultatifs,
@@ -87,8 +87,8 @@ Les clés disponibles :
   lecture, sans identifiant ni statistique, et un réseau absent ou lent ne change
   rien au lancement. `0` pour ne rien demander au réseau ; la variable
   d'environnement `ARTOUSTE_NO_MAJ` coupe aussi la recherche. Comme la radio, la
-  vérification a besoin de libcurl à la compilation : sans elle, elle n'a
-  simplement pas lieu.
+  vérification a besoin de libcurl à la compilation : sans elle, elle n'a pas
+  lieu.
 * `radio_url` : URL d'un **flux radio internet** (MP3 sur HTTP) joué dans le
   cockpit, sous les sons moteur. Vide par défaut (pas de radio). La radio est
   **coupée au lancement** : la touche `K` l'allume puis la coupe en vol. La
@@ -169,9 +169,9 @@ remarquables, hélipads). Voir [TERRAIN.md](TERRAIN.md) pour les détails du pip
 
 Une carte est livrée avec une photo aérienne d'ensemble. Elle suffit en vol haut
 et devient floue dès qu'on descend. Les tuiles sont la même photo en beaucoup
-plus fin, découpée en carrés que le jeu charge au fil du vol. Une fois
-installées, le sol redevient net au ras du sol. Elles ne changent rien d'autre :
-ni relief, ni bâtiments, ni contenu de la carte.
+plus fin, découpée en carrés que le jeu charge au fil du vol. Une fois qu'elles
+sont installées, le sol redevient net au ras du sol. Elles ne changent rien
+d'autre : ni relief, ni bâtiments, ni contenu de la carte.
 
 Une carte sans tuiles est dite LR, une carte avec ses tuiles HR : c'est tout le
 vocabulaire du gestionnaire de cartes, décrit plus bas.
@@ -551,7 +551,11 @@ plus haut).
 
 ## Cartes
 
-Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/) (Institut National de l'Information Géographique et Forestière) et sont distribuées sous licence [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence). Ces données sont utilisées pour générer les terrains et les bâtiments 3D du simulateur. Le relief 3D est obtenu grâce au LiDAR HD, le relevé laser aéroporté de l'IGN.
+Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/)
+(Institut national de l'information géographique et forestière), sous
+[Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+Ces données servent à générer les terrains et les bâtiments 3D du simulateur. Le
+relief 3D vient du LiDAR HD, le relevé laser aéroporté de l'IGN.
 
 <img src="IGN_logo_2012.png" alt="Logo IGN" width="100" />
 

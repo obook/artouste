@@ -560,7 +560,7 @@ Touche \texttt{C} au menu. La colonne \textbf{Résolution} combine deux états.
 \end{tabularx}}
 
 \section*{Passer une carte en HR}
-Entrée sur la carte choisie affiche la finesse visée, le volume sur disque, le volume à télécharger et la place restante. Entrée confirme : avancement et débit s'affichent, l'estimation pouvant aller à plusieurs heures sur les cartes les plus étendues. \texttt{Échap} arrête la fabrication (fermer le jeu aussi), sans perte : une relance reprend où elle s'était arrêtée. Une carte marquée \texttt{x} dans la colonne Tuiles est déjà à sa finesse maximale.
+Entrée sur la carte choisie affiche la finesse visée, le volume sur disque, le volume à télécharger et la place restante. Entrée confirme : avancement et débit s'affichent ; l'estimation va jusqu'à plusieurs heures sur les cartes les plus étendues. \texttt{Échap} arrête la fabrication (fermer le jeu aussi), sans perte : une relance reprend où elle s'était arrêtée. Une carte marquée \texttt{x} dans la colonne Tuiles est déjà à sa finesse maximale.
 
 \section*{Ajouter le relief 3D}
 Touche \texttt{L} sur la carte (\texttt{Fabriquer relief 3D}), même mécanique que pour l'image. Le relief 3D est modelé d'après le LiDAR HD de l'IGN, le relevé laser aéroporté du territoire : c'est lui qui donne le vrai détail métrique du terrain. Le relief fin donne une maille d'environ 2~m autour de l'appareil, contre 15 à 20~m pour le maillage d'ensemble. Réglez \texttt{relief\_fenetre 1} dans \texttt{assets/config.txt} pour l'afficher en vol.
@@ -569,7 +569,7 @@ Touche \texttt{L} sur la carte (\texttt{Fabriquer relief 3D}), même mécanique 
 \texttt{T} allume ou éteint les tuiles sans les supprimer. \texttt{Suppr} supprime les tuiles de la carte, \texttt{Maj+Suppr} son relief 3D.
 
 \section*{Combien de place}
-Les tuiles HR se comptent en gigaoctets, jusqu'à 37~Go pour la carte la plus étendue (Arcachon). Le relief 3D pèse moins, de 25~Mo (Dax) à 856~Mo (Arcachon) sur disque ; le téléchargement pèse environ huit fois ce poids. La clé \texttt{tuiles\_dossier} de \texttt{assets/config.txt} range tuiles et relief sur un autre disque.
+Les tuiles HR se comptent en gigaoctets, jusqu'à 37~Go pour la carte la plus étendue (Arcachon). Le relief 3D pèse moins, de 25~Mo (Dax) à 856~Mo (Arcachon) sur disque ; il faut télécharger environ huit fois ce volume. La clé \texttt{tuiles\_dossier} de \texttt{assets/config.txt} range tuiles et relief sur un autre disque.
 
 \vfill
 \noindent
@@ -602,7 +602,7 @@ Dans un dossier neuf, le jeu ne retrouve plus vos tuiles. Déplacez alors, de l'
 \texttt{assets/terrain/<carte>/tuiles}
 
 \section*{Pour ne plus y penser}
-Il est astucieux de ranger les tuiles hors du jeu, sur un disque de données. Par exemple, pour les conserver sur un disque \texttt{D}, réglez la ligne suivante dans \texttt{assets/config.txt} :
+Rangez les tuiles hors du jeu, sur un disque de données. Par exemple, pour les conserver sur un disque \texttt{D}, réglez la ligne suivante dans \texttt{assets/config.txt} :
 
 \medskip
 \noindent

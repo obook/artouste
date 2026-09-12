@@ -1,4 +1,4 @@
-# PANEL.md - Tableau de bord SE 3130 Alouette II
+# Tableau de bord SE 3130 Alouette II
 
 Relevé complet des instruments et commandes du tableau de bord de l'Alouette II SE 3130,
 d'après le Flight Manual officiel Sud Aviation (SGAC approved, figures 2-5 et 2-5a,
@@ -7,8 +7,6 @@ appendice 1 figure 1-1). Deux variantes documentées : appareils n° 1327 et inf
 
 > Ce fichier sert de référence pour l'implémentation du HUD et du cockpit 3D du simulateur
 > Artouste. Ne pas utiliser comme référence de vol réel.
-
----
 
 ## 1. Instruments de vol et de navigation
 
@@ -40,8 +38,6 @@ zone_verte_rotor   : (340, 380)
 zone_rouge_turbine : (35000, ...)
 ```
 
----
-
 ### 1.2 Indicateur de vitesse air (item 40 - "Airspeed indicator" / Indicateur de vitesse)
 
 - Graduation : 20 à 140 kt.
@@ -59,8 +55,6 @@ vne_kt         : 120
 arc_vert       : (95, 105)
 ```
 
----
-
 ### 1.3 Altimètre (item 41 - "Altimeter" / Altimètre)
 
 - Type : altimètre barométrique standard.
@@ -70,15 +64,11 @@ arc_vert       : (95, 105)
 
 **Implémentation simulateur :** affichage en mètres ou en pieds selon préférence utilisateur.
 
----
-
 ### 1.4 Variomètre (item 7 - "Rate-of-climb indicator" / Indicateur de vitesse verticale)
 
 - Graduation : montée et descente, en pieds/minute ou en m/s selon version.
 - Taux de montée nominal à puissance maxi : environ 4,8 m/s (945 ft/min).
 - Pas de zone rouge spécifique : l'instrument est purement informatif.
-
----
 
 ### 1.5 Compas magnétique (item 3 - "Magnetic compass" / Compas magnétique)
 
@@ -86,16 +76,12 @@ arc_vert       : (95, 105)
 - Compas de route à lecture directe, graduation 0 à 360 degrés.
 - Sensible aux accélérations : lecture fiable uniquement en vol stabilisé.
 
----
-
 ### 1.6 Indicateur de pas collectif (item 42 - "Collective-pitch indicator" / Indicateur de pas collectif)
 
 - Cadran semi-circulaire, graduation 0 à 14,5° ou 15° selon version.
 - Reflet direct de l'angle de calage des pales du rotor principal.
 - Correspondance avec le simulateur : 0 % collectif = 0°, 100 % = 14,5°.
 - Utilisation typique au décollage : 6 à 8° (environ 40 à 55 %).
-
----
 
 ## 2. Instruments moteur
 
@@ -135,8 +121,6 @@ seuil_alerte_huile  : 0.3    # bar
 seuil_alerte_tuyere : 500    # degrés C
 ```
 
----
-
 ### 2.2 Indicateur de carburant (item 47 - "Fuel contents gauge" / Jauge de carburant)
 
 - Graduation : 0 à 15 (US gallons x 10), soit 0 à 150 gallons = 580 litres environ.
@@ -144,23 +128,17 @@ seuil_alerte_tuyere : 500    # degrés C
 - Consommation indicative : 110 kg/h à vitesse économique, 155 kg/h à puissance maxi.
 - Autonomie approximative : 4 h à vitesse économique.
 
----
-
 ### 2.3 Voyant pression huile transmission (item 6 - "Transmission oil pressure warning light" / Voyant pression huile transmission)
 
 - Voyant rouge uniquement, pas de cadran analogique séparé.
 - S'allume en cas de chute de pression huile de la boîte de transmission principale.
 - Alerte critique : atterrissage immédiat requis.
 
----
-
 ### 2.4 Jauge de pression servo-commandes (item 13 - "Servo unit pressure gauge" / Manomètre servo-commandes)
 
 - Optionnel, présent sur les appareils équipés de servo-commandes (à partir du n° 285).
 - Graduation non précisée dans les images disponibles.
 - Absence de pression : commandes en effort direct (cas du SE 3130 de base sans servo).
-
----
 
 ## 3. Voyants d'alerte et signalisation
 
@@ -178,8 +156,6 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 | 39 | Maximum fuel flow warning light | Voyant débit carburant maxi | Rouge | Débit carburant maximum atteint |
 | 48 | Generator warning light | Voyant générateur | Rouge | Générateur hors service |
 | 66 | Pitot head heating indicator light | Voyant chauffage sonde Pitot | Variable | Optionnel |
-
----
 
 ## 4. Commandes de puissance et carburant (partie basse du tableau)
 
@@ -208,8 +184,6 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 - Non représenté comme levier physique visible mais essentiel en procédure.
 - Interrupteur électrique commandant l'ouverture/fermeture du robinet principal.
 - Vérification obligatoire du micro-switch à chaque mise en route (CN F-1996-072-053).
-
----
 
 ## 5. Commutateurs et disjoncteurs
 
@@ -262,8 +236,6 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 | 62 | Fuel jettison master switch | Interrupteur largage carburant |
 | 64 | Lateral trim cock | Robinet de trim latéral |
 
----
-
 ## 6. Réceptacles et prises
 
 | Item | Désignation officielle (anglais) | Traduction française |
@@ -271,8 +243,6 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 | 14 | 24-volt receptacle | Prise 24 volts |
 | 32 | 24-volt receptacle switch (de-froster, etc.) | Interrupteur prise 24 V (dégivrage, etc.) |
 | 43 | Flotation gear receptacle | Prise train de flottaison |
-
----
 
 ## 7. Commandes de vol (pédalier bas)
 
@@ -283,8 +253,6 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 | 69 | Governor control lever | Levier du régulateur | Voir section 4.2 |
 | 70 | Fuel shut-off cock control lever | Robinet de coupure carburant | Voir section 4.3 |
 | 71 | Adjustable stop | Butée réglable du levier | - |
-
----
 
 ## 8. Affichage et visière
 
@@ -299,15 +267,11 @@ Tous les voyants suivants sont référencés dans la légende officielle (image 
 | 65 | UV light | Lampe UV |
 | 49 | Flap for engine power check diagram | Volet du diagramme de contrôle puissance moteur |
 
----
-
 ## ANNEXE - Instruments et commandes nécessaires au simulateur Artouste
 
 Cette annexe définit strictement ce qui doit être implémenté dans le HUD et le
 système de commandes du simulateur pour un vol complet et réaliste.
 Tout le reste (radio, éclairage, optionnels) est hors périmètre de la version de base.
-
----
 
 ### A1. HUD - Instruments affichables en temps réel
 
@@ -339,8 +303,6 @@ Tout le reste (radio, éclairage, optionnels) est hors périmètre de la version
 | Phase de vol | `phase_vol` | Texte : ARRET, DEMARRAGE, EN VOL, etc. |
 | Frein rotor | `frein_rotor` | Indicateur booléen (SERRE / LIBRE) |
 
----
-
 ### A2. Voyants d'alerte à implémenter
 
 | Voyant | Variable déclenchante | Couleur | Condition |
@@ -354,8 +316,6 @@ Tout le reste (radio, éclairage, optionnels) est hors périmètre de la version
 | TEMPÉRATURE MAXI | `temperature_tuyere` | Rouge | > 500°C |
 | CARBURANT BAS | `carburant_litres` | Orange | < 15 L |
 | CARBURANT VIDE | `carburant_litres` | Rouge | < 4 L |
-
----
 
 ### A3. Commandes de vol à implémenter (commandes réelles du simulateur)
 
@@ -381,8 +341,6 @@ Source : tableau des commandes fourni par le développeur.
 | Pause | P | Bouton Back | - |
 | Réinitialiser la position | R | Bouton X | - |
 | Quitter | Échap | LB + RB simultanés | Combinaison pour éviter le déclenchement accidentel |
-
----
 
 ### A4. Logique d'affichage HUD recommandée
 
@@ -411,8 +369,6 @@ Disposition suggérée (vue cockpit, coins d'écran) :
 - Voyants d'alerte : toujours visibles en surimpression, quelle que soit la phase.
 - Collectif : barre de progression horizontale en % suffit, pas de cadran circulaire.
 - Tachymètres : cadrans analogiques ou barres de progression avec zones colorées.
-
----
 
 ### A5. Valeurs de référence pour la calibration
 

@@ -410,9 +410,9 @@ haute résolution d'une carte, ou de récupérer la place qu'elle occupe.
 
 **Ce que le téléchargement apporte.** Une carte est livrée avec une photo
 aérienne d'ensemble. Elle suffit en vol haut et devient floue quand on descend.
-Les tuiles sont la même photo en beaucoup plus fin. Une fois téléchargées, le sol
-redevient net au ras du sol : on distingue les marquages de piste, les toits, les
-voitures. Rien ne change en altitude, et rien ne se perd si vous les supprimez.
+Les tuiles sont la même photo en beaucoup plus fin. Une fois qu'elles sont
+téléchargées, le sol redevient net au ras du sol : on distingue les marquages de
+piste, les toits, les voitures. Rien ne change en altitude, et rien ne se perd si vous les supprimez.
 
 **LR et HR** sont les deux mots que l'écran emploie pour la finesse du sol :
 

@@ -1,4 +1,4 @@
-# PROCEDURE_VOL.md - Alouette II SE 3130 / SA 313B
+# Procédure de vol - Alouette II SE 3130 / SA 313B
 
 Procédure simplifiée pour le simulateur. Version pour la turbine Artouste IIC.
 Sources : documents techniques helimat.free.fr, consignes DGAC/EASA, témoignages
@@ -6,8 +6,6 @@ pilotes PPRuNe, manuel FlightGear FGMEMBERS/Alouette-II.
 
 > AVERTISSEMENT : ce document est une reconstitution simplifiée à visée
 > simulateur, non un manuel de vol certifié. Ne pas utiliser sur appareil réel.
-
----
 
 ## Données de référence
 
@@ -24,8 +22,6 @@ pilotes PPRuNe, manuel FlightGear FGMEMBERS/Alouette-II.
 | MTOW | 1 500 - 1 600 kg selon génération |
 | Vitesse de croisière max | 180 km/h |
 | Autonomie | 4 h environ à vitesse économique |
-
----
 
 ## PHASE 1 - Démarrage
 
@@ -78,8 +74,6 @@ sans action du pilote sur le frein rotor.
 
 7. Stabilisation au régime nominal : attendre 1 à 2 minutes avant décollage.
 
----
-
 ## PHASE 2 - Vol
 
 ### 2.1 Décollage
@@ -119,8 +113,6 @@ Comportement en vol :
 - Effet de sol en finale sous 5 m : portance accrue, réduire la collective.
 - Poser en douceur, sans hésitation.
 
----
-
 ## PHASE 3 - Arrêt
 
 ### 3.1 Mise au sol et stabilisation
@@ -159,8 +151,6 @@ recours. Rallumer en vol reste permis, c'est la procédure après une extinction
 7. Interrupteur batterie : OFF.
 8. Vérifier arrêt complet rotor et turbine avant de quitter l'appareil.
 
----
-
 ## Résumé séquentiel (pour intégration simulateur)
 
 ```
@@ -194,8 +184,6 @@ ARRÊT
   pompe OFF
   batterie OFF
 ```
-
----
 
 ## Notes pour le simulateur
 
@@ -318,8 +306,6 @@ En vue cockpit, une vibration légère de la cabine reproduit les trois impulsio
 par tour du rotor tripale (3/rev, environ 18 Hz au régime nominal). Cet effet est
 purement visuel et n'intervient pas dans le calcul du vol.
 
----
-
 ## ANNEXE - Commandes minimales pour un premier vol simulateur
 
 Cette annexe définit le jeu de commandes strictement nécessaire pour effectuer
@@ -429,14 +415,10 @@ palonnier            : float  # lacet
 10. batterie_on = false
 ```
 
----
-
 ## ANNEXE 2 - Commandes implémentées dans le simulateur Artouste
 
 Tableau de référence des commandes telles qu'elles existent dans le code du simulateur.
 Source : tableau fourni par le développeur. Ne pas modifier sans mise à jour du code.
-
----
 
 ### Tableau complet des commandes
 
@@ -453,8 +435,6 @@ Source : tableau fourni par le développeur. Ne pas modifier sans mise à jour d
 | Pause | P | Bouton Back |
 | Réinitialiser la position | R | Bouton X |
 | Quitter | Échap | LB + RB simultanés |
-
----
 
 ### Notes d'implémentation
 
@@ -479,8 +459,6 @@ selon l'état courant de la phase de vol.
 sont exclusivement sur clavier. À prévoir dans l'interface si un mode manette seule
 est souhaité à terme.
 
----
-
 ### Correspondance avec les phases de vol
 
 | Phase | Commandes actives | Commandes inactives |
@@ -491,8 +469,6 @@ est souhaité à terme.
 | EN_VOL | Collectif, cyclique, palonnier, T (coupure), C, H, P, R | - |
 | ARRET_ROTOR | - (séquence automatique) | Tout |
 | ARRET_TURBINE | - (séquence automatique) | Tout |
-
----
 
 ### Initialisation recommandée au lancement
 

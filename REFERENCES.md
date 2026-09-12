@@ -1,6 +1,7 @@
 # Références
 
-Sources documentaires du modèle de vol d'Artouste, les liens ont été vérifiés par téléchargement du document à la date indiquée.
+Sources documentaires du modèle de vol d'Artouste. Les liens ont été vérifiés par
+téléchargement du document à la date indiquée.
 
 Les sources sont classées par usage réel, et non par ordre d'importance : ce que
 le code doit à un ouvrage est dit sous chaque entrée. Une source seulement

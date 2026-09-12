@@ -126,8 +126,8 @@ LR.
 
 \section{Le rendu HR 3D : la fenêtre de relief}
 
-La méthode est propre à Artouste. Elle n'est pas reprise d'un moteur existant,
-elle a été construite pour ce jeu, mesure par mesure. Ses quatre choix : le
+La méthode est propre à Artouste, construite pour ce jeu, mesure par
+mesure. Ses quatre choix : le
 relief fin est un \emph{écart} ajouté à la carte, pas une surface de plus
 (carte + détail = laser, par construction) ; le pas des tuiles s'emboîte dans
 la maille du terrain ; la finesse ne dépend que de la distance, pour que les
@@ -177,7 +177,7 @@ invariant du moteur.
 
 \section{Modélisation}
 
-En un point $p$ du sol, à distance $d$ de l'oeil de la fenêtre :
+En un point $p$ du sol, à distance $d$ de l'œil de la fenêtre :
 \begin{equation*}
   h(p) = c(p) + t(d)\,\bigl[\,T_{\ell}(p) - c(p)\,\bigr]
 \end{equation*}
@@ -205,7 +205,7 @@ Le pas des tuiles s'emboîte dans la maille $m$ de la carte :
 \end{equation*}
 Sur dax : $m = 14{,}156 \times 21{,}763$~m donne $14{,}156/8 = 1{,}7695$~m et
 $21{,}763/12 = 1{,}8136$~m. 8 et 12 sont multiples de 4 : le noyau et l'anneau
-(qui dessine à 4 fois ce pas) tombent tous deux sur les noeuds du maillage.
+(qui dessine à 4 fois ce pas) tombent tous deux sur les nœuds du maillage.
 
 Chaque tuile de $512 \times 512$ points quantifie ses altitudes sur 16 bits,
 bornes propres à la tuile :
@@ -247,7 +247,7 @@ cercles du fondu en orange et jaune, légende dans le HUD 4 coins (touche
 \code{H}). Le journal du lancement donne le reste : maille LR, finesse des
 tuiles HR, pas des grilles, et la ligne \code{emboîtement dans la carte : oui}.
 
-\section{Les difficultés rencontrées, et les solutions}
+\section{Les difficultés rencontrées et les solutions}
 
 \textbf{Des silhouettes qui bougeaient à la frontière de la fenêtre.} Avec un
 pas de tuiles de 2,00~m partout, la fenêtre redessinait la surface du maillage
@@ -281,7 +281,7 @@ disparu avec le peigne ; le reste est surveillé.
 
 \textbf{Un décalage de 80~cm du relief sur les versants.} Les bornes
 géographiques de la fabrique étaient en simple précision (voir la section des
-formules). Passées en double (\code{CalageCarte}), ce qui a aussi corrigé le
+formules). Leur passage en double (\code{CalageCarte}) a aussi corrigé le
 même décalage sur les tuiles d'orthophoto.
 
 \textbf{Des points laser qui ne mesuraient pas le sol.} Certains retours

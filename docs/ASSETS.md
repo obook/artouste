@@ -3,7 +3,7 @@
 ## Modèle 3D et sons
 
 Le modèle 3D de l'Alouette II et les sons proviennent du paquet **FlightGear**
-de Emmanuel Baranger (helijah), sous licence GPL. Le sous-ensemble utilisé par
+d'Emmanuel Baranger (helijah), sous licence GPL. Le sous-ensemble utilisé par
 le simulateur (modèles `.ac`, textures, quatre boucles sonores rotor et turbine en
 intérieur et extérieur, plus le son de démarrage) est inclus dans ce dépôt avec le
 fichier `COPYING` d'origine. Source :

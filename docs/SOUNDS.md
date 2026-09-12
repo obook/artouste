@@ -1,4 +1,4 @@
-# SOUNDS.md - Mixage audio par vue
+# Mixage audio par vue
 
 Le son du simulateur repose sur deux boucles : la **turbine** (`running-outside.wav`)
 et le **rotor** (`rotor-outside.wav`). Leur volume et leur hauteur sont modulés en

@@ -1,4 +1,4 @@
-# Credits
+# Crédits
 
 Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
 

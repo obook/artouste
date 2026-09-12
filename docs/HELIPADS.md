@@ -1,12 +1,10 @@
-# HELIPADS.md - Ajouter des hélipads à une carte
+# Ajouter des hélipads à une carte
 
 Les hélipads sont affichés dans le HUD comme points de navigation : une étiquette
 projetée sur la scène 3D et un point sur la minimap.
 
 La seule source de vérité dans le dépôt est le champ `helipads` de chaque zone,
 dans `tools/terrain/zones/<zone>.py`, sous la forme `("Nom", lon, lat)`.
-
----
 
 ## Le chemin dans le jeu
 
@@ -19,8 +17,6 @@ dans `tools/terrain/zones/<zone>.py`, sous la forme `("Nom", lon, lat)`.
 Le fichier livré accepte aussi un cap facultatif, `lon lat cap nom`, qui oriente
 le H au sol. Le générateur ne l'écrit pas : un cap saisi à la main dans
 `helipads.txt` est perdu si la zone est régénérée.
-
----
 
 ## Les deux listes officielles
 
@@ -51,8 +47,6 @@ curl -sL "https://static.data.gouv.fr/resources/helistations-hospitalieres/\
 Cette liste porte au moins une erreur de coordonnées connue (Lariboisière est
 placé à La Défense) : la recouper avec la BD TOPO avant d'en tirer un point.
 
----
-
 ## Le filet OpenStreetMap
 
 OSM couvre ce que les deux listes ignorent : aires privées, DZ de refuge,
@@ -71,8 +65,6 @@ out center;
 
 Overpass attend la latitude d'abord, l'inverse des bbox de `zones/`.
 
----
-
 ## Nettoyage
 
 - Dédoublonner : un même site est souvent saisi plusieurs fois dans OSM.
@@ -81,8 +73,6 @@ Overpass attend la latitude d'abord, l'inverse des bbox de `zones/`.
   distinctes. Trancher sur l'orthophoto (Dax, Pau).
 - Écarter les points hors relief et hors du pays quand l'emprise déborde.
 - Vérifier chaque point sur l'orthophoto de la carte avant de le garder.
-
----
 
 ## Licences
 

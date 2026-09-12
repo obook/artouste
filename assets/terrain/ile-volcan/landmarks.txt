@@ -1,0 +1,6 @@
+# Lieux remarquables - île volcanique fictive (un par ligne : lon lat nom)
+-25.413183 37.752714 Cratère du Piton
+-25.448403 37.730098 Cône parasite
+-25.390461 37.723765 Lagon sud-est
+-25.459114 37.763318 Plage ouest
+-25.420000 37.791614 Pointe nord

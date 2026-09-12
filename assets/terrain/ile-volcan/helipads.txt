@@ -1,0 +1,4 @@
+# Hélipads - île volcanique fictive (un par ligne : lon lat nom)
+-25.459114 37.763318 Plage ouest (départ)
+-25.428329 37.754404 Épaule du Piton
+-25.398344 37.722569 Lagon sud-est

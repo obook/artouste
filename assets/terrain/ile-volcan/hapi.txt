@@ -1,0 +1,2 @@
+# Balises HAPI - île volcanique fictive (un par ligne : lon lat azimut_deg pente_pct nom)
+-25.459114 37.763318 75 6 Plage ouest (départ)

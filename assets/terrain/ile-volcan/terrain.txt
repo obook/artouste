@@ -1,0 +1,21 @@
+# Terrain Artouste - île volcanique FICTIVE (carte d'essai, aucune donnée réelle)
+# Relief et orthophoto engendrés par tools/terrain/ile_fictive.py ; l'emprise
+# est posée au large des Açores pour donner une échelle, rien de plus.
+cols 1024
+rows 1024
+width_m 12000.0
+height_m 12000.0
+elev_min 0.00
+elev_max 1180.38
+lon_min -25.488167
+lon_max -25.351833
+lat_min 37.695721
+lat_max 37.804279
+ortho_width 2048
+ortho_height 2048
+sea 1
+start_x -3442.8
+start_z -1472.1
+start_heading 75
+origin_x 0.00
+origin_z 0.00

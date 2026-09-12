@@ -30,9 +30,9 @@ constexpr const char* WMS_COUCHE_MNT =
    bits=32" une fois encodé pour l'URL. */
 constexpr const char* WMS_FORMAT_BIL = "image%2Fx-bil%3Bbits%3D32";
 
-/* Le relief d'ensemble de la carte, tel que le jeu le charge : heightmap.png en
-   16 bits, étalé de 0 à elev_max. Il bouche les trous du LiDAR, pour que la
-   fenêtre fine ne creuse jamais un puits là où le service n'a pas de donnée. */
+/* Le relief d'ensemble de la carte, tel que le jeu le charge (heightmap.bin ou
+   heightmap.png). Il bouche les trous du LiDAR, pour que la fenêtre fine ne
+   creuse jamais un puits là où le service n'a pas de donnée. */
 class ReliefCarte {
 public:
     [[nodiscard]] bool charger(const std::filesystem::path& dossierCarte,
@@ -44,10 +44,10 @@ public:
     [[nodiscard]] float altitude(double lon, double lat) const noexcept;
 
 private:
-    std::vector<unsigned short> m_niveaux;
-    int                         m_colonnes = 0;
-    int                         m_rangees  = 0;
-    CalageCarte                 m_carte;
+    std::vector<float> m_altitudes; /* en mètres */
+    int                m_colonnes = 0;
+    int                m_rangees  = 0;
+    CalageCarte        m_carte;
 };
 
 /* Écrit l'index à la racine du jeu, dans les mêmes termes que celui des tuiles

@@ -11,8 +11,7 @@
 #include "app/cartes/fabrique/FabriqueReliefInterne.hpp"
 
 #include "render/relief/FenetreReliefInterne.hpp"
-
-#include <stb_image.h>
+#include "render/terrain/ChargerHeightmap.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -149,22 +148,16 @@ std::filesystem::path cheminMarqueBloc(const std::filesystem::path& sortie, int 
 }
 
 bool ReliefCarte::charger(const std::filesystem::path& dossierCarte, const CalageCarte& carte) {
-    /* Rangée 0 au nord, comme l'a écrite l'outil de préparation. */
-    stbi_set_flip_vertically_on_load(0);
-    int             canaux = 0;
-    unsigned short* pixels = stbi_load_16((dossierCarte / "heightmap.png").string().c_str(),
-                                          &m_colonnes, &m_rangees, &canaux, 1);
-    if (pixels == nullptr || m_colonnes < 2 || m_rangees < 2) {
-        if (pixels != nullptr) {
-            stbi_image_free(pixels);
-        }
+    /* Le maillage vient de terrain.txt, et non des dimensions de l'image. */
+    m_colonnes = carte.mailleColonnes;
+    m_rangees  = carte.mailleRangees;
+    if (m_colonnes < 2 || m_rangees < 2 || carte.elevMax <= 0.0f) {
         return false;
     }
-    m_niveaux.assign(pixels, pixels + static_cast<std::size_t>(m_colonnes) *
-                                          static_cast<std::size_t>(m_rangees));
-    stbi_image_free(pixels);
+    m_altitudes = render::chargerHeightmap(dossierCarte, m_colonnes, m_rangees, 0.0f,
+                                           carte.elevMax);
     m_carte = carte;
-    return m_carte.elevMax > 0.0f;
+    return !m_altitudes.empty();
 }
 
 float ReliefCarte::altitude(double lon, double lat) const noexcept {
@@ -180,9 +173,7 @@ float ReliefCarte::altitude(double lon, double lat) const noexcept {
         static_cast<std::size_t>(std::clamp(i, 0.0, static_cast<double>(m_colonnes - 1)));
     const std::size_t rangee =
         static_cast<std::size_t>(std::clamp(j, 0.0, static_cast<double>(m_rangees - 1)));
-    const std::size_t k = rangee * static_cast<std::size_t>(m_colonnes) + col;
-    return static_cast<float>(static_cast<double>(m_niveaux[k]) / 65535.0 *
-                              static_cast<double>(m_carte.elevMax));
+    return m_altitudes[rangee * static_cast<std::size_t>(m_colonnes) + col];
 }
 
 } /* namespace artouste::app::cartes */

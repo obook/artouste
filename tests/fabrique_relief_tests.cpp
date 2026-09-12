@@ -191,3 +191,51 @@ TEST_CASE("Une tuile entièrement hors couverture n'est pas écrite") {
     CHECK(octets == 0);
     CHECK_FALSE(std::filesystem::exists(dossier.chemin() / "0" / "0.r16"));
 }
+
+TEST_CASE("Le relief d'ensemble se relit depuis heightmap.bin", "[fabrique][relief]") {
+    DossierTemporaire dossier("artouste_relief_bin");
+    /* Trois colonnes sur deux rangées : assez pour voir l'orientation. */
+    ecrireCarte(dossier.chemin(), 1000.0f, 800.0f, 3, 2);
+
+    /* Rangée 0 au nord, donc la première moitié du fichier est côté latMax. */
+    const std::vector<float> ecrites = {100.5f, 200.0f, 300.25f, -12.5f, 0.0f, 2868.62f};
+    std::ofstream            out(dossier.chemin() / "heightmap.bin", std::ios::binary);
+    out.write(reinterpret_cast<const char*>(ecrites.data()),
+              static_cast<std::streamsize>(ecrites.size() * sizeof(float)));
+    out.close();
+
+    const CalageCarte carte = lireCalage(dossier.chemin());
+    REQUIRE(carte.valide);
+    ReliefCarte relief;
+    REQUIRE(relief.charger(dossier.chemin(), carte));
+
+    /* Les quatre coins, sans quantification : les valeurs doivent être exactes. */
+    CHECK(relief.altitude(carte.lonMin, carte.latMax) == 100.5f);
+    CHECK(relief.altitude(carte.lonMax, carte.latMax) == 300.25f);
+    CHECK(relief.altitude(carte.lonMin, carte.latMin) == -12.5f);
+    CHECK(relief.altitude(carte.lonMax, carte.latMin) == 2868.62f);
+}
+
+TEST_CASE("Un heightmap.bin de mauvaise taille est refusé", "[fabrique][relief]") {
+    DossierTemporaire dossier("artouste_relief_bin_court");
+    ecrireCarte(dossier.chemin(), 1000.0f, 800.0f, 3, 2);
+
+    std::ofstream out(dossier.chemin() / "heightmap.bin", std::ios::binary);
+    out.write("tronque", 7);
+    out.close();
+
+    const CalageCarte carte = lireCalage(dossier.chemin());
+    REQUIRE(carte.valide);
+    ReliefCarte relief;
+    CHECK_FALSE(relief.charger(dossier.chemin(), carte));
+}
+
+TEST_CASE("Une carte sans relief ne charge pas", "[fabrique][relief]") {
+    DossierTemporaire dossier("artouste_relief_absent");
+    ecrireCarte(dossier.chemin(), 1000.0f, 800.0f, 3, 2);
+
+    const CalageCarte carte = lireCalage(dossier.chemin());
+    REQUIRE(carte.valide);
+    ReliefCarte relief;
+    CHECK_FALSE(relief.charger(dossier.chemin(), carte));
+}

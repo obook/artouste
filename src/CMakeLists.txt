@@ -127,6 +127,7 @@ add_executable(artouste
     render/Primitives.cpp
     render/Camera.cpp
     render/Terrain.cpp
+    render/terrain/ChargerHeightmap.cpp
     render/terrain/TerrainDetail.cpp
     render/terrain/TerrainMaillage.cpp
     render/terrain/TerrainMetadata.cpp

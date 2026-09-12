@@ -78,6 +78,7 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Dds.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Bc7.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/terrain/ChargerHeightmap.cpp
     ${CMAKE_SOURCE_DIR}/src/render/tuiles/Pyramide.cpp
 )
 

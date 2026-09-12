@@ -28,6 +28,9 @@ ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
 ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
 zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
+Le relief peut aussi venir d'un `heightmap.bin`, qui passe devant le `.png`
+s'il est là : des flottants bruts, en mètres, `cols` x `rows` d'après
+`terrain.txt`, rangée 0 au nord.
 
 ## Modifier la configuration
 

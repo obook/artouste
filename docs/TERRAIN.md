@@ -16,6 +16,8 @@ Données : IGN Géoplateforme, gratuit (Licence Ouverte Etalab 2.0), France uniq
 
 Pipeline : script Python hors-ligne -> `assets/terrain/<zone>/{heightmap.png
 (16 bits), ortho.jpg, terrain.txt, landmarks.txt, helipads.txt (facultatif)}`.
+Le relief se lit aussi depuis un `heightmap.bin` (flottants bruts en mètres,
+rangée 0 au nord), prioritaire sur le `.png` quand les deux sont là.
 Chaque terrain a son propre
 sous-dossier (par exemple `ossau/` ou `cote-landes/`) ; celui chargé au lancement
 est choisi par la clé `terrain` de `assets/config.txt` (ou la variable

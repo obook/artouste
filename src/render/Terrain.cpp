@@ -12,6 +12,7 @@
 
 #include "render/Terrain.hpp"
 
+#include "render/terrain/ChargerHeightmap.hpp"
 #include "render/terrain/TerrainInterne.hpp"
 
 #include "render/TextureCache.hpp"
@@ -19,7 +20,6 @@
 #include "render/Primitives.hpp"
 
 #include <glad/glad.h>
-#include <stb_image.h>
 
 #include <algorithm>
 #include <cmath>
@@ -40,7 +40,6 @@ Terrain::Terrain(const std::filesystem::path& dir,
                  bool                         fenetreRelief)
     : m_progression(std::move(progression)) {
     const std::filesystem::path meta = dir / "terrain.txt";
-    const std::filesystem::path height = dir / "heightmap.png";
     const std::filesystem::path ortho = dir / "ortho.jpg";
 
     /* Lieux remarquables, hélipads et balises HAPI du terrain (facultatifs : absent
@@ -76,29 +75,11 @@ Terrain::Terrain(const std::filesystem::path& dir,
         return;
     }
 
-    /* Lecture de la carte d'altitude en 16 bits, sans retournement vertical :
-       on garde la rangée 0 au nord, comme l'a écrite l'outil de préparation. */
-    stbi_set_flip_vertically_on_load(0);
-    int w = 0, h = 0, channels = 0;
-    unsigned short* pixels = stbi_load_16(height.string().c_str(), &w, &h, &channels, 1);
-    if (pixels == nullptr || w != m_cols || h != m_rows) {
-        std::fprintf(stderr,
-                     "[Terrain] heightmap illisible ou de taille inattendue (%s).\n",
-                     height.string().c_str());
-        if (pixels != nullptr) {
-            stbi_image_free(pixels);
-        }
+    m_heights = chargerHeightmap(dir, m_cols, m_rows, m_elevMin, m_elevMax);
+    if (m_heights.empty()) {
         buildFlatFallback();
         return;
     }
-
-    /* Reconstitution des altitudes en mètres à partir des niveaux de gris. */
-    const float span = m_elevMax - m_elevMin;
-    m_heights.resize(static_cast<std::size_t>(m_cols) * static_cast<std::size_t>(m_rows));
-    for (std::size_t k = 0; k < m_heights.size(); ++k) {
-        m_heights[k] = m_elevMin + (static_cast<float>(pixels[k]) / 65535.0f) * span;
-    }
-    stbi_image_free(pixels);
 
     /* Point de départ : on aplanit le relief sous le spawn, pour que le sol et
        l'appareil posé s'accordent à une même hauteur (sinon, sur une maille en

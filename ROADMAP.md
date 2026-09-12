@@ -227,10 +227,10 @@ que le jeu sache la produire.
   l'API JSON point par point. Même chemin libcurl que les tuiles, et pas même un
   décodeur d'image à brancher.
 
-- [ ] **`heightmap.bin` lu par le moteur, prérequis.** Le moteur lit aujourd'hui
-  `heightmap.png` en 16 bits (`stbi_load_16`), or stb_image_write ne produit que
-  du 8 bits : un outil C++ ne peut pas écrire ce fichier. Lire un simple tableau
-  d'altitudes lève l'obstacle, deux heures de travail.
+- [x] **`heightmap.bin` lu par le moteur, prérequis.** Fait : le relief
+  d'ensemble se lit en flottants bruts (cols x rows, mètres, rangée 0 au nord),
+  que n'importe quel `ofstream` sait écrire. Le `heightmap.png` des cartes
+  existantes reste lu, le `.bin` passant devant s'il est là.
 
 - [ ] **Orthophoto d'ensemble.** Même service WMS que les tuiles, à finesse
   grossière, assemblée par blocs : `demanderBloc` existe déjà, il ne manque que

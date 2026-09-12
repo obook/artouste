@@ -34,7 +34,7 @@ Liste des instruments par priorité : voir Priorité 1 du fichier PANEL.md
 
 - [ ] Dérive en lacet à droite en approche finale (réduction du collectif) :
   diagnostic et plan de correction détaillés dans APPROACH_YAW.md (fiche
-  hors dépôt, avec CLAUDE.md). Cause : `REACTIVE_TORQUE * (collective -
+  hors dépôt, dans le coffre de notes). Cause : `REACTIVE_TORQUE * (collective -
   COLL_HOVER)` (`FlightModel.cpp`) devient négatif sous le collectif de vol
   stationnaire, ce qui pousse le nez à droite -- physiquement correct sur
   l'Alouette II, mais peut-être trop marqué pour un pilote sans expérience.
@@ -130,7 +130,7 @@ Aller au-delà de la simple clairance : un échange en plusieurs temps, conforme
 
 **Points à trancher avant de commencer**
 
-- **Nom du terrain.** Des fichiers son figés diraient toujours le même terrain, alors que le nom vient de `helipads.txt` et change sur les neuf cartes. Piste retenue : garder la synthèse à l'exécution pour les phrases qui nomment la tour, et ne figer en WAV que les phrases neutres (readback, changement de fréquence, ambiance).
+- **Nom du terrain.** Des fichiers son figés diraient toujours le même terrain, alors que le nom vient de `helipads.txt` et change sur les onze cartes. Piste retenue : garder la synthèse à l'exécution pour les phrases qui nomment la tour, et ne figer en WAV que les phrases neutres (readback, changement de fréquence, ambiance).
 - **Indicatif.** Le message actuel dit `Fox-Bravo`. Une immatriculation Gendarmerie (F-MJGN, indicatif `Gendarmerie Hotel November`) serait plus juste pour une Alouette II, mais il faudra la reprendre partout d'un coup.
 - **Verrou de rotor.** Le rotor reste bloqué jusqu'à la fin de l'annonce (`setRotorHold`). Avec trois échanges avant le décollage, l'attente au pad passerait à une dizaine de secondes : libérer plutôt dès la fin de la clairance, et laisser le readback se jouer pendant la montée en régime.
 - **Filtre radio.** `radioize()` applique déjà passe-bande, saturation, squelch et roger beep. Des WAV filtrés en amont devraient donc emprunter un autre chemin de lecture, comme les sons de combat, sous peine d'être filtrés deux fois.
@@ -534,7 +534,7 @@ qui peuvent se mener séparément.
        l'abandonne, soit on élargit la carte au prix de la résolution. La
        Défense et l'héliport d'Issy-les-Moulineaux (LFPI) sont dans le cadre.
     8. Poids de l'archive. Environ 24,5 Mo de plus dans une release qui embarque
-       déjà neuf cartes.
+       déjà onze cartes.
     9. Hôtel des Invalides posé mais IMPARFAIT, à reprendre. Le modèle place
        mal ses éléments les uns par rapport aux autres : aucune pose ne satisfait
        à la fois le corps du complexe et l'église du Dôme, décalés d'une

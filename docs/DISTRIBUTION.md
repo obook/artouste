@@ -21,7 +21,7 @@ Ordres de grandeur mesurés sur Ossau, 319 km² :
 | Niveau de tuiles large | 0,75 m/px | 713 Mo |
 | Niveau de tuiles serré, abords des posers | 0,20 m/px | ~1,1 Go |
 
-Multiplié par dix cartes, cela fait une quinzaine de gigaoctets. Personne ne
+Multiplié par onze cartes, cela fait une quinzaine de gigaoctets. Personne ne
 télécharge quinze gigaoctets pour un simulateur de 45 Mo, GitHub plafonne un
 fichier de release à 2 Go, et l'immense majorité des joueurs ne survolera que
 deux ou trois cartes.
@@ -107,7 +107,7 @@ point traité plus bas.
 
 ## Le paquet initial
 
-Objectif : être jouable et beau sans rien télécharger de plus, sur les neuf
+Objectif : être jouable et beau sans rien télécharger de plus, sur les onze
 cartes. Côté joueur, le matériel demandé se résume à **un PC et une manette de
 jeu** : le clavier suffit à survoler le simulateur, pas à le piloter, ses touches
 ne rendant qu'un tout ou rien là où un stick donne une valeur continue.
@@ -270,10 +270,10 @@ Deux points techniques à trancher à l'écriture :
 
 | Fichier | Poids | Rôle |
 |---------|-------|------|
-| `artouste-Linux-x86_64.tar.gz` | ~140 Mo | jeu, les neuf cartes, outil de cartes |
+| `artouste-Linux-x86_64.tar.gz` | ~140 Mo | jeu, les onze cartes, outil de cartes |
 | `artouste-Windows-AMD64.zip` | ~140 Mo | idem |
 
-**Un seul fichier à télécharger, décision du 28/07/2026.** Les neuf cartes
+**Un seul fichier à télécharger, décision du 28/07/2026.** Les onze cartes
 voyagent dans l'archive, en basse résolution. La proposition d'origine, trois
 cartes livrées et six en zips séparés, économisait 90 Mo au prix d'une manoeuvre
 par carte : dézipper au bon endroit, se tromper de dossier, recommencer. Un seul

@@ -227,7 +227,7 @@ cd build && cpack
 
 Produit une archive `artouste-<version>-<système>` (`.tar.gz` sous Linux,
 `.zip` sous Windows) contenant le binaire autonome, les ressources (shaders,
-modèle 3D, sons, textures) et **les neuf cartes**, prête à distribuer. Comptez
+modèle 3D, sons, textures) et **les onze cartes**, prête à distribuer. Comptez
 environ 140 Mo.
 
 Une carte se conditionne aussi à part, pour la passer à quelqu'un sans lui
@@ -341,8 +341,8 @@ modification. Détails et commandes de régénération : [docs/ASSETS.md](docs/A
 
 ## Cartes (terrains)
 
-**Les dix cartes sont livrées avec le jeu**, dans l'archive : Ossau, côte
-landaise, Happy DeathHour (l'arène du mode zombie), Dax, Bordeaux, Paris,
+**Les onze cartes sont livrées avec le jeu**, dans l'archive : Ossau, côte
+landaise, Happy DeathHour (l'arène du mode zombie), Dax, Pau, Bordeaux, Paris,
 Toulouse, bassin d'Arcachon, Cauterets-Gavarnie et Pic du Midi de Bigorre.
 À choisir dans `assets/config.txt` (clé `terrain`), au menu de démarrage, ou via la variable
 d'environnement `ARTOUSTE_TERRAIN`.

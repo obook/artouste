@@ -12,7 +12,8 @@ Dax et aérodrome de Seyresse : cathédrale, Pont Vieux, arènes, musée de l'AL
 Saint-Paul-lès-Dax, les Thermes, Seyresse et le Golf de Saint-Paul-lès-Dax --
 recadrée sur la ville pour un sol net, voir ci-dessous),
 `assets/terrain/bigorre/` (Pic du Midi de Bigorre : l'observatoire, le col du
-Tourmalet, la station de La Mongie), `assets/terrain/paris/` (Paris intra-muros :
+Tourmalet, la station de La Mongie), `assets/terrain/pau/` (Pau : l'aéroport
+de Pau-Pyrénées, la base ALAT d'Uzein et le Gave de Pau), `assets/terrain/paris/` (Paris intra-muros :
 la tour Eiffel, Notre-Dame, Montmartre, le Bois de Boulogne et le Bois de
 Vincennes), `assets/terrain/toulouse/` (Toulouse et l'aérodrome de Lasbordes :
 le Capitole, Saint-Sernin, les Jacobins, la Garonne, la Cité de l'espace et
@@ -141,7 +142,8 @@ terrain cote-landes
 
 Enregistre, puis relance le simulateur : la nouvelle map est chargée. La valeur
 doit être le nom exact d'un sous-dossier de `assets/terrain/` (ici `ossau`,
-`cote-landes`, `arcachon`, `cauterets`, `bordeaux`, `dax`, `bigorre` ou `paris`).
+`cote-landes`, `arcachon`, `cauterets`, `bordeaux`, `dax`, `dax-arene`, `pau`,
+`bigorre`, `paris` ou `toulouse`).
 
 Sans modifier le fichier, la variable d'environnement `ARTOUSTE_TERRAIN` a la
 priorité, pratique pour essayer une map ponctuellement :
@@ -393,7 +395,7 @@ réanalyse le dossier brut à chaque lecture, là où ext4 tient un index.
 La fabrication écrit donc un `resume.txt` dans le dossier de sortie quand elle
 aboutit : nombre d'octets, nombre de fichiers. Le gestionnaire le lit au lieu de
 peser. L'ouverture de l'écran passe de 14,5 s à 0,8 s sur le jeu complet des
-dix cartes, à chiffres identiques.
+onze cartes, à chiffres identiques.
 
 Le fichier est effacé au démarrage d'une fabrication et réécrit à la fin : sa
 présence vaut "ce jeu est complet et rien n'y a bougé depuis". Absent, on

@@ -89,16 +89,153 @@ bool surLeContour(vec2 ecart, vec2 demis, float demi) {
    est bien arrivée : sans lui on afficherait des blocs vides, ou la tuile d'un
    autre bout de la carte. Une période nulle éteint le niveau, ce qui est le cas
    normal d'une carte sans tuiles : repli sans danger. */
-float poserTuiles(sampler2D tuiles, sampler2D masque, vec2 monde, vec2 ancre,
-                  float tailleM, float plein, float fondu, float dist,
+float poserTuiles(sampler2D tuiles, sampler2D masque, vec2 monde, vec2 dmx, vec2 dmy,
+                  vec2 ancre, float tailleM, float plein, float fondu, float dist,
                   inout vec3 couleur) {
     if (tailleM <= 0.0) {
         return 0.0;
     }
     vec2  uv   = (monde - ancre) / tailleM;
-    float part = texture(masque, uv).r * (1.0 - smoothstep(plein, fondu, dist));
-    couleur    = mix(couleur, texture(tuiles, uv).rgb, part);
+    vec2  dx   = dmx / tailleM;
+    vec2  dy   = dmy / tailleM;
+    float part = textureGrad(masque, uv, dx, dy).r * (1.0 - smoothstep(plein, fondu, dist));
+    couleur    = mix(couleur, textureGrad(tuiles, uv, dx, dy).rgb, part);
     return part;
+}
+
+/* Couleur de la photo en un point du sol : orthophoto d'ensemble, puis les deux
+   niveaux de tuiles par-dessus, du plus large au plus serré. Les dérivées écran
+   (de l'UV de la carte et du point monde) sont passées au lieu d'être laissées
+   au GPU : effacerTabliers lit la photo ailleurs que sous le fragment, dans une
+   branche que tous les fragments ne prennent pas, où le GPU ne sait pas les
+   calculer. Ce sont celles du fragment, la lecture n'étant que décalée. */
+vec3 photo(vec2 uv, vec2 monde, vec2 duvx, vec2 duvy, vec2 dmx, vec2 dmy, float dist,
+           out float fine, out float serre) {
+    vec3 couleur = textureGrad(u_texture, uv, duvx, duvy).rgb;
+    fine  = poserTuiles(u_fine, u_fineMasque, monde, dmx, dmy, u_fineAncre,
+                        u_fineTailleM, u_finePlein, u_fineFondu, dist, couleur);
+    serre = poserTuiles(u_serre, u_serreMasque, monde, dmx, dmy, u_serreAncre,
+                        u_serreTailleM, u_serrePlein, u_serreFondu, dist, couleur);
+    return couleur;
+}
+
+/* Ouvrages d'art proches de l'appareil (Buildings::tabliersProches). Le relief
+   est le sol nu : sous un tablier, la photo montre encore le pont, peint au
+   fond du lit. Vu de biais ou en passant dessous, on le voyait deux fois.
+
+   On y remplace la photo par celle prise de part et d'autre du tablier, au
+   même endroit le long de l'axe, fondue d'un bord à l'autre : le fleuve ou la
+   route du dessous se prolonge. La passe des chaussées met u_nbTabliers à 0,
+   le tablier garde donc la photo du pont. */
+const int   TABLIERS_MAX    = 64;   /* MÊME valeur que TABLIERS_EFFACES_MAX (BuildingsGeometrie.hpp) */
+/* La photo se lit à ce recul du bord effacé. À 1 m, on tombait sur les
+   avant-becs des piles du Pont Neuf de Toulouse, qui débordent de 6 à 8 m, et
+   sur l'ombre du pont : la bande effacée en sortait striée. */
+const float TABLIER_RECUL_M = 6.0;
+const float TABLIER_ETALEMENT_M = 3.0;  /* écart des lectures le long de l'axe */
+const float TABLIER_PAS_M   = 2.0;  /* pas pour sortir d'un tablier voisin */
+const int   TABLIER_PAS_MAX = 8;
+uniform int   u_nbTabliers;
+uniform vec4  u_tablier[TABLIERS_MAX];      /* axe : a.x, a.z, b.x, b.z (monde) */
+/* Demi-largeurs effacées (m), à gauche (x) et à droite (y) de a vers b. */
+uniform vec2  u_tablierDemi[TABLIERS_MAX];
+
+/* Enfoncement du point p sous le tablier k, en mètres : distance au bord le plus
+   proche, négative au-dehors. s reçoit l'écart signé à l'axe, positif à droite
+   (la perpendiculaire (-ab.y, ab.x) pointe à droite dans ce repère, Z au sud). */
+float enfoncement(int k, vec2 p, out float s) {
+    vec2  a  = u_tablier[k].xy;
+    vec2  ab = u_tablier[k].zw - a;
+    float l2 = max(dot(ab, ab), 1e-6);
+    float t  = dot(p - a, ab) / l2;
+    s        = dot(p - a, vec2(-ab.y, ab.x)) * inversesqrt(l2);
+    if (t < 0.0 || t > 1.0) {
+        return -1.0;
+    }
+    return min(u_tablierDemi[k].y - s, u_tablierDemi[k].x + s);
+}
+
+/* Vrai si le point est sous l'un des tabliers reçus. */
+bool sousUnTablier(vec2 p) {
+    float s;
+    for (int k = 0; k < u_nbTabliers; ++k) {
+        if (enfoncement(k, p, s) > 0.0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Distance à l'axe, depuis q et dans la direction dir, du premier point hors de
+   tout tablier. Un pont est souvent rendu en tronçons parallèles, chaussée et
+   trottoir : lu juste au bord de l'un, on retombait sur l'autre, et c'était
+   encore le pont qu'on recopiait sur l'eau. */
+float horsDesTabliers(vec2 q, vec2 dir, float depart) {
+    float d = depart;
+    for (int essai = 0; essai < TABLIER_PAS_MAX && sousUnTablier(q + dir * d); ++essai) {
+        d += TABLIER_PAS_M;
+    }
+    return d;
+}
+
+void effacerTabliers(vec2 uv, vec2 monde, vec2 duvx, vec2 duvy, vec2 dmx, vec2 dmy,
+                     float dist, inout vec3 couleur, inout float fine, inout float serre) {
+    /* Le tablier sous lequel le fragment est le plus enfoncé. Prendre le premier
+       venu ne suffit pas : sous un pont en deux tronçons, le bord de l'un tombe
+       au milieu de l'autre, et le fondu du bord y laissait revoir la photo du
+       pont, marquage central compris. */
+    int   k       = -1;
+    float enfonce = 0.0;
+    float s       = 0.0;
+    for (int i = 0; i < u_nbTabliers; ++i) {
+        float si;
+        float e = enfoncement(i, monde, si);
+        if (e > enfonce) {
+            enfonce = e;
+            k       = i;
+            s       = si;
+        }
+    }
+    if (k < 0) {
+        return;
+    }
+
+    vec2 a = u_tablier[k].xy;
+    vec2 u = normalize(u_tablier[k].zw - a);   /* le long de l'axe */
+    vec2 n = vec2(-u.y, u.x);                  /* en travers, vers la droite */
+
+    /* Pied du fragment sur l'axe, les deux points lus de part et d'autre (A à
+       droite, B à gauche), puis le trajet du fragment à chacun. */
+    vec2  q     = monde - n * s;
+    float dA    = horsDesTabliers(q, n, u_tablierDemi[k].y + TABLIER_RECUL_M);
+    float dB    = horsDesTabliers(q, -n, u_tablierDemi[k].x + TABLIER_RECUL_M);
+    vec2  versA = n * (dA - s);
+    vec2  versB = -n * (dB + s);
+
+    /* Trois lectures de chaque côté, étalées le long de l'axe et moyennées :
+       une seule recopiait en travers de la bande tout détail qui s'y trouvait
+       (pile, ponton), en longues stries. En UV de carte, V est inversée : la
+       rangée 0 est au nord. */
+    vec3  cA = vec3(0.0), cB = vec3(0.0);
+    float fineA = 0.0, serreA = 0.0, fineB = 0.0, serreB = 0.0;
+    for (int e = -1; e <= 1; ++e) {
+        vec2  vA = versA + u * (TABLIER_ETALEMENT_M * float(e));
+        vec2  vB = versB + u * (TABLIER_ETALEMENT_M * float(e));
+        float f1, s1, f2, s2;
+        cA += photo(uv + vec2(vA.x, -vA.y) / u_carteTailleM, monde + vA,
+                    duvx, duvy, dmx, dmy, dist, f1, s1);
+        cB += photo(uv + vec2(vB.x, -vB.y) / u_carteTailleM, monde + vB,
+                    duvx, duvy, dmx, dmy, dist, f2, s2);
+        fineA += f1; serreA += s1; fineB += f2; serreB += s2;
+    }
+
+    float w = (s + dB) / (dA + dB);   /* 0 au point B, 1 au point A */
+    /* Fondu sur le dernier mètre avant le bord : une coupure franche y traçait
+       un liseré, la photo ne changeant pas d'un coup. */
+    float f = smoothstep(0.0, 1.0, enfonce);
+    couleur = mix(couleur, mix(cB, cA, w) / 3.0, f);
+    fine    = mix(fine, mix(fineB, fineA, w) / 3.0, f);
+    serre   = mix(serre, mix(serreB, serreA, w) / 3.0, f);
 }
 
 void main() {
@@ -130,10 +267,15 @@ void main() {
         return;
     }
 
-    vec3 ortho = texture(u_texture, v_uv).rgb;
-
     float dist  = length(u_camPos - v_worldPos);
     vec2  monde = v_worldPos.xz + u_originXZ;
+
+    /* Dérivées écran pour toutes les lectures de la photo (voir photo), prises
+       ici, avant tout retour anticipé : là, tous les fragments passent. */
+    vec2 duvx = dFdx(v_uv);
+    vec2 duvy = dFdy(v_uv);
+    vec2 dmx  = dFdx(monde);
+    vec2 dmy  = dFdy(monde);
 
     /* Liserets des frontières : le contour du noyau et celui de l'anneau autour
        du centre calé, les deux cercles du fondu autour de l'oeil. Tracés avant
@@ -160,13 +302,11 @@ void main() {
         }
     }
 
-    /* Du plus large au plus serré : chaque niveau recouvre le précédent là où
-       ses tuiles sont présentes et où l'on est assez près pour qu'il apporte
-       quelque chose. */
-    float fine  = poserTuiles(u_fine, u_fineMasque, monde, u_fineAncre,
-                              u_fineTailleM, u_finePlein, u_fineFondu, dist, ortho);
-    float serre = poserTuiles(u_serre, u_serreMasque, monde, u_serreAncre,
-                              u_serreTailleM, u_serrePlein, u_serreFondu, dist, ortho);
+    /* La photo sous ce fragment, tuiles comprises, débarrassée du pont qu'un
+       tablier porte au-dessus. */
+    float fine, serre;
+    vec3  ortho = photo(v_uv, monde, duvx, duvy, dmx, dmy, dist, fine, serre);
+    effacerTabliers(v_uv, monde, duvx, duvy, dmx, dmy, dist, ortho, fine, serre);
 
     /* Finesse effective sous ce fragment : celle du niveau qui s'y applique
        réellement, l'orthophoto d'ensemble à défaut. C'est elle, et non la seule

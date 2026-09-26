@@ -16,6 +16,7 @@
 #pragma once
 
 #include "render/Mesh.hpp"
+#include "render/buildings/BuildingsGeometrie.hpp"
 #include "util/Math.hpp"
 
 #include <cstddef>
@@ -41,6 +42,23 @@ public:
        (dont u_model = recalage d'origine) déjà renseignés. */
     void draw(const mat4& worldViewProj, const vec3& camWorldPos) const;
 
+    /* Chaussée des ouvrages d'art, à dessiner avec le shader du TERRAIN et non
+       avec celui des bâtiments : elle porte l'orthophoto de la carte, drapée par
+       coordonnées monde, donc la photo du pont lui-même et les tuiles de détail
+       du sol qui l'entoure. À appeler dans la passe du terrain, une fois
+       u_reliefActif remis à 0 et le pochoir désactivé. */
+    void drawTabliers() const;
+
+    /* Vrai si au moins un tablier a été extrudé. */
+    [[nodiscard]] bool aTabliers() const noexcept { return !m_tabliers.empty(); }
+
+    /* Segments de tablier à moins de rayon mètres de (x, z), du plus proche au
+       plus loin, TABLIERS_EFFACES_MAX au plus. Le terrain s'en sert pour
+       effacer la photo du pont, peinte au sol sous le tablier. */
+    [[nodiscard]] std::vector<SegmentTablier> tabliersProches(float x, float z, float rayon) const {
+        return segmentsProches(m_segments, x, z, rayon);
+    }
+
     /* Vrai si au moins un bâtiment a été chargé et extrudé. */
     [[nodiscard]] bool built() const noexcept { return m_count > 0; }
 
@@ -58,6 +76,8 @@ private:
     };
 
     Mesh              m_mesh;
+    Mesh              m_tabliers;  /* chaussées, dessinées avec le terrain */
+    std::vector<SegmentTablier> m_segments;  /* axes des tabliers, en plan */
     std::vector<Tile> m_tiles;
     std::size_t       m_count = 0;
 };

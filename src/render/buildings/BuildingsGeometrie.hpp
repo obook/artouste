@@ -1,6 +1,7 @@
 /*
  * BuildingsGeometrie.hpp
- * Extrusion d'une emprise en un volume simple : murs verticaux et toit plat.
+ * Extrusion d'une emprise en un volume simple : murs verticaux et toit plat,
+ * et extrusion d'un axe d'ouvrage d'art en tablier.
  *
  * Auteur : O. Booklage
  * Date : août 2026
@@ -12,6 +13,7 @@
 #include "render/Mesh.hpp"
 #include "util/Math.hpp"
 
+#include <cstddef>
 #include <vector>
 
 namespace artouste::render {
@@ -30,5 +32,73 @@ void extruderBatiment(std::vector<Vertex>&       verts,
                       float                      hauteur,
                       const vec3&                mur,
                       const vec3&                toit);
+
+/* Épaisseur donnée au tablier d'un ouvrage d'art, en mètres. La BD TOPO donne
+   l'altitude de la CHAUSSÉE ; le dessous est posé à cette distance en dessous,
+   faute de mesure du gabarit réel. */
+inline constexpr float EPAISSEUR_TABLIER_M = 1.2f;
+
+/* Drapage de l'orthophoto de la carte : de quoi calculer l'UV d'un point du
+   monde exactement comme le fait le maillage du terrain (TerrainMaillage.cpp).
+   La chaussée d'un tablier s'en sert pour porter la photo du pont lui-même,
+   au lieu d'un gris uni. */
+struct CalageOrtho {
+    float coinX   = 0.0f; /* coin nord-ouest de l'emprise, en monde */
+    float coinZ   = 0.0f;
+    float tailleX = 1.0f; /* emprise au sol */
+    float tailleZ = 1.0f;
+
+    [[nodiscard]] vec2 uv(float x, float z) const {
+        return vec2{(x - coinX) / tailleX, 1.0f - (z - coinZ) / tailleZ};
+    }
+};
+
+/* Un ouvrage d'art : un ruban plat suivant l'axe (px, py, pz) point par point,
+   avec dessus, dessous et deux flancs. Il s'étend de demiGauche à gauche de
+   l'axe et de demiDroite à droite, dans le sens de parcours : l'axe d'une voie
+   n'est pas toujours au milieu de son pont (trottoir d'un seul côté, chaussée
+   voisine qui borne la largeur). Les altitudes py
+   viennent de la BD TOPO et non du relief : c'est tout l'intérêt, le modèle de
+   terrain ne connaît pas les ponts.
+
+   La géométrie sort en DEUX flots, parce qu'ils ne se dessinent pas pareil :
+
+   - beton  : dessous et flancs, à draper de rien du tout, dessinés avec les
+              bâtiments (couleur unie) ;
+   - chaussee : la face du dessus, dessinée avec le TERRAIN, qui lui pose
+              l'orthophoto et les tuiles de détail par coordonnées monde. Le
+              tablier montre alors la photo du pont, à la finesse du sol
+              d'à-côté, au lieu d'un aplat gris.
+
+   Les sommets et les indices sont ajoutés aux tampons donnés. */
+void extruderTablier(std::vector<Vertex>&       vertsBeton,
+                     std::vector<unsigned int>& idxBeton,
+                     std::vector<Vertex>&       vertsChaussee,
+                     std::vector<unsigned int>& idxChaussee,
+                     const std::vector<float>&  px,
+                     const std::vector<float>&  py,
+                     const std::vector<float>&  pz,
+                     float                      demiGauche,
+                     float                      demiDroite,
+                     const vec3&                couleur,
+                     const CalageOrtho&         ortho);
+
+/* Tabliers dont le terrain efface la photo au sol, au plus. MÊME valeur que
+   TABLIERS_MAX dans terrain.frag. */
+inline constexpr std::size_t TABLIERS_EFFACES_MAX = 64;
+
+/* Un segment de l'axe d'un tablier, en plan (x, z monde), et les
+   demi-largeurs de photo à effacer dessous, à gauche et à droite de a vers b. */
+struct SegmentTablier {
+    vec2  a;
+    vec2  b;
+    float gauche;
+    float droite;
+};
+
+/* Segments à moins de rayon mètres de (x, z), bord du tablier compris, du plus
+   proche au plus loin, TABLIERS_EFFACES_MAX au plus. */
+[[nodiscard]] std::vector<SegmentTablier>
+segmentsProches(const std::vector<SegmentTablier>& segments, float x, float z, float rayon);
 
 } /* namespace artouste::render */

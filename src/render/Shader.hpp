@@ -49,6 +49,9 @@ public:
        16 flottants chacune) à un uniforme tableau (par exemple u_bones[] du
        shader de skinning) en un seul appel. */
     void setMat4Array(const std::string& name, const float* values, int count);
+    /* Idem pour un tableau de vec4 ou de vec2 (4 ou 2 flottants chacun). */
+    void setVec4Array(const std::string& name, const float* values, int count);
+    void setVec2Array(const std::string& name, const float* values, int count);
     void setVec2(const std::string& name, const vec2& value);
     void setVec3(const std::string& name, const vec3& value);
     void setVec4(const std::string& name, const vec4& value);

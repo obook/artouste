@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <vector>
 
 namespace artouste::app {
 
@@ -30,6 +31,10 @@ namespace {
    servi à régler la fenêtre. Assez large pour se voir à deux kilomètres, assez
    fine pour ne rien cacher du sol. */
 constexpr float LISERET_M = 10.0f;
+
+/* Portée de l'effacement des ponts peints au sol (voir terrain.frag) : celle
+   du sol net des tuiles fines. Au-delà, le tablier cache le peu qu'on verrait. */
+constexpr float RAYON_TABLIERS_M = 1500.0f;
 
 /* Demi-côtés au sol d'une grille de la fenêtre, par axe. La grille n'est pas
    carrée : ses deux pas diffèrent de quelques pour cent. */
@@ -69,6 +74,30 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_terrainShader->setInt("u_detail", 1);
         m_terrainShader->setVec2("u_originXZ", vec2{m_renderOrigin.x, m_renderOrigin.z});
         m_terrainShader->setFloat("u_orthoMPP", m_terrain->orthoMetersPerPixel());
+        m_terrainShader->setVec2("u_carteCoin",
+                                 vec2{m_terrain->originX() - m_terrain->halfWidth(),
+                                      m_terrain->originZ() - m_terrain->halfHeight()});
+        m_terrainShader->setVec2("u_carteTailleM", vec2{2.0f * m_terrain->halfWidth(),
+                                                        2.0f * m_terrain->halfHeight()});
+
+        /* Ponts peints au sol sous leur tablier, effacés par terrain.frag : les
+           segments proches de la caméra, les plus proches d'abord. */
+        std::vector<render::SegmentTablier> tabliers;
+        if (m_buildings) {
+            const vec3 cam = m_camera.position();
+            tabliers = m_buildings->tabliersProches(cam.x, cam.z, RAYON_TABLIERS_M);
+        }
+        std::vector<float> axes, demis;
+        for (const render::SegmentTablier& t : tabliers) {
+            axes.insert(axes.end(), {t.a.x, t.a.y, t.b.x, t.b.y});
+            demis.insert(demis.end(), {t.gauche, t.droite});
+        }
+        const int nbTabliers = static_cast<int>(tabliers.size());
+        m_terrainShader->setInt("u_nbTabliers", nbTabliers);
+        if (nbTabliers > 0) {
+            m_terrainShader->setVec4Array("u_tablier", axes.data(), nbTabliers);
+            m_terrainShader->setVec2Array("u_tablierDemi", demis.data(), nbTabliers);
+        }
         if (m_terrainDetail) {
             m_terrainDetail->bind(1);
         }
@@ -100,6 +129,22 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         reglerNiveau(m_terrain->detailFin(), "serre", 4, 5);
 
         m_terrain->bindTexture(0);
+
+        /* Chaussée des ouvrages d'art, dessinée avec le TERRAIN et non avec les
+           bâtiments : elle reçoit ainsi l'orthophoto et les tuiles de détail du
+           sol, drapées par coordonnées monde. Le tablier montre donc la photo du
+           pont, à la finesse du sol d'à-côté, au lieu d'un aplat gris qui
+           laissait voir la photo du pont dépasser autour de lui.
+           Tirée APRÈS le maillage d'ensemble et hors du pochoir : dans le
+           pochoir elle disparaîtrait sous l'emprise de la fenêtre de relief,
+           c'est-à-dire juste sous l'appareil. */
+        const auto dessinerTabliers = [this] {
+            if (m_buildings && m_buildings->aTabliers()) {
+                /* Le tablier garde la photo du pont : rien à effacer dessus. */
+                m_terrainShader->setInt("u_nbTabliers", 0);
+                m_buildings->drawTabliers();
+            }
+        };
 
         /* Relief fin autour de l'appareil, dessiné AVANT le maillage d'ensemble
            et marquant son emprise dans le pochoir : le maillage d'ensemble en
@@ -140,11 +185,6 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             m_terrainShader->setVec2("u_reliefPasTexture",
                                      vec2{relief->pasX(), relief->pasZ()});
             m_terrainShader->setFloat("u_reliefDetailM", relief->distanceDetailM());
-            m_terrainShader->setVec2("u_carteCoin",
-                                     vec2{m_terrain->originX() - m_terrain->halfWidth(),
-                                          m_terrain->originZ() - m_terrain->halfHeight()});
-            m_terrainShader->setVec2("u_carteTailleM", vec2{2.0f * m_terrain->halfWidth(),
-                                                            2.0f * m_terrain->halfHeight()});
             /* ARTOUSTE_DEBUG_RELIEF_RACCORD=0 débraye le raccord au maillage. */
             static const int raccord =
                 (std::getenv("ARTOUSTE_DEBUG_RELIEF_RACCORD") != nullptr &&
@@ -198,11 +238,13 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
             glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
             m_terrain->draw();
             glDisable(GL_STENCIL_TEST);
+            dessinerTabliers();
         } else {
             /* Sans fenêtre de relief, il n'y a aucune frontière à tracer. */
             m_terrainShader->setInt("u_reliefActif", 0);
             m_terrainShader->setFloat("u_reliefLiseret", 0.0f);
             m_terrain->draw();
+            dessinerTabliers();
         }
     } else {
         m_shader->use();

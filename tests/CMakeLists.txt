@@ -29,6 +29,7 @@ add_executable(artouste_tests
     zombie_horde_tests.cpp
     wave_manager_tests.cpp
     bille_tests.cpp
+    tablier_pont_tests.cpp
     ground_impact_tests.cpp
     hud_alarms_tests.cpp
     texture_cache_tests.cpp
@@ -76,6 +77,7 @@ add_executable(artouste_tests
     ${CMAKE_SOURCE_DIR}/src/physics/FlightAssist.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Turbine.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/Raycast.cpp
+    ${CMAKE_SOURCE_DIR}/src/render/buildings/BuildingsGeometrie.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Dds.cpp
     ${CMAKE_SOURCE_DIR}/src/render/Bc7.cpp
     ${CMAKE_SOURCE_DIR}/src/render/terrain/ChargerHeightmap.cpp

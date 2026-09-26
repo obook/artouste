@@ -25,7 +25,8 @@ Un sous-dossier contient `terrain.txt` (calage), `heightmap.png` (relief),
 `helipads.txt` (hélipads à poser, par exemple un hôpital ou un port ; un par
 ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
 ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
-`buildings.bin` (bâtiments 3D), `forest.png` (masque de forêt, voir
+`buildings.bin` (bâtiments 3D), `bridges.bin` (ouvrages d'art, voir
+ci-dessous), `forest.png` (masque de forêt, voir
 ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
 zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
@@ -484,6 +485,89 @@ Deux pièges de placement, rencontrés sur ce monument :
   étant plus large côté océan ;
 - la BD TOPO arrête son tracé où finit le cheminement, pas où finit l'ouvrage.
   La tête d'enrochement continue 40 m au large, mesurés sur la BD ORTHO.
+
+## Ouvrages d'art (bridges.bin)
+
+Le relief est un modèle numérique de **terrain** : le sol nu, sans ponts ni
+viaducs. Un pont n'existe donc que dans l'orthophoto plaquée dessus, et son
+tablier suit le creux du lit du fleuve. Mesuré sur le pont d'Empalot à
+Toulouse : 8,5 m de creux entre la berge et le milieu de la Garonne.
+
+La BD TOPO donne aux tronçons de route et de voie ferrée une géométrie en trois
+dimensions, avec l'altitude de la chaussée, et un attribut
+`position_par_rapport_au_sol` qui vaut 1 ou plus quand la voie est portée par un
+ouvrage. `tools/fetch_bridges.py` en tire un ruban par tronçon et écrit
+`assets/terrain/<zone>/bridges.bin` :
+
+```bash
+tools/.venv/bin/python tools/fetch_bridges.py toulouse
+```
+
+L'altitude de la BD TOPO ne s'emploie pas telle quelle. Sur cote-landes, 27
+tronçons portés sur 301 ont des points à -1000 (altitude inconnue, surtout
+au-dessus de l'eau), et un bout sur quatre tombe à plus d'un mètre du sol
+dessiné. Le script recale donc chaque ouvrage sur le sol rendu (relief de la
+carte plus détail LiDAR HD) à ses bouts libres, là où la chaussée rejoint son
+remblai. Il écarte aussi les tronçons de moins d'un mètre de creux : ponceaux et
+passages sur un fossé, que le relief porte déjà. Les axes sont enfin simplifiés
+à 0,5 m près, ce qui divise par deux le nombre de segments (Toulouse : 2275 à
+1010).
+
+| Carte | Tronçons portés | Tabliers |
+|-------|-----------------|----------|
+| paris | 1558 | 1332 |
+| bordeaux | 975 | 768 |
+| toulouse | 574 | 505 |
+| pau | 619 | 487 |
+| arcachon | 564 (21 hors LiDAR) | 392 |
+| cote-landes | 301 | 219 |
+| cauterets | 152 | 145 |
+| bigorre | 102 | 89 |
+| ossau | 65 | 60 |
+| dax | 45 | 36 |
+
+dax-arene n'a aucun pont. Le moteur extrude chaque ruban en tablier (dessus,
+dessous, deux flancs), dans le même maillage que les bâtiments. Une carte sans
+`bridges.bin` garde ses ponts peints au sol.
+
+- **La largeur.** `largeur_de_chaussee` donne le revêtement roulant, pas
+  l'ouvrage : le pont Alexandre-III fait 40 m pour 18 m déclarés. Pour les
+  grands ponts, la BD TOPO dessine l'emprise de l'ouvrage (couche
+  `construction_surfacique`, nature `Pont`, 225 à Paris, 103 à Toulouse). Le
+  script y mesure, en trois points de l'axe, la distance au bord de chaque côté,
+  et en garde la médiane. Ailleurs, il ajoute à la chaussée 2,5 m de débord de
+  chaque côté, plafonnés à 40 % pour ne pas engraisser une passerelle (mesuré
+  sur l'A620 au-dessus de la Garonne : 33 m de bitume en travers, 13,5 m
+  couverts sans le débord, 30 m avec). Un tronçon parallèle voisin, l'autre sens
+  d'une autoroute ou un trottoir tracé à part, borne la largeur à mi-chemin : les
+  tabliers se touchent sans se chevaucher. L'emprise ne compte que si elle
+  s'allonge le long du tronçon : les raccords qui traversent le pont
+  Saint-Jean, à Bordeaux, y mesuraient sa longueur et en sortaient larges de
+  80 m. Les deux demi-largeurs, gauche et droite, vont dans `bridges.bin`
+  (version 2) : l'axe d'une voie n'est pas toujours au milieu de son pont. Pont
+  Neuf de Toulouse : 8,8 m à gauche, 12 m à droite, contre 14 m en tout avec
+  l'ancienne estimation.
+- **Les ponts d'un monument.** Le modèle du Grand Palais comprend le pont
+  Alexandre-III : deux tabliers se superposaient. La zone de la carte déclare
+  ces ponts (`ponts_des_monuments` dans `tools/terrain/zones/paris.py`, un
+  cercle par pont) ; le script les marque "photo seule", le moteur en efface la
+  photo sans poser de tablier. Le rayon des monuments ne suffit pas à le
+  deviner : celui du Louvre couvre le pont du Carrousel, que son modèle ne
+  porte pas, et celui du Grand Palais la moitié du pont des Invalides.
+- **La chaussée** est dessinée avec le shader du terrain : elle porte la photo
+  du pont, marquages et véhicules compris. Le dessous et les flancs restent en
+  béton uni.
+- **La photo en dessous** montrait encore le pont, peint au fond du lit : en
+  passant dessous, on le voyait deux fois. `terrain.frag` l'efface sous les
+  tabliers proches de l'appareil (1,5 km, 64 segments au plus) : il y reprend la
+  photo prise de part et d'autre du tablier, fondue d'un bord à l'autre. Le
+  fleuve ou l'autoroute du dessous se prolonge. La bande effacée déborde le
+  tablier de 2,5 m de chaque côté (parapets, ombre) : à 0,5 m puis 1 m, le bord
+  du pont d'Hossegor restait visible sur l'eau. La photo se lit 6 m plus loin,
+  hors de tout tablier voisin (chaussée et trottoir parallèles), en trois points
+  étalés le long de l'axe : lue au bord, elle recopiait les avant-becs des piles
+  du Pont Neuf de Toulouse en longues stries.
+
 
 ## Masque de forêt (forest.png)
 

@@ -99,4 +99,12 @@ ZONE = {
     "hapi": [
         ("Héliport de Paris (Issy-les-Moulineaux)", 2.274772, 48.833076, 90, 6),
     ],
+    # Ponts que porte déjà un monument 3D (monuments.txt) : fetch_bridges.py
+    # n'en garde que l'effacement de la photo, sans tablier, qui se serait
+    # superposé à celui du modèle. Un cercle par pont : nom, lon, lat, rayon.
+    # Le rayon d'un monument ne dit pas ce que porte son modèle : celui du
+    # Louvre couvre le pont du Carrousel, qui n'y est pas.
+    "ponts_des_monuments": [
+        ("Pont Alexandre-III (modèle du Grand Palais)", 2.31355, 48.86368, 60),
+    ],
 }

@@ -59,7 +59,7 @@ jobs:
 
   build-macos:
     name: Build macOS
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -72,10 +72,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/_deps
-          key: deps-macos-${{ hashFiles('cmake/Dependencies.cmake') }}
+          key: deps-macos-15-${{ hashFiles('cmake/Dependencies.cmake') }}
 
+      # Sans cible explicite, le binaire exige la version du runner (15) :
+      # on garde macOS 14 comme minimum, comme quand le runner était un 14.
       - name: Configurer
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0
 
       # Nombre de tâches explicite : voir le commentaire de macos.yml, un -j nu
       # noie les trois coeurs du runner.

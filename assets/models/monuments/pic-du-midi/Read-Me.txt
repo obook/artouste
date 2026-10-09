@@ -9,7 +9,7 @@ calculés à partir des données publiques de l'IGN par tools/observatoire.py.
   texture  : BD ORTHO à 0,20 m par pixel, même emprise
 
 Données IGN Géoplateforme, Licence Ouverte Etalab 2.0 :
-https://www.etalab.gouv.fr/licence-ouverte-open-licence
+https://www.data.gouv.fr/pages/legal/licences/etalab-2.0
 
 Pour refabriquer le modèle, ou changer son emprise ou sa finesse :
 

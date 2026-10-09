@@ -639,7 +639,7 @@ plus haut).
 
 Les cartes fournies avec le simulateur proviennent de l'[IGN](https://www.ign.fr/)
 (Institut national de l'information géographique et forestière), sous
-[Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+[Licence Ouverte Etalab 2.0](https://www.data.gouv.fr/pages/legal/licences/etalab-2.0).
 Ces données servent à générer les terrains et les bâtiments 3D du simulateur. Le
 relief 3D vient du LiDAR HD, le relevé laser aéroporté de l'IGN.
 

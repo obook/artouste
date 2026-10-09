@@ -118,6 +118,6 @@ puis LOD) donne un meilleur résultat pour moins de complexité.
 ---
 
 Relief 3D (LiDAR HD, relevé laser aéroporté), orthophotos et emprises de
-bâtiments : [IGN](https://www.ign.fr/), sous [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+bâtiments : [IGN](https://www.ign.fr/), sous [Licence Ouverte Etalab 2.0](https://www.data.gouv.fr/pages/legal/licences/etalab-2.0).
 
 <img src="IGN_logo_2012.png" alt="IGN" width="64" />

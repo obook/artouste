@@ -7,7 +7,7 @@ Ressources tierces utilisées dans Artouste, avec leur licence d'origine.
 - **Relief, orthophotos et emprises de bâtiments** : [IGN](https://www.ign.fr/)
   (Institut national de l'information géographique et forestière), jeux RGE ALTI,
   BD ORTHO, BD TOPO et LiDAR HD, sous
-  [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
+  [Licence Ouverte Etalab 2.0](https://www.data.gouv.fr/pages/legal/licences/etalab-2.0).
   Le relief 3D est obtenu grâce au **LiDAR HD**, le relevé laser aéroporté de
   l'IGN. Ces données servent à fabriquer les terrains, les orthophotos et les bâtiments
   3D des cartes livrées (`assets/terrain/`), ainsi que les tuiles fines

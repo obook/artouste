@@ -159,6 +159,29 @@ inline float vsiNeedleAngleDeg(float fpm) {
     return fpm < 0.0f ? -angle : angle;
 }
 
+/* Anémomètre (ASI) : convertit une vitesse air (en noeuds) en angle de l'aiguille (en
+   degrés, sens horaire depuis sa butée de repos à 6 heures). Le cadran n'est pas
+   linéaire : la table a été relevée sur les grandes graduations de asi.png (une tous
+   les 10 kt de 20 à 140, chiffres à moins de 2 degrés de leur graduation), plus serrée
+   sous 20 kt comme sur un vrai anémomètre. Au-delà de 140 kt, l'aiguille reste en butée. */
+inline float asiNeedleAngleDeg(float kt) {
+    static const float kKt[]    = {0.0f, 20.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f,
+                                   90.0f, 100.0f, 110.0f, 120.0f, 130.0f, 140.0f};
+    static const float kAngle[] = {0.0f, 20.0f, 67.0f, 101.0f, 133.0f, 167.0f, 196.0f,
+                                   222.0f, 246.0f, 271.0f, 294.0f, 315.0f, 337.0f};
+    const int count = 13;
+    if (kt <= 0.0f) {
+        return 0.0f;
+    }
+    for (int i = 0; i < count - 1; ++i) {
+        if (kt <= kKt[i + 1]) {
+            const float t = (kt - kKt[i]) / (kKt[i + 1] - kKt[i]);
+            return kAngle[i] + t * (kAngle[i + 1] - kAngle[i]);
+        }
+    }
+    return kAngle[count - 1];
+}
+
 /* Charge une pièce du modèle et affiche un petit compte-rendu (nom du fichier et
    nombre de parties obtenues), pratique pour vérifier le chargement. */
 inline Model loadPart(const std::filesystem::path& path, const std::vector<std::string>& skip,

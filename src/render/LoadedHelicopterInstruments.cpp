@@ -214,15 +214,11 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
         drawModel(shader, m_hiCard, cardMat, Pass::Opaque);
     }
 
-    /* Anémomètre animé : l'aiguille tourne autour de X proportionnellement à la vitesse
-       air. La face est linéaire (mesurée sur asi.png) : ~1.75 deg/kt. Le sens et le
-       calage du zéro (ASI_ZERO_OFFSET_DEG) sont à confirmer en vol, comme les autres. */
+    /* Anémomètre animé : l'aiguille tourne autour de X selon la vitesse air, suivant la
+       table non linéaire relevée sur les graduations du cadran (asiNeedleAngleDeg). */
     if (m_hasAsi) {
-        constexpr float ASI_DEG_PER_KT      = 1.75f;
-        constexpr float ASI_ZERO_OFFSET_DEG = 0.0f;
-        const float     kt      = airspeedKt < 0.0f ? 0.0f : (airspeedKt > 150.0f ? 150.0f : airspeedKt);
         const mat4      asiBase = root * glm::translate(mat4(1.0f), m_asiOffset);
-        const float     angle   = ASI_DEG_PER_KT * kt + ASI_ZERO_OFFSET_DEG;
+        const float     angle   = asiNeedleAngleDeg(airspeedKt);
         const mat4      needleMat =
             asiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
         drawModel(shader, m_asiStatic, asiBase, Pass::Opaque);

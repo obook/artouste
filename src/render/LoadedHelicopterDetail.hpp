@@ -27,7 +27,9 @@
 namespace artouste::render::heli_detail {
 
 /* Correction de repère FlightGear vers notre moteur. */
-inline constexpr float Y_OFFSET = 1.951f;  /* remonte les patins au niveau du sol */
+/* Remonte les patins au niveau du sol. Ne pas prendre le bas des flotteurs
+   masqués (1,951 m) : l'appareil posé flotterait de 56 cm. */
+inline constexpr float Y_OFFSET = 1.387f;
 
 /* Position des rotors (dans le repère du modèle, avant correction). Ces valeurs
    proviennent des fichiers d'assemblage de FlightGear. Une coordonnée

@@ -381,7 +381,7 @@ private:
        de l'oeil du pilote (COCKPIT_EYE.x ~3,55 m) pour rester devant lui en vue
        cockpit, et légèrement remonté. */
     static constexpr float MUZZLE_FWD_M = 6.0f;
-    static constexpr float MUZZLE_UP_M  = 1.0f;
+    static constexpr float MUZZLE_UP_M  = 0.436f;
 
     /* Points accordés en plus pour l'abattage d'un largueur, au-delà des points
        de l'explosion qui l'a achevé : de l'ordre de vingt marcheurs, à la

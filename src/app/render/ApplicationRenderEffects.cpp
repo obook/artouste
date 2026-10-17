@@ -37,7 +37,7 @@ namespace {
  * Strombo (feu anti-collision) : petite sphère rouge posée au-dessus de la cabine,
  * qui clignote (allumée une brève fraction de la période) tant que la turbine tourne.
  */
-const vec3      BEACON_POS{3.11f, 2.41f, 0.0f};  /* position du beacon du modèle (all-lights.xml), sur le toit */
+const vec3      BEACON_POS{3.11f, 1.846f, 0.0f};  /* position du beacon du modèle (all-lights.xml), sur le toit */
 constexpr float BEACON_RADIUS = 0.07f;           /* rayon de la sphère (m) */
 constexpr float BEACON_PERIOD = 1.2f;            /* période du clignotement (s) */
 constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
@@ -46,10 +46,10 @@ constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où 
  * Feux de position avant, aux positions du modèle (all-lights.xml d'Émmanuel),
  * exprimées ici en repère corps. Allumés la nuit (voir renderScene). On respecte la
  * convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite). Le feu
- * blanc de queue du modèle (corps {-3.96, 2.13, 0.20}) n'est pas allumé pour l'instant.
+ * blanc de queue du modèle (corps {-3.96, 1.566, 0.20}) n'est pas allumé pour l'instant.
  */
-const vec3      NAV_LEFT_POS{4.24f, 0.92f, -0.77f};   /* feu de navigation bâbord (rouge) */
-const vec3      NAV_RIGHT_POS{4.24f, 0.92f, 0.77f};   /* feu de navigation tribord (vert) */
+const vec3      NAV_LEFT_POS{4.24f, 0.356f, -0.77f};   /* feu de navigation bâbord (rouge) */
+const vec3      NAV_RIGHT_POS{4.24f, 0.356f, 0.77f};   /* feu de navigation tribord (vert) */
 constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu (m) */
 
 /*
@@ -60,7 +60,7 @@ constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu
  * qui se traduit par une distorsion thermique localisée (léger halo bleuté qui ondule)
  * et un petit coeur tiède sur le métal de la tuyère.
  */
-const vec3      NOZZLE_BODY_POS{-0.30f, 2.28f, 0.0f};
+const vec3      NOZZLE_BODY_POS{-0.30f, 1.716f, 0.0f};
 constexpr float NOZZLE_RADIUS = 0.24f;
 
 }  /* namespace */

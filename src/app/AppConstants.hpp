@@ -25,7 +25,7 @@ namespace artouste::app {
  * LoadedHelicopter). Posée sur le siège droit, un peu recentrée, et avancée pour
  * rapprocher la planche de bord.
  */
-inline const vec3 COCKPIT_EYE{3.55f, 1.86f, 0.46f};
+inline const vec3 COCKPIT_EYE{3.55f, 1.296f, 0.46f};
 
 /*
  * Amplitude maximale des vibrations du rotor ressenties en vue cockpit (mètres).

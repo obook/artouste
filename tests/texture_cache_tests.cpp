@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <vector>
 
 #include "render/Bc7.hpp"
@@ -193,6 +194,31 @@ TEST_CASE("Un DDS écrit puis relu rend exactement la même image") {
     const auto premiereDifference =
         static_cast<std::size_t>(std::distance(relue->donnees.begin(), ecart.first));
     CHECK(premiereDifference == relue->donnees.size());
+}
+
+TEST_CASE("Un DDS a l'en-tête standard de 148 octets, et l'ancien de 144 se relit encore") {
+    FichierTemporaire fichier("artouste_test_entete.dds");
+    const auto        pixels = mire(16, 16);
+    const auto        image  = bc7::compresser(pixels.data(), 16, 16, nullptr);
+    REQUIRE(image.has_value());
+    const dds::Empreinte source{77, 88};
+    REQUIRE(dds::ecrire(fichier.chemin(), *image, source));
+    CHECK(std::filesystem::file_size(fichier.chemin()) == 148 + image->donnees.size());
+
+    /* Ancien format : le même fichier sans le dernier mot de l'en-tête DX10. */
+    std::vector<char> octets(static_cast<std::size_t>(std::filesystem::file_size(fichier.chemin())));
+    {
+        std::ifstream in(fichier.chemin(), std::ios::binary);
+        in.read(octets.data(), static_cast<std::streamsize>(octets.size()));
+    }
+    octets.erase(octets.begin() + 144, octets.begin() + 148);
+    {
+        std::ofstream out(fichier.chemin(), std::ios::binary | std::ios::trunc);
+        out.write(octets.data(), static_cast<std::streamsize>(octets.size()));
+    }
+    const auto relue = dds::lire(fichier.chemin(), source);
+    REQUIRE(relue.has_value());
+    CHECK(relue->donnees == image->donnees);
 }
 
 TEST_CASE("Une empreinte différente périme le cache") {

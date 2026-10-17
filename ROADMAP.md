@@ -1116,7 +1116,7 @@ Trois points à contrôler sur chacun :
 
 - [ ] HudMode::Overlay avec "instruments ronds verts superposés (Super HUD)" : ce mode n'est pas dans nos fiches. C'est une bonne idée, à documenter dans PANEL.md.
 
-- [ ] En-tête DDS des tuiles de détail : 144 octets au lieu des 148 du standard (signature de 4 octets, en-tête de 124, en-tête DX10 de 20). Dans `src/render/Dds.cpp`, `NB_MOTS_ENTETE` vaut 36 au lieu de 37 : le dernier champ DX10 (`miscFlags2`) manque. Artouste relit ses propres fichiers sans souci, mais les autres outils (Pillow, texconv, visionneuses) lisent les données décalées de 4 octets et n'affichent que du bruit. Correctif : écrire 37 mots, et à la relecture accepter les deux tailles d'après la taille du fichier, pour ne pas refaire tous les caches du SSD.
+- [x] En-tête DDS des tuiles de détail : 144 octets au lieu des 148 du standard (signature de 4 octets, en-tête de 124, en-tête DX10 de 20). Dans `src/render/Dds.cpp`, `NB_MOTS_ENTETE` vaut 36 au lieu de 37 : le dernier champ DX10 (`miscFlags2`) manque. Artouste relit ses propres fichiers sans souci, mais les autres outils (Pillow, texconv, visionneuses) lisent les données décalées de 4 octets et n'affichent que du bruit. Corrigé : `Dds.cpp` écrit 37 mots (148 octets) et relit les deux tailles d'après la taille du fichier ; les caches du SSD restent valables. Les scripts hors dépôt du SSD (`ortho_depuis_tuiles.py`, `survol_ecarts.py`) supposent encore 144 octets.
 
 - [X] Mettre un PDF du README dans les archives des binaires dans les releases
 

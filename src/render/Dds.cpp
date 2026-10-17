@@ -57,7 +57,10 @@ enum Mot : std::size_t {
     MOT_EMPREINTE   = 9,   /* octets (2 mots) puis date (2 mots) */
     MOT_PF_FOURCC   = 21,
     MOT_DXGI        = 32,  /* premier mot de l'en-tête DX10 */
-    NB_MOTS_ENTETE  = 36,  /* signature + 124 octets + 20 octets */
+    NB_MOTS_ENTETE  = 37,  /* signature + 124 octets + 20 octets : 148 octets */
+    NB_MOTS_ANCIEN  = 36,  /* caches écrits avant octobre 2026, sans le dernier
+                              mot DX10 (miscFlags2) : 144 octets, illisibles par
+                              les outils standard, toujours relus ici */
 };
 
 void ecrireMot(std::vector<std::uint32_t>& mots, std::size_t index, std::uint32_t valeur) {
@@ -172,7 +175,8 @@ std::optional<Image> lireImage(const std::filesystem::path& chemin, const Emprei
         return std::nullopt;
     }
 
-    std::vector<std::uint32_t> mots(NB_MOTS_ENTETE, 0u);
+    /* Les 36 premiers mots portent tout ce qu'on contrôle, dans les deux formats. */
+    std::vector<std::uint32_t> mots(NB_MOTS_ANCIEN, 0u);
     in.read(reinterpret_cast<char*>(mots.data()),
             static_cast<std::streamsize>(mots.size() * sizeof(std::uint32_t)));
     if (!in) {
@@ -215,6 +219,18 @@ std::optional<Image> lireImage(const std::filesystem::path& chemin, const Emprei
         total += octets;
         l = std::max(1, l / 2);
         h = std::max(1, h / 2);
+    }
+
+    /* En-tête standard ou ancien : la taille du fichier dit où commencent les
+       données. Toute autre taille (tronqué, étranger) est refusée. */
+    std::error_code ec;
+    const auto      taille   = std::filesystem::file_size(chemin, ec);
+    const auto      standard = static_cast<std::uintmax_t>(NB_MOTS_ENTETE * sizeof(std::uint32_t));
+    const auto      ancien   = static_cast<std::uintmax_t>(NB_MOTS_ANCIEN * sizeof(std::uint32_t));
+    if (!ec && taille == standard + total) {
+        in.seekg(static_cast<std::streamoff>(standard));
+    } else if (ec || taille != ancien + total) {
+        return std::nullopt;
     }
 
     image.donnees.resize(total);

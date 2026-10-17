@@ -273,8 +273,9 @@ void Application::renderHelicopter(const RenderContext& ctx,
         const float altitudeFt = base[3].y * 3.28084f;
         /* Vitesse verticale en ft/min (m/s * 196.85), pour le vario. */
         const float varioFpm = m_flight.body().velocity.y * 196.85f;
-        /* Cap (radians) extrait du vecteur avant, pour le compas du tableau de bord. */
-        const float headingRad = std::atan2(fwd.x, fwd.z);
+        /* Cap boussole (radians) extrait du vecteur avant, pour le compas du tableau de
+           bord : 0 au nord (z négatif), pi/2 à l'est. */
+        const float headingRad = std::atan2(fwd.x, -fwd.z);
         /* Vitesse air en noeuds (vitesse horizontale * 1.94384), pour l'anémomètre. */
         const float airspeedKt =
             glm::length(vec2{m_flight.body().velocity.x, m_flight.body().velocity.z}) * 1.94384f;

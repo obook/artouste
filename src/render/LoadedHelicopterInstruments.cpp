@@ -200,14 +200,14 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
         drawModel(shader, m_vsiNeedle, needleMat, Pass::Opaque);
     }
 
-    /* Compas animé : la rose des vents (m_hiCard) tourne autour de X avec le cap, de
-       sorte que le cap courant vienne sous l'index fixe (le symbole avion m_hiStatic
-       ne bouge pas). Le sens et le calage du Nord sont à confirmer en vol (constante
-       HI_ZERO_OFFSET_DEG), comme l'altimètre et le vario. */
+    /* Compas animé : la rose des vents (m_hiCard, N en haut au repos) tourne autour
+       de X avec le cap boussole, de sorte que le cap courant vienne sous l'index fixe
+       (le symbole avion m_hiStatic ne bouge pas). Un angle positif tourne dans le
+       sens horaire vu du pilote, comme les aiguilles de l'altimètre : la rose tourne
+       donc de -cap, à contresens, et défile de droite à gauche en virage à droite. */
     if (m_hasHi) {
-        constexpr float HI_ZERO_OFFSET_DEG = 0.0f;
         const mat4      hiBase = root * glm::translate(mat4(1.0f), m_hiOffset);
-        const float     angle  = -glm::degrees(headingRad) + HI_ZERO_OFFSET_DEG;
+        const float     angle  = -glm::degrees(headingRad);
         const mat4      cardMat =
             hiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
         drawModel(shader, m_hiStatic, hiBase, Pass::Opaque);

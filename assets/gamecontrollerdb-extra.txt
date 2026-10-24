@@ -38,3 +38,10 @@
 # ne peut rattraper ce mode, les codes émis étant ceux des boutons physiques.
 03000000790000000600000010010000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Linux,
 03000000790000000600000000000000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Windows,
+
+# Logitech Extreme 3D Pro (USB 046d:c215), correspondance fournie par un
+# utilisateur et validée en vol. Torsion = palonnier, gâchette = tir, bouton du
+# pouce = regard. La manette des gaz est sur RT et LT n'a pas d'axe : le
+# collectif reste immobile manette des gaz au milieu, monte d'un côté et
+# descend de l'autre, avec une zone neutre étroite.
+030000006d04000015c2000011010000,Logitech Extreme 3D Pro,a:b8,b:b9,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b2,leftx:a0,lefty:a1,rightshoulder:b3,rightx:a2,righttrigger:a3,start:b7,x:b4,y:b5,leftstick:b1,rightstick:b0,platform:Linux,

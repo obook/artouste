@@ -39,9 +39,34 @@
 03000000790000000600000010010000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Linux,
 03000000790000000600000000000000,DragonRise PC TWIN SHOCK,a:b2,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b0,platform:Windows,
 
-# Logitech Extreme 3D Pro (USB 046d:c215), correspondance fournie par un
-# utilisateur et validée en vol. Torsion = palonnier, gâchette = tir, bouton du
-# pouce = regard. La manette des gaz est sur RT et LT n'a pas d'axe : le
-# collectif reste immobile manette des gaz au milieu, monte d'un côté et
-# descend de l'autre, avec une zone neutre étroite.
+# Logitech Extreme 3D Pro (USB 046d:c215) sous Linux, correspondance fournie par
+# un utilisateur et validée en vol.
+#
+# Axes
+#   a0  manche gauche/droite        cyclique latéral (leftx)
+#   a1  manche avant/arrière        cyclique longitudinal (lefty)
+#   a2  torsion du manche           palonnier (rightx)
+#   a3  manette des gaz             collectif (RT)
+# Boutons
+#   b0  gâchette                    tir du mode zombie (R3)
+#   b1  bouton du pouce             tenu + torsion : regard du pilote (L3)
+#   b2  haut, arrière gauche        mode assisté (LB)
+#   b3  haut, arrière droit         atterrissage automatique (RB)
+#   b4  haut, avant gauche          position de départ (X)
+#   b5  haut, avant droit           vue 3D (Y)
+#   b6  socle, haut gauche          pause (Back)
+#   b7  socle, haut droit           turbine : démarrer/couper (Start)
+#   b8  socle, milieu gauche        livrée (A)
+#   b9  socle, milieu droit         HUD, 4 modes (B)
+#   b10 socle, bas gauche           sans action
+#   b11 socle, bas droit            sans action
+# Chapeau (gamepad_probe le montre en b12 à b15, mais il faut l'écrire h0.x)
+#   h0.1 haut                       volume radio +
+#   h0.2 droite                     radio marche/arrêt
+#   h0.4 bas                        volume radio -
+#   h0.8 gauche                     sans action
+#
+# LT n'a pas d'axe : GLFW le lit à mi-course, ce qui fait de la manette des gaz
+# une commande à vitesse. Au milieu, le collectif reste immobile ; d'un côté il
+# monte, de l'autre il descend. La zone neutre est étroite.
 030000006d04000015c2000011010000,Logitech Extreme 3D Pro,a:b8,b:b9,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,leftshoulder:b2,leftx:a0,lefty:a1,rightshoulder:b3,rightx:a2,righttrigger:a3,start:b7,x:b4,y:b5,leftstick:b1,rightstick:b0,platform:Linux,

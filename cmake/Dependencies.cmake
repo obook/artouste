@@ -138,7 +138,13 @@ set(ASSIMP_BUILD_GLTF_IMPORTER                ON  CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_DRACO                       OFF CACHE BOOL "" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS                OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL_PDB                       OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ZLIB                        ON  CACHE BOOL "" FORCE)
+# Le zlib embarqué d'Assimp redéfinit fdopen, ce que refuse le SDK de Xcode 16 :
+# sous macOS on prend le zlib du système.
+if(APPLE)
+    set(ASSIMP_BUILD_ZLIB                    OFF CACHE BOOL "" FORCE)
+else()
+    set(ASSIMP_BUILD_ZLIB                    ON  CACHE BOOL "" FORCE)
+endif()
 
 FetchContent_Declare(assimp
     GIT_REPOSITORY https://github.com/assimp/assimp.git

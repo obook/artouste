@@ -41,8 +41,9 @@ jobs:
       - name: Configurer
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
+      # Un -j nu épuise la mémoire du runner Ubuntu 26, qui tue la compilation.
       - name: Compiler
-        run: cmake --build build -j
+        run: cmake --build build -j $(nproc)
 
       - name: Tester
         run: ctest --test-dir build --output-on-failure

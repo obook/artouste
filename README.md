@@ -310,6 +310,7 @@ Le simulateur en reconnaît bien davantage (voir plus bas), mais ces modèles-l�
 | PlayStation 4 (DualShock 4) | USB, Bluetooth | rien à faire |
 | PlayStation 5 (DualSense) | USB, Bluetooth | rien à faire |
 | Gamepad Freebox, et les autres manettes DragonRise PC TWIN SHOCK | USB | mode analogique obligatoire, diode rouge allumée |
+| Joystick Logitech Extreme 3D Pro | USB | Linux ; le collectif se règle à la manette des gaz, immobile en position médiane |
 
 Les manettes Xbox Series X/S dont le firmware n'a jamais été mis à jour
 (version 5.x) n'échangent aucune donnée avec la pile Bluetooth de Linux : la
@@ -330,6 +331,8 @@ Si une manette n'est pas reconnue, l'outil `gamepad_probe` livré avec les sourc
 ```sh
 ./build/bin/gamepad_probe
 ```
+
+Votre manette n'est pas reconnue ? Signalez-la dans une [issue](https://github.com/obook/artouste/issues) en donnant son nom, et la sortie de `gamepad_probe` si vous l'avez. Elle sera ajoutée à la version suivante.
 
 ## Modèle 3D, sons et textures
 

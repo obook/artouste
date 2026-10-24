@@ -1,3 +1,23 @@
+## v0.49.0 - 24 octobre 2026
+
+### Nouvelles fonctionnalités
+
+- **Ponts en 3D** sur dix cartes. Le relief ne connaît pas les ponts : le tablier peint sur la photo plongeait dans le lit du fleuve. Les tabliers viennent maintenant de la BD TOPO de l'IGN, recalés sur le sol LiDAR, et la photo du pont est effacée en dessous. L'aspect reste sommaire, une dalle sans piles ni parapets.
+- **Joystick Logitech Extreme 3D Pro** reconnu sous Linux, d'après la correspondance envoyée par un joueur. Torsion au palonnier, gâchette au tir, bouton du pouce au regard. La manette des gaz règle le collectif : immobile au milieu, il monte d'un côté et descend de l'autre.
+- **Fenêtres qui s'éteignent** : la part de fenêtres allumées suit l'heure. La ville s'allume vers 21 h, s'éteint jusqu'au creux de la nuit et se rallume avant le lever du soleil.
+
+### Changements
+
+- **Relief d'ensemble** : le jeu lit aussi un `heightmap.bin`, qui passe devant le `heightmap.png`. Un outil C++ peut ainsi fabriquer une carte neuve. Les onze cartes livrées ne changent pas.
+- **Manette non reconnue** : le README et la notice invitent à la signaler dans une issue GitHub, pour l'ajouter à la version suivante.
+
+### Corrections
+
+- **Appareil posé trop haut** : il reposait sur le bas des flotteurs, masqués, et flottait 56 cm au-dessus du sol. Il est posé sur ses patins ; vue cockpit, feux, canon et tuyère sont descendus d'autant.
+- **Anémomètre** : le cadran n'est pas linéaire, l'aiguille suit maintenant ses graduations.
+- **Compas** : la rose n'était pas calée sur le cap. Elle suit le cap boussole, nord à zéro.
+- **Tuiles de détail** : leur en-tête faisait 144 octets au lieu des 148 du format DDS, et les outils tiers n'y lisaient que du bruit. Les tuiles déjà téléchargées restent valables.
+
 ## v0.48.0 - 9 septembre 2026
 
 ### Nouvelles fonctionnalités

@@ -1,3 +1,9 @@
+## v0.50.0 - 25 octobre 2026
+
+### Nouvelles fonctionnalités
+
+- **Vitesse du collectif réglable** à la manette, par la clé `collectif_sensibilite` de `config.txt`. Un joueur trouvait la manette des gaz de l'Extreme 3D Pro trop vive pour tenir le collectif. À 1, rien ne change ; à 0.3, le levier va trois fois moins vite. Le réglage vaut aussi pour les gâchettes d'une manette classique.
+
 ## v0.49.0 - 24 octobre 2026
 
 ### Nouvelles fonctionnalités

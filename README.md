@@ -320,7 +320,7 @@ branchement USB fonctionne sans rien configurer. Mettre le firmware à jour
 depuis l'application Accessoires Xbox sous Windows, ou depuis une console,
 rétablit le sans-fil.
 
-La vitesse du collectif à la manette se règle par la clé `collectif_sensibilite` de `assets/config.txt`. La valeur 1, par défaut, garde la vitesse d'origine ; 0.3 la divise par trois, et les bornes vont de 0.05 à 3. Sur l'Extreme 3D Pro, la manette des gaz est trop vive à la valeur 1 : essayez d'abord 0.3, puis ajustez en vol. Elle vaut aussi pour les gâchettes d'une manette classique.
+La vitesse du collectif à la manette se règle par la clé `collectif_sensibilite` de `assets/config.txt`. La valeur 1 est la vitesse par défaut ; 0.5 la divise par deux, 2 la double, et les bornes vont de 0.05 à 3. Le réglage vaut pour les gâchettes d'une manette classique comme pour la manette des gaz d'un joystick tel que l'Extreme 3D Pro.
 
 Cette reconnaissance étendue s'appuie sur la base communautaire SDL embarquée (`assets/gamecontrollerdb.txt`), chargée au démarrage. Elle couvre plus de 2 200 manettes (2 242 à ce jour) sur Linux, Windows et macOS, dont les modèles Xbox sans fil récents (Series X/S) en Bluetooth, absents de la base intégrée de GLFW. Pour rester à jour au fil des nouveaux modèles, il suffit de remplacer ce fichier par la dernière version publiée sur le dépôt [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB).
 

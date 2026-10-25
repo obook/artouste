@@ -146,9 +146,9 @@ msaa 4
 
 # collectif_sensibilite : vitesse du collectif à la manette, gâchettes ou manette
 # des gaz d'un joystick (Logitech Extreme 3D Pro par exemple).
-#   1   = vitesse d'origine (défaut)
-#   0.3 = trois fois plus lent, pour un dosage fin à la manette des gaz
-#   2   = deux fois plus rapide
+#   1   = vitesse par défaut
+#   0.5 = deux fois plus lent, pour un dosage fin
+#   2   = deux fois plus rapide (vitesse des versions 0.49 et 0.50)
 # Bornes : 0.05 à 3. Le point décimal s'écrit avec un point.
 collectif_sensibilite 1
 

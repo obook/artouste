@@ -117,8 +117,7 @@ struct Config {
     int msaa = 4;
 
     /* Multiplicateur de la vitesse du collectif à la manette (gâchettes ou manette
-       des gaz). 1 = vitesse d'origine ; 0,3 la divise par trois. La manette des gaz
-       d'un joystick s'est révélée trop vive à 1. */
+       des gaz). 1 = vitesse par défaut ; 0,5 la divise par deux. */
     float collectiveSensitivity = 1.0f;
 
     /* Côté, en pixels, de la fenêtre de tuiles fines entretenue autour de

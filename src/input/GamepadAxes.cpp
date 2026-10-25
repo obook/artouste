@@ -24,8 +24,9 @@ namespace {
 constexpr float DEADZONE = 0.07f; /* zone morte ~7 % */
 constexpr float EXPO = 1.5f;      /* courbe d'expansion */
 
-/* Vitesse du levier de collectif, en unités par seconde à pleine gâchette. */
-constexpr float COLLECTIVE_RATE = 0.6f;
+/* Vitesse du levier de collectif, en unités par seconde à pleine gâchette.
+ * 0,6 jusqu'en 0.50.0, trop vif à l'usage pour tous les joueurs. */
+constexpr float COLLECTIVE_RATE = 0.3f;
 
 /* Applique zone morte puis expansion à un axe de stick brut [-1, +1].
  * La zone morte ignore les petits écarts ; l'expansion rend le centre

@@ -122,6 +122,8 @@ TEST_CASE("chaque option annoncée est réellement lue", "[config]") {
          {"relief_sommets_max 300000",
           [](const Config& c) { return c.reliefVertexBudget == 300000; }}},
         {"msaa", {"msaa 2", [](const Config& c) { return c.msaa == 2; }}},
+        {"collectif_sensibilite",
+         {"collectif_sensibilite 0.3", [](const Config& c) { return c.collectiveSensitivity == 0.3f; }}},
     };
 
     /* Le tableau doit couvrir exactement les clés annoncées : sinon, une option

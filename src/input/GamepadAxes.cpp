@@ -81,7 +81,7 @@ physics::Controls Gamepad::poll(float dt) noexcept {
     const float descend = triggerTo01(axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]);
     const float commande = monte - descend; /* dans [-1, +1] */
     if (std::fabs(commande) > 0.05f) {      /* on ignore le repos et le bruit */
-        m_collective += commande * COLLECTIVE_RATE * dt;
+        m_collective += commande * COLLECTIVE_RATE * m_collectiveSensitivity * dt;
         m_collective = std::clamp(m_collective, 0.0f, 1.0f);
     }
     controls.collective = m_collective;

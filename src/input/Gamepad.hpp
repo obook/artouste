@@ -169,6 +169,9 @@ public:
        même besoin de resynchronisation après un vol automatique). */
     void setCollective(float value) noexcept { m_collective = value; }
 
+    /* Multiplicateur de la vitesse du levier (clé collectif_sensibilite). */
+    void setCollectiveSensitivity(float value) noexcept { m_collectiveSensitivity = value; }
+
     /* Amorce les états de front des boutons avec l'état courant de la manette : un
      * bouton déjà tenu ne comptera pas comme un nouvel appui à la prochaine lecture.
      * À appeler en entrant en vol depuis le menu (le menu valide avec A, qui sert
@@ -199,6 +202,7 @@ private:
     static bool s_collectiveResetRequested;
 
     float m_collective = 0.0f;      /* position mémorisée du levier de collectif */
+    float m_collectiveSensitivity = 1.0f;
     bool m_prevY = false;           /* état du bouton Y à l'image précédente */
     bool m_prevStart = false;       /* état du bouton Start à l'image précédente */
     bool m_prevB = false;           /* état du bouton B à l'image précédente */

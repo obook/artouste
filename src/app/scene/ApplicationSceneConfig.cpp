@@ -155,6 +155,7 @@ void Application::initSceneConfig() {
 
     m_helicopter = std::make_unique<render::HelicopterModel>();
     m_input = std::make_unique<input::InputSystem>(m_window);
+    m_input->setCollectiveSensitivity(m_config.collectiveSensitivity);
     m_hud.init(m_window);
     m_audio.init(assets / "models" / "Alouette-II" / "Sounds");
     /* Mode zombie : dossier des sons ponctuels, séparé des sons de l'hélicoptère

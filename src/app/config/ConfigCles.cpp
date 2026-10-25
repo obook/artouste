@@ -38,7 +38,8 @@ const std::set<std::string>& clesConnues() {
                                                "tuiles_fenetre_px",
                                                "tuiles_dossier",
                                                "relief_sommets_max",
-                                               "msaa"};
+                                               "msaa",
+                                               "collectif_sensibilite"};
     return cles;
 }
 

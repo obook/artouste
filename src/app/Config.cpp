@@ -187,6 +187,13 @@ Config loadConfig(const std::filesystem::path& path) {
             } catch (const std::exception&) {
                 std::fprintf(stderr, "[Config] msaa invalide : %s\n", value.c_str());
             }
+        } else if (key == "collectif_sensibilite") {
+            try {
+                /* Zéro figerait le collectif : on garde un minimum. */
+                cfg.collectiveSensitivity = std::clamp(std::stof(value), 0.05f, 3.0f);
+            } catch (const std::exception&) {
+                std::fprintf(stderr, "[Config] collectif_sensibilite invalide : %s\n", value.c_str());
+            }
         } else if (clesRetirees().count(key) != 0) {
             /* Option supprimée depuis : le fichier de l'utilisateur la porte encore,
                on la passe SANS RIEN DIRE. La signaler comme inconnue ferait croire à

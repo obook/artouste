@@ -29,6 +29,8 @@ public:
 
     void primeButtons() noexcept { m_gamepad.primeButtons(); }
 
+    void setCollectiveSensitivity(float value) noexcept { m_gamepad.setCollectiveSensitivity(value); }
+
     void reset() noexcept {
         m_keyboard.reset();
         m_gamepad.reset();

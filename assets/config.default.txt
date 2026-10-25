@@ -144,6 +144,14 @@ arbres_max 1600000
 # (le plus rapide). La variable d'environnement ARTOUSTE_MSAA, si définie, a la priorité.
 msaa 4
 
+# collectif_sensibilite : vitesse du collectif à la manette, gâchettes ou manette
+# des gaz d'un joystick (Logitech Extreme 3D Pro par exemple).
+#   1   = vitesse d'origine (défaut)
+#   0.3 = trois fois plus lent, pour un dosage fin à la manette des gaz
+#   2   = deux fois plus rapide
+# Bornes : 0.05 à 3. Le point décimal s'écrit avec un point.
+collectif_sensibilite 1
+
 # tuiles_dossier : dossier où sont rangés les jeux de tuiles de détail, un
 # sous-dossier par carte. Par défaut "assets/terrain", c'est-à-dire chaque carte
 # chez elle, dans son sous-dossier "tuiles" : rien à changer si vous les laissez

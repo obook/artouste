@@ -1,3 +1,22 @@
+## v0.51.0 - 10 novembre 2026
+
+### Mise à jour depuis une version précédente
+
+- **Extraire la nouvelle archive par-dessus l'ancienne**, dans le même dossier, en acceptant d'écraser les fichiers. Les tuiles de détail téléchargées depuis le jeu sont rangées dans ce dossier, sous `assets/terrain/<carte>/tuiles`, et pèsent jusqu'à plusieurs gigaoctets : l'archive ne les contient pas, elle les laisse en place, tout comme votre `config.txt`. Extraite dans un nouveau dossier, elle repart sans tuiles, et il faut les retélécharger auprès de l'IGN. Si `tuiles_dossier` pointe ailleurs dans `config.txt`, rien ne change.
+
+### Nouvelles fonctionnalités
+
+- **Toits à deux pans** sur les maisons. Tous les toits étaient plats, et les villages ressemblaient à des blocs de béton. Le faîtage suit le grand côté de la maison, à la hauteur que donne la BD TOPO de l'IGN, avec une pente minimale : 40 degrés pour l'ardoise, 30 pour la tuile. Les pignons montent jusqu'au faîtage et le toit déborde de 40 cm. Les immeubles, les grands bâtiments et les formes irrégulières gardent un toit plat.
+
+### Changements
+
+- **Collectif deux fois plus lent** à la manette : il montait trop vite pour tout le monde. `collectif_sensibilite 1` donne maintenant cette nouvelle vitesse.
+
+### Corrections
+
+- **Cours et arènes bouchées** : les bâtiments troués, comme les arènes de Dax ou les immeubles sur cour, recevaient un toit plein. La cour reste maintenant ouverte, avec ses murs.
+- **Toits plats qui débordaient** sur les bâtiments en L ou en U : des pans de toit dépassaient des murs ou laissaient un trou.
+
 ## v0.50.0 - 25 octobre 2026
 
 ### Nouvelles fonctionnalités

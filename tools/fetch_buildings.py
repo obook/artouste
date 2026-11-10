@@ -4,7 +4,7 @@ fetch_buildings.py
 Télécharge les emprises de bâtiments (avec leur hauteur réelle) sur l'emprise
 d'une zone, depuis la BD TOPO de l'IGN via le service WFS de la Géoplateforme,
 et les écrit en fichier binaire compact (buildings.bin) que le moteur extrude en
-volumes simples (murs + toit plat).
+volumes simples (murs + toit à deux pans ou plat).
 
 Même producteur et même licence que le relief et l'orthophoto (IGN Géoplateforme,
 Licence Ouverte Etalab 2.0). La zone (bornes géographiques) est lue dans le
@@ -17,11 +17,14 @@ les cabanes et bergeries, utiles au repérage.
 
 Format de buildings.bin (petit-boutiste) :
     magie   : 4 octets "ABLD"
-    version : uint32 (= 1)
+    version : uint32 (= 2 ; le moteur lit encore la version 1, sans toit)
     nombre  : uint32 (nombre de bâtiments)
     puis, pour chaque bâtiment :
-        hauteur : float32 (mètres)
-        n       : uint16  (nombre de sommets de l'emprise, anneau non refermé)
+        hauteur  : float32 (mètres, du sol à la gouttière)
+        toit     : float32 (mètres, de la gouttière au faîtage ; -1 si inconnu)
+        materiau : uint8   (premier chiffre du code BD TOPO de la toiture :
+                            1 tuiles, 2 ardoises, 3 zinc..., 0 inconnu)
+        n        : uint16  (nombre de sommets de l'emprise, anneau non refermé)
         n x (lon : float32, lat : float32)   (degrés WGS84)
 
 Données : IGN Géoplateforme (BD TOPO), Licence Ouverte Etalab 2.0.
@@ -70,7 +73,7 @@ MIN_RENDER_HEIGHT = 2.0
 
 # En-tête du fichier binaire.
 MAGIC = b"ABLD"
-VERSION = 1
+VERSION = 2
 
 
 def fetch_page(bbox, start):
@@ -83,7 +86,9 @@ def fetch_page(bbox, start):
         "SRSNAME": "EPSG:4326",
         "BBOX": bbox + ",EPSG:4326",
         "OUTPUTFORMAT": "application/json",
-        "PROPERTYNAME": "hauteur,geometrie",  # géométrie + hauteur seules : charge réduite
+        # Champs utiles seuls : charge réduite.
+        "PROPERTYNAME": "hauteur,altitude_minimale_toit,altitude_maximale_toit,"
+                        "materiaux_de_la_toiture,geometrie",
         "COUNT": str(PAGE),
         "STARTINDEX": str(start),
     }
@@ -102,27 +107,100 @@ def fetch_page(bbox, start):
     raise RuntimeError(f"page de bâtiments (start={start}) : échec ({last_err})")
 
 
+def surface_signee(ring):
+    """Surface signée d'un anneau (formule du lacet) : son signe donne le sens
+       de parcours."""
+    return 0.5 * sum(x0 * y1 - x1 * y0
+                     for (x0, y0), (x1, y1) in zip(ring, ring[1:] + ring[:1]))
+
+
+def _se_coupent(a, b, c, d):
+    """Vrai si les segments [a, b] et [c, d] se croisent franchement (une
+       extrémité commune ne compte pas)."""
+    if a in (c, d) or b in (c, d):
+        return False
+
+    def cote(p, q, r):
+        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+
+    return (cote(a, b, c) * cote(a, b, d) < 0) and (cote(c, d, a) * cote(c, d, b) < 0)
+
+
+def relier_trous(contour, trous):
+    """Un seul anneau pour un polygone troué : chaque trou est relié au contour
+       par un pont aller-retour, parcouru en sens inverse du contour. Le moteur
+       n'extrude que des anneaux simples ; ainsi le toit d'une arène ou d'un
+       bâtiment sur cour s'arrête au bord de la cour, et le mur de la cour est
+       monté comme les autres. Le pont, lui, passe dans la masse du bâtiment."""
+    if surface_signee(contour) < 0:
+        contour = contour[::-1]
+    anneau = list(contour)
+    trous = [t[::-1] if surface_signee(t) > 0 else list(t) for t in trous]
+    # Le trou le plus à l'est d'abord : son pont ne peut pas croiser les suivants.
+    trous.sort(key=lambda t: -max(p[0] for p in t))
+    for k, trou in enumerate(trous):
+        m = max(range(len(trou)), key=lambda i: trou[i][0])
+        h = trou[m]
+        aretes = list(zip(anneau, anneau[1:] + anneau[:1]))
+        for t in trous[k:]:
+            aretes += list(zip(t, t[1:] + t[:1]))
+        candidats = sorted(range(len(anneau)),
+                           key=lambda i: (anneau[i][0] - h[0]) ** 2 + (anneau[i][1] - h[1]) ** 2)
+        for i in candidats:
+            if not any(_se_coupent(anneau[i], h, c, d) for c, d in aretes):
+                anneau[i + 1:i + 1] = trou[m:] + trou[:m] + [h, anneau[i]]
+                break
+        # Sans pont possible (emprise aberrante), le trou est ignoré.
+    return anneau
+
+
 def rings_of(geometry):
-    """Renvoie la liste des anneaux extérieurs (un par polygone) d'une géométrie
-       Polygon ou MultiPolygon. Les trous (anneaux intérieurs) sont ignorés."""
+    """Renvoie un anneau par polygone d'une géométrie Polygon ou MultiPolygon,
+       ses trous reliés au contour (voir relier_trous). L'anneau GeoJSON
+       refermé (dernier point = premier) perd son doublon."""
     if geometry is None:
         return []
     gtype = geometry["type"]
     coords = geometry["coordinates"]
     if gtype == "Polygon":
-        return [coords[0]]
-    if gtype == "MultiPolygon":
-        return [poly[0] for poly in coords]
-    return []
+        polygones = [coords]
+    elif gtype == "MultiPolygon":
+        polygones = coords
+    else:
+        return []
+    anneaux = []
+    for poly in polygones:
+        ouverts = []
+        for ring in poly:
+            pts = [(round(p[0], 6), round(p[1], 6)) for p in ring]
+            if len(pts) >= 2 and pts[0] == pts[-1]:
+                pts = pts[:-1]
+            if len(pts) >= 3:
+                ouverts.append(pts)
+        if ouverts:
+            anneaux.append(relier_trous(ouverts[0], ouverts[1:]))
+    return anneaux
+
+
+def toit_de(props):
+    """Hauteur du toit (gouttière -> faîtage, -1 si inconnue) et premier chiffre
+       du code de matériau de la toiture (0 si inconnu)."""
+    bas = props.get("altitude_minimale_toit")
+    haut = props.get("altitude_maximale_toit")
+    toit = haut - bas if bas is not None and haut is not None else -1.0
+    code = props.get("materiaux_de_la_toiture") or ""
+    materiau = int(code[0]) if code[:1].isdigit() else 0
+    return toit, materiau
 
 
 def write_buildings(path, buildings):
-    """Écrit la liste de bâtiments (hauteur, anneau de (lon, lat)) en binaire."""
+    """Écrit la liste de bâtiments (hauteur, toit, matériau, anneau de
+       (lon, lat)) en binaire."""
     with open(path, "wb") as out:
         out.write(MAGIC)
         out.write(struct.pack("<II", VERSION, len(buildings)))
-        for height, ring in buildings:
-            out.write(struct.pack("<fH", height, len(ring)))
+        for height, toit, materiau, ring in buildings:
+            out.write(struct.pack("<ffBH", height, toit, materiau, len(ring)))
             for lon, lat in ring:
                 out.write(struct.pack("<ff", lon, lat))
 
@@ -146,7 +224,7 @@ def main():
     print(f"[bâtiments] zone {zone} : WFS BD TOPO sur {bbox} (hauteur >= {height_min} m)")
     start = time.time()
 
-    buildings = []   # liste de (hauteur, anneau [(lon, lat), ...])
+    buildings = []   # liste de (hauteur, toit, matériau, anneau [(lon, lat), ...])
     examined = 0
     index = 0
     while True:
@@ -163,14 +241,9 @@ def main():
             # Cabane ou hauteur manquante : on extrude au moins MIN_RENDER_HEIGHT pour
             # qu'elle reste visible (sans effet sur les bâtiments déjà plus hauts).
             h = max(h, MIN_RENDER_HEIGHT)
-            for ring in rings_of(f.get("geometry")):
-                # L'anneau GeoJSON est refermé (dernier point = premier) : on retire
-                # le doublon, le moteur referme l'emprise.
-                pts = [(round(p[0], 6), round(p[1], 6)) for p in ring]
-                if len(pts) >= 2 and pts[0] == pts[-1]:
-                    pts = pts[:-1]
-                if len(pts) >= 3:
-                    buildings.append((h, pts))
+            toit, materiau = toit_de(f["properties"])
+            for pts in rings_of(f.get("geometry")):
+                buildings.append((h, toit, materiau, pts))
         index += len(feats)
         print(f"[bâtiments]   {index} examinés, {len(buildings)} retenus...")
 

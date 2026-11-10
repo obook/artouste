@@ -32,7 +32,8 @@ std::vector<unsigned char> Vegetation::buildBuildingMask(const std::filesystem::
        Buildings), on rastérise chaque polygone dans un masque à la résolution de
        l'ortho, avec un pixel de marge pour que le billboard ne mange pas les murs.
        Format : magie "ABLD", version, nombre, puis par bâtiment hauteur(float),
-       n(uint16), n x (lon,lat float). */
+       en version 2 hauteur du toit(float) et matériau(uint8), puis n(uint16),
+       n x (lon,lat float). */
     std::vector<unsigned char> building(
         static_cast<std::size_t>(orthoW) * static_cast<std::size_t>(orthoH), 0);
     std::ifstream bf(terrainDir / "buildings.bin", std::ios::binary);
@@ -44,12 +45,15 @@ std::vector<unsigned char> Vegetation::buildBuildingMask(const std::filesystem::
         bf.read(reinterpret_cast<char*>(&count), sizeof(count));
     }
     const bool ok =
-        bf && magic[0] == 'A' && magic[1] == 'B' && magic[2] == 'L' && magic[3] == 'D' && ver == 1u;
+        bf && magic[0] == 'A' && magic[1] == 'B' && magic[2] == 'L' && magic[3] == 'D' && (ver == 1u || ver == 2u);
     std::vector<float> bx, by; /* emprise en coordonnées pixel (réutilisé par bâtiment) */
     for (std::uint32_t bi = 0; ok && bi < count; ++bi) {
         float height = 0.0f;
         std::uint16_t npts = 0;
         bf.read(reinterpret_cast<char*>(&height), sizeof(height));
+        if (ver == 2u) {
+            bf.ignore(sizeof(float) + sizeof(std::uint8_t)); /* toit : sans effet sur le masque */
+        }
         bf.read(reinterpret_cast<char*>(&npts), sizeof(npts));
         if (!bf || npts < 3) {
             break; /* fichier tronqué ou emprise dégénérée */

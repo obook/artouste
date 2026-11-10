@@ -30,6 +30,7 @@ add_executable(artouste_tests
     wave_manager_tests.cpp
     bille_tests.cpp
     tablier_pont_tests.cpp
+    toit_batiment_tests.cpp
     ground_impact_tests.cpp
     hud_alarms_tests.cpp
     texture_cache_tests.cpp

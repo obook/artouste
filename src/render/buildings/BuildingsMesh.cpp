@@ -1,7 +1,7 @@
 /*
  * BuildingsMesh.cpp
- * Lit buildings.bin (emprises BD TOPO + hauteur) et extrude chaque bâtiment,
- * puis bridges.bin (axes d'ouvrages d'art + altitude de chaussée) et extrude
+ * Lit buildings.bin (emprises BD TOPO, hauteurs, matériau du toit) et extrude
+ * chaque bâtiment, puis bridges.bin (axes d'ouvrages d'art + altitude de chaussée) et extrude
  * chaque tablier. Tout est fusionné en un maillage unique, calé sur le relief,
  * découpé en tuiles spatiales pour le culling.
  *
@@ -70,17 +70,23 @@ struct Grille {
     }
 };
 
-/* En-tête d'un fichier d'emprises : magie sur 4 octets, version, effectif. */
-[[nodiscard]] bool lireEntete(std::ifstream& in, const char* attendue, std::uint32_t versionAttendue,
-                              std::uint32_t& count) {
+/* En-tête d'un fichier d'emprises : magie sur 4 octets, version, effectif.
+   Renvoie la version lue, 0 si l'en-tête est illisible ou la magie fausse. */
+[[nodiscard]] std::uint32_t lireEntete(std::ifstream& in, const char* attendue,
+                                       std::uint32_t& count) {
     char magic[4] = {0, 0, 0, 0};
     in.read(magic, 4);
     std::uint32_t version = 0;
     in.read(reinterpret_cast<char*>(&version), sizeof(version));
     in.read(reinterpret_cast<char*>(&count), sizeof(count));
-    return in && magic[0] == attendue[0] && magic[1] == attendue[1] && magic[2] == attendue[2] &&
-           magic[3] == attendue[3] && version == versionAttendue;
+    const bool ok = in && magic[0] == attendue[0] && magic[1] == attendue[1] &&
+                    magic[2] == attendue[2] && magic[3] == attendue[3];
+    return ok ? version : 0u;
 }
+
+/* Matériau de toiture "ardoise" : premier chiffre du code BD TOPO, tel que
+   tools/fetch_buildings.py l'écrit. */
+constexpr std::uint8_t MATERIAU_ARDOISE = 2;
 
 /* Bâtiments de la carte (buildings.bin, voir tools/fetch_buildings.py).
    Renvoie le nombre de volumes extrudés. */
@@ -93,7 +99,9 @@ struct Grille {
         return 0; /* pas de bâtiments pour ce terrain */
     }
     std::uint32_t count = 0;
-    if (!lireEntete(in, "ABLD", 1u, count)) {
+    /* Version 1 : sans hauteur de toit ni matériau, tous les toits sont plats. */
+    const std::uint32_t version = lireEntete(in, "ABLD", count);
+    if (version != 1u && version != 2u) {
         std::fprintf(stderr, "[Buildings] %s : en-tête invalide, bâtiments ignorés.\n",
                      path.string().c_str());
         return 0;
@@ -113,9 +121,15 @@ struct Grille {
     std::size_t        ecartesMonument = 0;
 
     for (std::uint32_t b = 0; b < count; ++b) {
-        float         hauteur = 0.0f;
-        std::uint16_t npts    = 0;
+        float         hauteur     = 0.0f;
+        float         hauteurToit = 0.0f;
+        std::uint8_t  materiau    = 0;
+        std::uint16_t npts        = 0;
         in.read(reinterpret_cast<char*>(&hauteur), sizeof(hauteur));
+        if (version >= 2u) {
+            in.read(reinterpret_cast<char*>(&hauteurToit), sizeof(hauteurToit));
+            in.read(reinterpret_cast<char*>(&materiau), sizeof(materiau));
+        }
         in.read(reinterpret_cast<char*>(&npts), sizeof(npts));
         if (!in || npts < 3) {
             break; /* fichier tronqué ou bâtiment dégénéré : on s'arrête */
@@ -172,14 +186,15 @@ struct Grille {
         tb->mn.z = std::min(tb->mn.z, minZ);
         tb->mx.z = std::max(tb->mx.z, maxZ);
         tb->mn.y = std::min(tb->mn.y, base);
-        tb->mx.y = std::max(tb->mx.y, base + hauteur);
 
         /* Seed du mur décorrélée de celle du toit : les deux ne doivent pas
            varier de concert. */
         const vec3 mur  = WALL_COLOR * jitter(b * 2654435761u + 1u, 0.08f);
         const vec3 toit = ortho.couleurToit(cx, cz, maxX - minX, maxZ - minZ, b);
 
-        extruderBatiment(tb->v, tb->i, px, pz, cx, cz, base, hauteur, mur, toit);
+        const float sommet = extruderBatiment(tb->v, tb->i, px, pz, base, hauteur,
+                                              hauteurToit, materiau == MATERIAU_ARDOISE, mur, toit);
+        tb->mx.y           = std::max(tb->mx.y, sommet);
         ++faits;
     }
 
@@ -226,7 +241,7 @@ constexpr std::uint8_t PHOTO_SEULE = 1;
         return 0; /* pas d'ouvrages relevés pour ce terrain */
     }
     std::uint32_t count = 0;
-    if (!lireEntete(in, "ABRG", 2u, count)) {
+    if (lireEntete(in, "ABRG", count) != 2u) {
         std::fprintf(stderr,
                      "[Buildings] %s : en-tête invalide ou ancienne version, ouvrages "
                      "ignorés (relancer tools/fetch_bridges.py).\n",

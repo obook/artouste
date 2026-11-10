@@ -2,9 +2,9 @@
  * Buildings.hpp
  * Bâtiments 3D du terrain : emprises au sol issues de la BD TOPO de l'IGN
  * (fichier buildings.bin produit par tools/fetch_buildings.py), extrudées en
- * volumes simples (murs verticaux + toit plat) à leur hauteur réelle. Tout est
- * fusionné en un seul maillage statique, posé sur le relief. Si le fichier est
- * absent, le maillage reste vide et rien n'est dessiné.
+ * volumes simples (murs verticaux + toit à deux pans ou plat) à leur hauteur
+ * réelle. Tout est fusionné en un seul maillage statique, posé sur le relief.
+ * Si le fichier est absent, le maillage reste vide et rien n'est dessiné.
  *
  * Repère monde : X vers l'est, Z vers le sud, Y vers le haut.
  *

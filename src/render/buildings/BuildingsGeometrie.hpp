@@ -1,6 +1,7 @@
 /*
  * BuildingsGeometrie.hpp
- * Extrusion d'une emprise en un volume simple : murs verticaux et toit plat,
+ * Extrusion d'une emprise en un volume simple : murs verticaux et toit (deux
+ * pans ou plat),
  * et extrusion d'un axe d'ouvrage d'art en tablier.
  *
  * Auteur : O. Booklage
@@ -18,20 +19,27 @@
 
 namespace artouste::render {
 
-/* Un bâtiment : un quad par côté de l'emprise, plus un toit plat en éventail
-   depuis le premier sommet (correct pour une emprise convexe, acceptable de
-   loin pour les rares formes concaves).
-   Les sommets et les indices sont ajoutés aux tampons donnés. */
-void extruderBatiment(std::vector<Vertex>&       verts,
-                      std::vector<unsigned int>& idx,
-                      const std::vector<float>&  px,
-                      const std::vector<float>&  pz,
-                      float                      cx,
-                      float                      cz,
-                      float                      base,
-                      float                      hauteur,
-                      const vec3&                mur,
-                      const vec3&                toit);
+/* Un bâtiment : un mur par côté de l'emprise, de base à base + hauteur
+   (la gouttière), puis le toit. Une emprise de maison proche d'un rectangle
+   reçoit deux pans dont le faîtage suit le grand axe, à hauteurToit au-dessus
+   de la gouttière (pente bornée, plus raide pour l'ardoise) ; les murs montent
+   jusque sous les pans, pignons compris. Sinon (immeuble, forme tordue), ou si
+   hauteurToit est presque nulle, le toit est plat. Une hauteurToit négative veut dire inconnue.
+   Une emprise trouée (cour, arène) arrive en un seul anneau, ses trous reliés
+   au contour par un pont (voir tools/fetch_buildings.py) : le toit s'arrête au
+   bord de la cour.
+   Les sommets et les indices sont ajoutés aux tampons donnés. Renvoie
+   l'altitude du point le plus haut (faîtage ou toit plat). */
+float extruderBatiment(std::vector<Vertex>&       verts,
+                       std::vector<unsigned int>& idx,
+                       const std::vector<float>&  px,
+                       const std::vector<float>&  pz,
+                       float                      base,
+                       float                      hauteur,
+                       float                      hauteurToit,
+                       bool                       ardoise,
+                       const vec3&                mur,
+                       const vec3&                toit);
 
 /* Épaisseur donnée au tablier d'un ouvrage d'art, en mètres. La BD TOPO donne
    l'altitude de la CHAUSSÉE ; le dessous est posé à cette distance en dessous,

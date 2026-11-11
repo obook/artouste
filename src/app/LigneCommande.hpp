@@ -42,6 +42,12 @@ struct OptionsLancement {
     float cap  = 0.0f;
     bool  aCap = false;
 
+    /* --heure : heure du soleil au départ, en heures décimales (21.5 = 21h30),
+       quelle que soit la vitesse du temps. Sans elle : heure locale en temps
+       réel, 8h sinon. */
+    float heure  = 0.0f;
+    bool  aHeure = false;
+
     bool aide   = false; /* --aide / --help : afficher l'aide et sortir */
     bool gpu    = false; /* --gpu : lister les cartes graphiques et sortir */
     bool erreur = false; /* option inconnue ou valeur manquante */

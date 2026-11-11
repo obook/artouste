@@ -370,6 +370,7 @@ refaire le trajet à chaque essai.
 artouste --carte paris --monument "Pantheon" --alt 300
 artouste --carte paris --lieu "Tour Eiffel" --alt 200 --cap 270
 artouste --carte paris --lon 2.346073 --lat 48.846167 --alt 300
+artouste --carte cote-landes --heure 22
 ```
 
 `--monument` cherche le nom dans le `monuments.txt` de la carte, `--lieu` dans
@@ -380,6 +381,10 @@ introuvable, le vol commence au pad, avec un message.
 `--alt` est une hauteur **au-dessus du sol**, pas une altitude absolue ; 0 pose
 l'appareil sur le relief. Dès qu'un point d'apparition est demandé, la turbine et
 le rotor sont mis au régime : naître en vol moteur arrêté, c'est tomber.
+
+`--heure` fixe l'heure du soleil au départ (0 à 24, décimale acceptée : 21.5 pour
+21h30), quelle que soit la vitesse du temps de `config.txt`. Pratique pour voir
+une ville de nuit sans attendre le coucher du soleil.
 
 `artouste --aide` donne la liste complète. Les variables d'environnement
 `ARTOUSTE_*` restent lues et gardent la priorité sur les options équivalentes.

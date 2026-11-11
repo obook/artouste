@@ -54,6 +54,15 @@ TEST_CASE("La carte et le point d'apparition sont lus", "[ligne_commande]") {
     CHECK(o.sauteMenu());
 }
 
+TEST_CASE("L'heure du soleil est lue et bornée", "[ligne_commande]") {
+    const OptionsLancement o = lire({"--carte", "cote-landes", "--heure", "21.5"});
+    REQUIRE_FALSE(o.erreur);
+    CHECK(o.aHeure);
+    CHECK(o.heure == 21.5f);
+    CHECK(lire({"--heure", "24"}).erreur);
+    CHECK(lire({"--heure", "-1"}).erreur);
+}
+
 TEST_CASE("Les formes courtes valent les longues", "[ligne_commande]") {
     const OptionsLancement o = lire({"-c", "bigorre", "-l", "Pic du Midi", "-a", "0"});
     REQUIRE_FALSE(o.erreur);

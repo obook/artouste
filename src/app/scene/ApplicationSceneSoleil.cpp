@@ -34,7 +34,13 @@ void Application::applySunSchedule() {
        lever, de sorte qu'une nuit dure deux fois moins longtemps qu'un jour avec
        la valeur par défaut (voir timeOfDaySeconds, ApplicationSun.cpp). */
     m_soleil.vitesseNuit = m_config.nightSpeedFactor;
-    if (m_soleil.vitesse == 1.0f) {
+    if (m_options.aHeure) {
+        /* --heure : l'heure demandée, quelle que soit la vitesse du temps. */
+        m_soleil.heureDepart = m_options.heure * 3600.0f;
+        std::printf("[scène] cycle jour/nuit : départ à %02d:%02d (--heure).\n",
+                    static_cast<int>(m_options.heure),
+                    static_cast<int>((m_options.heure - static_cast<int>(m_options.heure)) * 60.0f));
+    } else if (m_soleil.vitesse == 1.0f) {
         const std::time_t now = std::time(nullptr);
         std::tm local{};
 #if defined(_WIN32)

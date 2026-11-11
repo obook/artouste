@@ -127,6 +127,15 @@ OptionsLancement lireLigneCommande(int argc, char** argv) {
             if (!aValeur) { o.erreur = true; break; }
             o.cap  = std::strtof(valeur(), nullptr);
             o.aCap = true;
+        } else if (est(a, "--heure")) {
+            if (!aValeur) { o.erreur = true; break; }
+            o.heure  = std::strtof(valeur(), nullptr);
+            o.aHeure = true;
+            if (o.heure < 0.0f || o.heure >= 24.0f) {
+                std::fprintf(stderr, "--heure attend une valeur entre 0 et 24.\n");
+                o.erreur = true;
+                break;
+            }
         } else {
             std::fprintf(stderr, "Option inconnue : %s\n", a);
             o.erreur = true;
@@ -167,6 +176,9 @@ void afficherAide(const char* programme) {
         "                        0 pose l'appareil sur le relief. Défaut : 300.\n"
         "      --cap DEG         Cap boussole (0 = nord, 90 = est). Sans lui, le\n"
         "                        cap de départ de la carte.\n"
+        "      --heure H         Heure du soleil au départ, de 0 à 24, décimale\n"
+        "                        acceptée (21.5 = 21h30). Sans elle : heure locale\n"
+        "                        en temps réel, 8h en temps accéléré.\n"
         "      --gpu             Lister les cartes graphiques de la machine et\n"
         "                        sortir (Linux uniquement). Utile sur un\n"
         "                        portable à deux cartes.\n"
@@ -183,10 +195,11 @@ void afficherAide(const char* programme) {
         "  %s --carte paris --monument \"Pantheon\" --alt 300\n"
         "  %s --carte paris --lieu \"Tour Eiffel\" --alt 200 --cap 270\n"
         "  %s --carte paris --lon 2.346073 --lat 48.846167 --alt 300\n"
+        "  %s --carte cote-landes --heure 22\n"
         "\n"
         "Les variables d'environnement ARTOUSTE_* restent lues et gardent la\n"
         "priorité sur les options équivalentes.\n",
-        programme, programme, programme, programme);
+        programme, programme, programme, programme, programme);
 }
 
 } /* namespace artouste::app */

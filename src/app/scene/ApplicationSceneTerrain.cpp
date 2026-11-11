@@ -12,6 +12,7 @@
 
 #include "render/Bc7.hpp"
 #include "render/Buildings.hpp"
+#include "render/Lampadaires.hpp"
 #include "render/Clouds.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Terrain.hpp"
@@ -77,11 +78,22 @@ void Application::loadTerrain(const std::string& name) {
        (voir Gamepad::viderFile). */
     input::Gamepad::viderFile();
 
+    /* Masque d'eau de la carte (eau.png, tools/fetch_eau.py) : terrain.frag y
+       pose le reflet du soleil. Absent : repli sur la couleur de l'orthophoto. */
+    m_terrainEau.reset();
+    if (std::filesystem::exists(terrainDir / "eau.png")) {
+        m_terrainEau = std::make_unique<render::Texture>(terrainDir / "eau.png");
+    }
+
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien
        n'est dessiné. */
     m_buildings =
         batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain) : nullptr;
+
+    /* Éclairage public (lampadaires.bin, tools/fetch_lampadaires.py) : des
+       points lumineux la nuit le long des rues. Absent : rien. */
+    m_lampadaires = std::make_unique<render::Lampadaires>(terrainDir, *m_terrain);
 
     input::Gamepad::viderFile();
 

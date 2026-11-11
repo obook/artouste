@@ -23,6 +23,7 @@
 #include "render/Vegetation.hpp"
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include <cstdlib>
 
@@ -55,10 +56,13 @@ void Application::renderSkyAndSea(const RenderContext& ctx, float timeSeconds) {
         m_seaShader->setMat4("u_model", ctx.toRel);
         m_seaShader->setVec3("u_seaColor", SEA_COLOR);
         m_seaShader->setVec3("u_lightDir", ctx.lightDir);
+        m_seaShader->setFloat("u_isDay", ctx.isDay);
         m_seaShader->setVec3("u_camPos", ctx.camPosRel);
         m_seaShader->setVec3("u_fogColor", ctx.fogColor);
         m_seaShader->setFloat("u_fogStart", m_fogStart);
         m_seaShader->setFloat("u_fogEnd", m_fogEnd);
+        m_seaShader->setFloat("u_time", static_cast<float>(glfwGetTime()));
+        m_seaShader->setVec2("u_originXZ", vec2{m_renderOrigin.x, m_renderOrigin.z});
         glDepthMask(GL_FALSE);
         m_sea->draw();
         glDepthMask(GL_TRUE);

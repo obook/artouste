@@ -27,7 +27,8 @@ ligne : `lon lat nom`), `hapi.txt` (balise HAPI sur le pad de départ, un par
 ligne : `lon lat azimut_deg pente_pct nom` -- voir la section HAPI du README),
 `buildings.bin` (bâtiments 3D), `bridges.bin` (ouvrages d'art, voir
 ci-dessous), `forest.png` (masque de forêt, voir
-ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
+ci-dessous), `eau.png` (masque d'eau, voir ci-dessous), `lampadaires.bin`
+(éclairage public, voir ci-dessous), `zombies.txt` et `zombie_only.txt` (mode
 zombie, voir ci-dessous). L'hélipad de la
 zone de départ est toujours présent en plus de ceux de `helipads.txt`.
 Le relief peut aussi venir d'un `heightmap.bin`, qui passe devant le `.png`
@@ -407,10 +408,14 @@ ce qu'il faut faire après avoir ajouté ou retiré des tuiles soi-même.
 ## Bâtiments 3D (BD TOPO)
 
 Les bâtiments sont les emprises au sol de la BD TOPO de l'IGN, extrudées à leur
-hauteur réelle (murs + toit plat). Les murs sont habillés d'une texture de
-façade tuilée (fenêtres, voir `assets/textures/facade.png`, générée par
-`tools/facade/generer_facade.py`) répétée en coordonnées réelles (mètres) ;
-le toit garde une couleur unie panachée (tuile, ardoise). Ils sont produits à
+hauteur réelle (murs, toit à deux pans ou plat). Les murs sont habillés d'une
+façade tuilée tirée d'un atlas (fenêtres, porte ou vitrine au rez-de-chaussée,
+pignon aveugle, voir `assets/textures/facade.png`, généré par
+`tools/facade/generer_facade.py`) répétée en coordonnées réelles (mètres), par
+étages entiers ; le toit prend sa couleur dans l'orthophoto (tuile, ardoise),
+modulée par le relief de `assets/textures/couverture.png` (rangs de tuiles sur
+les pans, gravier sur les terrasses, `tools/facade/generer_couverture.py`) ;
+les immeubles reçoivent un édicule et des climatiseurs. Ils sont produits à
 part par `tools/fetch_buildings.py`, qui interroge le service WFS et écrit
 `assets/terrain/<zone>/buildings.bin` :
 
@@ -568,6 +573,38 @@ dessous, deux flancs), dans le même maillage que les bâtiments. Une carte sans
   étalés le long de l'axe : lue au bord, elle recopiait les avant-becs des piles
   du Pont Neuf de Toulouse en longues stries.
 
+
+## Masque d'eau (eau.png)
+
+Le soleil se reflète sur l'eau (traînée scintillante, comme dans FlightGear,
+voir `refletEau` dans `terrain.frag` et `sea.frag`). Le moteur reconnaissait
+l'eau à sa couleur dans l'orthophoto, mais le bassin d'Arcachon y est gris-vert
+et un lac de montagne presque noir. `tools/fetch_eau.py` fabrique
+`assets/terrain/<carte>/eau.png` (même grille que `forest.png`) à partir des
+surfaces hydrographiques permanentes de la BD TOPO, plus la mer hors des
+contours de départements sur les cartes qui ont `sea 1` dans `terrain.txt`,
+moins les zones d'estran (bancs découverts à marée basse, que la photo montre
+en sable) :
+
+```bash
+tools/.venv/bin/python tools/fetch_eau.py arcachon
+```
+
+Sans ce fichier, le moteur retombe sur le test de couleur.
+
+## Éclairage public (lampadaires.bin)
+
+La nuit, une ville vue d'hélicoptère est un chapelet de points orangés qui
+dessine les rues. `tools/fetch_lampadaires.py` pose un point tous les 30 m le
+long des tronçons de route marqués urbains dans la BD TOPO et les écrit dans
+`assets/terrain/<carte>/lampadaires.bin` (lon, lat par point). Le moteur
+(`render/Lampadaires`, shaders `lampadaires.*`) les dessine en points additifs
+à 8 m au-dessus du sol, allumés au crépuscule, cachés par les bâtiments qui
+les précèdent. Sans ce fichier, rien n'est dessiné.
+
+```bash
+tools/.venv/bin/python tools/fetch_lampadaires.py dax
+```
 
 ## Masque de forêt (forest.png)
 

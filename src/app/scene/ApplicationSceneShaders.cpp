@@ -98,6 +98,8 @@ void Application::initSceneShaders() {
                                                       assets / "shaders" / "shadow.frag");
     m_buildingShader = std::make_unique<render::Shader>(assets / "shaders" / "building.vert",
                                                         assets / "shaders" / "building.frag");
+    m_lampadairesShader = std::make_unique<render::Shader>(
+        assets / "shaders" / "lampadaires.vert", assets / "shaders" / "lampadaires.frag");
     m_monumentShader = std::make_unique<render::Shader>(assets / "shaders" / "monument.vert",
                                                         assets / "shaders" / "monument.frag");
     m_vegetationShader = std::make_unique<render::Shader>(assets / "shaders" / "vegetation.vert",
@@ -228,17 +230,16 @@ void Application::initSceneShaders() {
         }
     }
 
-    /* Façades tuilées des bâtiments, voir u_facade / u_facadePleine dans
-       building.frag : la face ouverte (fenêtres) et le pignon aveugle, choisis
-       par face au montage du maillage. Absentes : le shader reçoit une unité
-       vide, les murs restent en couleur unie. */
+    /* Atlas des façades et relief des toits des bâtiments, voir u_facade /
+       u_couverture dans building.frag. Absents : le shader reçoit une unité
+       vide, murs et toits restent en couleur unie. */
     const std::filesystem::path facadePath = assets / "textures" / "facade.png";
     if (std::filesystem::exists(facadePath)) {
         m_buildingFacade = std::make_unique<render::Texture>(facadePath);
     }
-    const std::filesystem::path facadePleinePath = assets / "textures" / "facade_pleine.png";
-    if (std::filesystem::exists(facadePleinePath)) {
-        m_buildingFacadePleine = std::make_unique<render::Texture>(facadePleinePath);
+    const std::filesystem::path couverturePath = assets / "textures" / "couverture.png";
+    if (std::filesystem::exists(couverturePath)) {
+        m_buildingCouverture = std::make_unique<render::Texture>(couverturePath);
     }
 
     /* Plan de mer : un grand quadrilatère horizontal qui s'étend jusqu'à l'horizon. */

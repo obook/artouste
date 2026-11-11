@@ -12,12 +12,14 @@
 #include "app/AppConstants.hpp"
 
 #include "render/Buildings.hpp"
+#include "render/Lampadaires.hpp"
 #include "render/Clouds.hpp"
 #include "render/Shader.hpp"
 #include "render/Terrain.hpp"
 #include "render/Vegetation.hpp"
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include <cmath>
 #include <cstdlib>
@@ -64,12 +66,14 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_terrainShader->setMat4("u_proj", ctx.proj);
         m_terrainShader->setMat4("u_model", ctx.toRel);
         m_terrainShader->setVec3("u_lightDir", ctx.lightDir);
+        m_terrainShader->setFloat("u_isDay", ctx.isDay);
         m_terrainShader->setVec3("u_seaColor", SEA_COLOR);
         m_terrainShader->setVec3("u_camPos", ctx.camPosRel);
         m_terrainShader->setInt("u_sonde", sonde);
         m_terrainShader->setVec3("u_fogColor", ctx.fogColor);
         m_terrainShader->setFloat("u_fogStart", m_fogStart);
         m_terrainShader->setFloat("u_fogEnd", m_fogEnd);
+        m_terrainShader->setFloat("u_time", static_cast<float>(glfwGetTime()));
         m_terrainShader->setInt("u_texture", 0);
         m_terrainShader->setInt("u_detail", 1);
         m_terrainShader->setVec2("u_originXZ", vec2{m_renderOrigin.x, m_renderOrigin.z});
@@ -100,6 +104,11 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         }
         if (m_terrainDetail) {
             m_terrainDetail->bind(1);
+        }
+        m_terrainShader->setInt("u_eau", 8);
+        m_terrainShader->setFloat("u_eauActif", m_terrainEau ? 1.0f : 0.0f);
+        if (m_terrainEau) {
+            m_terrainEau->bind(8);
         }
 
         /* Tuiles fines autour de la caméra, si la carte en livre : niveau large
@@ -140,9 +149,12 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
            c'est-à-dire juste sous l'appareil. */
         const auto dessinerTabliers = [this] {
             if (m_buildings && m_buildings->aTabliers()) {
-                /* Le tablier garde la photo du pont : rien à effacer dessus. */
+                /* Le tablier garde la photo du pont : rien à effacer dessus, et
+                   pas de reflet d'eau, même si le masque en met sous le pont. */
                 m_terrainShader->setInt("u_nbTabliers", 0);
+                m_terrainShader->setFloat("u_eauActif", -1.0f);
                 m_buildings->drawTabliers();
+                m_terrainShader->setFloat("u_eauActif", m_terrainEau ? 1.0f : 0.0f);
             }
         };
 
@@ -278,17 +290,30 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         m_buildingShader->setFloat("u_isDay", ctx.isDay);
         m_buildingShader->setFloat("u_partAllumees", ctx.partFenetresAllumees);
         m_buildingShader->setInt("u_facade", 0);
-        m_buildingShader->setInt("u_facadePleine", 1);
+        m_buildingShader->setInt("u_couverture", 1);
         if (m_buildingFacade) {
             m_buildingFacade->bind(0);
         }
-        if (m_buildingFacadePleine) {
-            m_buildingFacadePleine->bind(1);
+        if (m_buildingCouverture) {
+            m_buildingCouverture->bind(1);
         }
         /* Culling par tuiles : le recalage d'origine (u_model = toRel) s'annule dans le
            produit final, donc le frustum en coordonnées monde s'extrait de proj * vue
            monde (m_camera.view()), et la caméra est prise en position monde. */
         m_buildings->draw(ctx.proj * m_camera.view(), m_camera.position());
+    }
+
+    /* Éclairage public : des points additifs, seulement quand le jour baisse,
+       après les bâtiments pour qu'ils cachent les rues derrière eux. */
+    if (m_lampadaires && m_lampadaires->built() && ctx.isDay < 1.0f) {
+        m_lampadairesShader->use();
+        m_lampadairesShader->setMat4("u_model", ctx.toRel);
+        m_lampadairesShader->setMat4("u_view", ctx.view);
+        m_lampadairesShader->setMat4("u_proj", ctx.proj);
+        m_lampadairesShader->setVec3("u_camPos", ctx.camPosRel);
+        m_lampadairesShader->setFloat("u_hauteurEcran", static_cast<float>(m_height));
+        m_lampadairesShader->setFloat("u_nuit", 1.0f - ctx.isDay);
+        m_lampadaires->draw();
     }
 }
 
@@ -304,6 +329,7 @@ void Application::renderVegetationAndClouds(const RenderContext& ctx) {
         m_vegetationShader->setMat4("u_proj", ctx.proj);
         m_vegetationShader->setMat4("u_model", ctx.toRel);
         m_vegetationShader->setVec3("u_lightDir", ctx.lightDir);
+        m_vegetationShader->setFloat("u_isDay", ctx.isDay);
         m_vegetationShader->setVec3("u_camPos", ctx.camPosRel);
         m_vegetationShader->setVec3("u_fogColor", ctx.fogColor);
         m_vegetationShader->setFloat("u_fogStart", m_fogStart);
@@ -328,6 +354,7 @@ void Application::renderVegetationAndClouds(const RenderContext& ctx) {
         m_cloudShader->setMat4("u_proj", ctx.proj);
         m_cloudShader->setMat4("u_model", ctx.toRel);
         m_cloudShader->setVec3("u_lightDir", ctx.lightDir);
+        m_cloudShader->setFloat("u_isDay", ctx.isDay);
         m_cloudShader->setVec3("u_camPos", ctx.camPosRel);
         m_cloudShader->setVec3("u_fogColor", ctx.fogColor);
         m_cloudShader->setFloat("u_fogStart", m_fogStart);

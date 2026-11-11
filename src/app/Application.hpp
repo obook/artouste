@@ -51,6 +51,7 @@ namespace artouste::render {
 class Shader;
 class Terrain;
 class Buildings;
+class Lampadaires;
 class Vegetation;
 class Clouds;
 class HelicopterModel;
@@ -504,6 +505,7 @@ private:
     std::unique_ptr<render::Shader> m_flatShader;     /* couleur unie (lueurs) */
     std::unique_ptr<render::Shader> m_shadowShader;   /* ombre portée douce (dégradé) */
     std::unique_ptr<render::Shader> m_buildingShader; /* bâtiments extrudés (éclairage + brume) */
+    std::unique_ptr<render::Shader> m_lampadairesShader; /* éclairage public, points additifs la nuit */
     std::unique_ptr<render::Shader> m_monumentShader; /* monuments 3D (test alpha + brume) */
     std::unique_ptr<render::Shader> m_vegetationShader; /* arbres en billboards instanciés */
     std::unique_ptr<render::Shader> m_cloudShader;      /* nuages en billboards (mélange alpha) */
@@ -526,14 +528,16 @@ private:
     std::unique_ptr<render::Mesh> m_padSkirt;      /* jupe sous le disque (pad perché) */
     std::unique_ptr<render::Texture> m_loadingImage;  /* fond de l'écran d'attente */
     std::unique_ptr<render::Texture> m_terrainDetail; /* grain rocheux du terrain (unité 1) */
+    std::unique_ptr<render::Texture> m_terrainEau;    /* masque d'eau de la carte (unité 8) */
     std::unique_ptr<render::Texture> m_bonusTexteCarburant; /* lettrage des sphères de bonus */
     std::unique_ptr<render::Texture> m_bonusTexteSante;
     std::unique_ptr<render::Texture> m_bonusTexteMort;
-    std::unique_ptr<render::Texture> m_buildingFacade; /* façade tuilée des bâtiments (unité 0) */
-    std::unique_ptr<render::Texture> m_buildingFacadePleine; /* pignon aveugle (unité 1) */
+    std::unique_ptr<render::Texture> m_buildingFacade; /* atlas des façades des bâtiments (unité 0) */
+    std::unique_ptr<render::Texture> m_buildingCouverture; /* relief des toits (unité 1) */
     std::unique_ptr<render::Mesh> m_sea;               /* grand plan d'océan à l'horizon */
     std::unique_ptr<render::Terrain> m_terrain;
     std::unique_ptr<render::Buildings> m_buildings;   /* bâtiments 3D (BD TOPO extrudée) */
+    std::unique_ptr<render::Lampadaires> m_lampadaires; /* éclairage public (BD TOPO, routes urbaines) */
     using MonumentInstance = app::MonumentInstance; /* voir app/types/MonumentInstance.hpp */
 
     std::vector<MonumentInstance> m_monuments;        /* monuments 3D de la carte */

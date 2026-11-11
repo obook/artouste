@@ -25,6 +25,7 @@
 #include "input/Gamepad.hpp"
 #include "input/InputSystem.hpp"
 #include "render/Buildings.hpp"
+#include "render/Lampadaires.hpp"
 #include "render/Vegetation.hpp"
 #include "render/Clouds.hpp"
 #include "render/HelicopterModel.hpp"
@@ -101,6 +102,7 @@ Application::~Application() {
     m_loadedHeli.reset();
     m_helicopter.reset();
     m_buildings.reset();
+    m_lampadaires.reset();
     m_monuments.clear();
     m_vegetation.reset();
     m_clouds.reset();
@@ -119,6 +121,7 @@ Application::~Application() {
     m_flatShader.reset();
     m_shadowShader.reset();
     m_buildingShader.reset();
+    m_lampadairesShader.reset();
     m_monumentShader.reset();
     m_vegetationShader.reset();
     m_cloudShader.reset();
@@ -134,8 +137,9 @@ Application::~Application() {
     m_padSkirt.reset();
     m_loadingImage.reset();
     m_terrainDetail.reset();
+    m_terrainEau.reset();
     m_buildingFacade.reset();
-    m_buildingFacadePleine.reset();
+    m_buildingCouverture.reset();
     m_souffleFx.reset();
     m_souffleShader.reset();
 

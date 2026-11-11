@@ -12,6 +12,7 @@ par exemple :
 ```
 python3 tools/fetch_terrain.py ossau
 tools/.venv/bin/python tools/facade/generer_facade.py
+tools/.venv/bin/python tools/facade/generer_couverture.py
 blender --background --python tools/livree/make_tailrotor.py
 ```
 
@@ -35,7 +36,7 @@ from common import paths
 ```
 
 Les scripts directement rangés dans tools/ (fetch_terrain.py,
-fetch_buildings.py, fetch_forest.py) sont déjà dans ce dossier : ils n'ont besoin d'aucun
+fetch_buildings.py, fetch_forest.py, fetch_eau.py, fetch_lampadaires.py) sont déjà dans ce dossier : ils n'ont besoin d'aucun
 ajout à sys.path pour importer tools/common/ ou tools/terrain/.
 
 ## Paquets

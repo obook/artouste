@@ -254,6 +254,7 @@ void Application::renderHelicopter(const RenderContext& ctx,
         m_modelShader->setMat4("u_view", ctx.view);
         m_modelShader->setMat4("u_proj", ctx.proj);
         m_modelShader->setVec3("u_lightDir", ctx.lightDir);
+        m_modelShader->setFloat("u_isDay", ctx.isDay);
         m_modelShader->setVec3("u_camPos", ctx.camPosRel);
         m_modelShader->setInt("u_texture", 0);
         /* Verrière fêlée en mode zombie : la casse suit la vie perdue (voir

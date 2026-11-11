@@ -160,6 +160,7 @@ void Application::renderMonuments(const RenderContext& ctx) {
     m_monumentShader->setMat4("u_view", ctx.view);
     m_monumentShader->setMat4("u_proj", ctx.proj);
     m_monumentShader->setVec3("u_lightDir", ctx.lightDir);
+    m_monumentShader->setFloat("u_isDay", ctx.isDay);
     m_monumentShader->setVec3("u_camPos", ctx.camPosRel);
     m_monumentShader->setVec3("u_fogColor", ctx.fogColor);
     m_monumentShader->setFloat("u_fogStart", m_fogStart);

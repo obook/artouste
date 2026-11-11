@@ -165,6 +165,7 @@ add_executable(artouste
     render/combat/ExplosionFx.cpp
     render/combat/Projectiles.cpp
     render/combat/ZombieEyes.cpp
+    render/Lampadaires.cpp
     render/SouffleFx.cpp
     render/Clouds.cpp
     render/HelicopterModel.cpp

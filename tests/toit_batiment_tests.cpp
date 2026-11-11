@@ -31,8 +31,8 @@ struct Batiment {
 
     /* Base à 100 m, gouttière à 6 m au-dessus par défaut. */
     Batiment(const std::vector<float>& px, const std::vector<float>& pz, float toit,
-             bool ardoise = false, float hauteur = 6.0f) {
-        sommet = extruderBatiment(v, i, px, pz, 100.0f, hauteur, toit, ardoise, GRIS, GRIS);
+             bool ardoise = false, float hauteur = 6.0f, int facade = 0) {
+        sommet = extruderBatiment(v, i, px, pz, 100.0f, hauteur, toit, ardoise, facade, GRIS, GRIS);
     }
 
     /* Plus haut point des murs (normale horizontale). */
@@ -94,8 +94,11 @@ TEST_CASE("Toit plat quand la BD TOPO le dit", "[toit]") {
 }
 
 TEST_CASE("Toit plat sur un immeuble, même étroit", "[toit]") {
-    REQUIRE_THAT(Batiment(MAISON_X, MAISON_Z, 3.0f, false, 20.0f).sommet,
-                 WithinAbs(120.0f, 1e-3));
+    /* Terrasse à 120 m, l'édicule de 2,6 m posé dessus. */
+    const Batiment b(MAISON_X, MAISON_Z, 3.0f, false, 20.0f);
+    REQUIRE_THAT(b.sommet, WithinAbs(122.6f, 1e-3));
+    /* Terrasse, dessus de l'édicule (3 x 2,5) et d'un climatiseur (1,2 x 1,2). */
+    REQUIRE_THAT(b.surfaceToitPlat(), WithinAbs(60.0f + 7.5f + 1.44f, 1e-2));
 }
 
 TEST_CASE("Toit plat d'une emprise en L : ni débord ni trou", "[toit]") {
@@ -127,4 +130,36 @@ TEST_CASE("Emprise trouée : la cour reste ouverte, son mur la regarde", "[toit]
         }
     }
     REQUIRE(vu);
+}
+
+TEST_CASE("Façade : un nombre entier d'étages, la colonne de l'atlas dans l'UV", "[facade]") {
+    /* 7 m de gouttière : deux étages de 3 m étirés, colonne 2 de l'atlas. */
+    const Batiment b(MAISON_X, MAISON_Z, 0.2f, false, 7.0f, 2);
+    float vMin = 1e9f, vMax = -1e9f;
+    for (const Vertex& s : b.v) {
+        if (std::fabs(s.normal.y) < 0.01f) {
+            vMin = std::min(vMin, s.uv.y);
+            vMax = std::max(vMax, s.uv.y);
+        }
+    }
+    REQUIRE_THAT(vMin, WithinAbs(200.0f, 1e-3));
+    REQUIRE_THAT(vMax, WithinAbs(202.0f, 1e-3));
+}
+
+TEST_CASE("Terrasse d'immeuble : édicule et climatiseurs dans l'emprise", "[facade]") {
+    /* Immeuble de 30 x 12 m, 20 m de haut : des boîtes au-dessus du toit. */
+    const std::vector<float> px{0.0f, 30.0f, 30.0f, 0.0f};
+    const std::vector<float> pz{0.0f, 0.0f, 12.0f, 12.0f};
+    const Batiment           b(px, pz, 3.0f, false, 20.0f, 3);
+    REQUIRE_THAT(b.sommet, WithinAbs(122.6f, 1e-3));
+    for (const Vertex& s : b.v) {
+        if (s.position.y > 120.01f) {
+            REQUIRE(s.position.x > 0.0f);
+            REQUIRE(s.position.x < 30.0f);
+            REQUIRE(s.position.z > 0.0f);
+            REQUIRE(s.position.z < 12.0f);
+        }
+    }
+    /* Une maison n'en reçoit pas. */
+    REQUIRE_THAT(Batiment(MAISON_X, MAISON_Z, 0.2f).sommet, WithinAbs(106.0f, 1e-3));
 }

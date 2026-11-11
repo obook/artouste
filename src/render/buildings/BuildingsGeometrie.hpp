@@ -28,8 +28,13 @@ namespace artouste::render {
    Une emprise trouée (cour, arène) arrive en un seul anneau, ses trous reliés
    au contour par un pont (voir tools/fetch_buildings.py) : le toit s'arrête au
    bord de la cour.
+   facade est la colonne de l'atlas de façades (FACADES_MAISON premières
+   colonnes pour les maisons, les suivantes pour les immeubles, voir
+   tools/facade/generer_facade.py) ; les murs sont habillés d'un nombre entier
+   d'étages. Un immeuble à toit plat reçoit un édicule et des climatiseurs sur
+   sa terrasse.
    Les sommets et les indices sont ajoutés aux tampons donnés. Renvoie
-   l'altitude du point le plus haut (faîtage ou toit plat). */
+   l'altitude du point le plus haut (faîtage, toit plat ou édicule). */
 float extruderBatiment(std::vector<Vertex>&       verts,
                        std::vector<unsigned int>& idx,
                        const std::vector<float>&  px,
@@ -38,8 +43,19 @@ float extruderBatiment(std::vector<Vertex>&       verts,
                        float                      hauteur,
                        float                      hauteurToit,
                        bool                       ardoise,
+                       int                        facade,
                        const vec3&                mur,
                        const vec3&                toit);
+
+/* Colonnes de l'atlas de façades : les maisons d'abord, puis les immeubles.
+   MÊMES valeurs que VARIANTES dans tools/facade/generer_facade.py. */
+inline constexpr int FACADES_MAISON   = 3;
+inline constexpr int FACADES_IMMEUBLE = 2;
+
+/* À partir de cette hauteur de gouttière (5 étages environ), c'est un immeuble
+   à toit-terrasse : ses antennes et machineries font croire à la BD TOPO à un
+   toit en pente, et sa façade est celle d'un immeuble. */
+inline constexpr float HAUTEUR_IMMEUBLE_M = 15.0f;
 
 /* Épaisseur donnée au tablier d'un ouvrage d'art, en mètres. La BD TOPO donne
    l'altitude de la CHAUSSÉE ; le dessous est posé à cette distance en dessous,

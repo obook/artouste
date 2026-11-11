@@ -341,10 +341,13 @@ ce que trois secondes de survol suffisent à démentir. Deux chantiers distincts
 qui peuvent se mener séparément.
 
 - [ ] **Façades haussmanniennes.** `assets/textures/facade.png`, produite par
-  `tools/facade/generer_facade.py`, est une tuile générique de 12 x 6 m : trois
-  travées de 4 m sur deux étages de 3 m, enduit clair grainé, fenêtres
-  rectangulaires à croisillon, bandeau de plancher, pilastres discrets. Elle est
-  répétée sur tous les murs de toutes les cartes.
+  `tools/facade/generer_facade.py`, est un atlas de cases génériques de 12 x 3 m
+  (trois travées de 4 m sur un étage) : cinq variantes d'enduit ou de béton,
+  chacune en étage courant, rez-de-chaussée (porte ou vitrine) et pignon
+  aveugle, fenêtres rectangulaires à croisillon, bandeau de plancher, balcon
+  filant sur les immeubles. La variante est tirée par bâtiment, le mur reçoit
+  un nombre entier d'étages ; mais c'est toujours le même motif sur toutes les
+  cartes.
 
     Le vrai obstacle n'est pas le dessin mais la structure. Une façade
   haussmannienne n'est pas un motif répétable, c'est une composition sur toute la

@@ -191,9 +191,15 @@ constexpr std::uint8_t MATERIAU_ARDOISE = 2;
            varier de concert. */
         const vec3 mur  = WALL_COLOR * jitter(b * 2654435761u + 1u, 0.08f);
         const vec3 toit = ortho.couleurToit(cx, cz, maxX - minX, maxZ - minZ, b);
+        /* Colonne de l'atlas de façades : celles d'immeuble au-delà de la
+           hauteur d'immeuble, de maison sinon, tirée au sort par bâtiment. */
+        const std::uint32_t tirage = (b * 2246822519u) >> 8;
+        const int facade = hauteur >= HAUTEUR_IMMEUBLE_M
+                               ? FACADES_MAISON + static_cast<int>(tirage % FACADES_IMMEUBLE)
+                               : static_cast<int>(tirage % FACADES_MAISON);
 
-        const float sommet = extruderBatiment(tb->v, tb->i, px, pz, base, hauteur,
-                                              hauteurToit, materiau == MATERIAU_ARDOISE, mur, toit);
+        const float sommet = extruderBatiment(tb->v, tb->i, px, pz, base, hauteur, hauteurToit,
+                                              materiau == MATERIAU_ARDOISE, facade, mur, toit);
         tb->mx.y           = std::max(tb->mx.y, sommet);
         ++faits;
     }

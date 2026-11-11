@@ -20,6 +20,7 @@ uniform sampler2D u_texture;
 uniform sampler2D u_relief;    /* carte de relief en espace tangent, unité 1 */
 uniform int       u_hasRelief; /* 0 = la pièce n'en a pas, on garde sa normale */
 uniform vec3      u_lightDir;  /* direction VERS la lumière, déjà normalisée */
+uniform float     u_isDay;     /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
 uniform vec3      u_camPos;    /* position de la caméra (sert de lumière d'appoint) */
 uniform float     u_opacity;   /* 1 = opaque, < 1 = translucide */
 uniform int       u_glass;     /* 1 = vitrage : ajouter le reflet de Fresnel */
@@ -139,7 +140,9 @@ void main() {
     vec3  viewDir   = normalize(u_camPos - v_worldPos);
     float headlight = max(dot(n, viewDir), 0.0);
 
-    float light = 0.40 + 0.45 * diffuse + 0.45 * headlight;
+    /* La nuit, même chute que le terrain (NUIT dans terrain.frag) ; le phare
+       de caméra (headlight) garde l'appareil lisible. */
+    float light = (0.40 + 0.45 * diffuse) * mix(0.18, 1.0, u_isDay) + 0.45 * headlight;
 
     /* Reflets : la tôle peinte renvoie le soleil en un éclat serré (Blinn-Phong) et
        le ciel sur ses bords, là où le regard rase la surface. Sans ces deux termes,

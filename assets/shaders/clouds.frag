@@ -23,6 +23,7 @@ uniform vec3      u_camPos;     /* position caméra (distance de brume) */
 uniform vec3      u_fogColor;   /* teinte d'horizon */
 uniform float     u_fogStart;
 uniform float     u_fogEnd;
+uniform float     u_isDay;      /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
 
 void main() {
     vec4 texel = texture(u_texture, v_uv);
@@ -36,8 +37,10 @@ void main() {
     float grad   = smoothstep(0.0, 1.0, v_vfrac);
     vec3  color  = mix(bottom, top, grad);
 
-    /* Jour / nuit selon la hauteur du soleil. */
-    float day = clamp(u_lightDir.y * 0.4 + 0.65, 0.55, 1.0);
+    /* Jour / nuit selon la hauteur du soleil, puis la même chute nocturne que
+       le terrain (NUIT dans terrain.frag) : un nuage n'est pas plus clair que
+       le sol sous la lune. */
+    float day = clamp(u_lightDir.y * 0.4 + 0.65, 0.55, 1.0) * mix(0.18, 1.0, u_isDay);
     color *= day;
 
     /* Brume : les nuages lointains prennent la teinte d'horizon puis s'effacent. */

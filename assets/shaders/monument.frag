@@ -37,6 +37,8 @@ uniform vec3  u_fogColor;    /* teinte de l'horizon vers laquelle on fond */
 uniform float u_fogStart;    /* distance où la brume commence (m) */
 uniform float u_fogEnd;      /* distance où tout est noyé dans la brume (m) */
 uniform float u_alphaCutoff; /* en deçà, le pixel est jeté (ajour du treillis) */
+uniform float u_isDay;       /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
+const float NUIT = 0.18;     /* part de l'éclairage qui reste la nuit, comme terrain.frag */
 
 void main() {
     vec4 albedo = texture(u_texture, v_uv);
@@ -49,7 +51,7 @@ void main() {
        abs() évite qu'une face tournée à l'envers vire au noir. */
     vec3  n       = normalize(v_normal);
     float diffuse = abs(dot(n, normalize(u_lightDir))) * 0.5 + 0.5;
-    vec3  color   = albedo.rgb * (0.45 + 0.55 * diffuse);
+    vec3  color   = albedo.rgb * (0.45 + 0.55 * diffuse) * mix(NUIT, 1.0, u_isDay);
 
     /* Brume : proportion croissante de couleur d'horizon avec la distance,
        réglée comme celle du terrain et des bâtiments. */

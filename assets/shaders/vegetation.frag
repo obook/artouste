@@ -24,6 +24,7 @@ out vec4 frag_color;
 
 uniform sampler2D u_texture;
 uniform vec3      u_lightDir;   /* direction VERS le soleil, normalisée */
+uniform float     u_isDay;      /* 1 en plein jour, 0 soleil couché (ApplicationRender.cpp) */
 uniform vec3      u_camPos;     /* position caméra (distance de brume) */
 uniform vec3      u_fogColor;   /* teinte d'horizon */
 uniform float     u_fogStart;
@@ -36,7 +37,8 @@ void main() {
     }
 
     /* Luminosité selon la hauteur du soleil (plein jour clair, nuit sombre). */
-    float day = clamp(u_lightDir.y * 0.5 + 0.5, 0.25, 1.0);
+    /* Même chute nocturne que le terrain (NUIT dans terrain.frag). */
+    float day = clamp(u_lightDir.y * 0.5 + 0.5, 0.25, 1.0) * mix(0.18, 1.0, u_isDay);
     /* Très léger assombrissement du pied (occlusion ambiante) : le sprite photo est
        déjà ombré, on se contente d'accentuer un peu. */
     float ao    = mix(0.85, 1.0, clamp(v_vfrac * 1.6, 0.0, 1.0));

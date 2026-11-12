@@ -17,6 +17,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <fstream>
+#include <cmath>
+#include <limits>
 #include <string_view>
 #include <vector>
 
@@ -37,7 +39,7 @@ Lampadaires::Lampadaires(const std::filesystem::path& dir, const Terrain& terrai
     in.read(magie, 4);
     in.read(reinterpret_cast<char*>(&version), sizeof(version));
     in.read(reinterpret_cast<char*>(&nombre), sizeof(nombre));
-    if (!in || std::string_view(magie, 4) != "ALMP" || (version != 1u && version != 2u)) {
+    if (!in || std::string_view(magie, 4) != "ALMP" || version < 1u || version > 3u) {
         if (in.is_open()) { /* absent : pas d'éclairage public pour ce terrain */
             std::fprintf(stderr, "[Lampadaires] %s : en-tête invalide, éclairage ignoré.\n",
                          (dir / "lampadaires.bin").string().c_str());
@@ -46,7 +48,9 @@ Lampadaires::Lampadaires(const std::filesystem::path& dir, const Terrain& terrai
     }
 
     /* Par point : x, y, z et le type (0 rue, 1 feu d'aérodrome), lu tel quel par
-       le shader (a_pos.w). La version 1 n'a pas d'octet de type : tout est rue. */
+       le shader (a_pos.w). La version 1 n'a pas d'octet de type : tout est rue.
+       La 3 ajoute l'altitude de la chaussée d'un pont (NaN au sol) : le relief
+       passe sous le tablier, le lampadaire doit rester dessus. */
     std::vector<float> points;
     points.reserve(nombre * 4u);
     for (std::uint32_t k = 0; k < nombre; ++k) {
@@ -54,8 +58,12 @@ Lampadaires::Lampadaires(const std::filesystem::path& dir, const Terrain& terrai
         std::uint8_t type = 0;
         in.read(reinterpret_cast<char*>(&lon), sizeof(lon));
         in.read(reinterpret_cast<char*>(&lat), sizeof(lat));
-        if (version == 2u) {
+        float        alt  = std::numeric_limits<float>::quiet_NaN();
+        if (version >= 2u) {
             in.read(reinterpret_cast<char*>(&type), sizeof(type));
+        }
+        if (version >= 3u) {
+            in.read(reinterpret_cast<char*>(&alt), sizeof(alt));
         }
         if (!in) {
             break;
@@ -63,7 +71,8 @@ Lampadaires::Lampadaires(const std::filesystem::path& dir, const Terrain& terrai
         float x = 0.0f, z = 0.0f;
         terrain.worldAt(lon, lat, x, z);
         const float hauteur = type == 0 ? HAUTEUR_M : HAUTEUR_FEU_M;
-        points.insert(points.end(), {x, terrain.heightAt(x, z) + hauteur, z, float(type)});
+        const float sol     = std::isnan(alt) ? terrain.heightAt(x, z) : alt;
+        points.insert(points.end(), {x, sol + hauteur, z, float(type)});
     }
     for (const vec4& f : feux) {
         points.insert(points.end(), {f.x, f.y, f.z, f.w});

@@ -9,6 +9,12 @@ Etalab 2.0), et on ne garde que ceux qui ont un bâtiment (buildings.bin) à
 moins de RAYON_BATI_M : une route "urbaine" qui traverse les champs reste
 noire. Le moteur les dessine en points lumineux la nuit (render/Lampadaires).
 
+Les ponts en ville sont éclairés (pont de pierre à Bordeaux) : les points d'un
+tronçon urbain porté par un ouvrage (position_par_rapport_au_sol >= 1) qui
+tombent dans l'emprise d'un tablier de bridges.bin sont gardés sans bâtiment à
+côté, et reçoivent l'altitude de la chaussée : le relief, lui, est au fond du
+fleuve.
+
 Écrit aussi lampadaires.png, le halo au sol : même grille que eau.png (un pixel
 tous les PX_M mètres), un disque clair flouté par lampadaire, que terrain.frag
 ajoute en lumière orangée la nuit.
@@ -21,10 +27,11 @@ distinction : tout est blanc.
 
 Format de lampadaires.bin (petit-boutiste) :
     magie   : 4 octets "ALMP"
-    version : uint32 (= 2 ; la version 1 n'a pas l'octet de type)
+    version : uint32 (= 3 ; la 1 n'a pas l'octet de type, la 2 pas l'altitude)
     nombre  : uint32
     puis, par point : lon float32, lat float32 (degrés WGS84),
-                      type uint8 (0 lampadaire de rue, 1 feu d'aérodrome)
+                      type uint8 (0 lampadaire de rue, 1 feu d'aérodrome),
+                      alt float32 (altitude de la chaussée d'un pont, NaN au sol)
 
 Usage : python3 tools/fetch_lampadaires.py [carte]   (carte par défaut : ossau)
 Sortie : assets/terrain/<carte>/lampadaires.bin et lampadaires.png
@@ -56,6 +63,7 @@ RAYON_BATI_M = 50.0     # pas de lampadaire sans bâtiment à moins de 50 m
 HALO_PX = 1.0           # rayon du halo au sol, en pixels du masque (10 m)
 BALISE_M = 60.0         # un feu de bord de piste tous les 60 m (OACI)
 RUE, PISTE = 0, 1       # types de point du .bin
+AU_SOL = float("nan")   # altitude d'un point posé sur le relief
 M_PAR_DEG_LAT = 111320.0
 
 
@@ -93,6 +101,39 @@ def pres_du_bati(points, sommets, rayon, m_par_deg_lon):
                for s in voisins):
             garde.append((lon, lat))
     return garde
+
+
+def tabliers(path):
+    """Axes des tabliers de bridges.bin (voir fetch_bridges.py) : par tablier,
+       la demi-largeur maximale et ses points (lon, lat, alt)."""
+    if not path.exists():
+        return []
+    liste = []
+    with open(path, "rb") as f:
+        magie, version, nombre = struct.unpack("<4sII", f.read(12))
+        if magie != b"ABRG" or version != 2:
+            raise RuntimeError(f"{path} : en-tête inconnu")
+        for _ in range(nombre):
+            gauche, droite, _, n = struct.unpack("<ffBH", f.read(11))
+            liste.append((max(gauche, droite), list(struct.iter_unpack("<fff", f.read(12 * n)))))
+    return liste
+
+
+def altitude_sur_tablier(point, tabliers, m_par_deg_lon):
+    """Altitude de la chaussée au droit du point s'il tombe dans l'emprise
+       d'un tablier (projection sur son axe), AU_SOL sinon."""
+    lon, lat = point
+    for demi, axe in tabliers:
+        for (lon0, lat0, alt0), (lon1, lat1, alt1) in zip(axe, axe[1:]):
+            ax, ay = (lon1 - lon0) * m_par_deg_lon, (lat1 - lat0) * M_PAR_DEG_LAT
+            px, py = (lon - lon0) * m_par_deg_lon, (lat - lat0) * M_PAR_DEG_LAT
+            longueur2 = ax * ax + ay * ay
+            if longueur2 == 0:
+                continue
+            t = max(0.0, min(1.0, (px * ax + py * ay) / longueur2))
+            if math.hypot(px - t * ax, py - t * ay) <= demi:
+                return alt0 + (alt1 - alt0) * t
+    return AU_SOL
 
 
 def halo_au_sol(points, cadre):
@@ -140,19 +181,31 @@ def main():
     depart = time.time()
 
     points = []
+    portes = []     # points des tronçons sur un ouvrage, à poser sur le tablier
     troncons = 0
-    for feat in fetch_pages(bbox, WFS_LAYER_ROUTE, "nature,urbain,geometrie",
+    for feat in fetch_pages(bbox, WFS_LAYER_ROUTE,
+                            "nature,urbain,position_par_rapport_au_sol,geometrie",
                             filtre=filtre_natures(bbox, NATURES_ROUTE)):
-        if not feat["properties"].get("urbain"):
+        props = feat["properties"]
+        if not props.get("urbain"):
             continue
         troncons += 1
+        porte = str(props.get("position_par_rapport_au_sol")).isdigit() and \
+            int(props["position_par_rapport_au_sol"]) >= 1
         for ligne in lignes_de(feat.get("geometry")):
-            points += [p for p in echantillonner(ligne, PAS_M, m_par_deg_lon)
-                       if lon_min <= p[0] <= lon_max and lat_min <= p[1] <= lat_max]
+            cible = portes if porte else points
+            cible += [p for p in echantillonner(ligne, PAS_M, m_par_deg_lon)
+                      if lon_min <= p[0] <= lon_max and lat_min <= p[1] <= lat_max]
 
-    poses = len(points)
+    poses = len(points) + len(portes)
+    axes = tabliers(out_dir / "bridges.bin")
+    sur_pont = [(p, alt) for p in portes
+                for alt in [altitude_sur_tablier(p, axes, m_par_deg_lon)]
+                if not math.isnan(alt)]
     points = pres_du_bati(points, sommets_batiments(out_dir / "buildings.bin"),
                           RAYON_BATI_M, m_par_deg_lon)
+    points += [p for p, _ in sur_pont]   # un pont en ville est éclairé, bâti ou pas
+    altitudes = dict(sur_pont)
 
     feux = [(lon, lat)
             for feat in fetch_pages(bbox, WFS_LAYER_PISTE)
@@ -162,12 +215,13 @@ def main():
 
     path = out_dir / "lampadaires.bin"
     with open(path, "wb") as f:
-        f.write(b"ALMP" + struct.pack("<II", 2, len(points) + len(feux)))
+        f.write(b"ALMP" + struct.pack("<II", 3, len(points) + len(feux)))
         for genre, liste in ((RUE, points), (PISTE, feux)):
             for lon, lat in liste:
-                f.write(struct.pack("<ffB", lon, lat, genre))
+                f.write(struct.pack("<ffBf", lon, lat, genre, altitudes.get((lon, lat), AU_SOL)))
     print(f"[lampadaires] {path} écrit : {len(points)} points gardés sur {poses} posés "
-          f"({troncons} tronçons urbains), {len(feux)} feux d'aérodrome, "
+          f"({troncons} tronçons urbains, {len(sur_pont)} points sur un pont), "
+          f"{len(feux)} feux d'aérodrome, "
           f"{os.path.getsize(path) / 1024.0:.0f} ko, {time.time() - depart:.0f} s")
 
     path = out_dir / "lampadaires.png"

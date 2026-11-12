@@ -20,6 +20,7 @@
 #include "render/Model.hpp"
 #include "render/Shader.hpp"
 #include "render/Terrain.hpp"
+#include "app/types/RenderContext.hpp"
 #include "util/Math.hpp"
 
 #include <glad/glad.h>
@@ -60,6 +61,7 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
     /* Rendu relatif à la caméra : la vue reçue est déjà relative à m_renderOrigin ;
        on retranche donc la même origine des positions monde et de u_camPos. */
     const vec3 camPosRel = m_camera.position() - m_renderOrigin;
+    const float isDay = glm::clamp(lightDir.y + 0.2f, 0.0f, 1.0f); /* comme ApplicationRender.cpp */
     const auto drawPad = [&](float x, float z, float capDeg) {
         const float padTop = m_terrain->heightAt(x, z);
         /* Cap du marquage : le H sort du maillage montants selon Z, soit l'axe
@@ -100,7 +102,20 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
             m_modelShader->setVec3("u_lightDir", lightDir);
             m_modelShader->setVec3("u_camPos", camPosRel);
             m_modelShader->setInt("u_texture", 0);
+            /* La nuit, les six feux du pad (voir initScene) posent chacun leur
+               halo sur la dalle ; remis à zéro ensuite, le shader sert aussi à
+               l'appareil. */
+            m_modelShader->setFloat("u_isDay", isDay);
+            if (nuitLampadaires(lightDir) > 0.0f) {
+                std::vector<vec3> feux;
+                for (const vec4& f : feuxDuPad(x, z)) {
+                    feux.push_back(vec3{f.x, f.y, f.z} - m_renderOrigin);
+                }
+                m_modelShader->setInt("u_nbFeux", static_cast<int>(feux.size()));
+                m_modelShader->setVec3Array("u_feux", &feux[0].x, static_cast<int>(feux.size()));
+            }
             m_helipadModel->draw(*m_modelShader, render::Pass::Opaque);
+            m_modelShader->setInt("u_nbFeux", 0);
         } else {
             /* Repli procédural (aplats de couleur). */
             m_shader->use();
@@ -115,6 +130,29 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
         }
     };
 
+    for (const vec3& pad : padsDessines()) {
+        drawPad(pad.x, pad.y, pad.z);
+    }
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0.0f, 0.0f);
+    glDepthMask(GL_TRUE);
+}
+
+std::vector<vec4> Application::feuxDuPad(float x, float z) const {
+    /* Six feux verts au bord de la dalle (périmètre d'hélistation, OACI),
+       juste à l'intérieur de l'anneau blanc, encastrés. Type 2 pour
+       lampadaires.vert. */
+    const float y = m_terrain->heightAt(x, z) + 0.25f;
+    std::vector<vec4> feux;
+    for (int k = 0; k < 6; ++k) {
+        const float a = glm::radians(60.0f * static_cast<float>(k));
+        feux.push_back(vec4{x + 6.3f * std::cos(a), y, z + 6.3f * std::sin(a), 2.0f});
+    }
+    return feux;
+}
+
+std::vector<vec3> Application::padsDessines() const {
     /* Hélipads du terrain, convertis de lon/lat en position monde et ignorés
        s'ils tombent hors de l'emprise courante. */
     const float halfW = m_terrain->halfWidth();
@@ -124,27 +162,24 @@ void Application::drawHelipads(const mat4& view, const mat4& proj, const vec3& l
     /* Le départ est calé sur l'hélipad le plus proche du repère de la carte (voir
        initScene) : quand la carte en déclare, le pad de départ est donc l'un d'eux,
        et le tracer une seconde fois croiserait deux H de caps différents. */
+    std::vector<vec3> pads;
     bool departCouvert = false;
     for (const render::Landmark& pad : m_terrain->helipads()) {
         float x = 0.0f, z = 0.0f;
         m_terrain->worldAt(pad.lon, pad.lat, x, z);
         if (std::fabs(x - origX) <= halfW && std::fabs(z - origZ) <= halfH) {
-            drawPad(x, z, pad.headingDeg);
+            pads.push_back(vec3{x, z, pad.headingDeg});
         }
         const float dx = x - m_startPos.x, dz = z - m_startPos.z;
         if (dx * dx + dz * dz < 1.0f) {
             departCouvert = true;
         }
     }
-
     /* Hélipad de départ, seulement si la carte n'en a pas déclaré un à cet endroit. */
     if (!departCouvert) {
-        drawPad(m_startPos.x, m_startPos.z, 0.0f);
+        pads.push_back(vec3{m_startPos.x, m_startPos.z, 0.0f});
     }
-
-    glDisable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(0.0f, 0.0f);
-    glDepthMask(GL_TRUE);
+    return pads;
 }
 
 void Application::drawScorchMarks(const mat4& view, const mat4& proj) {

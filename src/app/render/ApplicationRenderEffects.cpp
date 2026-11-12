@@ -43,13 +43,14 @@ constexpr float BEACON_PERIOD = 1.2f;            /* période du clignotement (s)
 constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
 
 /*
- * Feux de position avant, aux positions du modèle (all-lights.xml d'Émmanuel),
+ * Feux de position, aux positions du modèle (all-lights.xml d'Émmanuel),
  * exprimées ici en repère corps. Allumés la nuit (voir renderScene). On respecte la
- * convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite). Le feu
- * blanc de queue du modèle (corps {-3.96, 1.566, 0.20}) n'est pas allumé pour l'instant.
+ * convention aéronautique : rouge à bâbord (gauche), vert à tribord (droite), blanc
+ * en bout de poutre de queue.
  */
 const vec3      NAV_LEFT_POS{4.24f, 0.356f, -0.77f};   /* feu de navigation bâbord (rouge) */
 const vec3      NAV_RIGHT_POS{4.24f, 0.356f, 0.77f};   /* feu de navigation tribord (vert) */
+const vec3      NAV_TAIL_POS{-3.96f, 1.566f, 0.20f};   /* feu de queue (blanc) */
 constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu (m) */
 
 /*
@@ -65,7 +66,8 @@ constexpr float NOZZLE_RADIUS = 0.24f;
 
 }  /* namespace */
 
-void Application::drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds) {
+void Application::drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds,
+                                    float nuit) {
     /* Lueurs moteur (turbine coupée = rien à dessiner) et flash de bouche
        (mode zombie, indépendant du régime turbine -- on tire aussi bien à
        plein régime). Sans l'un ni l'autre, rien à faire. */
@@ -85,7 +87,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
        développe. */
     const std::vector<RocketSystem::ExplosionView> blasts =
         m_combat.active() ? m_combat.explosions() : std::vector<RocketSystem::ExplosionView>{};
-    if (!engineGlows && !muzzleFlash && rockets.empty() && blasts.empty()) {
+    if (!engineGlows && !muzzleFlash && rockets.empty() && blasts.empty() && nuit <= 0.0f) {
         return;
     }
 
@@ -146,6 +148,21 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);  /* les lueurs ne masquent rien : elles s'ajoutent au rendu */
 
+    /* --- Feux de position (nuit) --------------------------------------------- */
+    /* Rouge bâbord, vert tribord, blanc en queue : allumés au crépuscule,
+       comme l'éclairage public (nuit = nuitLampadaires), éteints le jour.
+       Sur batterie : allumés même turbine coupée. */
+    if (nuit > 0.0f) {
+        const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
+            const vec3 w = bodyToWorld(bodyPos);
+            drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f * nuit});
+            drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f * nuit});
+        };
+        drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
+        drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
+        drawLight(NAV_TAIL_POS, vec3{1.0f, 1.0f, 0.95f});    /* queue : blanc */
+    }
+
     if (engineGlows) {
         /* --- Strombo ----------------------------------------------------------- */
         /* Petite sphère rouge au-dessus de la cabine, qui clignote : allumée
@@ -153,20 +170,6 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         const float beaconPhase = std::fmod(timeSeconds, BEACON_PERIOD) / BEACON_PERIOD;
         if (beaconPhase < BEACON_ON) {
             drawGlow(bodyToWorld(BEACON_POS), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
-        }
-
-        /* --- Feux de position avant (nuit) -------------------------------------- */
-        /* Les deux feux de nez (rouge bâbord, vert tribord) s'allument la nuit,
-           entre 18h et 6h dans l'heure du simulateur. De jour ils restent éteints. */
-        const float hourOfDay = timeOfDaySeconds(timeSeconds) / 3600.0f;
-        if (hourOfDay >= 18.0f || hourOfDay < 6.0f) {
-            const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
-                const vec3 w = bodyToWorld(bodyPos);
-                drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f});
-                drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f});
-            };
-            drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
-            drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
         }
 
         /* --- Tuyère -------------------------------------------------------------- */

@@ -55,6 +55,9 @@ uniform float     u_isDay;      /* 1 en plein jour, 0 soleil couché (Applicatio
 const float       NUIT = 0.18;  /* part de l'éclairage qui reste la nuit (lune) */
 uniform sampler2D u_eau;        /* masque d'eau de la carte (eau.png), unité 8 */
 uniform float     u_eauActif;   /* 1 si la carte a son masque, 0 sinon, -1 sur un tablier (pas de reflet) */
+uniform sampler2D u_lampes;     /* halo des lampadaires au sol (lampadaires.png), unité 9 */
+uniform float     u_lampesNuit;  /* 0 le jour ou sans masque, 1 la nuit tombée */
+const vec3        SODIUM = vec3(0.98, 0.63, 0.27); /* orangé des photos aériennes, même teinte que lampadaires.vert */
 uniform vec3      u_camPos;     /* position de la caméra (pour la distance de brume) */
 uniform vec3      u_fogColor;   /* teinte de l'horizon vers laquelle on fond */
 uniform float     u_fogStart;   /* distance où la brume commence (m) */
@@ -387,7 +390,13 @@ void main() {
        l'ombre dans le noir total. */
     float diffuse = dot(n, normalize(u_lightDir)) * 0.5 + 0.5;
     float light   = (0.55 + 0.55 * diffuse) * mix(NUIT, 1.0, u_isDay);
-    vec3  color   = albedo * min(light, 1.3);
+    /* La nuit, les lampadaires éclairent la chaussée sous eux : halo orangé
+       lu dans le masque de la carte, qui s'allume avec les points. Le sodium
+       est quasi monochrome : seule la clarté du sol compte, pas sa couleur de
+       jour (sinon la chaussée prend le beige de la photo, comme du sable). */
+    float rue     = texture(u_lampes, v_uv).r * u_lampesNuit;
+    float clarte  = dot(albedo, vec3(0.30, 0.59, 0.11));
+    vec3  color   = albedo * min(light, 1.3) + SODIUM * clarte * rue;
 
     /* La mer du terrain est rendue dans la couleur unie du plan de mer (même
        éclairage), partout où l'altitude est ~ 0. Cela donne une surface d'eau

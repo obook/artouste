@@ -83,6 +83,7 @@ void Application::renderScene(const mat4& base,
 
     /* Décalques au sol, dessinés avant l'appareil (voir ApplicationGround.cpp). */
     drawHelipads(view, proj, lightDir);
+    renderLampadaires(ctx); /* après les pads : leurs feux sont sur le disque */
     drawHapi(view, proj, timeSeconds);
     drawScorchMarks(view, proj); /* traces d'impact des roquettes (mode zombie) */
     drawGroundShadow(base, rotorFraction, view, proj, lightDir);
@@ -95,7 +96,7 @@ void Application::renderScene(const mat4& base,
     drawSouffle(ctx);
 
     /* Lueurs moteur (strombo + tuyère), dessinées en dernier car translucides. */
-    drawEngineEffects(base, turbineFraction, timeSeconds);
+    drawEngineEffects(base, turbineFraction, timeSeconds, nuitLampadaires(lightDir));
 }
 
 } /* namespace artouste::app */

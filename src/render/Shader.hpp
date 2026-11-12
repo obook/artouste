@@ -51,6 +51,7 @@ public:
     void setMat4Array(const std::string& name, const float* values, int count);
     /* Idem pour un tableau de vec4 ou de vec2 (4 ou 2 flottants chacun). */
     void setVec4Array(const std::string& name, const float* values, int count);
+    void setVec3Array(const std::string& name, const float* values, int count);
     void setVec2Array(const std::string& name, const float* values, int count);
     void setVec2(const std::string& name, const vec2& value);
     void setVec3(const std::string& name, const vec3& value);

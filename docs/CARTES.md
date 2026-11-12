@@ -592,15 +592,23 @@ tools/.venv/bin/python tools/fetch_eau.py arcachon
 
 Sans ce fichier, le moteur retombe sur le test de couleur.
 
-## Éclairage public (lampadaires.bin)
+## Éclairage public (lampadaires.bin, lampadaires.png)
 
 La nuit, une ville vue d'hélicoptère est un chapelet de points orangés qui
 dessine les rues. `tools/fetch_lampadaires.py` pose un point tous les 30 m le
-long des tronçons de route marqués urbains dans la BD TOPO et les écrit dans
+long des tronçons de route marqués urbains dans la BD TOPO, ne garde que ceux
+qui ont un bâtiment de `buildings.bin` à moins de 50 m (une route "urbaine"
+qui traverse les champs reste noire) et les écrit dans
 `assets/terrain/<carte>/lampadaires.bin` (lon, lat par point). Le moteur
 (`render/Lampadaires`, shaders `lampadaires.*`) les dessine en points additifs
 à 8 m au-dessus du sol, allumés au crépuscule, cachés par les bâtiments qui
-les précèdent. Sans ce fichier, rien n'est dessiné.
+les précèdent. Le script écrit aussi `lampadaires.png` (même grille que
+`eau.png`), le halo de chaque lampadaire au sol, que `terrain.frag` ajoute en
+lumière orangée la nuit. Les surfaces d'aérodrome de la BD TOPO reçoivent en
+plus un feu blanc tous les 60 m sur leur contour, au ras du sol (type 1 dans le
+`.bin`) ; l'OACI voudrait des seuils verts et des voies bleues, mais la BD TOPO
+ne distingue pas une piste d'une aire. Sans ces fichiers, rien n'est dessiné.
+Régénérer les deux après `fetch_buildings.py`.
 
 ```bash
 tools/.venv/bin/python tools/fetch_lampadaires.py dax

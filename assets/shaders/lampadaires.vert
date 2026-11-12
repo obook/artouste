@@ -11,7 +11,7 @@
  * Licence : GPL v2
  */
 
-layout(location = 0) in vec3 a_pos;  /* position monde, avant recalage */
+layout(location = 0) in vec4 a_pos;  /* xyz : position monde, avant recalage ; w : 0 rue, 1 feu d'aérodrome, 2 feu de pad */
 
 uniform mat4  u_model;   /* recalage repère-caméra */
 uniform mat4  u_view;
@@ -25,8 +25,10 @@ out float v_fondu;
 const float TAILLE_M    = 2.6;  /* diamètre apparent de près, en mètres */
 const float TAILLE_MIN  = 3.0;  /* plancher à l'écran, en pixels */
 const float TAILLE_MAX  = 18.0;
-const vec3  SODIUM      = vec3(1.00, 0.72, 0.35);
+const vec3  SODIUM      = vec3(0.98, 0.63, 0.27);
 const vec3  LED         = vec3(0.92, 0.95, 1.00);
+/* Balisage : aérodrome blanc, périmètre d'hélistation vert (OACI, annexe 14 vol. II). */
+const vec3  FEUX[2]     = vec3[2](vec3(1.00, 1.00, 0.95), vec3(0.25, 1.00, 0.40));
 
 float alea(vec3 p) {
     uvec3 q = uvec3(ivec3(floor(p)));
@@ -36,7 +38,7 @@ float alea(vec3 p) {
 }
 
 void main() {
-    vec3  pos  = (u_model * vec4(a_pos, 1.0)).xyz;
+    vec3  pos  = (u_model * vec4(a_pos.xyz, 1.0)).xyz;
     vec4  clip = u_proj * u_view * vec4(pos, 1.0);
     float dist = max(length(u_camPos - pos), 1.0);
     /* Taille en pixels d'un objet de TAILLE_M mètres à cette distance. */
@@ -44,8 +46,11 @@ void main() {
     gl_PointSize = clamp(px, TAILLE_MIN, TAILLE_MAX);
     gl_Position  = clip;
 
-    float t = alea(a_pos);
-    v_color = mix(SODIUM, LED, step(0.85, t)) * (0.7 + 0.3 * alea(a_pos + 7.0));
+    float t = alea(a_pos.xyz);
+    v_color = mix(SODIUM, LED, step(0.85, t)) * (0.7 + 0.3 * alea(a_pos.xyz + 7.0));
+    if (a_pos.w > 0.5) {
+        v_color = FEUX[int(a_pos.w) - 1];
+    }
     /* Les points lointains s'effacent dans la brume, un peu avant le terrain. */
     v_fondu = 1.0 - smoothstep(6000.0, 14000.0, dist);
 }

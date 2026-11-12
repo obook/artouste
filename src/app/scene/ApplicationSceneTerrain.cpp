@@ -84,16 +84,18 @@ void Application::loadTerrain(const std::string& name) {
     if (std::filesystem::exists(terrainDir / "eau.png")) {
         m_terrainEau = std::make_unique<render::Texture>(terrainDir / "eau.png");
     }
+    /* Halo des lampadaires au sol (lampadaires.png, même grille) : terrain.frag
+       l'ajoute en lumière orangée la nuit. Absent : rien. */
+    m_terrainLampes.reset();
+    if (std::filesystem::exists(terrainDir / "lampadaires.png")) {
+        m_terrainLampes = std::make_unique<render::Texture>(terrainDir / "lampadaires.png");
+    }
 
     /* Bâtiments 3D (BD TOPO extrudée) propres au terrain, posés sur le relief.
        Absents (fichier buildings.bin manquant) ou refusés par la carte : rien
        n'est dessiné. */
     m_buildings =
         batimentsIci ? std::make_unique<render::Buildings>(terrainDir, *m_terrain) : nullptr;
-
-    /* Éclairage public (lampadaires.bin, tools/fetch_lampadaires.py) : des
-       points lumineux la nuit le long des rues. Absent : rien. */
-    m_lampadaires = std::make_unique<render::Lampadaires>(terrainDir, *m_terrain);
 
     input::Gamepad::viderFile();
 
@@ -118,6 +120,7 @@ void Application::loadTerrain(const std::string& name) {
     /* Nuages en billboards (prototype) : couche de cumulus épars au-dessus du relief.
        Partagent la texture de bouffée entre terrains. */
     m_clouds = std::make_unique<render::Clouds>(*m_terrain, m_assetsDir / "clouds" / "puff.png");
+    m_lampadaires.reset(); /* reconstruit ci-dessous avec les feux de pad */
 
     /*
      * Position de départ : posé à Fabrèges, le fond de vallée plat à l'entrée du
@@ -160,6 +163,15 @@ void Application::loadTerrain(const std::string& name) {
         const float parkZ = START_Z - avant.z * render::LoadedHelicopter::ROTOR_FORWARD_OFFSET;
         m_parkPos = vec3{parkX, m_terrain->heightAt(parkX, parkZ), parkZ};
         m_flight.reset(m_parkPos, m_terrain->startHeadingDeg());
+
+        /* Éclairage public (lampadaires.bin, tools/fetch_lampadaires.py) : des
+           points lumineux la nuit le long des rues, plus les feux de chaque pad. */
+        std::vector<vec4> feuxPads;
+        for (const vec3& pad : padsDessines()) {
+            const std::vector<vec4> feux = feuxDuPad(pad.x, pad.y);
+            feuxPads.insert(feuxPads.end(), feux.begin(), feux.end());
+        }
+        m_lampadaires = std::make_unique<render::Lampadaires>(terrainDir, *m_terrain, feuxPads);
 
         /* Point d'apparition demandé sur la ligne de commande : on repose
            l'appareil ailleurs, après le placement au pad et non à sa place. Le

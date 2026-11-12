@@ -12,8 +12,11 @@
 
 #pragma once
 
+#include "util/Math.hpp"
+
 #include <cstddef>
 #include <filesystem>
+#include <vector>
 
 namespace artouste::render {
 
@@ -22,8 +25,11 @@ class Terrain;
 class Lampadaires {
 public:
     /* Charge lampadaires.bin depuis dir et pose chaque point sur le relief, à
-       HAUTEUR_M au-dessus du sol. Fichier absent : rien (built() == false). */
-    Lampadaires(const std::filesystem::path& dir, const Terrain& terrain);
+       HAUTEUR_M au-dessus du sol, puis ajoute les feux donnés tels quels
+       (x, y, z monde et type, voir lampadaires.vert). Rien du tout : built()
+       == false. */
+    Lampadaires(const std::filesystem::path& dir, const Terrain& terrain,
+                const std::vector<vec4>& feux = {});
     ~Lampadaires();
     Lampadaires(const Lampadaires&)            = delete;
     Lampadaires& operator=(const Lampadaires&) = delete;

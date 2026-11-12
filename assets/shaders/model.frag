@@ -25,6 +25,10 @@ uniform vec3      u_camPos;    /* position de la caméra (sert de lumière d'app
 uniform float     u_opacity;   /* 1 = opaque, < 1 = translucide */
 uniform int       u_glass;     /* 1 = vitrage : ajouter le reflet de Fresnel */
 uniform float     u_damage;    /* 0 = verrière intacte, 1 = en miettes (mode zombie) */
+uniform int       u_nbFeux;    /* feux posés sur la pièce (hélipad la nuit), 0 sinon */
+uniform vec3      u_feux[6];   /* leur position, repère de rendu */
+const vec3        FEU_VERT  = vec3(0.25, 1.00, 0.40); /* même teinte que lampadaires.vert */
+const float       FEU_RAYON = 1.2;                    /* portée du halo au sol, en mètres */
 
 /* Taille d'une écaille de verre. La verrière fait environ un mètre : à 22 cm,
    cinq ou six écailles en travers, ce qui se lit comme du verre feuilleté. */
@@ -142,21 +146,28 @@ void main() {
 
     /* La nuit, même chute que le terrain (NUIT dans terrain.frag) ; le phare
        de caméra (headlight) garde l'appareil lisible. */
-    float light = (0.40 + 0.45 * diffuse) * mix(0.18, 1.0, u_isDay) + 0.45 * headlight;
+    float nuit  = mix(0.18, 1.0, u_isDay);
+    float light = (0.40 + 0.45 * diffuse) * nuit + 0.45 * headlight;
 
     /* Reflets : la tôle peinte renvoie le soleil en un éclat serré (Blinn-Phong) et
        le ciel sur ses bords, là où le regard rase la surface. Sans ces deux termes,
        la cellule rend comme du plastique mat quelle que soit la finesse du maillage.
        L'éclat du soleil est coupé du côté à l'ombre, que le demi-Lambert éclaire
-       encore ; le reflet du ciel, lui, ne dépend pas de l'heure. */
+       encore, et s'éteint avec le soleil ; le reflet du ciel suit la nuit
+       (sinon la tôle gardait un éclat blanc sous un soleil couché). */
     vec3  lightDir = normalize(u_lightDir);
     vec3  halfDir  = normalize(lightDir + viewDir);
     float lit      = clamp(dot(n, lightDir) * 4.0, 0.0, 1.0);
-    float soleil   = pow(max(dot(n, halfDir), 0.0), 32.0) * 0.60 * lit;
-    float ciel     = pow(1.0 - max(dot(n, viewDir), 0.0), 4.0) * 0.18;
+    float soleil   = pow(max(dot(n, halfDir), 0.0), 32.0) * 0.60 * lit * u_isDay;
+    float ciel     = pow(1.0 - max(dot(n, viewDir), 0.0), 4.0) * 0.18 * nuit;
 
     vec3  color = albedo.rgb * min(light, 1.2) + vec3(soleil) +
                   vec3(0.55, 0.68, 0.85) * ciel;
+    /* Feux de pad : chacun pose un petit halo vert sur la dalle autour de lui. */
+    for (int i = 0; i < u_nbFeux; ++i) {
+        float d = distance(v_worldPos, u_feux[i]) / FEU_RAYON;
+        color += albedo.rgb * FEU_VERT * exp(-d * d) * 0.6;
+    }
     float alpha = albedo.a * u_opacity;
 
     /*
@@ -168,7 +179,7 @@ void main() {
      */
     if (u_glass == 1) {
         float fresnel = pow(1.0 - abs(dot(n, viewDir)), 3.0);
-        color = mix(color, vec3(0.85, 0.90, 0.95), fresnel * 0.6);
+        color = mix(color, vec3(0.85, 0.90, 0.95) * nuit, fresnel * 0.6);
         alpha = clamp(alpha + fresnel * 0.5, 0.0, 1.0);
 
         /* Verrière fêlée (mode zombie). Le trait opacifie le verre en plus de

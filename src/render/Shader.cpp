@@ -129,6 +129,10 @@ void Shader::setVec4Array(const std::string& name, const float* values, int coun
     glUniform4fv(getLocation(name), count, values);
 }
 
+void Shader::setVec3Array(const std::string& name, const float* values, int count) {
+    glUniform3fv(getLocation(name), count, values);
+}
+
 void Shader::setVec2Array(const std::string& name, const float* values, int count) {
     glUniform2fv(getLocation(name), count, values);
 }

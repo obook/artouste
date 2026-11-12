@@ -298,6 +298,7 @@ private:
     /* Terrain texturé (ou repli à couleurs de sommets) et bâtiments 3D extrudés.
        Définie dans ApplicationRenderTerrain.cpp. */
     void renderTerrainAndBuildings(const RenderContext& ctx);
+    void renderLampadaires(const RenderContext& ctx);
 
     /* Monuments 3D de la carte (modèles ponctuels posés à une coordonnée), après
        les bâtiments extrudés. Ne dessine rien si la carte n'en déclare pas.
@@ -346,6 +347,11 @@ private:
        l'appareil sans test de profondeur pour éviter le z-fighting au ras du sol.
        Définie dans ApplicationGround.cpp. */
     void drawHelipads(const mat4& view, const mat4& proj, const vec3& lightDir);
+    /* Pads dessinés : ceux de helipads.txt dans l'emprise, plus celui du départ
+       s'il n'en recouvre aucun. x, z monde et cap du H en degrés. */
+    [[nodiscard]] std::vector<vec3> padsDessines() const;
+    /* Les six feux d'un pad centré en (x, z) : position monde et type. */
+    [[nodiscard]] std::vector<vec4> feuxDuPad(float x, float z) const;
 
     /* Balises HAPI du terrain (indicateur de pente d'approche) : une petite
        lueur au sol par balise, recolorée à chaque image selon la position de
@@ -373,7 +379,8 @@ private:
     /* Lueurs liées au moteur : strombo (flash rouge anti-collision au-dessus de la
        cabine, clignotant quand la turbine tourne) et tuyère (zone chaude jaune/rouge
        à la sortie de la turbine, d'intensité croissante avec le régime). */
-    void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds);
+    void drawEngineEffects(const mat4& base, float turbineFraction, float timeSeconds,
+                           float nuit);
 
     /* Souffle rotor : avance le nuage de poussière soulevé près du sol (émission
        sous l'axe du mât, que 'base' situe dans le monde) puis le dessine. Un pas
@@ -529,6 +536,7 @@ private:
     std::unique_ptr<render::Texture> m_loadingImage;  /* fond de l'écran d'attente */
     std::unique_ptr<render::Texture> m_terrainDetail; /* grain rocheux du terrain (unité 1) */
     std::unique_ptr<render::Texture> m_terrainEau;    /* masque d'eau de la carte (unité 8) */
+    std::unique_ptr<render::Texture> m_terrainLampes; /* halo des lampadaires au sol (unité 9) */
     std::unique_ptr<render::Texture> m_bonusTexteCarburant; /* lettrage des sphères de bonus */
     std::unique_ptr<render::Texture> m_bonusTexteSante;
     std::unique_ptr<render::Texture> m_bonusTexteMort;

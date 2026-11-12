@@ -110,6 +110,11 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
         if (m_terrainEau) {
             m_terrainEau->bind(8);
         }
+        m_terrainShader->setInt("u_lampes", 9);
+        m_terrainShader->setFloat("u_lampesNuit", m_terrainLampes ? nuitLampadaires(ctx.lightDir) : 0.0f);
+        if (m_terrainLampes) {
+            m_terrainLampes->bind(9);
+        }
 
         /* Tuiles fines autour de la caméra, si la carte en livre : niveau large
            sur les unités 2 et 3, niveau serré sur les unités 4 et 5. Une taille
@@ -302,17 +307,21 @@ void Application::renderTerrainAndBuildings(const RenderContext& ctx) {
            monde (m_camera.view()), et la caméra est prise en position monde. */
         m_buildings->draw(ctx.proj * m_camera.view(), m_camera.position());
     }
+}
 
-    /* Éclairage public : des points additifs, seulement quand le jour baisse,
-       après les bâtiments pour qu'ils cachent les rues derrière eux. */
-    if (m_lampadaires && m_lampadaires->built() && ctx.isDay < 1.0f) {
+void Application::renderLampadaires(const RenderContext& ctx) {
+    /* Éclairage public : des points additifs, seulement quand le jour baisse.
+       Après les bâtiments, qui cachent les rues derrière eux, et après les
+       hélipads : leurs feux sont posés sur le disque, qui les recouvrirait. */
+    const float nuit = nuitLampadaires(ctx.lightDir);
+    if (m_lampadaires && m_lampadaires->built() && nuit > 0.0f) {
         m_lampadairesShader->use();
         m_lampadairesShader->setMat4("u_model", ctx.toRel);
         m_lampadairesShader->setMat4("u_view", ctx.view);
         m_lampadairesShader->setMat4("u_proj", ctx.proj);
         m_lampadairesShader->setVec3("u_camPos", ctx.camPosRel);
         m_lampadairesShader->setFloat("u_hauteurEcran", static_cast<float>(m_height));
-        m_lampadairesShader->setFloat("u_nuit", 1.0f - ctx.isDay);
+        m_lampadairesShader->setFloat("u_nuit", nuit);
         m_lampadaires->draw();
     }
 }

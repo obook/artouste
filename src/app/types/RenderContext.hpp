@@ -29,4 +29,11 @@ struct RenderContext {
     float partFenetresAllumees;
 };
 
+/* Allumage de l'éclairage public et des feux de pad : de 0 à 1 entre soleil à
+   +3 et -6 degrés (crépuscule civil). isDay, lui, décroît dès le milieu de
+   l'après-midi. */
+inline float nuitLampadaires(const vec3& lightDir) {
+    return 1.0f - glm::smoothstep(-0.10f, 0.05f, lightDir.y);
+}
+
 } /* namespace artouste::app */

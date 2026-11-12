@@ -609,9 +609,15 @@ le halo sort sur le tablier, dessiné avec le terrain. Le moteur
 les précèdent. Le script écrit aussi `lampadaires.png` (même grille que
 `eau.png`), le halo de chaque lampadaire au sol, que `terrain.frag` ajoute en
 lumière orangée la nuit. Les surfaces d'aérodrome de la BD TOPO reçoivent en
-plus un feu blanc tous les 60 m sur leur contour, au ras du sol (type 1 dans le
-`.bin`) ; l'OACI voudrait des seuils verts et des voies bleues, mais la BD TOPO
-ne distingue pas une piste d'une aire. Sans ces fichiers, rien n'est dessiné.
+plus un feu blanc tous les 60 m sur leur contour, trous compris (à Dax, un bord
+de piste longe une île d'herbe), au ras du sol (type 1 dans le `.bin`). La BD
+TOPO ne distingue pas la piste des aires, alors les seuils viennent d'OpenStreetMap
+(axes `aeroway=runway`, via Overpass, (c) les contributeurs d'OpenStreetMap,
+ODbL) : à chaque bout de piste en dur, une barre verte de feux de seuil (type
+3), décalée si OSM le dit, et une barre rouge de fin de piste 10 m au-delà
+(type 4), un feu tous les 3 m sur la largeur OSM (30 m à défaut). Les pistes
+en herbe n'ont rien, les voies de circulation restent blanches.
+Sans ces fichiers, rien n'est dessiné.
 Régénérer les deux après `fetch_buildings.py` ou `fetch_bridges.py`.
 
 ```bash

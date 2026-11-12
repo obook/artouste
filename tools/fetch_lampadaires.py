@@ -20,17 +20,20 @@ tous les PX_M mètres), un disque clair flouté par lampadaire, que terrain.frag
 ajoute en lumière orangée la nuit.
 
 Les surfaces d'aérodrome (BD TOPO) reçoivent un balisage : un feu blanc tous
-les BALISE_M mètres sur leur contour, au ras du sol, sans tri ni halo. L'OACI
-veut aussi des seuils verts, des extrémités rouges et des voies de circulation
-bleues, mais la BD TOPO découpe pistes, voies et aires en polygones sans
-distinction : tout est blanc.
+les BALISE_M mètres sur leur contour, trous compris, au ras du sol, sans tri ni
+halo. La BD TOPO ne distingue pas la piste des voies et des aires, alors les
+seuils viennent d'OpenStreetMap (axes aeroway=runway, Overpass) : à chaque bout
+de piste, une barre de feux verts en travers (seuil) et une barre rouge juste
+au-delà (fin de piste), largeur OSM ou LARGEUR_PISTE_M. Les voies de
+circulation restent blanches, OSM ne les sépare pas assez bien des aires.
 
 Format de lampadaires.bin (petit-boutiste) :
     magie   : 4 octets "ALMP"
     version : uint32 (= 3 ; la 1 n'a pas l'octet de type, la 2 pas l'altitude)
     nombre  : uint32
     puis, par point : lon float32, lat float32 (degrés WGS84),
-                      type uint8 (0 lampadaire de rue, 1 feu d'aérodrome),
+                      type uint8 (0 rue, 1 feu d'aérodrome blanc, 2 feu de pad,
+                                  3 seuil vert, 4 fin de piste rouge),
                       alt float32 (altitude de la chaussée d'un pont, NaN au sol)
 
 Usage : python3 tools/fetch_lampadaires.py [carte]   (carte par défaut : ossau)
@@ -40,11 +43,14 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
+import json
 import math
 import os
 import struct
 import sys
 import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -54,7 +60,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from terrain.config import TERRAIN_ROOT
 from terrain.meta import read_meta
 
-from foret.geometrie import anneaux_de, en_pixels, lignes_de
+from foret.geometrie import en_pixels, lignes_de
 from foret.reglages import NATURES_ROUTE, PX_M, WFS_LAYER_PISTE, WFS_LAYER_ROUTE
 from foret.service_ign import fetch_pages, filtre_natures
 
@@ -62,7 +68,12 @@ PAS_M = 30.0            # un lampadaire tous les 30 m
 RAYON_BATI_M = 50.0     # pas de lampadaire sans bâtiment à moins de 50 m
 HALO_PX = 1.0           # rayon du halo au sol, en pixels du masque (10 m)
 BALISE_M = 60.0         # un feu de bord de piste tous les 60 m (OACI)
-RUE, PISTE = 0, 1       # types de point du .bin
+RUE, PISTE, SEUIL, FIN = 0, 1, 3, 4   # types de point du .bin (2 : pad, moteur)
+LARGEUR_PISTE_M = 30.0  # largeur de piste quand OSM ne la donne pas
+PAS_SEUIL_M = 3.0       # un feu de seuil tous les 3 m (OACI)
+RECUL_FIN_M = 10.0      # la barre rouge, à 10 m au-delà du seuil
+OVERPASS = "https://overpass-api.de/api/interpreter"
+SANS_BALISAGE = ("grass", "earth", "dirt", "sand", "gravel")   # pistes non éclairées
 AU_SOL = float("nan")   # altitude d'un point posé sur le relief
 M_PAR_DEG_LAT = 111320.0
 
@@ -136,6 +147,122 @@ def altitude_sur_tablier(point, tabliers, m_par_deg_lon):
     return AU_SOL
 
 
+def tous_les_anneaux(geometrie):
+    """Contours ET trous d'un polygone ou multipolygone : à Dax, toute la
+       surface revêtue (piste, voies, aires) est un seul polygone, et un bord de
+       la piste longe un trou d'herbe. anneaux_de (foret) ignore les trous."""
+    if geometrie is None:
+        return []
+    if geometrie["type"] == "Polygon":
+        return list(geometrie["coordinates"])
+    if geometrie["type"] == "MultiPolygon":
+        return [a for poly in geometrie["coordinates"] for a in poly]
+    return []
+
+
+def pistes_osm(bbox):
+    """Axes de piste d'OpenStreetMap sur l'emprise : par piste, sa largeur (m)
+       et ses points (lon, lat). Les tronçons qui se touchent sont enchaînés,
+       une piste coupée en deux n'a pas de seuil au milieu. Les surfaces
+       (way fermé) sont ignorées."""
+    lon_min, lat_min, lon_max, lat_max = bbox.split(",")
+    requete = (f'[out:json][timeout:60];way["aeroway"="runway"]'
+               f'({lat_min},{lon_min},{lat_max},{lon_max});out geom;')
+    # Overpass refuse (406) une requête sans User-Agent nommé.
+    req = urllib.request.Request(OVERPASS, urllib.parse.urlencode({"data": requete}).encode(),
+                                 {"User-Agent": "artouste (fetch_lampadaires.py)"})
+    with urllib.request.urlopen(req, timeout=90) as rep:
+        ways = [w for w in json.load(rep)["elements"]
+                if w.get("nodes") and w["nodes"][0] != w["nodes"][-1]
+                and w.get("tags", {}).get("surface") not in SANS_BALISAGE]
+    # Enchaînement par noeud commun aux bouts, jusqu'à ce que plus rien ne
+    # se touche : une piste en trois morceaux demande deux passes.
+    chaines = [{"noeuds": list(w["nodes"]),
+                "points": [(g["lon"], g["lat"]) for g in w["geometry"]],
+                "deplace": [w.get("tags", {}).get("runway") == "displaced_threshold"]
+                           * (len(w["nodes"]) - 1),   # un drapeau par segment
+                "largeur": w.get("tags", {}).get("width")} for w in ways]
+
+    def fusion(a, b):
+        if a["noeuds"][-1] == b["noeuds"][0]:
+            pass
+        elif a["noeuds"][0] == b["noeuds"][-1]:
+            a, b = b, a
+        elif a["noeuds"][-1] == b["noeuds"][-1]:
+            b = retourne(b)
+        elif a["noeuds"][0] == b["noeuds"][0]:
+            a = retourne(a)
+        else:
+            return None
+        return {"noeuds": a["noeuds"] + b["noeuds"][1:],
+                "points": a["points"] + b["points"][1:],
+                "deplace": a["deplace"] + b["deplace"],
+                "largeur": a["largeur"] or b["largeur"]}
+
+    def retourne(c):
+        return {**c, "noeuds": c["noeuds"][::-1], "points": c["points"][::-1],
+                "deplace": c["deplace"][::-1]}
+
+    fusionne = True
+    while fusionne:
+        fusionne = False
+        for i in range(len(chaines)):
+            for j in range(i + 1, len(chaines)):
+                f = fusion(chaines[i], chaines[j])
+                if f is not None:
+                    chaines[i] = f
+                    del chaines[j]
+                    fusionne = True
+                    break
+            if fusionne:
+                break
+    pistes = []
+    for c in chaines:
+        try:
+            largeur = float(str(c["largeur"]).split()[0])
+        except (TypeError, ValueError):
+            largeur = LARGEUR_PISTE_M
+        pistes.append((largeur, c["points"], c["deplace"]))
+    return pistes
+
+
+def barre(bout, voisin, largeur, recul, m_par_deg_lon):
+    """Feux en travers de l'axe au bout de piste, à recul mètres au-delà
+       du bout (négatif : en deçà), un tous les PAS_SEUIL_M sur largeur."""
+    ax = (bout[0] - voisin[0]) * m_par_deg_lon
+    ay = (bout[1] - voisin[1]) * M_PAR_DEG_LAT
+    longueur = math.hypot(ax, ay)
+    if longueur == 0:
+        return []
+    ax, ay = ax / longueur, ay / longueur         # vers l'extérieur de la piste
+    n = max(2, int(largeur // PAS_SEUIL_M) + 1)
+    feux = []
+    for k in range(n):
+        d = -largeur / 2.0 + k * largeur / (n - 1)  # position en travers
+        mx = bout[0] * m_par_deg_lon + ax * recul - ay * d
+        my = bout[1] * M_PAR_DEG_LAT + ay * recul + ax * d
+        feux.append((mx / m_par_deg_lon, my / M_PAR_DEG_LAT))
+    return feux
+
+
+def seuils(pistes, m_par_deg_lon):
+    """(lon, lat, type) des barres de seuil (vert) et de fin (rouge) aux deux
+       bouts de chaque piste. Un seuil décalé (OSM runway=displaced_threshold
+       au bout) met le vert au bout intérieur de ce segment, le rouge reste au
+       bout de la chaussée."""
+    feux = []
+    for largeur, pts, deplace in pistes:
+        if len(pts) < 2:
+            continue
+        for sens in (1, -1):
+            p = pts[::sens]
+            bout, voisin = p[0], p[1]
+            seuil = p[1] if deplace[::sens][0] and len(p) > 2 else p[0]
+            feux += [(lon, lat, SEUIL) for lon, lat in barre(seuil, p[-1], largeur, 0.0, m_par_deg_lon)]
+            feux += [(lon, lat, FIN) for lon, lat in barre(bout, voisin, largeur, RECUL_FIN_M, m_par_deg_lon)]
+    return feux
+
+
 def halo_au_sol(points, cadre):
     """Masque du halo : un disque de HALO_PX par lampadaire, flouté."""
     image = Image.new("L", (cadre[4], cadre[5]), 0)
@@ -207,21 +334,24 @@ def main():
     points += [p for p, _ in sur_pont]   # un pont en ville est éclairé, bâti ou pas
     altitudes = dict(sur_pont)
 
-    feux = [(lon, lat)
+    feux = [(lon, lat, PISTE)
             for feat in fetch_pages(bbox, WFS_LAYER_PISTE)
-            for anneau in anneaux_de(feat.get("geometry"))
-            for lon, lat in echantillonner(anneau, BALISE_M, m_par_deg_lon)
-            if lon_min <= lon <= lon_max and lat_min <= lat <= lat_max]
+            for anneau in tous_les_anneaux(feat.get("geometry"))
+            for lon, lat in echantillonner(anneau, BALISE_M, m_par_deg_lon)]
+    if feux:   # un aérodrome sur la carte : ses seuils par OSM
+        feux += seuils(pistes_osm(bbox), m_par_deg_lon)
+    feux = [f for f in feux if lon_min <= f[0] <= lon_max and lat_min <= f[1] <= lat_max]
 
     path = out_dir / "lampadaires.bin"
     with open(path, "wb") as f:
         f.write(b"ALMP" + struct.pack("<II", 3, len(points) + len(feux)))
-        for genre, liste in ((RUE, points), (PISTE, feux)):
-            for lon, lat in liste:
-                f.write(struct.pack("<ffBf", lon, lat, genre, altitudes.get((lon, lat), AU_SOL)))
+        for lon, lat in points:
+            f.write(struct.pack("<ffBf", lon, lat, RUE, altitudes.get((lon, lat), AU_SOL)))
+        for lon, lat, genre in feux:
+            f.write(struct.pack("<ffBf", lon, lat, genre, AU_SOL))
     print(f"[lampadaires] {path} écrit : {len(points)} points gardés sur {poses} posés "
           f"({troncons} tronçons urbains, {len(sur_pont)} points sur un pont), "
-          f"{len(feux)} feux d'aérodrome, "
+          f"{len(feux)} feux d'aérodrome dont {sum(f[2] != PISTE for f in feux)} de seuil, "
           f"{os.path.getsize(path) / 1024.0:.0f} ko, {time.time() - depart:.0f} s")
 
     path = out_dir / "lampadaires.png"

@@ -11,7 +11,7 @@
  * Licence : GPL v2
  */
 
-layout(location = 0) in vec4 a_pos;  /* xyz : position monde, avant recalage ; w : 0 rue, 1 feu d'aérodrome, 2 feu de pad */
+layout(location = 0) in vec4 a_pos;  /* xyz : position monde, avant recalage ; w : 0 rue, 1 à 4 feu de balisage (voir FEUX) */
 
 uniform mat4  u_model;   /* recalage repère-caméra */
 uniform mat4  u_view;
@@ -27,8 +27,10 @@ const float TAILLE_MIN  = 3.0;  /* plancher à l'écran, en pixels */
 const float TAILLE_MAX  = 18.0;
 const vec3  SODIUM      = vec3(0.98, 0.63, 0.27);
 const vec3  LED         = vec3(0.92, 0.95, 1.00);
-/* Balisage : aérodrome blanc, périmètre d'hélistation vert (OACI, annexe 14 vol. II). */
-const vec3  FEUX[2]     = vec3[2](vec3(1.00, 1.00, 0.95), vec3(0.25, 1.00, 0.40));
+/* Balisage (OACI, annexe 14) : 1 bord de piste blanc, 2 périmètre d'hélistation
+   vert, 3 seuil de piste vert, 4 fin de piste rouge. */
+const vec3  FEUX[4]     = vec3[4](vec3(1.00, 1.00, 0.95), vec3(0.25, 1.00, 0.40),
+                                  vec3(0.25, 1.00, 0.40), vec3(1.00, 0.15, 0.10));
 
 float alea(vec3 p) {
     uvec3 q = uvec3(ivec3(floor(p)));

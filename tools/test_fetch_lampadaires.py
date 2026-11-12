@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fetch_lampadaires import M_PAR_DEG_LAT, altitude_sur_tablier, pres_du_bati
+from fetch_lampadaires import FIN, M_PAR_DEG_LAT, SEUIL, altitude_sur_tablier, barre, pres_du_bati, seuils
 
 M_PAR_DEG_LON = M_PAR_DEG_LAT  # équateur : un degré vaut autant en lon qu'en lat
 
@@ -42,7 +42,27 @@ def test_altitude_sur_tablier():
     assert math.isnan(altitude_sur_tablier((_deg(120), 0.0), axe, M_PAR_DEG_LON))
 
 
+def test_barre():
+    # Piste de 30 m de large, axe vers l'est : la barre est nord-sud au bout est.
+    feux = barre((_deg(100), 0.0), (0.0, 0.0), 30.0, 0.0, M_PAR_DEG_LON)
+    assert len(feux) == 11
+    assert all(abs(lon - _deg(100)) < 1e-9 for lon, _ in feux)
+    assert abs(feux[0][1] * M_PAR_DEG_LAT + 15.0) < 1e-6 and abs(feux[-1][1] * M_PAR_DEG_LAT - 15.0) < 1e-6
+    # Barre rouge à 10 m au-delà du bout.
+    rouge = barre((_deg(100), 0.0), (0.0, 0.0), 30.0, 10.0, M_PAR_DEG_LON)
+    assert abs(rouge[0][0] * M_PAR_DEG_LAT - 110.0) < 1e-6
+    feux = seuils([(30.0, [(0.0, 0.0), (_deg(100), 0.0)], [False])], M_PAR_DEG_LON)
+    assert sum(t == SEUIL for *_, t in feux) == 22 and sum(t == FIN for *_, t in feux) == 22
+    # Seuil décalé de 20 m à l'ouest : le vert à 20 m, le rouge à -10 m.
+    feux = seuils([(30.0, [(0.0, 0.0), (_deg(20), 0.0), (_deg(100), 0.0)], [True, False])],
+                  M_PAR_DEG_LON)
+    verts = sorted(lon * M_PAR_DEG_LAT for lon, _, t in feux if t == SEUIL)
+    rouges = sorted(lon * M_PAR_DEG_LAT for lon, _, t in feux if t == FIN)
+    assert abs(verts[0] - 20.0) < 1e-6 and abs(rouges[0] + 10.0) < 1e-6
+
+
 if __name__ == "__main__":
     test_pres_du_bati()
     test_altitude_sur_tablier()
+    test_barre()
     print("ok")

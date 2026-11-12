@@ -399,6 +399,11 @@ de vol et des données sont réunies dans [REFERENCES.md](REFERENCES.md).
 
 <img src="docs/IGN_logo_2012.png" alt="IGN" width="64" />
 
+Les feux de seuil et de fin de piste des aérodromes sont placés d'après les
+axes de piste d'[OpenStreetMap](https://www.openstreetmap.org/copyright)
+((c) les contributeurs d'OpenStreetMap, licence ODbL), lus au moment de la
+génération d'une carte.
+
 ### Première ouverture d'une carte
 
 L'orthophoto est livrée en JPEG, que la carte graphique ne sait pas lire

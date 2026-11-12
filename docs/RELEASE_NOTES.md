@@ -1,3 +1,23 @@
+## v0.52.0 - 12 novembre 2026
+
+### Nouvelles fonctionnalités
+
+- **La nuit tombe.** Une fois le soleil couché, le sol, la mer, les bâtiments, les arbres et l'appareil passent à 18 % de leur éclairage. L'option `--heure` (0 à 24, décimale acceptée) choisit l'heure du soleil au lancement, pour voir une ville de nuit sans attendre.
+- **Les villes s'allument.** Un lampadaire tous les 30 m le long des rues de la BD TOPO, mais seulement là où il y a des maisons à moins de 50 m : une route urbaine qui traverse les champs reste noire. Chaque lampadaire éclaire la chaussée d'un halo orangé. Les fenêtres des bâtiments s'allument avec leur propre tirage et leur teinte. Tout cela s'allume au crépuscule civil et s'éteint à l'aube.
+- **Feux d'aérodrome et de pad.** Un feu blanc tous les 60 m sur le contour des surfaces d'aérodrome. Six feux verts sur le bord de chaque hélipad, chacun avec son halo sur la dalle, comme le veut le balisage des hélistations.
+- **Feux de position de l'appareil.** Le feu blanc de queue rejoint le rouge et le vert. Tous trois s'allument la nuit, même turbine coupée.
+- **Façades et toits habillés.** Cinq façades (trois maisons, deux immeubles) avec rez-de-chaussée, étages et pignon aveugle. Rangs de tuiles sur les pans, gravier, édicule et climatiseurs sur les terrasses, ombre au pied des murs.
+- **Le soleil brille sur l'eau.** Un masque d'eau par carte (lacs, rivières, bassins de la BD TOPO, plus la mer sur les cartes côtières, moins l'estran du bassin d'Arcachon). Clapot, traînée vers le soleil et un peu de ciel en incidence rasante.
+
+### Corrections
+
+- La tôle de l'appareil gardait un éclat blanc la nuit, comme si le soleil brillait encore.
+- Les feux de position suivaient une heure fixe (18 h à 6 h) ; ils suivent maintenant le soleil.
+
+### Cartes
+
+Les cartes reçoivent deux fichiers par carte : `eau.png` et `lampadaires.png`, et `lampadaires.bin` change de format. Les tuiles de détail déjà téléchargées restent valables ; extraire l'archive par-dessus l'ancienne, comme pour la v0.51.0.
+
 ## v0.51.0 - 10 novembre 2026
 
 ### Mise à jour depuis une version précédente

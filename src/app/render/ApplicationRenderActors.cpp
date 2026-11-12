@@ -257,6 +257,8 @@ void Application::renderHelicopter(const RenderContext& ctx,
         m_modelShader->setFloat("u_isDay", ctx.isDay);
         m_modelShader->setVec3("u_camPos", ctx.camPosRel);
         m_modelShader->setInt("u_texture", 0);
+        /* Lampes de planche : allumées avec les feux de position. */
+        m_modelShader->setFloat("u_nuitPlanche", nuitLampadaires(ctx.lightDir));
         /* Verrière fêlée en mode zombie : la casse suit la vie perdue (voir
            fissures(), model.frag). Remis à zéro hors combat, le shader servant
            aussi aux autres modèles. */

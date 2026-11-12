@@ -29,6 +29,9 @@ uniform int       u_nbFeux;    /* feux posés sur la pièce (hélipad la nuit), 
 uniform vec3      u_feux[6];   /* leur position, repère de rendu */
 const vec3        FEU_VERT  = vec3(0.25, 1.00, 0.40); /* même teinte que lampadaires.vert */
 const float       FEU_RAYON = 1.2;                    /* portée du halo au sol, en mètres */
+uniform float     u_nuitPlanche; /* 0 le jour, 1 la nuit : lampes de planche allumées */
+uniform float     u_planche;     /* 1 pendant le dessin des cadrans, 0 sinon */
+const vec3        PLANCHE = vec3(1.00, 0.45, 0.30); /* rouge chaud des lampes à capuchon */
 
 /* Taille d'une écaille de verre. La verrière fait environ un mètre : à 22 cm,
    cinq ou six écailles en travers, ce qui se lit comme du verre feuilleté. */
@@ -168,6 +171,9 @@ void main() {
         float d = distance(v_worldPos, u_feux[i]) / FEU_RAYON;
         color += albedo.rgb * FEU_VERT * exp(-d * d) * 0.6;
     }
+    /* Lampes de planche : lumière rouge tombant du haut sur les cadrans. Multipliée
+       par l'albédo, elle fait ressortir chiffres et aiguilles et laisse le fond noir. */
+    color += albedo.rgb * PLANCHE * u_nuitPlanche * u_planche * (0.6 + 0.4 * max(n.y, 0.0));
     float alpha = albedo.a * u_opacity;
 
     /*

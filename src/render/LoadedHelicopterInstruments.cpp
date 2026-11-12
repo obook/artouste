@@ -147,6 +147,8 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
     drawModel(shader, m_consoleMask, console, Pass::Opaque);
 
     drawModel(shader, m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
+    /* Les lampes de planche n'arrosent que les cadrans (u_planche, model.frag). */
+    shader.setFloat("u_planche", 1.0f);
     for (const Gauge& gauge : m_gauges) {
         drawModel(shader, gauge.model, root * glm::translate(mat4(1.0f), gauge.offset),
                   Pass::Opaque);
@@ -239,6 +241,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
         drawModel(shader, m_torqueStatic, torqueBase, Pass::Opaque);
         drawModel(shader, m_torqueNeedle, needleMat, Pass::Opaque);
     }
+    shader.setFloat("u_planche", 0.0f);
 }
 
 }  /* namespace artouste::render */

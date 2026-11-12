@@ -68,7 +68,7 @@ ZONE = {
         # approximatif d'origine (IGN BD TOPO, couche aerodrome).
         ("Aéroport de Bordeaux-Mérignac", -0.69646, 44.83831),
         ("CHU Pellegrin", -0.6039, 44.8275),
-        ("Hôpital Haut-Lévêque (Pessac)", -0.6609, 44.7853),
+        ("Hôpital Haut-Lévêque (Pessac)", -0.66123, 44.78481),
         # Aucune aire de poser officielle ni OpenStreetMap à moins de 1,5 km de
         # ce point : à vérifier, il pourrait n'avoir jamais existé.
         ("Hôpital Saint-André", -0.5790, 44.8333),

@@ -1,3 +1,25 @@
+## v0.53.0 - 17 novembre 2026
+
+### Nouvelles fonctionnalités
+
+- **Départ l'après-midi.** Une case du menu fait partir à midi, pour voir la nuit tomber en vol sans passer par `--heure`.
+- **Cadrans éclairés.** Une lampe rouge éclaire chacun des huit cadrans de la planche de bord. Elle s'allume avec les feux de position.
+- **Ponts éclairés en ville.** Les lampadaires suivent maintenant les ponts urbains, à la hauteur du tablier. Les ponts de campagne restent noirs.
+- **Seuils de piste balisés.** Une barre verte marque le seuil de chaque piste, décalé s'il l'est, et une barre rouge le bout de la chaussée. Les axes de piste viennent d'OpenStreetMap. Les pistes en herbe n'ont pas de balisage.
+
+### Changements
+
+- Au menu, le stick et la croix descendent des cartes jusqu'aux cases à cocher. A ou X cochent la case sous le curseur.
+
+### Corrections
+
+- Le pad de Haut-Lévêque, à Bordeaux, était sur le toit de l'hôpital. Il est maintenant sur l'hélisurface, sur la pelouse au sud.
+- Les feux blancs d'aérodrome suivent aussi les trous des surfaces. À Dax, un bord de piste restait noir.
+
+### Cartes
+
+`lampadaires.bin` change de format sur toutes les cartes. Extraire l'archive par-dessus l'ancienne, comme pour la v0.51.0 : les tuiles de détail déjà téléchargées restent valables.
+
 ## v0.52.0 - 12 novembre 2026
 
 ### Nouvelles fonctionnalités

@@ -41,10 +41,10 @@ void Application::applySunSchedule() {
                     static_cast<int>(m_options.heure),
                     static_cast<int>((m_options.heure - static_cast<int>(m_options.heure)) * 60.0f));
     } else if (m_menu.finApresMidi) {
-        /* Case du menu : le soleil se couche une minute environ après le départ
+        /* Case du menu : le soleil se couche environ six minutes après le départ
            avec la vitesse par défaut (soleil_vitesse 72). */
-        m_soleil.heureDepart = 17.0f * 3600.0f;
-        std::printf("[scène] cycle jour/nuit : départ à 17h00 (fin d'après-midi).\n");
+        m_soleil.heureDepart = 12.0f * 3600.0f;
+        std::printf("[scène] cycle jour/nuit : départ à 12h00 (midi).\n");
     } else if (m_soleil.vitesse == 1.0f) {
         const std::time_t now = std::time(nullptr);
         std::tm local{};

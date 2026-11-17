@@ -53,7 +53,7 @@ bool Application::runStartupMenu() {
     /* Position du curseur clavier/manette : les cartes, puis les deux cases à cocher. */
     std::size_t curseur = 0;
     bool turbine = false;          /* turbine et rotor déjà démarrés au lancement ? */
-    bool finApresMidi = false;     /* départ à 17h pour voir la nuit tomber ? */
+    bool finApresMidi = false;     /* départ à midi pour voir la nuit tomber ? */
     bool lancer = false;           /* passe à true quand l'utilisateur valide */
     bool demoChoisi = false;       /* passe à true si l'utilisateur choisit la démo */
     /* Le menu lit les entrées directement dans GLFW (clavier + manette) plutôt que la
@@ -208,7 +208,7 @@ bool Application::runStartupMenu() {
             }
         };
         caseACocher("Turbine et rotor déjà démarrés (décollage immédiat)", &turbine, cartes.size());
-        caseACocher("Fin d'après-midi (voir la nuit tomber)", &finApresMidi, cartes.size() + 1);
+        caseACocher("Après-midi", &finApresMidi, cartes.size() + 1);
         ImGui::Separator();
         if (ImGui::Button("Démarrer", ImVec2(ui::hud_widgets::sc(160.0f), 0.0f))) {
             lancer = true;

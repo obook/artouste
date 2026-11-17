@@ -21,7 +21,7 @@ struct EtatMenu {
     int         turbine = -1; /* -1 = pas de choix, 0 = à froid, 1 = démarrée */
     bool        demo    = false;
     bool        combat  = false; /* mode zombie */
-    bool        finApresMidi = false; /* départ à 17h pour voir la nuit tomber */
+    bool        finApresMidi = false; /* départ à midi pour voir la nuit tomber */
 };
 
 } /* namespace artouste::app */

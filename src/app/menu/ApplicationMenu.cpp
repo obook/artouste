@@ -50,7 +50,10 @@ bool Application::runStartupMenu() {
     }
 
     std::size_t selection = 0;     /* carte en surbrillance (défaut : la première) */
+    /* Position du curseur clavier/manette : les cartes, puis les deux cases à cocher. */
+    std::size_t curseur = 0;
     bool turbine = false;          /* turbine et rotor déjà démarrés au lancement ? */
+    bool finApresMidi = false;     /* départ à 17h pour voir la nuit tomber ? */
     bool lancer = false;           /* passe à true quand l'utilisateur valide */
     bool demoChoisi = false;       /* passe à true si l'utilisateur choisit la démo */
     /* Le menu lit les entrées directement dans GLFW (clavier + manette) plutôt que la
@@ -95,22 +98,36 @@ bool Application::runStartupMenu() {
 
         const EntreesMenu e = lireEntreesMenu(m_window);
 
-        /* Déplacement cyclique : monter depuis la première carte ramène à la
-           dernière, descendre depuis la dernière revient à la première. La
-           liste vide (aucune carte trouvée) ne bouge pas, faute de modulo. */
-        if (!cartes.empty()) {
-            if (edge(e.haut, precedentes.haut)) {
-                selection = (selection + cartes.size() - 1) % cartes.size();
-            }
-            if (edge(e.bas, precedentes.bas)) {
-                selection = (selection + 1) % cartes.size();
-            }
+        /* Déplacement cyclique : les cartes, la case turbine, la case fin
+           d'après-midi, puis retour à la première carte. Sur une case, la carte
+           choisie reste celle d'avant. */
+        const std::size_t positions = cartes.size() + 2;
+        if (edge(e.haut, precedentes.haut)) {
+            curseur = (curseur + positions - 1) % positions;
         }
+        if (edge(e.bas, precedentes.bas)) {
+            curseur = (curseur + 1) % positions;
+        }
+        if (curseur < cartes.size()) {
+            selection = curseur;
+        }
+        /* Espace/X : coche la case sous le curseur, la turbine depuis une carte. */
         if (edge(e.turbine, precedentes.turbine)) {
-            turbine = !turbine;
+            if (curseur == cartes.size() + 1) {
+                finApresMidi = !finApresMidi;
+            } else {
+                turbine = !turbine;
+            }
         }
         if (edge(e.valider, precedentes.valider)) {
-            lancer = true;
+            /* Entrée/A coche la case sous le curseur, et ne démarre que sur une carte. */
+            if (curseur == cartes.size()) {
+                turbine = !turbine;
+            } else if (curseur == cartes.size() + 1) {
+                finApresMidi = !finApresMidi;
+            } else {
+                lancer = true;
+            }
         }
         if (edge(e.demo, precedentes.demo)) { /* touche D / bouton Y : lancer la démonstration */
             demoChoisi = true;
@@ -174,10 +191,24 @@ bool Application::runStartupMenu() {
         for (std::size_t i = 0; i < cartes.size(); ++i) {
             if (ImGui::RadioButton(libelleCarte(cartes[i]).c_str(), selection == i)) {
                 selection = i;
+                curseur = i;
             }
         }
         ImGui::Separator();
-        ImGui::Checkbox("Turbine et rotor déjà démarrés (décollage immédiat)", &turbine);
+        /* La case sous le curseur est surlignée, sinon on ne voit pas où l'on est. */
+        auto caseACocher = [&](const char* libelle, bool* valeur, std::size_t position) {
+            const bool vise = curseur == position;
+            if (vise) {
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_FrameBgActive));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_CheckMark));
+            }
+            ImGui::Checkbox(libelle, valeur);
+            if (vise) {
+                ImGui::PopStyleColor(2);
+            }
+        };
+        caseACocher("Turbine et rotor déjà démarrés (décollage immédiat)", &turbine, cartes.size());
+        caseACocher("Fin d'après-midi (voir la nuit tomber)", &finApresMidi, cartes.size() + 1);
         ImGui::Separator();
         if (ImGui::Button("Démarrer", ImVec2(ui::hud_widgets::sc(160.0f), 0.0f))) {
             lancer = true;
@@ -200,7 +231,7 @@ bool Application::runStartupMenu() {
             glfwSetWindowShouldClose(m_window, GLFW_TRUE);
         }
         ImGui::Separator();
-        ImGui::TextDisabled("Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer   "
+        ImGui::TextDisabled("Flèches/stick : choisir   Espace : turbine   Entrée/A : démarrer ou cocher   "
                             "D/Y : démo   C : cartes   Échap/B : quitter");
         ImGui::TextDisabled("%s", ARTOUSTE_VERSION_STRING);
         /* Version plus récente publiée : on la signale sans rien imposer -- le vol
@@ -234,6 +265,7 @@ bool Application::runStartupMenu() {
 
     m_menu.terrain = cartes[selection].dir;
     m_menu.turbine = turbine ? 1 : 0;
+    m_menu.finApresMidi = finApresMidi;
     m_menu.demo = demoChoisi; /* démo demandée : lancée par initScene/applyMenuSession */
     /* Mode zombie : démarre automatiquement sur une carte dédiée (zombieOnly, ex.
        dax-arene), qui n'a alors pas d'autre usage -- un lancement normal doit y

@@ -50,7 +50,13 @@ constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où 
  */
 const vec3      NAV_LEFT_POS{4.24f, 0.356f, -0.77f};   /* feu de navigation bâbord (rouge) */
 const vec3      NAV_RIGHT_POS{4.24f, 0.356f, 0.77f};   /* feu de navigation tribord (vert) */
-const vec3      NAV_TAIL_POS{-3.96f, 1.566f, 0.20f};   /* feu de queue (blanc) */
+/* Feu de queue blanc : mis en commentaire, l'Alouette II du plan n'en a pas à
+   cet endroit ; le feu rouge de poutre (NAV_BOOM_POS) le remplace.
+const vec3      NAV_TAIL_POS{-3.96f, 1.566f, 0.20f};
+*/
+/* Feu rouge sous la racine de la poutre, au noeud bas du treillis juste
+   derrière la cloison arrière (plan trois vues de l'Alouette II). */
+const vec3      NAV_BOOM_POS{-0.10f, 0.66f, 0.0f};
 constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu (m) */
 
 /*
@@ -152,6 +158,10 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     /* Rouge bâbord, vert tribord, blanc en queue : allumés au crépuscule,
        comme l'éclairage public (nuit = nuitLampadaires), éteints le jour.
        Sur batterie : allumés même turbine coupée. */
+    /* Le feu de poutre a un corps de lampe rouge, visible le jour aussi (photo
+       du musée) ; les autres feux n'ont que leur lueur de nuit. */
+    drawGlow(bodyToWorld(NAV_BOOM_POS), NAV_RADIUS * 0.8f, vec4{0.75f, 0.03f, 0.03f, 1.0f});
+
     if (nuit > 0.0f) {
         const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
             const vec3 w = bodyToWorld(bodyPos);
@@ -160,7 +170,8 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         };
         drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
         drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
-        drawLight(NAV_TAIL_POS, vec3{1.0f, 1.0f, 0.95f});    /* queue : blanc */
+        /* drawLight(NAV_TAIL_POS, vec3{1.0f, 1.0f, 0.95f});  queue : blanc, voir NAV_TAIL_POS */
+        drawLight(NAV_BOOM_POS, vec3{1.0f, 0.05f, 0.05f});   /* poutre : rouge */
     }
 
     if (engineGlows) {

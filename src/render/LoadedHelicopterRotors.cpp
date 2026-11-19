@@ -116,7 +116,10 @@ void LoadedHelicopter::drawLivery(Shader& shader, const mat4& root) const {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
-    if (m_livery == Livery::Gendarmerie) {
+    /* Cellule glTF : ses marquages sont dans sa texture, les décalques du .ac
+       tomberaient à côté. */
+    if (m_gltf) {
+    } else if (m_livery == Livery::Gendarmerie) {
         /* "GENDARMERIE" sur le bas des flancs de cabine, "F-BRHP" sur le caisson
            arrière. Positions en coordonnées FlightGear, affinées visuellement.
            Liséré blanc juste au-dessus du mot, sur chaque flanc. */

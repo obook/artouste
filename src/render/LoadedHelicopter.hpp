@@ -36,6 +36,8 @@ public:
     /* Vrai si le fuselage a bien été chargé. Sinon, l'appelant se rabat sur
        l'hélicoptère de remplacement construit par le code. */
     [[nodiscard]] bool loaded() const noexcept { return !m_fuselage.empty(); }
+    /* Cellule glTF (modèle 3dexport) : certains repères de feux diffèrent du .ac. */
+    [[nodiscard]] bool gltf() const noexcept { return m_gltf; }
 
     /* Dessine l'appareil complet. 'base' place et oriente l'hélicoptère dans le
        monde ; 'rotorAngle' est l'angle du rotor principal (rad), géré par
@@ -134,6 +136,7 @@ private:
     /* Redressement du fuselage seul : identité pour les modèles .ac FlightGear,
        quart de tour et recalage vertical pour un modèle glTF (voir constructeur). */
     mat4               m_fuselageFix{1.0f};
+    bool               m_gltf = false;  /* cellule glTF : intérieur et arceau du .ac non dessinés */
     const Texture*     m_liveryBlanche          = nullptr;  /* livrée blanche (fuselage) */
     const Texture*     m_liveryGendarmerie      = nullptr;  /* livrée bleue (fuselage) */
     const Texture*     m_liveryArmeeDeTerre     = nullptr;  /* livrée olive (fuselage) */

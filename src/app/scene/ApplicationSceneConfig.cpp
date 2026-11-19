@@ -183,8 +183,13 @@ void Application::initSceneConfig() {
        FlightGear tiers sans toucher au code. Les pièces manquantes (pilote, planche
        de bord, décalques) restent simplement vides, et les repères des rotors sont
        ceux de l'Alouette : c'est un essai, pas un deuxième appareil jouable. */
+    /* Cellule 3dexport en glTF si elle est là (fichier local, hors dépôt, voir
+       docs/ASSETS.md), sinon le modèle FlightGear. */
     std::filesystem::path modelFile =
-        assets / "models" / "Alouette-II" / "Models" / "alouette.ac";
+        assets / "models" / "Alouette-II" / "Models" / "alouette-3dexport.glb";
+    if (!std::filesystem::exists(modelFile)) {
+        modelFile = assets / "models" / "Alouette-II" / "Models" / "alouette.ac";
+    }
     if (const char* env = std::getenv("ARTOUSTE_MODELE"); env != nullptr && env[0] != '\0') {
         modelFile = env;
     }

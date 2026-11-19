@@ -113,3 +113,30 @@ python3 tools/livree/make_decals.py            # -> décalques (textes et immatr
 /tmp. `cuire_geometrie.py` cuit position et normale sur l'atlas, `usure.py` en
 tire la salissure en mètres (suie derrière l'échappement, coulures sur les
 flancs, crasse en bas) : ses réglages sont des constantes en tête de fichier.
+
+## Cellule de rechange en glTF (modèle 3dexport, hors dépôt)
+
+Le modèle commercial 3dexport de l'Alouette II (archive dans le coffre
+Obsidian, projets/artouste/3dmodel/) se charge à la place d'alouette.ac dès
+que `assets/models/Alouette-II/Models/alouette-3dexport.glb` existe (ce
+dossier est ignoré par git, le .glb reste local) ; ARTOUSTE_MODELE force un
+autre fichier. Les meubles du poste du FBX (planche, consoles, palonniers,
+manches, collectif) sont retirés à la conversion, le jeu pose les siens ; les
+feux de poutre et de tuyère ont leurs repères propres (constantes *_GLTF dans
+ApplicationRenderEffects.cpp, celles du .ac restent à côté). Conversion depuis le FBX extrait (unrar, 7z ne lit pas cette archive) :
+
+```bash
+flatpak run org.blender.Blender -b --factory-startup \
+    -P tools/modele/convertir_3dexport.py -- \
+    .../3dmodel/civil/Civil_FBX.FBX \
+    assets/models/Alouette-II/Models/alouette-3dexport.glb
+```
+
+Seule la cellule est convertie (vitrages à part, dans un noeud "verriere") ;
+rotors, pilotes, planche de bord et commandes restent ceux du .ac, posés par
+le moteur. Avec une cellule glTF, le moteur n'applique ni livrée ni décalques,
+et ne dessine ni l'intérieur ni l'arceau du .ac. Les patins posent à la hauteur
+de ceux du .ac (y = -1,387, Y_OFFSET) et le mât, plus court sur ce modèle,
+monte 16 cm au-dessus du plan des pales du jeu : le moyeu de mainrotor.ac
+descend assez pour couvrir le raccord.
+

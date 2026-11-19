@@ -43,19 +43,15 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
     m_fuselage  = loadPart(modelFile, skipBody, glass);
 
     /* Modèle glTF (.glb/.gltf) : autre convention d'axes que les .ac FlightGear
-       (nez vers +Z au lieu de -X) et bas de l'appareil à une autre hauteur. On le
-       redresse au dessin, quart de tour puis descente pour reposer les patins sur
-       le sol, sans toucher au fichier. */
+       (nez vers +Z au lieu de -X), redressée d'un quart de tour au dessin. Le
+       fichier est déjà à l'échelle et à la hauteur du .ac (voir
+       tools/modele/convertir_3dexport.py) ; il garde sa texture, sans livrée,
+       et apporte son propre intérieur et son arceau de queue. */
     if (const std::string ext = modelFile.extension().string();
         ext == ".glb" || ext == ".gltf") {
-        float minY = 0.0f;
-        for (const vec3& p : m_fuselage.positions()) {
-            minY = std::min(minY, p.y);
-        }
-        m_fuselageFix = glm::translate(mat4(1.0f), vec3{0.0f, -(Y_OFFSET + minY), 0.0f}) *
-                        glm::rotate(mat4(1.0f), -PI / 2.0f, vec3{0.0f, 1.0f, 0.0f});
-        std::printf("[modèle] glTF redressé : quart de tour, descente de %.2f m.\n",
-                    static_cast<double>(Y_OFFSET + minY));
+        m_gltf        = true;
+        m_fuselageFix = glm::rotate(mat4(1.0f), -PI / 2.0f, vec3{0.0f, 1.0f, 0.0f});
+        std::printf("[modèle] cellule glTF : quart de tour, livrée et intérieur du .ac ignorés.\n");
     }
     /* Livrées de rechange du fuselage : blanc, bleu Gendarmerie, olive armée de
        terre et rouge Protection civile, préchargées dans le cache du fuselage et
@@ -175,7 +171,7 @@ void LoadedHelicopter::setLivery(Livery livery) {
         case Livery::ProtectionCivile: fuselageTex = m_liveryProtectionCivile; break;
         case Livery::Blanche:          fuselageTex = m_liveryBlanche;          break;
     }
-    m_fuselage.setLivery(fuselageTex);
+    m_fuselage.setLivery(m_gltf ? nullptr : fuselageTex);
 
     /* Tenue du pilote (chemise et casque) : bleu Gendarmerie, olive armée de
        terre, orange Protection civile ; la livrée blanche garde la tenue

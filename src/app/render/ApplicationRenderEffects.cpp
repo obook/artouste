@@ -57,6 +57,8 @@ const vec3      NAV_TAIL_POS{-3.96f, 1.566f, 0.20f};
 /* Feu rouge sous la racine de la poutre, au noeud bas du treillis juste
    derrière la cloison arrière (plan trois vues de l'Alouette II). */
 const vec3      NAV_BOOM_POS{-0.10f, 0.66f, 0.0f};
+/* Même feu sur la cellule 3dexport (glTF) : sa corde basse passe 12 cm plus haut. */
+const vec3      NAV_BOOM_POS_GLTF{-0.10f, 0.75f, 0.0f};
 constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu (m) */
 
 /*
@@ -68,6 +70,8 @@ constexpr float NAV_RADIUS = 0.05f;                   /* rayon du coeur d'un feu
  * et un petit coeur tiède sur le métal de la tuyère.
  */
 const vec3      NOZZLE_BODY_POS{-0.30f, 1.716f, 0.0f};
+/* Tuyère de la cellule 3dexport (glTF) : bord de sortie du tube, mesuré sur le FBX. */
+const vec3      NOZZLE_BODY_POS_GLTF{-0.03f, 1.92f, 0.0f};
 constexpr float NOZZLE_RADIUS = 0.24f;
 
 }  /* namespace */
@@ -102,6 +106,9 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     const auto bodyToWorld = [&](const vec3& bodyPos) {
         return vec3(base * vec4(bodyPos, 1.0f));
     };
+    const bool  gltf      = m_loadedHeli != nullptr && m_loadedHeli->gltf();
+    const vec3& boomPos   = gltf ? NAV_BOOM_POS_GLTF : NAV_BOOM_POS;
+    const vec3& nozzlePos = gltf ? NOZZLE_BODY_POS_GLTF : NOZZLE_BODY_POS;
 
     /* Une petite sphère lumineuse de couleur unie, mélangée par-dessus la scène.
        Rendu relatif à la caméra : on retranche m_renderOrigin de la position monde,
@@ -160,7 +167,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
        Sur batterie : allumés même turbine coupée. */
     /* Le feu de poutre a un corps de lampe rouge, visible le jour aussi (photo
        du musée) ; les autres feux n'ont que leur lueur de nuit. */
-    drawGlow(bodyToWorld(NAV_BOOM_POS), NAV_RADIUS * 0.8f, vec4{0.75f, 0.03f, 0.03f, 1.0f});
+    drawGlow(bodyToWorld(boomPos), NAV_RADIUS * 0.8f, vec4{0.75f, 0.03f, 0.03f, 1.0f});
 
     if (nuit > 0.0f) {
         const auto drawLight = [&](const vec3& bodyPos, const vec3& rgb) {
@@ -171,7 +178,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
         drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
         drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
         /* drawLight(NAV_TAIL_POS, vec3{1.0f, 1.0f, 0.95f});  queue : blanc, voir NAV_TAIL_POS */
-        drawLight(NAV_BOOM_POS, vec3{1.0f, 0.05f, 0.05f});   /* poutre : rouge */
+        drawLight(boomPos, vec3{1.0f, 0.05f, 0.05f});   /* poutre : rouge */
     }
 
     if (engineGlows) {
@@ -190,7 +197,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
            plus un petit coeur tiède sur le métal de la tuyère. */
         const float heat        = clamp(turbineFraction, 0.0f, 1.0f);
         const float shimmer     = 0.85f + 0.15f * std::sin(timeSeconds * 9.0f) * std::sin(timeSeconds * 5.3f);
-        const vec3  nozzleWorld = bodyToWorld(NOZZLE_BODY_POS);
+        const vec3  nozzleWorld = bodyToWorld(nozzlePos);
         drawGlow(nozzleWorld, NOZZLE_RADIUS * shimmer, vec4{0.55f, 0.75f, 1.0f, 0.10f * heat});
         drawGlow(nozzleWorld, NOZZLE_RADIUS * 0.5f * shimmer, vec4{0.80f, 0.88f, 1.0f, 0.14f * heat});
     }

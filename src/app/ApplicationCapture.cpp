@@ -169,6 +169,9 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
        par ARTOUSTE_SHOT_ROTORANGLE (utile pour enchaîner des captures avec des pales
        à des angles différents, par exemple pour composer une séquence animée). */
     const float shotRotorAngle = shotFloat("ARTOUSTE_SHOT_ROTORANGLE", 1.3f);
+    /* Régime rotor (0 pales nettes à l'arrêt, 1 disque flou) : 1 par défaut, la
+       turbine est au régime pour la capture. */
+    const float shotRotorFraction = shotFloat("ARTOUSTE_SHOT_ROTORFRACTION", 1.0f);
     attendreTuilesDeDetail();
 
     /* Souffle rotor : le nuage de poussière se construit au fil de la boucle de
@@ -183,7 +186,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
     for (int i = 0; i < 3; ++i) {
         /* Turbine au régime pour la capture : strombo et tuyère visibles (le temps
            0,1 s tombe dans la phase allumée du flash). */
-        renderScene(base, shotRotorAngle, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat,
+        renderScene(base, shotRotorAngle, shotRotorFraction, shotRudder, shotCyclicLong, shotCyclicLat,
                     shotCollective, 1.0f, 0.1f);
         m_hud.updateScale(fbw, fbh);  /* échelle et police, avant le NewFrame ImGui */
         m_hud.render(hud, shotHud, false);
@@ -199,7 +202,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         temps.reserve(static_cast<std::size_t>(images));
         for (int i = 0; i < images; ++i) {
             const auto debut = std::chrono::steady_clock::now();
-            renderScene(base, shotRotorAngle, 1.0f, shotRudder, shotCyclicLong, shotCyclicLat,
+            renderScene(base, shotRotorAngle, shotRotorFraction, shotRudder, shotCyclicLong, shotCyclicLat,
                         shotCollective, 1.0f, 0.1f);
             m_hud.updateScale(fbw, fbh);
             m_hud.render(hud, shotHud, false);

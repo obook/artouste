@@ -121,6 +121,15 @@ def retint(src, dst, target_hex, gain_clip=None):
             print(f"   turbine ramenée à {LUM_TURBINE:.2f} de luminance "
                   f"(depuis {moyenne:.2f}, {coeur.mean() * 100:.1f}% de l'atlas)")
 
+    # Salissure (usure.py), si la carte est posée à côté de la source : suie de
+    # la turbine, coulures et crasse du bas, les mêmes sur toutes les livrées.
+    carte_usure = os.path.join(os.path.dirname(src) or ".", "texture-usure.png")
+    if os.path.exists(carte_usure):
+        usure = Image.open(carte_usure).convert("L").resize((out.shape[1], out.shape[0]),
+                                                            Image.LANCZOS)
+        out = out * (np.asarray(usure).astype(np.float32) / 255.0)[..., None]
+        print("   usure appliquée")
+
     out = np.clip(out, 0.0, 1.0)
     Image.fromarray((out * 255).astype("uint8")).save(dst)
     print(f"livrée écrite -> {dst}  ({neutral.mean() * 100:.0f}% des pixels repeints"

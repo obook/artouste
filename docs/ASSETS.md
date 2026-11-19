@@ -82,10 +82,34 @@ reteintant les pixels neutres vers la couleur cible, sans toucher aux marquages
 saturés (cocardes tricolores). Les textures sont versionnées ; régénérer ne sert
 qu'après modification :
 
+Les livrées sont en 2048 : chaque make_* part d'un fond fabriqué par
+`make_fond.py` (atlas d'origine agrandi, lignes de tôle redessinées depuis la
+carte de relief cuite), puis `retint.py` repeint, applique l'occlusion, assombrit
+la turbine et pose la salissure. Ces cartes de travail sont cherchées A COTE du
+fond : on travaille dans un dossier à part (ici `~/.cache/cc/livree`, le Blender
+flatpak ne voit pas /tmp). Chaîne complète, depuis la racine du dépôt :
+
 ```bash
-python3 tools/livree/make_blanche.py           # -> texture-blanche.png (blanc)
-python3 tools/livree/make_gendarmerie.py       # -> texture-gendarmerie.png (bleu)
-python3 tools/livree/make_armeedeterre.py      # -> texture-armeedeterre.png (olive)
-python3 tools/livree/make_protectioncivile.py  # -> texture-protectioncivile.png (rouge)
+W=~/.cache/cc/livree; M=assets/models/Alouette-II/Models; mkdir -p $W
+./build/bin/model_probe $M/alouette.ac $W/alouette.obj "hdr,blur,disc,flotteur,barre,roue"
+./build/bin/model_probe $M/alouette.ac $W/tubes.obj "fuselage,cache,hdr,blur,disc"
+cp $W/tubes.obj $W/texture-ao-epargne.obj
+cp $M/cuisson/texture-ao.png $M/cuisson/texture-turbine.obj $W/
+PYTHONPATH=tools/livree tools/.venv/bin/python tools/livree/make_fond.py \
+    $M/texture.png $M/cuisson/texture-relief.png $W/texture-fond.png $W/tubes.obj
+flatpak run org.blender.Blender -b --factory-startup \
+    -P $PWD/tools/livree/cuire_geometrie.py -- $W/alouette.obj $W/geo 2048
+tools/.venv/bin/python tools/livree/usure.py $W/geo $W/texture-usure.png
+for l in blanche gendarmerie armeedeterre protectioncivile; do
+    PYTHONPATH=tools/livree tools/.venv/bin/python tools/livree/make_$l.py \
+        $W/texture-fond.png $M/texture-$l.png
+done
 python3 tools/livree/make_decals.py            # -> décalques (textes et immatriculations)
 ```
+
+`cuisson/texture-turbine.obj` est la zone UV de la turbine (faces du maillage
+"moteur" assombries à 0,10 de luminance) : il est versionné de force, `*.obj`
+étant ignoré par git, parce que le fichier d'origine a été perdu une fois avec
+/tmp. `cuire_geometrie.py` cuit position et normale sur l'atlas, `usure.py` en
+tire la salissure en mètres (suie derrière l'échappement, coulures sur les
+flancs, crasse en bas) : ses réglages sont des constantes en tête de fichier.

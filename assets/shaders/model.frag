@@ -132,6 +132,35 @@ vec3 relief(vec3 n, vec3 worldPos, vec2 uv) {
     return normalize(mat3(t * invMax, b * invMax, n) * m);
 }
 
+/*
+ * Couleur du ciel dans une direction : le même dégradé que sky.frag (mêmes
+ * teintes, même cycle jour/nuit, même halo), sans le disque du soleil ni les
+ * étoiles, trop fins pour un reflet. Sous l'horizon, le reflet du sol, plutôt
+ * que la brume d'abîme du ciel : la tôle du dessous renvoie la terre.
+ * Un vrai cubemap coûterait six rendus par changement d'heure pour un ciel
+ * qui se calcule en quelques lignes.
+ */
+vec3 ciel(vec3 dir, vec3 sunDir, float halo) {
+    float isDay = smoothstep(-0.15, 0.15, sunDir.y);
+    vec3 dayZenith   = vec3(0.12, 0.35, 0.75);
+    vec3 dayHorizon  = vec3(0.70, 0.85, 0.95);
+    vec3 duskHorizon = vec3(1.00, 0.45, 0.15);
+    vec3 nightZenith = vec3(0.01, 0.02, 0.05);
+    vec3 nightHorizon= vec3(0.05, 0.06, 0.10);
+    vec3 horizon = mix(nightHorizon,
+                       mix(duskHorizon, dayHorizon, clamp(sunDir.y * 3.0, 0.0, 1.0)), isDay);
+    vec3 zenith  = mix(nightZenith, dayZenith, isDay);
+    vec3 sol     = mix(nightZenith, vec3(0.30, 0.32, 0.24), isDay);
+    float fade   = smoothstep(0.0, 0.5, abs(dir.y));
+    vec3 color   = (dir.y >= 0.0) ? mix(horizon, zenith, fade) : mix(horizon, sol, fade);
+
+    float sunAlign = max(0.0, dot(dir, sunDir));
+    float sunGlow  = pow(sunAlign, 16.0) * 0.4 + pow(sunAlign, 64.0) * 0.5;
+    vec3  sunColor = mix(vec3(1.0, 0.25, 0.05), vec3(1.0, 0.9, 0.8),
+                         clamp(sunDir.y * 5.0, 0.0, 1.0));
+    return color + sunColor * sunGlow * halo * smoothstep(-0.25, 0.05, dir.y) * isDay;
+}
+
 void main() {
     vec4 albedo = texture(u_texture, v_uv);
 
@@ -153,7 +182,7 @@ void main() {
     float light = (0.40 + 0.45 * diffuse) * nuit + 0.45 * headlight;
 
     /* Reflets : la tôle peinte renvoie le soleil en un éclat serré (Blinn-Phong) et
-       le ciel sur ses bords, là où le regard rase la surface. Sans ces deux termes,
+       le ciel et le sol sur ses bords, là où le regard rase la surface. Sans ces deux termes,
        la cellule rend comme du plastique mat quelle que soit la finesse du maillage.
        L'éclat du soleil est coupé du côté à l'ombre, que le demi-Lambert éclaire
        encore, et s'éteint avec le soleil ; le reflet du ciel suit la nuit
@@ -162,10 +191,18 @@ void main() {
     vec3  halfDir  = normalize(lightDir + viewDir);
     float lit      = clamp(dot(n, lightDir) * 4.0, 0.0, 1.0);
     float soleil   = pow(max(dot(n, halfDir), 0.0), 32.0) * 0.60 * lit * u_isDay;
-    float ciel     = pow(1.0 - max(dot(n, viewDir), 0.0), 4.0) * 0.18 * nuit;
+    /* Reflet du ciel et du sol (Schlick, F0 de la peinture) : la tôle renvoie
+       ce qu'elle a en face, bleu du zénith sur le dos, terre sous le ventre. */
+    vec3  r        = reflect(-viewDir, n);
+    /* Sans le halo du soleil : sur une pale noire à facettes, il peint chaque
+       facette d'un gris différent. Plafonné en rasant : un liséré trop vif
+       cerne les bords (planche de bord en vue cockpit) et crénelle. La
+       planche, mate, en reçoit à peine. */
+    vec3  reflet   = ciel(r, lightDir, 0.0);
+    float fresnel  = 0.16 * pow(1.0 - max(dot(n, viewDir), 0.0), 5.0);
+    fresnel       *= 1.0 - 0.8 * u_planche;
 
-    vec3  color = albedo.rgb * min(light, 1.2) + vec3(soleil) +
-                  vec3(0.55, 0.68, 0.85) * ciel;
+    vec3  color = albedo.rgb * min(light, 1.2) + vec3(soleil) + reflet * fresnel;
     /* Feux de pad : chacun pose un petit halo vert sur la dalle autour de lui. */
     for (int i = 0; i < u_nbFeux; ++i) {
         float d = distance(v_worldPos, u_feux[i]) / FEU_RAYON;
@@ -185,7 +222,12 @@ void main() {
      */
     if (u_glass == 1) {
         float fresnel = pow(1.0 - abs(dot(n, viewDir)), 3.0);
-        color = mix(color, vec3(0.85, 0.90, 0.95) * nuit, fresnel * 0.6);
+        /* Seul le ciel se reflète : le disque flou du rotor passe aussi par
+           ici (opacité < 1) et, vu de côté, renverrait le sol en taches
+           sombres. Vers le bas on garde la teinte pâle d'avant. */
+        vec3 teinte = mix(vec3(0.85, 0.90, 0.95) * nuit, ciel(r, lightDir, 1.0) * 1.1,
+                          smoothstep(0.0, 0.25, r.y));
+        color = mix(color, teinte, fresnel * 0.6);
         alpha = clamp(alpha + fresnel * 0.5, 0.0, 1.0);
 
         /* Verrière fêlée (mode zombie). Le trait opacifie le verre en plus de

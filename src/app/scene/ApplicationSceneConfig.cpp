@@ -15,6 +15,7 @@
 #include "app/Application.hpp"
 #include "app/Config.hpp"
 #include "input/InputSystem.hpp"
+#include "render/CelluleEmbarquee.hpp"
 #include "render/HelicopterModel.hpp"
 #include "render/LoadedHelicopter.hpp"
 #include "render/Terrain.hpp"
@@ -183,17 +184,21 @@ void Application::initSceneConfig() {
        FlightGear tiers sans toucher au code. Les pièces manquantes (pilote, planche
        de bord, décalques) restent simplement vides, et les repères des rotors sont
        ceux de l'Alouette : c'est un essai, pas un deuxième appareil jouable. */
-    /* Cellule 3dexport en glTF si elle est là (fichier local, hors dépôt, voir
-       docs/ASSETS.md), sinon le modèle FlightGear. */
+    /* Cellule 3dexport en glTF si elle est là (fichier local hors dépôt, ou
+       fondue dans le binaire des releases, voir docs/ASSETS.md), sinon le
+       modèle FlightGear. */
+    const auto disponible = [](const std::filesystem::path& p) {
+        return std::filesystem::exists(p) || render::celluleEmbarquee(p);
+    };
     std::filesystem::path modelFile =
-        assets / "models" / "Alouette-II" / "Models" / "alouette-3dexport.glb";
-    if (!std::filesystem::exists(modelFile)) {
+        assets / "models" / "Alouette-II" / "Models" / render::kNomCelluleEmbarquee;
+    if (!disponible(modelFile)) {
         modelFile = assets / "models" / "Alouette-II" / "Models" / "alouette.ac";
     }
     if (const char* env = std::getenv("ARTOUSTE_MODELE"); env != nullptr && env[0] != '\0') {
         modelFile = env;
     }
-    if (std::filesystem::exists(modelFile)) {
+    if (disponible(modelFile)) {
         renderLoadingScreen("Chargement de l'hélicoptère...");
         auto loaded = std::make_unique<render::LoadedHelicopter>(modelFile);
         if (loaded->loaded()) {

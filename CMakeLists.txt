@@ -107,14 +107,17 @@ install(TARGETS artouste RUNTIME DESTINATION .)
 # Le moteur recense les cartes en parcourant assets/terrain/
 # (ApplicationMenuMaps.cpp) : rien à déclarer ici quand on en ajoute une.
 #
-# Deux exclusions, qui ne coûtent rien sur la forge (dépôt tout neuf) mais
+# Deux exclusions pratiques, qui ne coûtent rien sur la forge (dépôt tout neuf) mais
 # comptent pour qui empaquette depuis sa machine : les jeux de tuiles rangés dans
 # une carte pèsent des gigaoctets et se retéléchargent, et config.txt est la
 # configuration PERSONNELLE de celui qui compile, que le modèle recrée au premier
-# lancement de toute façon.
+# lancement de toute façon. Une troisième, la cellule 3dexport, pour sa licence.
 install(DIRECTORY assets/ DESTINATION assets
         PATTERN "tuiles" EXCLUDE
-        PATTERN "config.txt" EXCLUDE)
+        PATTERN "config.txt" EXCLUDE
+        # Cellule 3dexport : sa licence interdit de la livrer en fichier, elle
+        # voyage fondue dans l'exécutable (ARTOUSTE_CELLULE_EMBARQUEE).
+        PATTERN "*3dexport*" EXCLUDE)
 install(FILES README.md LICENSE DESTINATION . OPTIONAL)
 # Notice PDF des commandes, à la racine de l'archive. Le fichier est versionné
 # (la CI ne compile pas le LaTeX) : penser à le recompiler et le recommiter

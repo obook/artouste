@@ -19,6 +19,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cellule 3dexport, fondue dans l'exécutable : sa licence interdit de la
+      # mettre dans ce dépôt public ou en fichier dans l'archive (docs/ASSETS.md).
+      # Elle vient d'un dépôt privé, lu avec un jeton en lecture seule.
+      - name: Récupérer la cellule 3dexport
+        uses: actions/checkout@v4
+        with:
+          repository: obook/artouste-assets
+          token: ${{ secrets.ARTOUSTE_ASSETS_TOKEN }}
+          path: prive
+
       # GLFW a besoin des en-têtes X11 et OpenGL ; GLAD génère ses sources via
       # Python (déjà présent sur le runner). libcurl (paquet de développement)
       # est désormais obligatoire : la radio internet du cockpit en dépend.
@@ -39,7 +49,7 @@ jobs:
       # vieux cmake_minimum_required de certaines dependances (GLAD). Cette option
       # leur accorde une compatibilite minimale.
       - name: Configurer
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DARTOUSTE_CELLULE_EMBARQUEE=prive/alouette-3dexport.glb
 
       # Un -j nu épuise la mémoire du runner Ubuntu 26, qui tue la compilation.
       - name: Compiler
@@ -64,6 +74,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cellule 3dexport, fondue dans l'exécutable : sa licence interdit de la
+      # mettre dans ce dépôt public ou en fichier dans l'archive (docs/ASSETS.md).
+      # Elle vient d'un dépôt privé, lu avec un jeton en lecture seule.
+      - name: Récupérer la cellule 3dexport
+        uses: actions/checkout@v4
+        with:
+          repository: obook/artouste-assets
+          token: ${{ secrets.ARTOUSTE_ASSETS_TOKEN }}
+          path: prive
+
       # Rien à installer : clang et CMake sont sur le runner, libcurl et le
       # framework OpenGL viennent du SDK. L'archive produite est arm64 : elle ne
       # tourne pas sur un Mac Intel. Pour couvrir les deux, il faudrait
@@ -78,7 +98,7 @@ jobs:
       # Sans cible explicite, le binaire exige la version du runner (15) :
       # on garde macOS 14 comme minimum, comme quand le runner était un 14.
       - name: Configurer
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DARTOUSTE_CELLULE_EMBARQUEE=prive/alouette-3dexport.glb -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0
 
       # Nombre de tâches explicite : voir le commentaire de macos.yml, un -j nu
       # noie les trois coeurs du runner.
@@ -104,6 +124,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cellule 3dexport, fondue dans l'exécutable : sa licence interdit de la
+      # mettre dans ce dépôt public ou en fichier dans l'archive (docs/ASSETS.md).
+      # Elle vient d'un dépôt privé, lu avec un jeton en lecture seule.
+      - name: Récupérer la cellule 3dexport
+        uses: actions/checkout@v4
+        with:
+          repository: obook/artouste-assets
+          token: ${{ secrets.ARTOUSTE_ASSETS_TOKEN }}
+          path: prive
+
       - name: Cache des dépendances FetchContent
         uses: actions/cache@v4
         with:
@@ -125,7 +155,7 @@ jobs:
       # et le triplet statique exposent libcurl a find_package(CURL).
       - name: Configurer
         shell: bash
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DARTOUSTE_CELLULE_EMBARQUEE=prive/alouette-3dexport.glb -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
 
       - name: Compiler
         run: cmake --build build --config Release -j

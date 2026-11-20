@@ -140,3 +140,14 @@ de ceux du .ac (y = -1,387, Y_OFFSET) et le mât, plus court sur ce modèle,
 monte 16 cm au-dessus du plan des pales du jeu : le moyeu de mainrotor.ac
 descend assez pour couvrir le raccord.
 
+Livraison aux joueurs : la licence Basic de 3dexport autorise un jeu gratuit,
+mais pas de fournir le modèle lui-même, ni sous une forme où l'utilisateur
+final peut le récupérer. Le .glb n'entre donc ni dans ce dépôt public ni en
+fichier dans les archives (exclu par `install(DIRECTORY assets/ ...)`). Il est
+fondu dans l'exécutable, octets mélangés à une clé : l'option CMake
+`ARTOUSTE_CELLULE_EMBARQUEE` désigne le .glb, `tools/modele/embarquer_cellule.py`
+en fait un source C++, `src/render/CelluleEmbarquee.cpp` le restitue à Assimp.
+Un .glb présent sur le disque garde la priorité. `release.yml` lit le fichier
+dans le dépôt privé `obook/artouste-assets` avec le secret
+`ARTOUSTE_ASSETS_TOKEN` (jeton en lecture seule sur ce seul dépôt).
+

@@ -174,6 +174,7 @@ add_executable(artouste
     render/TextureCache.cpp
     render/Model.cpp
     render/ModelLoader.cpp
+    render/CelluleEmbarquee.cpp
     render/LoadedHelicopter.cpp
     render/LoadedHelicopterPilote.cpp
     render/LoadedHelicopterInstruments.cpp
@@ -196,6 +197,36 @@ add_executable(artouste
     audio/radio/RadioSource.cpp
     util/Journal.cpp
 )
+
+# Cellule 3dexport fondue dans le binaire (releases) : ARTOUSTE_CELLULE_EMBARQUEE
+# désigne le .glb, que release.yml récupère dans un dépôt privé. Sa licence
+# interdit de le livrer en fichier lisible (docs/ASSETS.md). Sans lui, le binaire
+# n'embarque rien et ne trouve la cellule que sur le disque.
+set(ARTOUSTE_CELLULE_EMBARQUEE "" CACHE FILEPATH
+    "Cellule 3dexport (.glb) à fondre dans l'exécutable, vide pour aucune")
+if(ARTOUSTE_CELLULE_EMBARQUEE)
+    # Chemin relatif : pris depuis la racine du dépôt (cas de release.yml).
+    get_filename_component(ARTOUSTE_CELLULE_EMBARQUEE "${ARTOUSTE_CELLULE_EMBARQUEE}"
+        ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+    if(NOT EXISTS "${ARTOUSTE_CELLULE_EMBARQUEE}")
+        message(FATAL_ERROR "ARTOUSTE_CELLULE_EMBARQUEE : ${ARTOUSTE_CELLULE_EMBARQUEE} introuvable")
+    endif()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(_cellule_cpp "${CMAKE_CURRENT_BINARY_DIR}/cellule_donnees.cpp")
+    add_custom_command(
+        OUTPUT  "${_cellule_cpp}"
+        COMMAND Python3::Interpreter
+                "${CMAKE_SOURCE_DIR}/tools/modele/embarquer_cellule.py"
+                "${ARTOUSTE_CELLULE_EMBARQUEE}" "${_cellule_cpp}"
+        DEPENDS "${ARTOUSTE_CELLULE_EMBARQUEE}"
+                "${CMAKE_SOURCE_DIR}/tools/modele/embarquer_cellule.py"
+        COMMENT "Cellule 3dexport fondue dans l'exécutable")
+    target_sources(artouste PRIVATE "${_cellule_cpp}")
+    message(STATUS "  cellule 3dexport embarquée : ${ARTOUSTE_CELLULE_EMBARQUEE}")
+else()
+    set_source_files_properties(render/CelluleEmbarquee.cpp
+        PROPERTIES COMPILE_DEFINITIONS ARTOUSTE_SANS_CELLULE)
+endif()
 
 # Racine des includes du projet : permet les chemins "render/...", "util/...".
 target_include_directories(artouste PRIVATE

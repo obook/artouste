@@ -11,6 +11,8 @@
 
 #include "render/ModelLoader.hpp"
 
+#include "render/CelluleEmbarquee.hpp"
+
 #include "util/Math.hpp"
 
 #include <assimp/postprocess.h>
@@ -206,10 +208,19 @@ Model ModelLoader::load(const std::filesystem::path& path,
     /* Assimp lit le fichier et nous renvoie la scène. Les options demandent de
        découper les faces en triangles, de fusionner les sommets identiques et
        de calculer des normales lissées (utiles pour l'éclairage). */
+    constexpr unsigned int flags =
+        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals;
     Assimp::Importer importer;
-    const aiScene*   scene = importer.ReadFile(
-        path.string(),
-        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals);
+    const aiScene*   scene = nullptr;
+    /* Cellule 3dexport absente du disque : celle fondue dans le binaire des
+       releases (voir CelluleEmbarquee.hpp). Assimp copie la scène, le tampon
+       peut disparaître après la lecture. */
+    if (!std::filesystem::exists(path) && celluleEmbarquee(path)) {
+        const std::vector<unsigned char> data = lireCelluleEmbarquee();
+        scene = importer.ReadFileFromMemory(data.data(), data.size(), flags, "glb");
+    } else {
+        scene = importer.ReadFile(path.string(), flags);
+    }
 
     /* On vérifie que le chargement a réussi et que la scène est exploitable. */
     if (scene == nullptr || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != 0 ||

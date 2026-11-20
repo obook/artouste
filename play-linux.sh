@@ -37,6 +37,49 @@ while getopts ":yh" opt; do
     esac
 done
 
+# ---------------------------------------------------------------------------
+# Cellule 3dexport : modèle commercial, absent du dépôt public (licence). On
+# la met à jour depuis le dépôt privé obook/artouste-assets, en ne téléchargeant
+# que si son empreinte git diffère de la copie locale. Tout échec (réseau, gh
+# absent ou non connecté, accès refusé) est sans gravité : la copie locale
+# sert, et à défaut le simulateur reprend le modèle libre alouette.ac.
+# ---------------------------------------------------------------------------
+
+CELLULE="assets/models/Alouette-II/Models/alouette-3dexport.glb"
+CELLULE_API="repos/obook/artouste-assets/contents/alouette-3dexport.glb"
+
+maj_cellule() {
+    command -v gh >/dev/null 2>&1 || return 1
+    local distant local_ tmp
+    distant="$(timeout 30 gh api "$CELLULE_API" --jq .sha 2>/dev/null)" || return 1
+    [ -n "$distant" ] || return 1
+    local_="$(git hash-object "$CELLULE" 2>/dev/null || true)"
+    if [ "$distant" = "$local_" ]; then
+        echo "Cellule 3dexport à jour."
+        return 0
+    fi
+    tmp="$(mktemp "$CELLULE.XXXXXX")"
+    if timeout 300 gh api -H "Accept: application/vnd.github.raw" "$CELLULE_API" >"$tmp" 2>/dev/null \
+        && [ "$(git hash-object "$tmp")" = "$distant" ]; then
+        mv "$tmp" "$CELLULE"
+        echo "Cellule 3dexport mise à jour."
+        return 0
+    fi
+    rm -f "$tmp"
+    return 1
+}
+
+echo ">> Récupération de la cellule 3dexport"
+if ! maj_cellule; then
+    echo "AVERTISSEMENT : cellule 3dexport non récupérée depuis GitHub" >&2
+    echo "(réseau coupé, gh absent ou non connecté, ou accès refusé)." >&2
+    if [ -f "$CELLULE" ]; then
+        echo "-> Repli sur la copie locale, peut-être ancienne : $CELLULE" >&2
+    else
+        echo "-> Repli sur le modèle libre alouette.ac." >&2
+    fi
+fi
+
 echo ">> Compilation"
 if [ "$ASSUME_YES" -eq 1 ]; then
     ./build.sh -y

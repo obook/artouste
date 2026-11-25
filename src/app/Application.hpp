@@ -251,6 +251,8 @@ private:
     /* Place la caméra selon la vue courante (poursuite, cockpit ou orbite) et gère
        le cut net au changement de vue. Définie dans ApplicationCameraAudio.cpp. */
     void updateCamera(const mat4& base, const vec3& renderPos, float yaw, float t, float frameDt);
+    /* Oeil du pilote en vue cockpit, selon le poste chargé (FBX ou FlightGear). */
+    [[nodiscard]] vec3 cockpitEye() const;
 
     /* Module les boucles sonores (rotor, turbine, vent), déclenche le son de
        démarrage et calcule l'effet Doppler de la vue orbite. Définie dans

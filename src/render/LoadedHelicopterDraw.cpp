@@ -59,6 +59,18 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
     if (!m_gltf) {
         drawModel(shader, m_tailGuard, root, Pass::Opaque);
     }
+    /* Poste du FBX tel quel : planche et commandes sont dans la cellule, les
+       pilotes figés à part. En vue cockpit, la caméra est dans la tête du
+       pilote : on la retire, on voit son corps, ses bras et ses mains. */
+    if (m_posteGltf) {
+        const mat4 cellule = root * m_fuselageFix;
+        drawModel(shader, m_equipageDroit, cellule, Pass::Opaque);
+        if (fullPilot) {
+            drawModel(shader, m_tetePilote, cellule, Pass::Opaque);
+        }
+        drawModel(shader, m_equipageGauche, cellule, Pass::Opaque);
+        return;
+    }
     /* En vue cockpit, le pilote est dessiné sans jambes (chargées à part) : on
        affiche alors ses jambes animées au palonnier. Le pilote entier (vues
        externes) et le copilote gardent leurs jambes figées. */

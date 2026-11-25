@@ -27,6 +27,11 @@ namespace artouste::app {
  */
 inline const vec3 COCKPIT_EYE{3.55f, 1.296f, 0.46f};
 
+/* Oeil du pilote avec le poste de la cellule 3dexport : à la place des yeux
+   de son pilote (tête mesurée sur le modèle), plus haut et plus en avant que
+   COCKPIT_EYE, réglé pour l'ancien poste. Voir Application::cockpitEye. */
+inline const vec3 COCKPIT_EYE_POSTE_FBX{3.70f, 1.55f, 0.365f};
+
 /*
  * Amplitude maximale des vibrations du rotor ressenties en vue cockpit (mètres).
  * Le rotor tripale génère trois impulsions par tour (3/rev, ~18 Hz à 360 tr/min) :

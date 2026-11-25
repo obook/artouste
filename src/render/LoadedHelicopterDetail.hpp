@@ -83,6 +83,21 @@ inline vec3 fgToAssimp(const vec3& fg) {
 /* Position de la planche de bord (issue des fichiers d'assemblage FlightGear). */
 inline const vec3 PANEL_OFFSET = fgToAssimp(vec3{-4.136f, 0.0f, -0.344f});
 
+/* Grands cadrans de la planche 3dexport, mesurés sur leurs lunettes dans le
+   .glb (repère racine) : deux rangées de trois sur une planche inclinée de
+   18 deg vers l'arrière. Gauche et droite vus du pilote. */
+struct CadranPoste {
+    vec3  centre;
+    float diametre;  /* lunette, bord extérieur */
+};
+inline const vec3        NORMALE_PLANCHE_3DEXPORT{0.948f, 0.318f, 0.0f};
+inline const CadranPoste CADRAN_HAUT_GAUCHE{{-4.4146f, -0.1517f, 0.1411f}, 0.079f};
+inline const CadranPoste CADRAN_HAUT_CENTRE{{-4.4146f, -0.1517f, 0.0285f}, 0.079f};
+inline const CadranPoste CADRAN_HAUT_DROITE{{-4.4146f, -0.1517f, -0.0871f}, 0.079f};
+inline const CadranPoste CADRAN_MILIEU_GAUCHE{{-4.3789f, -0.2568f, 0.1370f}, 0.086f};
+inline const CadranPoste CADRAN_MILIEU_CENTRE{{-4.3789f, -0.2568f, 0.0274f}, 0.086f};
+inline const CadranPoste CADRAN_MILIEU_DROITE{{-4.3789f, -0.2568f, -0.0871f}, 0.086f};
+
 /* Cache-console : centre, hauteur et largeur du panneau sombre qui couvre la
    partie pleine du nez sous la planche (calés à l'oeil en vue cockpit). */
 inline const vec3      CONSOLE_MASK_POS{-4.36f, -0.63f, 0.0f};

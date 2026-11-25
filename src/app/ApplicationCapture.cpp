@@ -120,7 +120,7 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
         m_viewMode = 1;  /* vue cockpit : pilote allégé, jambes animées */
         m_camera.setFovYDeg(70.0f);
         m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
-        const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
+        const vec3 eye = vec3(base * vec4(cockpitEye(), 1.0f));
         m_camera.setLookAt(eye, eye + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
                            vec3{0.0f, 1.0f, 0.0f});
     } else if (const char* solar = std::getenv("ARTOUSTE_SHOT_SOLAR")) {

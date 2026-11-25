@@ -13,13 +13,44 @@
 #include "render/LoadedHelicopter.hpp"
 
 #include "render/LoadedHelicopterDetail.hpp"
+#include "render/PlacementCadran.hpp"
 #include "render/Shader.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace artouste::render {
 
 using namespace heli_detail;
+
+namespace {
+
+/* Pose un instrument FlightGear sur un cadran de la planche 3dexport : mis à
+   la taille de la lunette, le fond de son boîtier sur le plan de la lunette,
+   donc sa face devant le cadran peint. */
+mat4 placerSurCadran(const Model& cadranFixe, const CadranPoste& cadran) {
+    float xMin = 1e30f;
+    float yMin = 1e30f;
+    float yMax = -1e30f;
+    for (const vec3& p : cadranFixe.positions()) {
+        xMin = std::min(xMin, p.x);
+        yMin = std::min(yMin, p.y);
+        yMax = std::max(yMax, p.y);
+    }
+    const float echelle = cadran.diametre / (yMax - yMin);
+    return placementCadran(cadran.centre, NORMALE_PLANCHE_3DEXPORT, echelle, -xMin * echelle);
+}
+
+}  /* namespace */
+
+void LoadedHelicopter::poserSurPlancheGltf() {
+    m_asiPlace    = placerSurCadran(m_asiStatic, CADRAN_HAUT_GAUCHE);
+    m_aiPlace     = placerSurCadran(m_aiStatic, CADRAN_HAUT_CENTRE);
+    m_altPlace    = placerSurCadran(m_altStatic, CADRAN_HAUT_DROITE);
+    m_torquePlace = placerSurCadran(m_torqueStatic, CADRAN_MILIEU_GAUCHE);
+    m_hiPlace     = placerSurCadran(m_hiStatic, CADRAN_MILIEU_CENTRE);
+    m_vsiPlace    = placerSurCadran(m_vsiStatic, CADRAN_MILIEU_DROITE);
+}
 
 void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     /* Horizon artificiel animé : on charge ai.ac en trois morceaux par filtrage des
@@ -28,7 +59,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     {
         const vec3                  aiFgOffset{-0.231f, 0.060f, 0.112f};
         const std::filesystem::path aiFile = dir / "Interior/Panel/Instruments/ai/ai.ac";
-        m_aiOffset = PANEL_OFFSET + fgToAssimp(aiFgOffset);
+        m_aiPlace = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(aiFgOffset));
         /* Statique (lunette + symbole avion + repères fixes) : on écarte les objets
            mobiles (carte de roulis et barre d'horizon) et le verre. */
         m_aiStatic = loadPart(aiFile, {"background", "scale", "float", "vitre", "blur", "disc"});
@@ -48,7 +79,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     {
         const vec3                  altFgOffset{-0.222f, -0.181f, 0.112f};
         const std::filesystem::path altFile = dir / "Interior/Panel/Instruments/alt/alt.ac";
-        m_altOffset = PANEL_OFFSET + fgToAssimp(altFgOffset);
+        m_altPlace = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(altFgOffset));
         /* Cadran statique : on écarte les 3 aiguilles (par nom exact) et le verre. */
         m_altStatic = loadPart(
             altFile, {"=needle100", "=needle1000", "=needle10000", "vitre", "blur", "disc"});
@@ -69,7 +100,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     {
         const vec3                  vsiFgOffset{-0.208f, -0.060f, 0.112f};
         const std::filesystem::path vsiFile = dir / "Interior/Panel/Instruments/vsi/vsi.ac";
-        m_vsiOffset = PANEL_OFFSET + fgToAssimp(vsiFgOffset);
+        m_vsiPlace = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(vsiFgOffset));
         /* Cadran : on garde face + fond, on écarte l'aiguille et le verre "vitre"
            (opaque, il apparaîtrait comme un disque noir, comme pour l'altimètre). */
         m_vsiStatic = loadPart(vsiFile, {"needle", "vitre"});
@@ -84,7 +115,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     {
         const vec3                  hiFgOffset{-0.223f, -0.060f, -0.014f};
         const std::filesystem::path hiFile = dir / "Interior/Panel/Instruments/hi/hi.ac";
-        m_hiOffset = PANEL_OFFSET + fgToAssimp(hiFgOffset);
+        m_hiPlace = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(hiFgOffset));
         /* Cadran fixe : tout sauf la rose mobile et le verre. */
         m_hiStatic = loadPart(hiFile, {"face", "vitre"});
         /* Rose des vents mobile : la "face" seule. */
@@ -97,7 +128,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
     {
         const vec3                  asiFgOffset{-0.207f, 0.181f, 0.112f};
         const std::filesystem::path asiFile = dir / "Interior/Panel/Instruments/asi/asi.ac";
-        m_asiOffset = PANEL_OFFSET + fgToAssimp(asiFgOffset);
+        m_asiPlace  = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(asiFgOffset));
         m_asiStatic = loadPart(asiFile, {"needle", "vitre"});         /* face + fond */
         m_asiNeedle = loadPart(asiFile, {"face", "fond", "vitre"});   /* l'aiguille seule */
         m_hasAsi    = !m_asiNeedle.empty();
@@ -108,7 +139,7 @@ void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
         const vec3                  torqueFgOffset{-0.223f, 0.181f, -0.014f};
         const std::filesystem::path torqueFile =
             dir / "Interior/Panel/Instruments/torque/torque.ac";
-        m_torqueOffset = PANEL_OFFSET + fgToAssimp(torqueFgOffset);
+        m_torquePlace = glm::translate(mat4(1.0f), PANEL_OFFSET + fgToAssimp(torqueFgOffset));
         m_torqueStatic = loadPart(torqueFile, {"needle", "vitre"});        /* face + fond */
         m_torqueNeedle = loadPart(torqueFile, {"face", "fond", "vitre"});  /* l'aiguille seule */
         m_hasTorque    = !m_torqueNeedle.empty();
@@ -142,16 +173,22 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
                                        float headingRad, float airspeedKt, float torquePct) const {
     /* Cache-console sombre sous la planche (voir loadInstruments), dessiné avant
        elle pour qu'elle reste au premier plan. */
-    const mat4 console = root * glm::translate(mat4(1.0f), CONSOLE_MASK_POS) *
-                         glm::scale(mat4(1.0f), vec3{1.0f, CONSOLE_MASK_H, CONSOLE_MASK_W});
-    drawModel(shader, m_consoleMask, console, Pass::Opaque);
-
-    drawModel(shader, m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET), Pass::Opaque);
+    /* Poste 3dexport : la planche est dans la cellule, on n'y pose que les
+       instruments animés. */
+    if (!m_posteGltf) {
+        const mat4 console = root * glm::translate(mat4(1.0f), CONSOLE_MASK_POS) *
+                             glm::scale(mat4(1.0f), vec3{1.0f, CONSOLE_MASK_H, CONSOLE_MASK_W});
+        drawModel(shader, m_consoleMask, console, Pass::Opaque);
+        drawModel(shader, m_panel, root * glm::translate(mat4(1.0f), PANEL_OFFSET),
+                  Pass::Opaque);
+    }
     /* Les lampes de planche n'arrosent que les cadrans (u_planche, model.frag). */
     shader.setFloat("u_planche", 1.0f);
-    for (const Gauge& gauge : m_gauges) {
-        drawModel(shader, gauge.model, root * glm::translate(mat4(1.0f), gauge.offset),
-                  Pass::Opaque);
+    if (!m_posteGltf) {
+        for (const Gauge& gauge : m_gauges) {
+            drawModel(shader, gauge.model, root * glm::translate(mat4(1.0f), gauge.offset),
+                      Pass::Opaque);
+        }
     }
 
     /* Horizon artificiel animé (d'après ai.xml de FlightGear). Roulis : la carte
@@ -163,7 +200,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
        de la géométrie chargée à la verticale en Y (assimp réoriente le .ac). Le
        symbole avion et la lunette (m_aiStatic) restent fixes. */
     if (m_hasAi) {
-        const mat4  aiBase = root * glm::translate(mat4(1.0f), m_aiOffset);
+        const mat4  aiBase = root * m_aiPlace;
         const mat4  rollM  = aiBase * glm::rotate(mat4(1.0f), rollRad, vec3{1.0f, 0.0f, 0.0f});
         const float pitchOffset =
             glm::clamp(-0.0004f * glm::degrees(pitchRad), -0.008f, 0.008f);
@@ -177,7 +214,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
        avec l'altitude (en pieds), aux facteurs FlightGear : 0.36 deg/ft (centaines,
        un tour par 1000 ft), 0.036 (milliers) et 0.0036 (dizaines de milliers). */
     if (m_hasAlt) {
-        const mat4 altBase = root * glm::translate(mat4(1.0f), m_altOffset);
+        const mat4 altBase = root * m_altPlace;
         const auto needleM = [&](float factor) {
             return altBase *
                    glm::rotate(mat4(1.0f), glm::radians(factor * altitudeFt), vec3{-1.0f, 0.0f, 0.0f});
@@ -194,7 +231,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
        en vol, comme cela a été fait pour l'altimètre. */
     if (m_hasVsi) {
         constexpr float VSI_ZERO_OFFSET_DEG = 0.0f;
-        const mat4      vsiBase = root * glm::translate(mat4(1.0f), m_vsiOffset);
+        const mat4      vsiBase = root * m_vsiPlace;
         const float     angle   = vsiNeedleAngleDeg(varioFpm) + VSI_ZERO_OFFSET_DEG;
         const mat4      needleMat =
             vsiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
@@ -208,7 +245,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
        sens horaire vu du pilote, comme les aiguilles de l'altimètre : la rose tourne
        donc de -cap, à contresens, et défile de droite à gauche en virage à droite. */
     if (m_hasHi) {
-        const mat4      hiBase = root * glm::translate(mat4(1.0f), m_hiOffset);
+        const mat4      hiBase = root * m_hiPlace;
         const float     angle  = -glm::degrees(headingRad);
         const mat4      cardMat =
             hiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
@@ -219,7 +256,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
     /* Anémomètre animé : l'aiguille tourne autour de X selon la vitesse air, suivant la
        table non linéaire relevée sur les graduations du cadran (asiNeedleAngleDeg). */
     if (m_hasAsi) {
-        const mat4      asiBase = root * glm::translate(mat4(1.0f), m_asiOffset);
+        const mat4      asiBase = root * m_asiPlace;
         const float     angle   = asiNeedleAngleDeg(airspeedKt);
         const mat4      needleMat =
             asiBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});
@@ -234,7 +271,7 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
         constexpr float TORQUE_DEG_PER_PCT     = 2.73f;
         constexpr float TORQUE_ZERO_OFFSET_DEG = 0.0f;
         const float     pct = torquePct < 0.0f ? 0.0f : (torquePct > 110.0f ? 110.0f : torquePct);
-        const mat4      torqueBase = root * glm::translate(mat4(1.0f), m_torqueOffset);
+        const mat4      torqueBase = root * m_torquePlace;
         const float     angle      = TORQUE_DEG_PER_PCT * pct + TORQUE_ZERO_OFFSET_DEG;
         const mat4      needleMat =
             torqueBase * glm::rotate(mat4(1.0f), glm::radians(angle), vec3{-1.0f, 0.0f, 0.0f});

@@ -40,7 +40,10 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
        ce maillage dans le modèle pour ne rendre transparent que le verre.) */
     const std::vector<std::string> glass{"verriere", "vitreporte"};
 
-    m_fuselage  = loadPart(modelFile, skipBody, glass);
+    std::vector<std::string> skipFuselage = skipBody;
+    skipFuselage.emplace_back("equipage");     /* pilotes du poste glTF, chargés à part */
+    skipFuselage.emplace_back("tete-pilote");
+    m_fuselage  = loadPart(modelFile, skipFuselage, glass);
 
     /* Modèle glTF (.glb/.gltf) : autre convention d'axes que les .ac FlightGear
        (nez vers +Z au lieu de -X), redressée d'un quart de tour au dessin. Le
@@ -52,6 +55,12 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
         m_gltf        = true;
         m_fuselageFix = glm::rotate(mat4(1.0f), -PI / 2.0f, vec3{0.0f, 1.0f, 0.0f});
         std::printf("[modèle] cellule glTF : quart de tour, livrée et intérieur du .ac ignorés.\n");
+        /* Poste du FBX gardé à la conversion (option --poste) : ses deux pilotes
+           sont dans des noeuds à part, un par siège, et la tête du pilote aussi. */
+        m_equipageDroit  = loadPart(modelFile, {"fuselage", "verriere", "gauche", "tete"});
+        m_tetePilote     = loadPart(modelFile, {"fuselage", "verriere", "equipage"});
+        m_equipageGauche = loadPart(modelFile, {"fuselage", "verriere", "droit", "tete"});
+        m_posteGltf      = !m_equipageDroit.empty();
     }
     /* Livrées de rechange du fuselage : blanc, bleu Gendarmerie, olive armée de
        terre et rouge Protection civile, préchargées dans le cache du fuselage et
@@ -114,6 +123,9 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
     /* Instruments animés du tableau de bord (chargés à part, voir
        LoadedHelicopterInstruments.cpp). */
     loadInstruments(dir);
+    if (m_posteGltf) {
+        poserSurPlancheGltf();
+    }
 
     /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale
        est chargée par rotor, puis recopiée et tournée à l'affichage. */

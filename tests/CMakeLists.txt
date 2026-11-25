@@ -40,6 +40,7 @@ add_executable(artouste_tests
     fabrique_relief_tests.cpp
     souffle_rotor_tests.cpp
     rotor_blur_tests.cpp
+    placement_cadran_tests.cpp
     ligne_commande_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/app/Config.cpp
     ${CMAKE_SOURCE_DIR}/src/app/config/ConfigCles.cpp

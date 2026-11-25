@@ -38,6 +38,8 @@ public:
     [[nodiscard]] bool loaded() const noexcept { return !m_fuselage.empty(); }
     /* Cellule glTF (modèle 3dexport) : certains repères de feux diffèrent du .ac. */
     [[nodiscard]] bool gltf() const noexcept { return m_gltf; }
+    /* Cellule glTF portant son propre poste (planche, commandes, pilotes). */
+    [[nodiscard]] bool posteGltf() const noexcept { return m_posteGltf; }
 
     /* Dessine l'appareil complet. 'base' place et oriente l'hélicoptère dans le
        monde ; 'rotorAngle' est l'angle du rotor principal (rad), géré par
@@ -91,6 +93,10 @@ private:
        parties mobiles. Appelé par le constructeur. */
     void loadInstruments(const std::filesystem::path& dir);
 
+    /* Poste 3dexport : pose les instruments animés sur les cadrans peints de
+       la planche du FBX. */
+    void poserSurPlancheGltf();
+
     /* Dessine la cellule : fuselage, intérieur, pilotes, et les commandes animées
        (jambes, bras du pilote, palonnier, manche cyclique, levier de collectif). */
     void drawAirframe(Shader& shader, const mat4& root, bool fullPilot, float rudder,
@@ -137,6 +143,12 @@ private:
        quart de tour et recalage vertical pour un modèle glTF (voir constructeur). */
     mat4               m_fuselageFix{1.0f};
     bool               m_gltf = false;  /* cellule glTF : intérieur et arceau du .ac non dessinés */
+    /* Cellule glTF avec son propre poste (planche, commandes, pilotes figés) :
+       plus aucune pièce du poste FlightGear n'est dessinée. */
+    bool               m_posteGltf = false;
+    Model              m_equipageDroit;   /* pilote, siège droit, sans la tête */
+    Model              m_tetePilote;      /* sa tête et son casque (cachés en vue cockpit) */
+    Model              m_equipageGauche;  /* copilote, siège gauche */
     const Texture*     m_liveryBlanche          = nullptr;  /* livrée blanche (fuselage) */
     const Texture*     m_liveryGendarmerie      = nullptr;  /* livrée bleue (fuselage) */
     const Texture*     m_liveryArmeeDeTerre     = nullptr;  /* livrée olive (fuselage) */
@@ -177,7 +189,7 @@ private:
     Model              m_aiStatic;
     Model              m_aiCard;
     Model              m_aiFloat;
-    vec3               m_aiOffset{0.0f};
+    mat4               m_aiPlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasAi = false;
 
     /* Altimètre animé : cadran statique + trois aiguilles (centaines, milliers et
@@ -186,35 +198,35 @@ private:
     Model              m_altN100;
     Model              m_altN1000;
     Model              m_altN10000;
-    vec3               m_altOffset{0.0f};
+    mat4               m_altPlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasAlt = false;
 
     /* Vario (VSI) animé : cadran statique + aiguille unique qui tourne autour de X
        selon la vitesse verticale (table non linéaire relevée sur la face du cadran). */
     Model              m_vsiStatic;
     Model              m_vsiNeedle;
-    vec3               m_vsiOffset{0.0f};
+    mat4               m_vsiPlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasVsi = false;
 
     /* Compas (conservateur de cap) animé : cadran fixe (symbole avion, index) + rose
        des vents mobile qui tourne autour de X avec le cap. */
     Model              m_hiStatic;
     Model              m_hiCard;
-    vec3               m_hiOffset{0.0f};
+    mat4               m_hiPlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasHi = false;
 
     /* Anémomètre (ASI) animé : cadran statique + aiguille unique qui tourne autour de X
        proportionnellement à la vitesse air (face linéaire, ~1.75 deg/kt). */
     Model              m_asiStatic;
     Model              m_asiNeedle;
-    vec3               m_asiOffset{0.0f};
+    mat4               m_asiPlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasAsi = false;
 
     /* Couplemètre (torque) animé : cadran statique + aiguille unique qui tourne autour
        de X selon le couple estimé en pourcentage (face linéaire, ~2.73 deg/%). */
     Model              m_torqueStatic;
     Model              m_torqueNeedle;
-    vec3               m_torqueOffset{0.0f};
+    mat4               m_torquePlace{1.0f};  /* pose du cadran dans le repère racine */
     bool               m_hasTorque = false;
     Model              m_mainHub;
     Model              m_mainBlade;

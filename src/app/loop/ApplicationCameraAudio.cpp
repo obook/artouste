@@ -14,11 +14,16 @@
 #include "app/Application.hpp"
 #include "input/InputSystem.hpp"
 #include "render/Camera.hpp"
+#include "render/LoadedHelicopter.hpp"
 #include "util/Math.hpp"
 
 #include <cmath>
 
 namespace artouste::app {
+
+vec3 Application::cockpitEye() const {
+    return (m_loadedHeli && m_loadedHeli->posteGltf()) ? COCKPIT_EYE_POSTE_FBX : COCKPIT_EYE;
+}
 
 void Application::updateCamera(
     const mat4& base, const vec3& renderPos, float yaw, float t, float frameDt) {
@@ -96,7 +101,7 @@ void Application::updateCamera(
 
     const vec3 lookTarget = renderPos + vec3{0.0f, 1.2f, 0.0f};
     if (m_viewMode == 1) { /* cockpit */
-        const vec3 eye = vec3(base * vec4(COCKPIT_EYE, 1.0f));
+        const vec3 eye = vec3(base * vec4(cockpitEye(), 1.0f));
         const vec3 up = mat3(base) * vec3{0.0f, 1.0f, 0.0f};
         /* Axe de visée de base, puis lacet de la tête du pilote autour de la
            verticale appareil (angle négatif = regard vers la droite). */

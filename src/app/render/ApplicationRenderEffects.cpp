@@ -38,6 +38,9 @@ namespace {
  * qui clignote (allumée une brève fraction de la période) tant que la turbine tourne.
  */
 const vec3      BEACON_POS{3.11f, 1.846f, 0.0f};  /* position du beacon du modèle (all-lights.xml), sur le toit */
+/* Même feu sur la cellule 3dexport (glTF) : son toit, mesuré à 1,911 m au droit
+   du feu, est plus haut ; à 1,846 m la sphère clignotait sous la verrière. */
+const vec3      BEACON_POS_GLTF{3.11f, 1.99f, 0.0f};
 constexpr float BEACON_RADIUS = 0.07f;           /* rayon de la sphère (m) */
 constexpr float BEACON_PERIOD = 1.2f;            /* période du clignotement (s) */
 constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où le feu est allumé */
@@ -50,6 +53,10 @@ constexpr float BEACON_ON     = 0.18f;           /* fraction de la période où 
  */
 const vec3      NAV_LEFT_POS{4.24f, 0.356f, -0.77f};   /* feu de navigation bâbord (rouge) */
 const vec3      NAV_RIGHT_POS{4.24f, 0.356f, 0.77f};   /* feu de navigation tribord (vert) */
+/* Mêmes feux sur la cellule 3dexport (glTF) : sur ses carters de feu, en bas
+   des flancs avant ; aux positions FlightGear ils flottaient sous la cabine. */
+const vec3      NAV_LEFT_POS_GLTF{4.27f, 0.52f, -0.69f};
+const vec3      NAV_RIGHT_POS_GLTF{4.27f, 0.52f, 0.705f};
 /* Feu de queue blanc : mis en commentaire, l'Alouette II du plan n'en a pas à
    cet endroit ; le feu rouge de poutre (NAV_BOOM_POS) le remplace.
 const vec3      NAV_TAIL_POS{-3.96f, 1.566f, 0.20f};
@@ -109,6 +116,9 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
     const bool  gltf      = m_loadedHeli != nullptr && m_loadedHeli->gltf();
     const vec3& boomPos   = gltf ? NAV_BOOM_POS_GLTF : NAV_BOOM_POS;
     const vec3& nozzlePos = gltf ? NOZZLE_BODY_POS_GLTF : NOZZLE_BODY_POS;
+    const vec3& beaconPos = gltf ? BEACON_POS_GLTF : BEACON_POS;
+    const vec3& navLeft   = gltf ? NAV_LEFT_POS_GLTF : NAV_LEFT_POS;
+    const vec3& navRight  = gltf ? NAV_RIGHT_POS_GLTF : NAV_RIGHT_POS;
 
     /* Une petite sphère lumineuse de couleur unie, mélangée par-dessus la scène.
        Rendu relatif à la caméra : on retranche m_renderOrigin de la position monde,
@@ -175,8 +185,8 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
             drawGlow(w, NAV_RADIUS, vec4{rgb, 0.95f * nuit});
             drawGlow(w, NAV_RADIUS * 2.2f, vec4{rgb, 0.22f * nuit});
         };
-        drawLight(NAV_LEFT_POS, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
-        drawLight(NAV_RIGHT_POS, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
+        drawLight(navLeft, vec3{1.0f, 0.05f, 0.05f});   /* bâbord : rouge */
+        drawLight(navRight, vec3{0.05f, 1.0f, 0.10f});  /* tribord : vert */
         /* drawLight(NAV_TAIL_POS, vec3{1.0f, 1.0f, 0.95f});  queue : blanc, voir NAV_TAIL_POS */
         drawLight(boomPos, vec3{1.0f, 0.05f, 0.05f});   /* poutre : rouge */
     }
@@ -187,7 +197,7 @@ void Application::drawEngineEffects(const mat4& base, float turbineFraction, flo
            seulement au début de chaque période, éteinte le reste du temps. */
         const float beaconPhase = std::fmod(timeSeconds, BEACON_PERIOD) / BEACON_PERIOD;
         if (beaconPhase < BEACON_ON) {
-            drawGlow(bodyToWorld(BEACON_POS), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
+            drawGlow(bodyToWorld(beaconPos), BEACON_RADIUS, vec4{1.0f, 0.08f, 0.08f, 0.95f});
         }
 
         /* --- Tuyère -------------------------------------------------------------- */

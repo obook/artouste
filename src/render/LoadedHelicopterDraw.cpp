@@ -49,7 +49,13 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
                                     float collective) const {
     /* Fuselage (hors vitrages), intérieur et les deux occupants. Les pales du rotor
        principal sont traitées à part, en mélange, pour le fondu selon le régime. */
+    if (m_posteGltf) {
+        lampesFacesGltf(shader, true);
+    }
     drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Opaque);
+    if (m_posteGltf) {
+        lampesFacesGltf(shader, false);
+    }
     if (!m_gltf) {
         drawModel(shader, m_interior, root, Pass::Opaque);
     }

@@ -107,6 +107,9 @@ private:
        m_etatPlanche. Définis dans LoadedHelicopterPlanche.cpp. */
     void chargerPlancheGltf(const std::filesystem::path& dir);
     void dessinerPlancheGltf(Shader& shader, const mat4& root) const;
+    /* Lampes de planche sur les faces peintes dans l'atlas de la cellule :
+       allumées le temps du dessin de la cellule, éteintes ensuite. */
+    void lampesFacesGltf(Shader& shader, bool allumees) const;
 
     /* Dessine la cellule : fuselage, intérieur, pilotes, et les commandes animées
        (jambes, bras du pilote, palonnier, manche cyclique, levier de collectif). */

@@ -31,6 +31,8 @@ const vec3        FEU_VERT  = vec3(0.25, 1.00, 0.40); /* même teinte que lampad
 const float       FEU_RAYON = 1.2;                    /* portée du halo au sol, en mètres */
 uniform float     u_nuitPlanche; /* 0 le jour, 1 la nuit : lampes de planche allumées */
 uniform float     u_planche;     /* 1 pendant le dessin des cadrans, 0 sinon */
+uniform int       u_nbFaces;     /* faces de cadrans peintes dans la texture (poste 3dexport), 0 sinon */
+uniform vec4      u_faces[9];    /* centre (repère modèle) et rayon de chacune */
 uniform float     u_emissif;     /* 1 = la pièce luit d'elle-même (voyant allumé), 0 sinon */
 const vec3        PLANCHE = vec3(1.00, 0.45, 0.30); /* rouge chaud des lampes à capuchon */
 
@@ -211,7 +213,11 @@ void main() {
     }
     /* Lampes de planche : lumière rouge tombant du haut sur les cadrans. Multipliée
        par l'albédo, elle fait ressortir chiffres et aiguilles et laisse le fond noir. */
-    color += albedo.rgb * PLANCHE * u_nuitPlanche * u_planche * (0.6 + 0.4 * max(n.y, 0.0));
+    float planche = u_planche;
+    for (int i = 0; i < u_nbFaces; ++i) {
+        planche = max(planche, step(distance(v_pos, u_faces[i].xyz), u_faces[i].w));
+    }
+    color += albedo.rgb * PLANCHE * u_nuitPlanche * planche * (0.6 + 0.4 * max(n.y, 0.0));
     /* Voyant allumé : sa couleur propre, quel que soit l'éclairage. */
     color = mix(color, albedo.rgb, u_emissif);
     float alpha = albedo.a * u_opacity;

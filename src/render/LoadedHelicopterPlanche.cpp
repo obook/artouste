@@ -18,6 +18,7 @@
 #include "render/PlancheBord.hpp"
 #include "render/Shader.hpp"
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <vector>
@@ -342,6 +343,27 @@ void LoadedHelicopter::dessinerPlancheGltf(Shader& shader, const mat4& root) con
                          glm::scale(mat4(1.0f), vec3{1.0f, COMPAS_HAUTEUR, 0.0012f});
         drawModel(shader, m_aiguille, foi, Pass::Opaque);
     }
+}
+
+/* Le shader reconnaît les faces à leur position dans le repère du maillage de
+   la cellule (quart de tour m_fuselageFix défait). Rayon : un peu plus que la
+   face (décalage compris), moins que la lunette (face à 90 % du disque). La
+   taille du tableau est celle de u_faces dans model.frag. */
+void LoadedHelicopter::lampesFacesGltf(Shader& shader, bool allumees) const {
+    if (!allumees) {
+        shader.setInt("u_nbFaces", 0);
+        return;
+    }
+    static const std::array<const CadranDessine*, 9> FACES{
+        &TACHYMETRE, &UNITE_TRIPLE, &PAS_COLLECTIF, &VOLTMETRE, &CARBURANT,
+        &SERVO,      &MONTRE,       &VIRAGE,        &AIR};
+    const mat4                  versMaillage = glm::inverse(m_fuselageFix);
+    std::array<vec4, FACES.size()> faces{};
+    for (std::size_t i = 0; i < FACES.size(); ++i) {
+        faces[i] = vec4(vec3(versMaillage * repere(*FACES[i])[3]), FACES[i]->rayon * 1.05f);
+    }
+    shader.setVec4Array("u_faces", &faces[0].x, static_cast<int>(faces.size()));
+    shader.setInt("u_nbFaces", static_cast<int>(faces.size()));
 }
 
 }  /* namespace artouste::render */

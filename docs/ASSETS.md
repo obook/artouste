@@ -148,7 +148,16 @@ yeux. Écrire ce .glb sous un autre nom (`alouette-3dexport-poste.glb`, chargé
 par ARTOUSTE_MODELE) : `play-linux.sh` remplace `alouette-3dexport.glb` par la
 copie du dépôt privé. Une tige pendue au plafond (Object001/002), une barre en
 U entre les sièges et un berceau devant le copilote, absents de l'appareil
-réel, ne sont jamais repris.
+réel, ne sont jamais repris ; le compas magnétique, au-dessus du capot, reste.
+
+La planche suit le manuel de vol (figure 2-5a). Les cadrans absents de
+FlightGear sont peints sans aiguilles dans l'atlas intérieur, agrandi en 4096
+et vieilli par `tools/modele/interieur_4096.py` : le résultat, dérivé du
+modèle, reste à côté du FBX et la conversion le prend s'il y est. Le moteur
+anime leurs aiguilles (`src/render/LoadedHelicopterPlanche.cpp`, échelles
+dans `PlancheBord.hpp`). La rose du compas et les coupoles des voyants ont
+leurs textures dans `Interior/`, produites par `tools/modele/rose_compas.py`
+et `tools/modele/voyants.py`.
 
 Livraison aux joueurs : la licence Basic de 3dexport autorise un jeu gratuit,
 mais pas de fournir le modèle lui-même, ni sous une forme où l'utilisateur

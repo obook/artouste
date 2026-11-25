@@ -15,7 +15,8 @@ d'un quart de tour au dessin.
 Les faces du matériau "glass" sont détachées dans un objet "verriere" : le
 moteur rend translucides les noeuds dont le nom contient "verriere".
 La texture du rotor (sa_313b_germany_c.jpg) manque de l'archive : on la
-remplace par l'atlas civil, même dépliage.
+remplace par l'atlas civil, même dépliage. L'atlas intérieur agrandi en 4096
+(interieur_4096.py), s'il est à côté du FBX, remplace celui d'origine.
 
 Avec --poste, le poste du FBX est gardé (planche, consoles, commandes)
 avec ses deux pilotes, en noeuds "equipage-droit" et "equipage-gauche", et la
@@ -72,6 +73,10 @@ RETIRES = [
     # à objectif. Le plancher de la boîte épargne les boutons du manche.
     (((0.0, -2.85, 1.235), (0.66, -2.66, 1.52)), 1.52),
 ]
+# Compas magnétique (boîtier à fenêtre, repère 3 du manuel de vol), au-dessus
+# du capot : il pend de sa jambe de force sous sa visière, mais tient dans la
+# boîte de la barre en U ; on l'épargne.
+COMPAS = ((0.0, -3.10, 1.43), (0.07, -3.0, 1.54))
 # Repris avec --poste : les pilotes (un seul objet pour les deux).
 PILOTES = "Pilots"
 # Hauteur du cou du pilote, en mètres dans le repère recalé (patins à -1,387) :
@@ -136,6 +141,8 @@ def retirer_poste(fuse, avec_poste):
 
         def dedans(boite):
             return all(boite[0][i] <= mn[i] and mx[i] <= boite[1][i] for i in range(3))
+        if dedans(COMPAS):
+            continue
         if any(dedans(b) and mn[2] < bas for b, bas in RETIRES) or \
                 (not avec_poste and any(dedans(b) for b in POSTE)):
             a_supprimer.extend(ilot)
@@ -163,6 +170,12 @@ def main():
         if "germany" in im.name:
             im.filepath = os.path.join(os.path.dirname(entree), "sa_313b.jpg")
             im.reload()
+        # Atlas intérieur agrandi par interieur_4096.py, s'il est à côté du FBX.
+        net = os.path.join(os.path.dirname(entree), "sa_313b_interior_c_4096.jpg")
+        if "interior" in im.name and os.path.exists(net):
+            im.filepath = net
+            im.reload()
+            print("convertir_3dexport : atlas intérieur", net)
 
     # Ne garder que la cellule, en coordonnées monde (l'empty parent porte
     # l'échelle 0,01 et un quart de tour).

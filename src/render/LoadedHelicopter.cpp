@@ -124,7 +124,7 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
        LoadedHelicopterInstruments.cpp). */
     loadInstruments(dir);
     if (m_posteGltf) {
-        poserSurPlancheGltf();
+        poserSurPlancheGltf(dir);
     }
 
     /* Pièces des rotors : moyeu et pale, principaux et de queue. Une seule pale

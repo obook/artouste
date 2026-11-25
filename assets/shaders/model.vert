@@ -19,6 +19,7 @@ layout(location = 3) in vec2 a_uv;
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
+uniform vec2 u_uvDecalage; /* défilement de texture (rose du compas), 0 sinon */
 
 out vec3 v_normal;
 out vec2 v_uv;
@@ -30,6 +31,6 @@ void main() {
     v_worldPos  = world.xyz;
     v_pos       = a_pos;
     v_normal    = mat3(u_model) * a_normal;
-    v_uv        = a_uv;
+    v_uv        = a_uv + u_uvDecalage;
     gl_Position = u_proj * u_view * world;
 }

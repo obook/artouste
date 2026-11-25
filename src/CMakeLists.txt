@@ -178,6 +178,7 @@ add_executable(artouste
     render/LoadedHelicopter.cpp
     render/LoadedHelicopterPilote.cpp
     render/LoadedHelicopterInstruments.cpp
+    render/LoadedHelicopterPlanche.cpp
     render/LoadedHelicopterDraw.cpp
     render/LoadedHelicopterRotors.cpp
     ui/Hud.cpp

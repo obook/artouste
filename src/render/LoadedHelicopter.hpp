@@ -18,6 +18,7 @@
 
 #include "render/Livery.hpp"
 #include "render/Model.hpp"
+#include "render/PlancheBord.hpp"
 #include "util/Math.hpp"
 
 #include <filesystem>
@@ -61,6 +62,10 @@ public:
               float altitudeFt = 0.0f, float varioFpm = 0.0f, float headingRad = 0.0f,
               float airspeedKt = 0.0f, float torquePct = 0.0f) const;
 
+    /* Ce que montrent les cadrans dessinés du poste 3dexport (montre,
+       tachymètre, unité triple...). À donner à chaque image, avant draw. */
+    void setEtatPlanche(const EtatPlanche& etat) noexcept { m_etatPlanche = etat; }
+
     /* Applique une livrée : origine (métal), Gendarmerie (bleu) ou armée de terre
        (olive). Commute la texture du fuselage, des pales et de l'arceau de queue,
        la tenue (chemise et casque) de tous les segments du pilote, et choisit les
@@ -95,7 +100,13 @@ private:
 
     /* Poste 3dexport : pose les instruments animés sur les cadrans peints de
        la planche du FBX. */
-    void poserSurPlancheGltf();
+    void poserSurPlancheGltf(const std::filesystem::path& dir);
+
+    /* Cadrans dessinés du poste 3dexport : charge la lame d'aiguille et la
+       rose du compas, puis dessine les aiguilles et la rose selon
+       m_etatPlanche. Définis dans LoadedHelicopterPlanche.cpp. */
+    void chargerPlancheGltf(const std::filesystem::path& dir);
+    void dessinerPlancheGltf(Shader& shader, const mat4& root) const;
 
     /* Dessine la cellule : fuselage, intérieur, pilotes, et les commandes animées
        (jambes, bras du pilote, palonnier, manche cyclique, levier de collectif). */
@@ -206,6 +217,14 @@ private:
     Model              m_vsiStatic;
     Model              m_vsiNeedle;
     mat4               m_vsiPlace{1.0f};  /* pose du cadran dans le repère racine */
+
+    /* Cadrans dessinés du poste 3dexport : une lame d'aiguille commune et
+       l'état qu'elles affichent. */
+    Model              m_aiguille;
+    Model              m_bille;       /* bille de l'indicateur de virage */
+    std::vector<Model> m_voyants;     /* coupoles des voyants, par couleur et état */
+    Model              m_roseCompas;  /* bande graduée devant la fenêtre du compas */
+    EtatPlanche        m_etatPlanche;
     bool               m_hasVsi = false;
 
     /* Compas (conservateur de cap) animé : cadran fixe (symbole avion, index) + rose

@@ -36,6 +36,7 @@
 #include "physics/FlightModel.hpp"
 #include "render/Camera.hpp"
 #include "render/Livery.hpp"
+#include "render/PlancheBord.hpp"
 #include "ui/Hud.hpp"
 
 #include <cstddef>
@@ -337,6 +338,9 @@ private:
        secondes depuis minuit [0, 86400[. Part de l'heure locale du PC au lancement
        puis avance en temps réel (mode local) ou accéléré (mode accéléré). */
     float timeOfDaySeconds(float t) const;
+    /* Ce que montrent les cadrans dessinés du poste 3dexport (ApplicationRender.cpp). */
+    render::EtatPlanche etatPlanche(const mat4& base, float turbineFraction, float rotorFraction,
+                                    float timeSeconds);
 
     /* Direction (unitaire) du soleil à l'instant t (s depuis le lancement), selon
        le mode d'heure choisi (heure locale réelle ou temps accéléré). Source unique
@@ -642,6 +646,10 @@ private:
        battement : c'est l'affichage qui traîne, pas la turbine. */
     float m_aiguilleTurbineRpm = 0.0f;
     float m_aiguilleRotorRpm   = 0.0f;
+    /* Température d'huile des cadrans du poste 3dexport : elle monte en
+       quelques minutes (voir etatPlanche), d'où un état. */
+    float m_huileC   = 15.0f;
+    float m_plancheT = 0.0f;  /* instant du dernier calcul */
     /* Valeurs réellement affichées : les précédentes calées sur la graduation de
        l'instrument, avec hystérésis. Sans elle, un régime posé sur une frontière
        d'arrondi ferait osciller le compteur entre deux graduations, ce qui est

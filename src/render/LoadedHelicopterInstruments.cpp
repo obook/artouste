@@ -43,13 +43,18 @@ mat4 placerSurCadran(const Model& cadranFixe, const CadranPoste& cadran) {
 
 }  /* namespace */
 
-void LoadedHelicopter::poserSurPlancheGltf() {
-    m_asiPlace    = placerSurCadran(m_asiStatic, CADRAN_HAUT_GAUCHE);
-    m_aiPlace     = placerSurCadran(m_aiStatic, CADRAN_HAUT_CENTRE);
-    m_altPlace    = placerSurCadran(m_altStatic, CADRAN_HAUT_DROITE);
-    m_torquePlace = placerSurCadran(m_torqueStatic, CADRAN_MILIEU_GAUCHE);
-    m_hiPlace     = placerSurCadran(m_hiStatic, CADRAN_MILIEU_CENTRE);
-    m_vsiPlace    = placerSurCadran(m_vsiStatic, CADRAN_MILIEU_DROITE);
+void LoadedHelicopter::poserSurPlancheGltf(const std::filesystem::path& dir) {
+    /* Disposition du manuel de vol (figure 2-5a) : vario et anémomètre en
+       haut, altimètre au milieu. Les autres cadrans sont dessinés (voir
+       LoadedHelicopterPlanche.cpp) ; l'Alouette II n'a ni horizon, ni
+       conservateur de cap, ni couplemètre. */
+    m_vsiPlace = placerSurCadran(m_vsiStatic, CADRAN_HAUT_CENTRE);
+    m_asiPlace = placerSurCadran(m_asiStatic, CADRAN_HAUT_DROITE);
+    m_altPlace = placerSurCadran(m_altStatic, CADRAN_MILIEU_CENTRE);
+    m_hasAi     = false;
+    m_hasHi     = false;
+    m_hasTorque = false;
+    chargerPlancheGltf(dir);
 }
 
 void LoadedHelicopter::loadInstruments(const std::filesystem::path& dir) {
@@ -278,6 +283,11 @@ void LoadedHelicopter::drawInstruments(Shader& shader, const mat4& root, float r
         drawModel(shader, m_torqueStatic, torqueBase, Pass::Opaque);
         drawModel(shader, m_torqueNeedle, needleMat, Pass::Opaque);
     }
+    /* Cadrans dessinés du poste 3dexport : leurs aiguilles. */
+    if (m_posteGltf) {
+        dessinerPlancheGltf(shader, root);
+    }
+
     shader.setFloat("u_planche", 0.0f);
 }
 

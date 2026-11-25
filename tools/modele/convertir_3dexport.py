@@ -17,9 +17,14 @@ moteur rend translucides les noeuds dont le nom contient "verriere".
 La texture du rotor (sa_313b_germany_c.jpg) manque de l'archive : on la
 remplace par l'atlas civil, même dépliage.
 
+Avec --poste, le poste du FBX est gardé (planche, consoles, commandes)
+avec ses deux pilotes, en noeuds "equipage-droit" et "equipage-gauche", et la
+tête du pilote à part ("tete-pilote"). Le moteur ne pose alors plus les
+pièces FlightGear.
+
 Usage :
     flatpak run org.blender.Blender -b --factory-startup \\
-        -P tools/modele/convertir_3dexport.py -- Civil_FBX.FBX sortie.glb
+        -P tools/modele/convertir_3dexport.py -- Civil_FBX.FBX sortie.glb [--poste]
 
 Auteur : O. Booklage
 Date : novembre 2026
@@ -45,18 +50,64 @@ CELLULE = ["fuse", "tail", "elevator", "gear_c", "gear_l", "gear_r",
 # Meubles du poste à retirer de "fuse" (le jeu pose les siens, animés) : un
 # îlot du maillage dont la boîte tient dans l'une de ces boîtes, en mètres dans
 # le repère du FBX (x latéral, y vers la queue, z haut), est supprimé. Les
-# sièges et le plancher restent. Object001/002 (consoles de gauche) ne sont
-# pas repris non plus.
+# sièges et le plancher restent. Object001/002 ne sont jamais repris : c'est
+# une tige à boîtier pendue au plafond, juste devant les yeux du pilote (deux
+# copies superposées), absente de l'appareil réel.
 POSTE = [
     ((-0.7, -3.5, 0.5), (0.7, -3.3, 0.7)),    # palonniers
     ((-0.5, -3.2, 0.5), (0.5, -3.0, 1.1)),    # manches cycliques et leurs embases
     ((0.1, -2.9, 0.5), (0.2, -2.3, 1.05)),    # levier de collectif
     ((-0.7, -3.4, 0.45), (0.7, -2.9, 1.5)),   # planche de bord et consoles
 ]
+# Toujours retirés, absents de l'appareil réel et gênants pour la vue : un
+# îlot dont la boîte tient dans l'une de ces boîtes et dont le point le plus
+# bas est sous 'bas' est supprimé.
+RETIRES = [
+    # Barre en U au milieu de la cabine : descend du plafond derrière les
+    # têtes, passe entre les pilotes à hauteur d'épaule, remonte vers la
+    # verrière, avec le boîtier et la ferrure fixés dessus. 'bas' épargne les
+    # petites pièces de l'arceau central prises dans la même boîte.
+    (((0.0, -3.1, 1.35), (0.07, -2.35, 1.9)), 1.55),
+    # Berceau devant le copilote : deux tubes sur ressorts portant un boîtier
+    # à objectif. Le plancher de la boîte épargne les boutons du manche.
+    (((0.0, -2.85, 1.235), (0.66, -2.66, 1.52)), 1.52),
+]
+# Repris avec --poste : les pilotes (un seul objet pour les deux).
+PILOTES = "Pilots"
+# Hauteur du cou du pilote, en mètres dans le repère recalé (patins à -1,387) :
+# au-dessus, sa tête et son casque vont dans le noeud "tete-pilote", que le
+# moteur ne dessine pas en vue cockpit (la caméra est dedans).
+COU = 0.02
 
 
-def retirer_poste(fuse):
-    """Supprime les îlots de 'fuse' qui tiennent dans une boîte de POSTE."""
+def couper(obj, nom, prendre):
+    """Déplace dans un nouvel objet 'nom' les faces de 'obj' dont le centre
+    vérifie 'prendre'."""
+    import bmesh
+    copie = obj.copy()
+    copie.data = obj.data.copy()
+    copie.name = nom
+    bpy.context.scene.collection.objects.link(copie)
+    for o, garder in ((copie, True), (obj, False)):
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        jeter = [f for f in bm.faces if prendre(f.calc_center_median()) != garder]
+        bmesh.ops.delete(bm, geom=jeter, context="FACES")
+        bm.to_mesh(o.data)
+        bm.free()
+
+
+def scinder_equipage(pilotes):
+    """Coupe l'objet des pilotes en un noeud par siège, et la tête du pilote
+    à part. Dans le repère du FBX, x < 0 est le côté droit, celui du pilote."""
+    couper(pilotes, "equipage-gauche", lambda c: c.x >= 0.0)
+    couper(pilotes, "tete-pilote", lambda c: c.z > COU)
+    pilotes.name = "equipage-droit"
+
+
+def retirer_poste(fuse, avec_poste):
+    """Supprime de 'fuse' les îlots de RETIRES et, sans 'avec_poste', ceux
+    qui tiennent dans une boîte de POSTE."""
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(fuse.data)
@@ -82,25 +133,29 @@ def retirer_poste(fuse):
         pts = [v.co * ECHELLE for v in ilot]
         mn = [min(p[i] for p in pts) for i in range(3)]
         mx = [max(p[i] for p in pts) for i in range(3)]
-        for (b0, b1) in POSTE:
-            if all(b0[i] <= mn[i] and mx[i] <= b1[i] for i in range(3)):
-                a_supprimer.extend(ilot)
-                break
+
+        def dedans(boite):
+            return all(boite[0][i] <= mn[i] and mx[i] <= boite[1][i] for i in range(3))
+        if any(dedans(b) and mn[2] < bas for b, bas in RETIRES) or \
+                (not avec_poste and any(dedans(b) for b in POSTE)):
+            a_supprimer.extend(ilot)
     faces = {f for v in a_supprimer for f in v.link_faces}
     # Console centrale : son boîtier est soudé au plancher, l'îlot déborde de
     # toute boîte ; on coupe ses faces une à une dans la zone.
-    for f in bm.faces:
+    for f in bm.faces if not avec_poste else []:
         c = f.calc_center_median() * ECHELLE
         if abs(c.x) < 0.35 and -3.45 <= c.y <= -2.95 and 0.45 <= c.z <= 1.5:
             faces.add(f)
     bmesh.ops.delete(bm, geom=list(faces), context="FACES")
     bm.to_mesh(fuse.data)
     bm.free()
-    print("convertir_3dexport : poste du FBX retiré, %d faces" % len(faces))
+    print("convertir_3dexport : %d faces retirées du poste" % len(faces))
 
 
 def main():
-    entree, sortie = sys.argv[sys.argv.index("--") + 1:][:2]
+    args = sys.argv[sys.argv.index("--") + 1:]
+    entree, sortie = args[:2]
+    avec_poste = "--poste" in args[2:]
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete()
     bpy.ops.import_scene.fbx(filepath=entree)
@@ -111,7 +166,8 @@ def main():
 
     # Ne garder que la cellule, en coordonnées monde (l'empty parent porte
     # l'échelle 0,01 et un quart de tour).
-    garder = [o for o in bpy.data.objects if o.name in CELLULE]
+    noms = CELLULE + ([PILOTES] if avec_poste else [])
+    garder = [o for o in bpy.data.objects if o.name in noms]
     for o in garder:
         o.data.transform(o.matrix_world)
         o.parent = None
@@ -134,9 +190,12 @@ def main():
     for o in list(bpy.data.objects):
         if o not in garder:
             bpy.data.objects.remove(o)
-    retirer_poste(bpy.data.objects["fuse"])
-    bpy.ops.object.select_all(action="SELECT")
-    bpy.context.view_layer.objects.active = garder[0]
+    pilotes = bpy.data.objects.get(PILOTES) if avec_poste else None
+    retirer_poste(bpy.data.objects["fuse"], avec_poste)
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in garder:
+        o.select_set(o is not pilotes)
+    bpy.context.view_layer.objects.active = bpy.data.objects["fuse"]
     bpy.ops.object.join()
     cellule = bpy.context.view_layer.objects.active
     cellule.name = "fuselage"
@@ -144,8 +203,11 @@ def main():
     # y vers la queue, z haut). L'export glTF passe ensuite en Y haut, nez +Z :
     # (x, y, z) -> (x, z, -y), et le moteur fait le quart de tour restant.
     decalage = MOYEU_AC - MOYEU_FBX
-    cellule.data.transform(mathutils.Matrix.Translation(decalage) @
-                           mathutils.Matrix.Scale(ECHELLE, 4))
+    recalage = mathutils.Matrix.Translation(decalage) @ mathutils.Matrix.Scale(ECHELLE, 4)
+    cellule.data.transform(recalage)
+    if pilotes:
+        pilotes.data.transform(recalage)
+        scinder_equipage(pilotes)
 
     # Vitrages à part.
     idx = [i for i, m in enumerate(cellule.data.materials) if m and m.name == "glass"]
@@ -158,7 +220,7 @@ def main():
     bpy.ops.mesh.separate(type="SELECTED")
     bpy.ops.object.mode_set(mode="OBJECT")
     for o in bpy.data.objects:
-        if o != cellule:
+        if o != cellule and not o.name.startswith(("equipage", "tete-pilote")):
             o.name = "verriere"
     print("convertir_3dexport : cellule %d faces, verrière %d faces" %
           (len(cellule.data.polygons), len(bpy.data.objects["verriere"].data.polygons)))

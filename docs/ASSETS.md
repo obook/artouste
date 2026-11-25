@@ -140,6 +140,16 @@ de ceux du .ac (y = -1,387, Y_OFFSET) et le mât, plus court sur ce modèle,
 monte 16 cm au-dessus du plan des pales du jeu : le moyeu de mainrotor.ac
 descend assez pour couvrir le raccord.
 
+Avec `--poste`, la conversion garde le poste du FBX (planche, consoles,
+commandes) et ses deux pilotes. Le moteur ne pose alors plus les pièces
+FlightGear du poste : il met ses six instruments animés sur les cadrans du
+FBX, cache la tête du pilote en vue cockpit et remonte l'oeil à hauteur de ses
+yeux. Écrire ce .glb sous un autre nom (`alouette-3dexport-poste.glb`, chargé
+par ARTOUSTE_MODELE) : `play-linux.sh` remplace `alouette-3dexport.glb` par la
+copie du dépôt privé. Une tige pendue au plafond (Object001/002), une barre en
+U entre les sièges et un berceau devant le copilote, absents de l'appareil
+réel, ne sont jamais repris.
+
 Livraison aux joueurs : la licence Basic de 3dexport autorise un jeu gratuit,
 mais pas de fournir le modèle lui-même, ni sous une forme où l'utilisateur
 final peut le récupérer. Le .glb n'entre donc ni dans ce dépôt public ni en

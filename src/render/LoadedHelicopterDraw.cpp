@@ -14,6 +14,7 @@
 
 #include <glad/glad.h>
 
+#include "render/CommandesPoste.hpp"
 #include "render/LoadedHelicopterDetail.hpp"
 #include "render/Shader.hpp"
 
@@ -50,11 +51,15 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
     /* Fuselage (hors vitrages), intérieur et les deux occupants. Les pales du rotor
        principal sont traitées à part, en mélange, pour le fondu selon le régime. */
     if (m_posteGltf) {
+        /* Poste glTF : le nœud de la cellule seul ; ses commandes (nœuds
+           commande-* du même modèle) se dessinent plus bas, chacune avec sa
+           pose. */
         lampesFacesGltf(shader, true);
-    }
-    drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Opaque);
-    if (m_posteGltf) {
+        shader.setMat4("u_model", root * m_fuselageFix);
+        m_fuselage.drawNoeud(shader, "fuselage", Pass::Opaque);
         lampesFacesGltf(shader, false);
+    } else {
+        drawModel(shader, m_fuselage, root * m_fuselageFix, Pass::Opaque);
     }
     if (!m_gltf) {
         drawModel(shader, m_interior, root, Pass::Opaque);
@@ -65,12 +70,69 @@ void LoadedHelicopter::drawAirframe(Shader& shader, const mat4& root, bool fullP
     if (!m_gltf) {
         drawModel(shader, m_tailGuard, root, Pass::Opaque);
     }
-    /* Poste du FBX tel quel : planche et commandes sont dans la cellule, les
-       pilotes figés à part. En vue cockpit, la caméra est dans la tête du
-       pilote : on la retire, on voit son corps, ses bras et ses mains. */
+    /* Poste du FBX : commandes mobiles, pilotes figés à part. En vue cockpit,
+       la caméra est dans la tête du pilote : on la retire, on voit son corps,
+       ses bras et ses mains. */
     if (m_posteGltf) {
         const mat4 cellule = root * m_fuselageFix;
-        drawModel(shader, m_equipageDroit, cellule, Pass::Opaque);
+        /* Commandes conjuguées des deux sièges, chacune tournée autour de son
+           pivot. */
+        const auto commande = [&](const char* noeud, const mat4& pose) {
+            shader.setMat4("u_model", root * pose * m_fuselageFix);
+            m_fuselage.drawNoeud(shader, noeud, Pass::Opaque);
+        };
+        commande("commande-manche", poseManche(PIVOT_MANCHE, cyclicLong, cyclicLat));
+        commande("commande-manche-copilote",
+                 poseManche(PIVOT_MANCHE_COPILOTE, cyclicLong, cyclicLat));
+        /* Collectifs : en vue cockpit, la pose trichée qui les fait voir
+           (poseCollectifCockpit), ailleurs le vrai levier. */
+        const auto poseDuCollectif = [&](const vec3& pivot, const vec3& poignee) {
+            return fullPilot ? poseCollectif(pivot, collective)
+                             : poseCollectifCockpit(pivot, poignee, collective);
+        };
+        const mat4 collectifPilote = poseDuCollectif(PIVOT_COLLECTIF, POIGNEE_COLLECTIF);
+        commande("commande-collectif", collectifPilote);
+        commande("commande-collectif-copilote",
+                 poseDuCollectif(PIVOT_COLLECTIF_COPILOTE, POIGNEE_COLLECTIF_COPILOTE));
+        commande("commande-palonnier-droit", posePalonnier(PIVOT_PALONNIER_DROIT, true, rudder));
+        commande("commande-palonnier-gauche",
+                 posePalonnier(PIVOT_PALONNIER_GAUCHE, false, rudder));
+        commande("commande-palonnier-droit-copilote",
+                 posePalonnier(PIVOT_PALONNIER_DROIT_COPILOTE, true, rudder));
+        commande("commande-palonnier-gauche-copilote",
+                 posePalonnier(PIVOT_PALONNIER_GAUCHE_COPILOTE, false, rudder));
+        /* Pilote : le corps, puis ses bras posés par cinématique inverse, la
+           main gauche sur la poignée du collectif, la droite sur celle du
+           manche. Un modèle sans ces noeuds garde son pilote entier, figé. */
+        shader.setMat4("u_model", cellule);
+        m_equipageDroit.drawNoeud(shader, "equipage-droit", Pass::Opaque);
+        const auto membre = [&](const char* haut, const char* bas, const PoseBras& pose) {
+            shader.setMat4("u_model", root * pose.bras * m_fuselageFix);
+            m_equipageDroit.drawNoeud(shader, haut, Pass::Opaque);
+            shader.setMat4("u_model", root * pose.avantBras * m_fuselageFix);
+            m_equipageDroit.drawNoeud(shader, bas, Pass::Opaque);
+        };
+        const vec3 priseCollectif = vec3(collectifPilote * vec4(PRISE_COLLECTIF, 1.0f));
+        const vec3 priseManche =
+            vec3(poseManche(PIVOT_MANCHE, cyclicLong, cyclicLat) * vec4(PRISE_MANCHE, 1.0f));
+        PoseBras gauche = poseBras(BRAS_PILOTE_GAUCHE, priseCollectif);
+        gauche.avantBras =
+            gauche.avantBras * rotationAvantBras(BRAS_PILOTE_GAUCHE, MAIN_GAUCHE_ROTATION_DEG);
+        membre("equipage-droit-bras-g", "equipage-droit-avantbras-g", gauche);
+        /* Main droite : le mannequin, tourné vers le manche, la présentait
+           pouce à l'extérieur comme une main gauche ; symétrie de l'avant-bras. */
+        PoseBras droit = poseBras(BRAS_PILOTE_DROIT, priseManche);
+        droit.avantBras = droit.avantBras * symetrieAvantBras(BRAS_PILOTE_DROIT);
+        membre("equipage-droit-bras-d", "equipage-droit-avantbras-d", droit);
+        /* Jambes : l'avant de chaque pied sur sa pédale, hanche fixe. */
+        const vec3 appuiGauche = vec3(posePalonnier(PIVOT_PALONNIER_GAUCHE, false, rudder) *
+                                      vec4(APPUI_PALONNIER_GAUCHE, 1.0f));
+        const vec3 appuiDroit  = vec3(posePalonnier(PIVOT_PALONNIER_DROIT, true, rudder) *
+                                      vec4(APPUI_PALONNIER_DROIT, 1.0f));
+        membre("equipage-droit-cuisse-g", "equipage-droit-jambe-g",
+               poseBras(JAMBE_PILOTE_GAUCHE, appuiGauche, TENSION_JAMBE, 0.0f));
+        membre("equipage-droit-cuisse-d", "equipage-droit-jambe-d",
+               poseBras(JAMBE_PILOTE_DROITE, appuiDroit, TENSION_JAMBE, 0.0f));
         if (fullPilot) {
             drawModel(shader, m_tetePilote, cellule, Pass::Opaque);
         }

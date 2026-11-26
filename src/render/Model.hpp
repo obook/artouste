@@ -49,6 +49,10 @@ public:
        chaque partie, pour faire apparaître un modèle en fondu (le disque flou du
        rotor selon le régime, par exemple). */
     void draw(Shader& shader, Pass pass = Pass::All, float opacityScale = 1.0f) const;
+    /* Comme draw, mais seulement les parties venues du nœud 'noeud' du fichier :
+       plusieurs pièces mobiles chargées en un seul modèle (une seule copie de
+       leur texture) se dessinent ainsi chacune avec sa propre pose. */
+    void drawNoeud(Shader& shader, const std::string& noeud, Pass pass = Pass::All) const;
 
     [[nodiscard]] bool        empty() const noexcept { return m_parts.empty(); }
     [[nodiscard]] std::size_t partCount() const noexcept { return m_parts.size(); }
@@ -72,7 +76,7 @@ public:
     void setLivery(const Texture* texture) noexcept { m_livery = texture; }
     /* Ajoute une partie au modèle (maillage + texture + réglages de rendu). */
     void addPart(Mesh&& mesh, const Texture* texture, bool transparent = false,
-                 float opacity = 1.0f, const Texture* relief = nullptr);
+                 float opacity = 1.0f, const Texture* relief = nullptr, std::string noeud = {});
 
     /* Mémorise les positions des sommets (repère local du modèle), pendant le
        chargement. Sert à retrouver le point de jonction réel entre deux pièces
@@ -92,7 +96,11 @@ private:
         const Texture* relief      = nullptr;
         bool           transparent = false;
         float          opacity     = 1.0f;
+        std::string    noeud;  /* nœud du fichier d'où vient la partie */
     };
+
+    /* Dessine une partie si elle relève de la passe demandée. */
+    void drawPart(Shader& shader, const Part& part, Pass pass, float opacityScale) const;
 
     std::vector<Part>                                        m_parts;
     std::unordered_map<std::string, std::unique_ptr<Texture>> m_textures;

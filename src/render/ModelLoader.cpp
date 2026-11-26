@@ -187,7 +187,8 @@ void processNode(Model& model, const aiScene* scene, const aiNode* node, const m
                 model.recordVertices(vertices);
                 model.addPart(Mesh(vertices, indices),
                               resolveTexture(model, scene, mesh, baseDir), isTransparent,
-                              opacity, resolveRelief(model, scene, mesh, baseDir));
+                              opacity, resolveRelief(model, scene, mesh, baseDir),
+                              node->mName.C_Str());
             }
         }
     }

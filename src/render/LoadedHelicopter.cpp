@@ -57,9 +57,9 @@ LoadedHelicopter::LoadedHelicopter(const std::filesystem::path& modelFile) {
         std::printf("[modèle] cellule glTF : quart de tour, livrée et intérieur du .ac ignorés.\n");
         /* Poste du FBX gardé à la conversion (option --poste) : ses deux pilotes
            sont dans des noeuds à part, un par siège, et la tête du pilote aussi. */
-        m_equipageDroit  = loadPart(modelFile, {"fuselage", "verriere", "gauche", "tete"});
-        m_tetePilote     = loadPart(modelFile, {"fuselage", "verriere", "equipage"});
-        m_equipageGauche = loadPart(modelFile, {"fuselage", "verriere", "droit", "tete"});
+        m_equipageDroit  = loadPart(modelFile, {"fuselage", "verriere", "gauche", "tete", "commande"});
+        m_tetePilote     = loadPart(modelFile, {"fuselage", "verriere", "equipage", "commande"});
+        m_equipageGauche = loadPart(modelFile, {"fuselage", "verriere", "droit", "tete", "commande"});
         m_posteGltf      = !m_equipageDroit.empty();
     }
     /* Livrées de rechange du fuselage : blanc, bleu Gendarmerie, olive armée de

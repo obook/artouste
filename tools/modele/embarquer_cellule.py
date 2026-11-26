@@ -8,6 +8,10 @@ La licence Basic de 3dexport interdit de livrer le modèle sous une forme que
 le joueur peut récupérer tel quel : ni dans le dépôt, ni en fichier dans
 l'archive. Le .glb voyage donc dans le binaire, octets mélangés à une clé.
 
+La clé n'est jamais dans le dépôt : elle vient de la variable d'environnement
+ARTOUSTE_CELLULE_CLE (secret de CI des releases), sinon elle est tirée au
+hasard. Elle part dans le source généré, à côté des données.
+
 Usage : embarquer_cellule.py <entrée.glb> <sortie.cpp>
 Appelé par CMake quand ARTOUSTE_CELLULE_EMBARQUEE désigne un .glb.
 
@@ -15,10 +19,18 @@ Auteur : O. Booklage
 Licence : GPL v2
 """
 
+import hashlib
+import os
+import secrets
 import sys
 
-# Doit rester identique à kCle dans src/render/CelluleEmbarquee.cpp.
-CLE = b"Artouste-Alouette-II-SA313B"
+
+def cle() -> bytes:
+    """32 octets : le secret condensé s'il est fourni, sinon du hasard."""
+    secret = os.environ.get("ARTOUSTE_CELLULE_CLE", "")
+    if secret:
+        return hashlib.sha256(secret.encode()).digest()
+    return secrets.token_bytes(32)
 
 
 def main() -> None:
@@ -28,8 +40,9 @@ def main() -> None:
     if data[:4] != b"glTF":
         sys.exit(f"embarquer_cellule : {entree} n'est pas un .glb")
     taille = len(data)
+    k = cle()
     for i in range(taille):
-        data[i] ^= CLE[i % len(CLE)] ^ (i & 0xFF)
+        data[i] ^= k[i % len(k)] ^ (i & 0xFF)
 
     # Mots de 64 bits : huit fois moins d'éléments à analyser pour le
     # compilateur qu'un tableau d'octets (13 Mo de modèle).
@@ -42,6 +55,9 @@ def main() -> None:
         f.write("#include <cstddef>\n#include <cstdint>\n\n")
         f.write("namespace artouste::render::cellule {\n")
         f.write(f"extern const std::size_t kTaille = {taille};\n")
+        f.write(f"extern const std::size_t kTailleCle = {len(k)};\n")
+        f.write("extern const unsigned char kCle[] = {"
+                + ",".join(map(str, k)) + "};\n")
         f.write("extern const std::uint64_t kMots[] = {\n")
         ligne = []
         for mot in mots:

@@ -166,6 +166,9 @@ fichier dans les archives (exclu par `install(DIRECTORY assets/ ...)`). Il est
 fondu dans l'exécutable, octets mélangés à une clé : l'option CMake
 `ARTOUSTE_CELLULE_EMBARQUEE` désigne le .glb, `tools/modele/embarquer_cellule.py`
 en fait un source C++, `src/render/CelluleEmbarquee.cpp` le restitue à Assimp.
+La clé n'est pas dans le dépôt : `release.yml` la donne par la variable
+d'environnement `ARTOUSTE_CELLULE_CLE` (secret du même nom) ; sans elle, le
+script en tire une au hasard à chaque compilation.
 Un .glb présent sur le disque garde la priorité. `release.yml` lit le fichier
 dans le dépôt privé `obook/artouste-assets` avec le secret
 `ARTOUSTE_ASSETS_TOKEN` (jeton en lecture seule sur ce seul dépôt).

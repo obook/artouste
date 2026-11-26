@@ -52,7 +52,10 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DARTOUSTE_CELLULE_EMBARQUEE=prive/alouette-3dexport.glb
 
       # Un -j nu épuise la mémoire du runner Ubuntu 26, qui tue la compilation.
+      # Clé de brouillage de la cellule, lue par embarquer_cellule.py.
       - name: Compiler
+        env:
+          ARTOUSTE_CELLULE_CLE: ${{ secrets.ARTOUSTE_CELLULE_CLE }}
         run: cmake --build build -j $(nproc)
 
       - name: Tester
@@ -102,7 +105,10 @@ jobs:
 
       # Nombre de tâches explicite : voir le commentaire de macos.yml, un -j nu
       # noie les trois coeurs du runner.
+      # Clé de brouillage de la cellule, lue par embarquer_cellule.py.
       - name: Compiler
+        env:
+          ARTOUSTE_CELLULE_CLE: ${{ secrets.ARTOUSTE_CELLULE_CLE }}
         run: cmake --build build -j 3
 
       - name: Tester
@@ -157,7 +163,10 @@ jobs:
         shell: bash
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DARTOUSTE_CELLULE_EMBARQUEE=prive/alouette-3dexport.glb -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
 
+      # Clé de brouillage de la cellule, lue par embarquer_cellule.py.
       - name: Compiler
+        env:
+          ARTOUSTE_CELLULE_CLE: ${{ secrets.ARTOUSTE_CELLULE_CLE }}
         run: cmake --build build --config Release -j
 
       - name: Tester

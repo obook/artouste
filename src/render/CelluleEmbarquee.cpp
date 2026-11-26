@@ -1,7 +1,7 @@
 /*
  * CelluleEmbarquee.cpp
- * Désobscurcit la cellule 3dexport fondue dans le binaire. Les données
- * (kTaille, kMots) viennent d'un source généré à la configuration quand
+ * Désobscurcit la cellule 3dexport fondue dans le binaire. Les données et
+ * leur clé (kTaille, kMots, kCle) viennent d'un source généré à la compilation quand
  * ARTOUSTE_CELLULE_EMBARQUEE est défini ; sinon ARTOUSTE_SANS_CELLULE est posé
  * et rien n'est embarqué.
  *
@@ -14,25 +14,20 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string_view>
 
 #ifndef ARTOUSTE_SANS_CELLULE
 namespace artouste::render::cellule {
 extern const std::size_t   kTaille;
 extern const std::uint64_t kMots[];
+extern const std::size_t   kTailleCle;
+extern const unsigned char kCle[];
 }  /* namespace artouste::render::cellule */
 #endif
 
 namespace artouste::render {
 
-namespace {
-
-/* Doit rester identique à CLE dans tools/modele/embarquer_cellule.py.
-   ponytail: simple mélange, pas un chiffrement ; il suffit que le .glb ne
-   soit pas lisible tel quel dans l'archive, comme les .pak des jeux. */
-constexpr std::string_view kCle = "Artouste-Alouette-II-SA313B";
-
-}  /* namespace */
+/* shortcut: simple mélange, pas un chiffrement, et la clé est dans le binaire ;
+   il suffit que le .glb ne soit pas lisible tel quel, comme les .pak des jeux. */
 
 bool celluleEmbarquee(const std::filesystem::path& path) {
 #ifdef ARTOUSTE_SANS_CELLULE
@@ -50,7 +45,7 @@ std::vector<unsigned char> lireCelluleEmbarquee() {
     for (std::size_t i = 0; i < data.size(); ++i) {
         const auto octet = static_cast<unsigned char>(cellule::kMots[i / 8] >> (8 * (i % 8)));
         data[i] = static_cast<unsigned char>(
-            octet ^ static_cast<unsigned char>(kCle[i % kCle.size()]) ^ (i & 0xFFu));
+            octet ^ cellule::kCle[i % cellule::kTailleCle] ^ (i & 0xFFu));
     }
 #endif
     return data;

@@ -118,10 +118,14 @@ void Application::captureScreenshot(const std::filesystem::path& path) {
 
     if (shotFlag("ARTOUSTE_SHOT_COCKPIT")) {
         m_viewMode = 1;  /* vue cockpit : pilote allégé, jambes animées */
-        m_camera.setFovYDeg(70.0f);
+        /* Zoom sur la planche : ARTOUSTE_SHOT_FOV (degrés) et la visée
+           ARTOUSTE_SHOT_VISEE_Y / _Z (pente et dérive pour 1 vers l'avant). */
+        m_camera.setFovYDeg(shotFloat("ARTOUSTE_SHOT_FOV", 70.0f));
         m_camera.setNear(0.05f);  /* petit : ne tranche pas la verrière toute proche */
-        const vec3 eye = vec3(base * vec4(cockpitEye(), 1.0f));
-        m_camera.setLookAt(eye, eye + glm::normalize(vec3{1.0f, -0.22f, 0.0f}),
+        const vec3 eye   = vec3(base * vec4(cockpitEye(), 1.0f));
+        const vec3 visee = {1.0f, shotFloat("ARTOUSTE_SHOT_VISEE_Y", -0.22f),
+                            shotFloat("ARTOUSTE_SHOT_VISEE_Z", 0.0f)};
+        m_camera.setLookAt(eye, eye + glm::normalize(visee),
                            vec3{0.0f, 1.0f, 0.0f});
     } else if (const char* solar = std::getenv("ARTOUSTE_SHOT_SOLAR")) {
         /* Vue d'orbite solaire (plan "golden hour") : on synthétise un soleil bas

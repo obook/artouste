@@ -27,8 +27,11 @@ namespace {
 
 /* Pose un instrument FlightGear sur un cadran de la planche 3dexport : mis à
    la taille de la lunette, le fond de son boîtier sur le plan de la lunette,
-   donc sa face devant le cadran peint. */
-mat4 placerSurCadran(const Model& cadranFixe, const CadranPoste& cadran) {
+   donc sa face devant le cadran peint. Décalé vers la droite et le haut du
+   pilote (m) comme les cadrans dessinés : de l'oeil, le flanc du cadran en
+   relief le décentre (voir CadranDessine, LoadedHelicopterPlanche.cpp). */
+mat4 placerSurCadran(const Model& cadranFixe, const CadranPoste& cadran, float droite,
+                     float haut) {
     float xMin = 1e30f;
     float yMin = 1e30f;
     float yMax = -1e30f;
@@ -38,7 +41,10 @@ mat4 placerSurCadran(const Model& cadranFixe, const CadranPoste& cadran) {
         yMax = std::max(yMax, p.y);
     }
     const float echelle = cadran.diametre / (yMax - yMin);
-    return placementCadran(cadran.centre, NORMALE_PLANCHE_3DEXPORT, echelle, -xMin * echelle);
+    const vec3  x       = glm::normalize(NORMALE_PLANCHE_3DEXPORT);
+    const vec3  y       = glm::normalize(vec3{0.0f, 1.0f, 0.0f} - x * x.y);
+    const vec3  centre  = cadran.centre + y * haut - glm::cross(x, y) * droite;
+    return placementCadran(centre, NORMALE_PLANCHE_3DEXPORT, echelle, -xMin * echelle);
 }
 
 }  /* namespace */
@@ -48,9 +54,9 @@ void LoadedHelicopter::poserSurPlancheGltf(const std::filesystem::path& dir) {
        haut, altimètre au milieu. Les autres cadrans sont dessinés (voir
        LoadedHelicopterPlanche.cpp) ; l'Alouette II n'a ni horizon, ni
        conservateur de cap, ni couplemètre. */
-    m_vsiPlace = placerSurCadran(m_vsiStatic, CADRAN_HAUT_CENTRE);
-    m_asiPlace = placerSurCadran(m_asiStatic, CADRAN_HAUT_DROITE);
-    m_altPlace = placerSurCadran(m_altStatic, CADRAN_MILIEU_CENTRE);
+    m_vsiPlace = placerSurCadran(m_vsiStatic, CADRAN_HAUT_CENTRE, 0.0015f, 0.0003f);
+    m_asiPlace = placerSurCadran(m_asiStatic, CADRAN_HAUT_DROITE, 0.0011f, 0.0003f);
+    m_altPlace = placerSurCadran(m_altStatic, CADRAN_MILIEU_CENTRE, 0.0016f, 0.0007f);
     m_hasAi     = false;
     m_hasHi     = false;
     m_hasTorque = false;

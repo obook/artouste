@@ -63,25 +63,45 @@ constexpr float VOYANT_MICROPOMPE_Z  = 0.0348f;
 constexpr float VOYANT_GENERATRICE_Z = 0.0082f;
 constexpr float VOYANT_HUILE_BTP_Z   = -0.0462f;
 
-/* Cadran dessiné : centre et normale de sa face plate mesurés sur le .glb
-   (repère racine), rayon de la face redessinée (90 % du disque, comme dans
-   interieur_4096.py). */
+/* Cadran dessiné : centre (cercle ajusté sur le bord) et normale de sa face
+   plate mesurés sur le .glb (repère racine), rayon de la face redessinée
+   (90 % du disque, comme dans interieur_4096.py), puis décalage de la face
+   vers la droite et le haut du pilote.
+   Ce décalage vient du relief : chaque cadran est un cylindre qui dépasse de
+   6 mm de la planche. De l'oeil du pilote, on voit son flanc du côté de
+   l'oeil, ce qui décentre la face dans ce qu'on perçoit comme la lunette. La
+   face glisse donc de la moitié de ce flanc apparent, (profondeur / 2) x tan
+   de l'angle de vue, calculé pour chaque cadran depuis COCKPIT_EYE_POSTE_FBX.
+   Mêmes valeurs dans interieur_4096.py. */
 struct CadranDessine {
     vec3  centre;
     vec3  normale;
     float rayon;
+    float droite;
+    float haut;
 };
 
-const CadranDessine TACHYMETRE{{-4.4146f, -0.1515f, 0.1409f}, {0.948f, 0.317f, -0.004f}, 0.0356f};
-const CadranDessine UNITE_TRIPLE{{-4.3790f, -0.2565f, 0.1367f}, {0.948f, 0.319f, -0.002f}, 0.0390f};
-const CadranDessine PAS_COLLECTIF{{-4.3788f, -0.2566f, -0.0873f}, {0.947f, 0.321f, 0.001f}, 0.0377f};
-const CadranDessine VOLTMETRE{{-4.3307f, -0.3985f, 0.0733f}, {0.948f, 0.318f, 0.002f}, 0.0281f};
-const CadranDessine CARBURANT{{-4.3307f, -0.3985f, -0.0780f}, {0.948f, 0.318f, 0.002f}, 0.0278f};
-const CadranDessine SERVO{{-4.3579f, -0.3693f, 0.1590f}, {0.945f, 0.328f, 0.005f}, 0.0203f};
-const CadranDessine MONTRE{{-4.3398f, -0.3717f, -0.0060f}, {0.946f, 0.323f, 0.0f}, 0.0277f};
+const CadranDessine TACHYMETRE{{-4.4146f, -0.1516f, 0.1411f}, {0.948f, 0.317f, -0.004f}, 0.0356f,
+                               0.0020f, 0.0003f};
+const CadranDessine UNITE_TRIPLE{{-4.3789f, -0.2567f, 0.1370f}, {0.948f, 0.319f, -0.002f}, 0.0390f,
+                                 0.0021f, 0.0008f};
+const CadranDessine PAS_COLLECTIF{{-4.3787f, -0.2569f, -0.0871f}, {0.947f, 0.321f, 0.001f}, 0.0377f,
+                                  0.0012f, 0.0007f};
+const CadranDessine VOLTMETRE{{-4.3306f, -0.3988f, 0.0735f}, {0.948f, 0.318f, 0.002f}, 0.0281f,
+                              0.0019f, 0.0014f};
+const CadranDessine CARBURANT{{-4.3306f, -0.3988f, -0.0778f}, {0.948f, 0.318f, 0.002f}, 0.0278f,
+                              0.0012f, 0.0014f};
+const CadranDessine SERVO{{-4.3582f, -0.3684f, 0.1585f}, {0.945f, 0.328f, 0.005f}, 0.0203f,
+                          0.0016f, 0.0009f};
+/* Montre agrandie à 97 % du disque (le décalage la fait déborder d'un mm en
+   haut à droite, sur le flanc). */
+const CadranDessine MONTRE{{-4.3397f, -0.3719f, -0.0058f}, {0.946f, 0.323f, 0.0f}, 0.0294f,
+                           0.0015f, 0.0013f};
 /* Les deux petits cadrans à gauche du capot, côté copilote. */
-const CadranDessine VIRAGE{{-4.3826f, -0.2480f, 0.2882f}, {0.945f, 0.326f, -0.003f}, 0.0198f};
-const CadranDessine AIR{{-4.3826f, -0.2480f, 0.3535f}, {0.945f, 0.326f, -0.003f}, 0.0197f};
+const CadranDessine VIRAGE{{-4.3826f, -0.2481f, 0.2884f}, {0.945f, 0.326f, -0.003f}, 0.0198f,
+                           0.0022f, 0.0006f};
+const CadranDessine AIR{{-4.3826f, -0.2481f, 0.3535f}, {0.945f, 0.326f, -0.003f}, 0.0197f,
+                        0.0024f, 0.0006f};
 
 /* Bille de l'indicateur de virage : elle roule dans un tube courbe, arc de
    rayon BILLE_ARC centré BILLE_CENTRE au-dessus du centre du cadran (en
@@ -94,11 +114,6 @@ constexpr float BILLE_RAYON      = 0.09f;
 constexpr float BILLE_BUTEE_DEG  = 25.0f;
 constexpr float BILLE_DEG_PAR_G  = 125.0f;
 
-/* Faces décalées de 1,6 mm vers le haut et la droite du pilote : la planche,
-   vue d'en haut, laissait un vide en haut à droite des lunettes (réglé à
-   l'oeil sur la montre). Même décalage dans interieur_4096.py. */
-constexpr float DECALAGE_HAUT   = 0.0016f;
-constexpr float DECALAGE_DROITE = 0.0016f;
 /* Les aiguilles passent 1,5 mm devant la face, chacune un peu devant la
    précédente pour ne pas scintiller là où elles se croisent. */
 constexpr float DEVANT_FACE     = 0.0015f;
@@ -108,7 +123,7 @@ constexpr float ECART_AIGUILLES = 0.0003f;
    compris ; X vers le pilote, Y vers midi, droite du pilote vers -Z. */
 mat4 repere(const CadranDessine& c) {
     return placementCadran(c.centre, c.normale, 1.0f, DEVANT_FACE) *
-           glm::translate(mat4(1.0f), vec3{0.0f, DECALAGE_HAUT, -DECALAGE_DROITE});
+           glm::translate(mat4(1.0f), vec3{0.0f, c.haut, -c.droite});
 }
 
 /* Lame d'aiguille dans le plan du cadran : longueur 1 vers midi, base de

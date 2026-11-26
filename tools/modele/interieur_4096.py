@@ -67,22 +67,23 @@ DISJONCTEURS = [
 
 # Cadrans dessinés, d'après le manuel de vol SE 3130 (figure 2-5a et
 # graduations de l'appendice 1) : centre et rayon de la face en px de l'atlas
-# 1024, mesurés sur les disques plats du .glb. La face couvre 90 % du disque et
-# se décale d'un pixel (1,6 mm) vers le haut et la droite : la planche,
-# inclinée et vue d'en haut, laissait un vide en haut à droite des lunettes.
-# Pas d'aiguilles : le moteur les pose et les anime
-# (src/render/LoadedHelicopterPlanche.cpp, mêmes centres et mêmes rayons).
+# 1024. La face couvre 90 % du disque plat du .glb (97 % pour la montre). Son
+# centre est celui du disque, décalé vers la droite et le haut du pilote de
+# la moitié du flanc du cylindre vu de l'oeil (voir CadranDessine dans
+# src/render/LoadedHelicopterPlanche.cpp, mêmes décalages en mm), puis
+# ramené dans l'atlas par le dépliage du disque (barycentrique, 1 px = 1,6 mm).
+# Pas d'aiguilles : le moteur les pose et les anime.
 CADRANS = [
-    (570.3, 940.6, 22.05, "tachymetre"),
-    (493.5, 944.4, 24.1, "triple"),
-    (537.2, 991.4, 23.2, "pas"),
-    (510.0, 684.8, 17.2, "volts"),
-    (837.6, 214.8, 17.0, "carburant"),
-    (878.4, 206.2, 12.4, "servo"),
-    (509.4, 627.4, 17.3, "montre"),
+    (570.42, 941.46, 22.05, "tachymetre"),
+    (493.64, 945.02, 24.1, "triple"),
+    (536.86, 992.16, 23.2, "pas"),
+    (510.06, 685.18, 17.2, "volts"),
+    (837.26, 215.18, 17.0, "carburant"),
+    (878.64, 206.14, 12.4, "servo"),
+    (509.17, 627.76, 18.2, "montre"),
     # Côté copilote, hors figure du manuel : bille-aiguille et thermomètre.
-    (647.0, 998.2, 11.34, "virage"),
-    (553.7, 677.9, 12.06, "air"),
+    (647.15, 998.79, 11.34, "virage"),
+    (554.18, 678.64, 12.06, "air"),
 ]
 
 
